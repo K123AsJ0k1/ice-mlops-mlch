@@ -9,6 +9,7 @@ from actors.detector import Detector
 from tasks.collector import data_collector
 
 from icebreaker.storage.management import object_storage_interaction
+from icebreaker.mlflow.setup import mlflow_setup_client
 
 def das1_internal_data_analysis(
     process_parameters: any,
@@ -53,7 +54,31 @@ def das1_internal_data_analysis(
             for output_ref in done_task_1_refs:
                 collected_statistics.extend(ray.get(output_ref))
         
-        # Load these into MLflow
+        mlflow_parameters = storage_parameters['mlflow-parameters']
+        mlflow_client = mlflow_setup_client(
+            mlflow_parameters = mlflow_parameters
+        )
+        
+        experiment_id = mlflow_get_or_create_experiment(
+            mlflow_client = mlflow_client,
+            experiment_name = mlflow_parameters['experiment-name']
+        )
+
+        run_id = mlflow_start_run(
+            mlflow_client = mlflow_client,
+            experiment_id = experiment_id, 
+            run_name = = mlflow_parameters['run-name'], 
+            tags = mlflow_parameters['run-tags']
+        )
+
+        for statistics in collected_statistics:
+            mlflow_log_metrics(
+                mlflow_client = mlflow_client,
+                run_id = run_id, 
+                metrics = statistics, 
+                step = 0
+            ) 
+
         return True
     except Exception as e:
         print('das1 internal data analysis error', e)
@@ -62,7 +87,18 @@ def das1_internal_data_analysis(
 if __name__ == "__main__":
     print('Starting Ray job')
     print('Python version is:' + str(sys.version))
-    print('Ray version is:' + version('ray'))
+    check_packages = [
+        'ray',
+        'python-swiftclient',
+        'mlflow',
+        'pandas',
+        'pyarrow',
+        'fasttext',
+        'numpy',
+        'mlflow'
+    ]
+    for pkg_name in check_packages:
+        print(pkg_name,' version is ',version(pkg_name))
     
     print('Getting input')
     job_input = json.loads(sys.argv[1])
@@ -70,7 +106,7 @@ if __name__ == "__main__":
     storage_parameters = job_input['storage']
     data_parameters = job_input['data']
 
-    print('Running parallel processing')
+    print('Running DAS1 internal data analysis')
     task_status = das1_internal_data_analysis(
         process_parameters = process_parameters,
         storage_parameters = storage_parameters,
