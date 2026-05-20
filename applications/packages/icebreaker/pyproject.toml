@@ -29,8 +29,11 @@ data = [
     "pyarrow"
 ]
 
-detect = [
+lang_detect = [
     "fasttext",
+]
+
+code_detect = [
     "magika"
 ]
 
@@ -55,5 +58,5 @@ logging = [
 ]
 
 all = [
-    "icebreaker[notebook, data, detect, redis, swift, ray, pararellism, logging]"
+    "icebreaker[notebook, swift, data, lang_detect, code_detect, redis, flower, ray, pararellism, logging]"
 ]

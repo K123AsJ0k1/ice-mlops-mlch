@@ -1,4 +1,4 @@
-def setup_mlflow(
+def mlflow_setup_client(
     mlflow_parameters: any
 ):
     try:
