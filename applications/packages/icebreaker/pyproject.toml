@@ -11,7 +11,7 @@ where = ["src"]
 
 [project.optional-dependencies]
 
-nb = [
+notebook = [
     "PyYAML",
     "pyarrow",
     "apache-airflow-client==3.0.2",
@@ -50,5 +50,5 @@ pararellism = [
 ]
 
 all = [
-    "icebreaker[nb, data, detect, redis, swift, ray, pararellism]"
+    "icebreaker[notebook, data, detect, redis, swift, ray, pararellism]"
 ]
