@@ -1,0 +1,54 @@
+[project] 
+name = "icebreaker"
+version = "0.0.1"
+description = "Abstraction functions that make integrating computing enviroments (ICE) easier"
+dependencies = [
+    "pydantic"
+]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[project.optional-dependencies]
+
+nb = [
+    "PyYAML",
+    "pyarrow",
+    "apache-airflow-client==3.0.2",
+    "keystoneauth1",
+    "python-keystoneclient"
+]
+
+swift = [
+    "python-swiftclient"
+]
+
+data = [
+    "pandas",
+    "pyarrow"
+]
+
+detect = [
+    "fasttext",
+    "magika"
+]
+
+redis = [
+    "redis==7.3.0"
+]
+
+flower = [
+    "flower"
+]
+
+ray = [
+    "ray[default]==2.49.2"
+]
+
+pararellism = [
+    "numpy"
+]
+
+all = [
+    "icebreaker[nb, data, detect, redis, swift, ray, pararellism]"
+]
