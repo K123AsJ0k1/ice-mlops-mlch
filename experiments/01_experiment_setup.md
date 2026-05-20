@@ -155,6 +155,13 @@ pip install -r packages.txt
 4. Install repository package 
 
 ```
+cd ..
 cd applications/packages/icebreaker
 pip install -e ".[all]"
+```
+
+If there are problems, you can uninstall the package to fix it with
+
+```
+pip uninstall icebreaker
 ```
