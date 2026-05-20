@@ -1,0 +1,20 @@
+apiVersion: v1
+kind: Endpoints
+metadata:
+   name: ray-local-3-dash 
+subsets:
+  - addresses:
+    - ip: '192.168.1.19'
+    ports: 
+      - port: 8102
+---
+apiVersion: v1
+kind: Service
+metadata:
+   name: ray-local-3-dash 
+spec:
+   type: ClusterIP
+   ports:
+   - protocol: TCP
+     port: 8102
+     targetPort: 8102

@@ -1,0 +1,23 @@
+apiVersion: v1
+kind: Endpoints
+metadata:
+   name: ray-local-2-metrics-worker
+subsets:
+  - addresses:
+    - ip: '192.168.1.19'
+    ports: 
+      - port: 8204
+---
+apiVersion: v1
+kind: Service
+metadata:
+   name: ray-local-2-metrics-worker 
+   annotations:
+      prometheus.io/scrape: 'true'
+      prometheus.io/port: '8204'
+spec:
+   type: ClusterIP
+   ports:
+   - protocol: TCP
+     port: 8204
+     targetPort: 8204

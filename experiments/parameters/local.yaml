@@ -1,0 +1,44 @@
+clusters:
+  lt1:
+    resources:
+      nodes: 'head'
+      cpu: '12'
+      ram: '13 GB'
+      gpu: 'None'
+    network:
+      kubernetes:
+        dash: 'ray-local-1-dash.integration.svc.cluster.local:8100'
+        serve: 'ray-local-1-serve.integration.svc.cluster.local:8301'
+      istio:
+        dash: 'ray.local.dash-1.oss:7100'
+        serve: 'ray.local.serve-1.oss:7100'
+  lt2:
+    resources:
+      nodes: 'head'
+      cpu: '14'
+      ram: '11 GB'
+      gpu: 
+        - hardware: 'NVIDIA GeForce RTX 4070'
+          vram: '8188 MiB'
+    network:
+      kubernetes:
+        dash: 'ray-local-2-dash.integration.svc.cluster.local:8101'
+        serve: 'ray-local-2-serve.integration.svc.cluster.local:8302'
+      istio:
+        dash: 'ray.local.dash-2.oss:7100'
+        serve: 'ray.local.serve-2.oss:7100'
+  lt3:
+    resources:
+      nodes: 'head'
+      cpu: '30'
+      ram: '15 GB'
+      gpu: 
+        - hardware: 'NVIDIA GeForce RTX 4090'
+          vram: '16186 MiB'
+    network:
+      kubernetes:
+        dash: 'ray-local-3-dash.integration.svc.cluster.local:8102'
+        serve: 'ray-local-3-serve.integration.svc.cluster.local:8303'
+      istio:
+        dash: 'ray.local.dash-3.oss:7100'
+        serve: 'ray.local.serve-3.oss:7100'

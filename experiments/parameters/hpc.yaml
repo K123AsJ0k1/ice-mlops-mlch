@@ -1,0 +1,44 @@
+clusters:
+  puhti:
+    resources:
+      nodes: 'head-worker-1'
+      cpu: '8'
+      ram: '16 GB'
+      gpu: 
+        - hardware: 'NVIDIA V100'
+          vram: '32 GB'
+    network:
+      kubernetes:
+        dash: 'ray-hpc-1-dash.integration.svc.cluster.local:8125'
+        serve: 'ray-hpc-1-serve.integration.svc.cluster.local:8351'
+      istio:
+        dash: 'ray.hpc.dash-1.oss:7100'
+        serve: 'ray.hpc.serve-1.oss:7100'
+  mahti:
+    resources:
+      nodes: 'head-worker-1'
+      cpu: '30'
+      ram: '60 GB'
+      gpu: 
+        - hardware: 'NVIDIA A100'
+          vram: '80 GB'
+    network:
+      kubernetes:
+        dash: 'ray-hpc-2-dash.integration.svc.cluster.local:8126'
+        serve: 'ray-hpc-2-serve.integration.svc.cluster.local:8352'
+      istio:
+        dash: 'ray.hpc.dash-2.oss:7100'
+        serve: 'ray.hpc.serve-2.oss:7100'
+  lumi:
+    resources:
+      nodes: 'head-worker-1'
+      cpu: '16'
+      ram: '32 GB'
+      gpu: 'None'
+    network:
+      kubernetes:
+        dash: 'ray-hpc-3-dash.integration.svc.cluster.local:8127'
+        serve: 'ray-hpc-3-serve.integration.svc.cluster.local:8353'
+      istio:
+        dash: 'ray.hpc.dash-3.oss:7100'
+        serve: 'ray.hpc.serve-3.oss:7100'

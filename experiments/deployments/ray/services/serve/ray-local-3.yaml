@@ -1,0 +1,20 @@
+apiVersion: v1
+kind: Endpoints
+metadata:
+   name: ray-local-3-serve
+subsets:
+  - addresses:
+    - ip: '192.168.1.19'
+    ports: 
+      - port: 8303
+---
+apiVersion: v1
+kind: Service
+metadata:
+   name: ray-local-3-serve 
+spec:
+   type: ClusterIP
+   ports:
+   - protocol: TCP
+     port: 8303
+     targetPort: 8303

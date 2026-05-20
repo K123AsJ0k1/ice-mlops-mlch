@@ -1,0 +1,7 @@
+resources:
+- ray-local-1.yaml
+- ray-local-2.yaml
+- ray-local-3.yaml
+- ray-hpc-1.yaml
+- ray-hpc-2.yaml
+- ray-hpc-3.yaml

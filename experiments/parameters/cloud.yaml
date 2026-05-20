@@ -1,0 +1,29 @@
+clusters:
+  vm1:
+    resources:
+      nodes: 'head-worker-1'
+      cpu: '8'
+      ram: '104 GB'
+      gpu: 
+        - hardware: 'NVIDIA Tesla P100-PCIE-16GB'
+          vram: '16384 MiB'
+    network:
+      kubernetes:
+        dash: 'raycluster-kuberay-head-svc.default.svc.cluster.local:8265'
+        serve: 'raycluster-kuberay-head-svc.default.svc.cluster.local:8000'
+      istio:
+        dash: 'ray.cloud.dash-1.oss:7100'
+        serve: 'ray.cloud.serve-1.oss:7100'
+  vm2:
+    resources:
+      nodes: 'head'
+      cpu: '6'
+      ram: '86 GB'
+      gpu: 'None'
+    network:
+      kubernetes:
+        dash: 'ray-cloud-2-dash.integration.svc.cluster.local:8100'
+        serve: 'ray-cloud-2-dash.integration.svc.cluster.local:8100'
+      istio:
+        dash: 'ray.cloud.dash-2.oss:7100'
+        serve: 'ray.cloud.serve-2.oss:7100'

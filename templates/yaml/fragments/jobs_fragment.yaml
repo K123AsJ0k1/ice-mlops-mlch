@@ -1,0 +1,24 @@
+path: 'fill'
+id: 'fill'
+status: 
+  states: 
+    - 'fill'
+  order: 
+    start: False
+    stop: False
+  interaction: 
+    submitted: False
+    stopped: False
+    stored: False
+    cleaned: False
+  submitter: 
+    operating: False
+    monitoring: False
+    halted: False
+    failed: False
+    success: False
+times: 
+  - name: 'fill' 
+    start: '0'
+    end: '0'
+    total: '0'
