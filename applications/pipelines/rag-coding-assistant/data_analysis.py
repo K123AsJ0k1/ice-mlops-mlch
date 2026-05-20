@@ -1,9 +1,9 @@
 from kfp import dsl
-
+ 
 @dsl.component(
     base_image = "python:3.12.3",
     packages_to_install = [
-        "icebreaker[swift, ray, pararellism] @ git+https://github.com/K123AsJ0k1/multi-cloud-hpc-oss-mlops-platform.git@experiments#subdirectory=applications/packages/icebreaker"
+        "icebreaker[swift, ray, pararellism] @ git+https://github.com/K123AsJ0k1/ice-mlops-mlch.git@main#subdirectory=applications/packages/icebreaker"
     ]
 )
 def internal_data_analysis(
@@ -36,7 +36,6 @@ def internal_data_analysis(
         swift_parameters = swift_parameters
     )
     print('Swift client setup')
-    #print('Integration parameters')
     local_cloud_cluster_yamls = integration_parameters['cluster-yamls']
     local_cloud_resource_weights = integration_parameters['resource-weights']
 
@@ -81,7 +80,6 @@ def internal_data_analysis(
                 storage_parameters = data_storage,
                 object_prefix = 'ICEbreaker-tutorial'
             )
-
             # This is affected by the order the input sets
             print('Dividing data')
             clustered_dataset_paths = division_load_balanced_cluster_round_robin(
