@@ -16,7 +16,8 @@ notebook = [
     "pyarrow",
     "apache-airflow-client==3.0.2",
     "keystoneauth1",
-    "python-keystoneclient"
+    "python-keystoneclient",
+    "kfp==2.16.1"
 ]
 
 swift = [
