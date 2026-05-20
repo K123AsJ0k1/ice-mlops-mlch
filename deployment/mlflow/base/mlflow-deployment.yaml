@@ -24,6 +24,8 @@ spec:
           env:
             - name: MLFLOW_SERVER_ALLOWED_HOSTS
               value: "*" 
+            - name: MLFLOW_SERVER_CORS_ALLOWED_ORIGINS
+              value: "http://mlflow.oss:7001"
             - name: DEFAULT_ARTIFACT_ROOT
               valueFrom:
                 configMapKeyRef:
