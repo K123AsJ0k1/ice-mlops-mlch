@@ -1,0 +1,1 @@
+icebreaker[swift, data, detect] @ git+https://github.com/K123AsJ0k1/multi-cloud-hpc-oss-mlops-platform.git@experiments#subdirectory=applications/packages/icebreaker
