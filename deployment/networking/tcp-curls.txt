@@ -1,0 +1,17 @@
+# redis
+curl -v http://localhost:7002  
+
+# MinIO client
+curl -v http://localhost:7003
+
+# Postgres
+curl -v http://localhost:7004
+
+# MongoDB
+curl -v http://localhost:7005
+
+# Qdrant
+curl -v http://localhost:7006
+
+# Neo4j bolt
+curl -v http://localhost:7007

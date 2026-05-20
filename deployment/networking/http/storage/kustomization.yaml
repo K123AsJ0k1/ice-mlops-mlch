@@ -1,0 +1,5 @@
+resources:
+- express-virtualservice.yaml
+- qdrant-virtualservice.yaml
+- neo4j-virtualservice.yaml
+- minio-virtualservice.yaml

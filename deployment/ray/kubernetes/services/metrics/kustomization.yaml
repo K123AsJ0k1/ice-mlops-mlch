@@ -1,0 +1,13 @@
+resources:
+- ray-local-1-head.yaml
+- ray-local-1-worker.yaml
+- ray-local-2-head.yaml
+- ray-local-2-worker.yaml
+- ray-local-3-head.yaml
+- ray-local-3-worker.yaml
+- ray-hpc-1-head.yaml
+- ray-hpc-1-worker.yaml
+- ray-hpc-2-head.yaml
+- ray-hpc-2-worker.yaml
+- ray-hpc-3-head.yaml
+- ray-hpc-3-worker.yaml

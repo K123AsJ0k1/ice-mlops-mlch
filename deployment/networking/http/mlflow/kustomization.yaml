@@ -1,0 +1,3 @@
+resources:
+- mlflow-virtualservice.yaml
+- mlflow-minio-virtualservice.yaml

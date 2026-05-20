@@ -1,0 +1,3 @@
+resources:
+- kubeflow-virtualservice.yaml
+- kubeflow-minio-virtualservice.yaml

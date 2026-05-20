@@ -1,0 +1,22 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namespace: storage
+
+configMapGenerator:
+- name: storage-configmap
+  envs:
+    - config.env
+
+secretGenerator:
+- name: storage-secrets
+  envs:
+    - secret.env
+
+resources: 
+- storage-namespace.yaml
+- structured/
+- vectors/
+- graphs/
+- cache/
+- objects/
+- relational/

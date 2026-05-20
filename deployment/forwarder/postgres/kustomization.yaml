@@ -1,0 +1,5 @@
+resources:
+- postgres-airflow-deployment.yaml
+- postgres-airflow-pvc.yaml
+- postgres-airflow-service.yaml
+- postgres-airflow-secret.yaml
