@@ -66,3 +66,5 @@ old/
 temp/
 .platform/
 config.yaml
+venv*
+.ipynb
