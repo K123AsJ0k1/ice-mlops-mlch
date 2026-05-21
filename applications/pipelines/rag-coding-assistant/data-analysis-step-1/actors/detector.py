@@ -12,6 +12,8 @@ class Detector:
     ):
         import tempfile
         import fasttext
+        from icebreaker.swift.setup import swift_setup_client
+        from icebreaker.swift.use import swift_get_object_content
         actor_swift_client = swift_setup_client(
             swift_parameters = swift_parameters
         )
