@@ -186,6 +186,11 @@ def division_split_input(
     job_input: list, 
     num_workers: int
 ) -> any:
+    try:
+        import math
+    except ImportError as e:
+        raise ImportError("pararellism/division failed to import", e)
+
     if num_workers <= 0:
         raise ValueError("Number of workers must be greater than 0.")
         
