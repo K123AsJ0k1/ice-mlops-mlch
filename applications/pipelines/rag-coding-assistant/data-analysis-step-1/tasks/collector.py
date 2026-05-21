@@ -25,6 +25,8 @@ def data_collector(
     task_batch: any
 ) -> any:
     start_time = t.time()
+    print('Task', worker_index, 'Actor', actor_index)
+    
     swift_parameters = storage_parameters['swift-parameters']
     print('Setting up swift client')
     setup_swift_client = swift_setup_client(
@@ -47,11 +49,14 @@ def data_collector(
         key_name = object_path.split('/')[-1].split('.')[0]
         stored_dataset = object_storage_interaction(
             storage_client = setup_swift_client,
+            lock_parameters = {},
+            lock_location = None,
             parameters = {
                 'mode': 'get',
                 'bucket-target': data_storage['bucket-target'],
                 'bucket-prefix': data_storage['bucket-prefix'],
                 'bucket-user': data_storage['bucket-user'],
+                'debug-prints': True,
                 'object-name': 'root',
                 'path-replacers': {
                     'name': object_path
@@ -139,13 +144,13 @@ def data_collector(
         )
         # Speaking language-(type)
         text_input_ref = ray.put(pandas_df[language_column])
-        actor_ref.batch_fasttext_stats(
+        provider_actor_refs.append(actor_ref.batch_fasttext_stats.remote(
             worker_index = worker_index,
             actor_index = actor_index,
             batch_index = batch_index,
             text_input = text_input_ref,
             analysis_parameters = analysis_parameters
-        )
+        ))
         batch_index += 1
     
     while len(provider_actor_refs):
