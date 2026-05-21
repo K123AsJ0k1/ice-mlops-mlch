@@ -153,7 +153,7 @@ def data_collector(
             analysis_parameters = analysis_parameters
         ))
         batch_index += 1
-    
+    print(collected_stats)
     while len(provider_actor_refs):
         done_actor_refs, provider_actor_refs = ray.wait(provider_actor_refs)
         for output_ref in done_actor_refs: 
