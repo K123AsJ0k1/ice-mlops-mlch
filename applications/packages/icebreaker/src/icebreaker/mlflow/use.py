@@ -64,16 +64,14 @@ def mlflow_change_run_status(
     run_id: str, 
     status: str
 ) -> None:
-    try:
-        from mlflow.entities import RunStatus
-    except ImportError as e:
-        raise ImportError("mlflow/use failed to import", e)
+    sanitized_status = status.upper()
 
-    status_enum = RunStatus.from_string(status.upper())
-    mlflow_client.set_terminated(
-        run_id = run_id, 
-        status = status_enum
-    )
+    valid_statuses = ["FINISHED", "FAILED", "KILLED", "RUNNING"]
+    if sanitized_status in valid_statuses:
+        mlflow_client.update_run(
+            run_id = run_id, 
+            status = sanitized_status
+        )
 
 # consider synthetic dataset function
 # consider llm as a judge function
