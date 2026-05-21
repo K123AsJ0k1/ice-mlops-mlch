@@ -125,7 +125,8 @@ def ray_download_job(
         runtime_requirements = ray_runtime['pip'].split('/')[-1]
     directory_name = working_directory_path.split('/')[-1]
     download_path = './downloads/ray'
-    runtime_directory = Path(download_path + '/' + directory_name)
+    final_requirements = None
+    runtime_directory = str(Path(download_path + '/' + directory_name))
     if not object_stored is None:
         for object_path, values in object_stored.items():
             if 'CODE' in object_path:
@@ -136,7 +137,7 @@ def ray_download_job(
                     local_file_path = Path(download_path + '/' + file_directory_path)
                     local_file_path.parent.mkdir(parents=True, exist_ok=True)   
                     if runtime_requirements in str(local_file_path):
-                        runtime_requirements = local_file_path
+                        final_requirements = str(local_file_path)
                     file_object = object_storage_interaction(
                         storage_client = storage_client,
                         lock_parameters = {},
@@ -164,4 +165,4 @@ def ray_download_job(
     end_time = t.time()
     total_time = round(end_time-start_time,5)
     print('Spent seconds', total_time)
-    return str(runtime_directory), str(runtime_requirements)
+    return runtime_directory, final_requirements
