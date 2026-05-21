@@ -87,27 +87,24 @@ def das1_internal_data_analysis(
             actor_index = (actor_index + 1) % actor_number
         
         print('Waiting data collector tasks')
-        collected_statistics = []
+        collected_statistics = {} 
         while len(task_1_refs):
             done_task_1_refs, task_1_refs = ray.wait(task_1_refs)
             for output_ref in done_task_1_refs:
-                collected_statistics.extend(ray.get(output_ref))
+                collected_statistics.update(ray.get(output_ref))
         
         # remember that metrics only takes integers or floats
         print('Logging metrics into MLflow')
         print(collected_statistics)
-        for worker_results in collected_statistics:
-            for worker_result in worker_results:
-                for key_name, key_metrics in worker_result.items():
-                    #print(statistics)
-                    print('Adding ', key_name, ' stats')
-                    print(key_metrics)
-                    mlflow_log_metrics(
-                        mlflow_client = mlflow_client,
-                        run_id = run_id, 
-                        metrics = key_metrics, 
-                        step = 0
-                    ) 
+        for key_name, key_metrics in collected_statistics.items():
+            print('Adding ', key_name, ' stats')
+            print(key_metrics)
+            mlflow_log_metrics(
+                mlflow_client = mlflow_client,
+                run_id = run_id, 
+                metrics = key_metrics, 
+                step = 0
+            ) 
         print('Completing MLflow run')
         mlflow_change_run_status(
             mlflow_client = mlflow_client, 
