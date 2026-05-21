@@ -8,8 +8,9 @@ from importlib.metadata import version
 from actors.detector import Detector
 from tasks.collector import data_collector
 
-from icebreaker.storage.management import object_storage_interaction
 from icebreaker.mlflow.setup import mlflow_setup_client
+from icebreaker.mlflow.use import mlflow_get_or_create_experiment, mlflow_start_run, mlflow_log_metrics, mlflow_change_run_status
+from icebreaker.pararellism.division import division_split_input
 
 def das1_internal_data_analysis(
     process_parameters: any,
@@ -17,14 +18,41 @@ def das1_internal_data_analysis(
     data_parameters: any
 ):
     try:  
-        batch_input = data_parameters['input']
-        given_actor_number = process_parameters['actor-number']
-        
-        file_batch_refs = []
-        for file_batch in batch_input:
-            file_batch_refs.append(ray.put(file_batch))
+
+        mlflow_parameters = storage_parameters['mlflow-parameters']
+
+        mlflow_client = mlflow_setup_client(
+            mlflow_parameters = mlflow_parameters
+        )
+
+        experiment_id = mlflow_get_or_create_experiment(
+            mlflow_client = mlflow_client,
+            name = mlflow_parameters['experiment-name']
+        )
+
+        run_id = mlflow_start_run(
+            mlflow_client = mlflow_client,
+            experiment_id = experiment_id, 
+            run_name = mlflow_parameters['run-name'], 
+            tags = mlflow_parameters['run-tags']
+        )
+
+        # This should be divided into batches based on worker number
+        input_data = data_parameters['input']
+
+        given_worker_number = process_parameters['worker-number']
+
+        worker_batches = division_split_input(
+            job_input = input_data, 
+            num_workers = given_worker_number
+        )
+
+        worker_batch_refs = []
+        for worker_batch in worker_batches:
+            worker_batch_refs.append(ray.put(worker_batch))
         # We assume that actor number isn't ridiculus
-        actor_number = min(given_actor_number,len(batch_input))
+        given_actor_number = process_parameters['actor-number']
+        actor_number = min(given_actor_number,len(worker_batches))
 
         print('Creating ' + str(actor_number) + ' provider actors')
         actor_refs = []
@@ -35,7 +63,7 @@ def das1_internal_data_analysis(
         task_1_refs = [] 
         worker_index = 1
         actor_index = 0
-        for file_batch_ref in file_batch_refs:
+        for file_batch_ref in worker_batch_refs:
             actor_ref = actor_refs[actor_index]
             task_1_refs.append(data_collector.remote(
                 worker_index = worker_index,
@@ -46,7 +74,7 @@ def das1_internal_data_analysis(
             ))
             worker_index += 1
             actor_index = (actor_index + 1) % actor_number
-        # We need to add the stats here into MLflow
+        
         print('Waiting data collector tasks')
         collected_statistics = []
         while len(task_1_refs):
@@ -54,23 +82,7 @@ def das1_internal_data_analysis(
             for output_ref in done_task_1_refs:
                 collected_statistics.extend(ray.get(output_ref))
         
-        mlflow_parameters = storage_parameters['mlflow-parameters']
-        mlflow_client = mlflow_setup_client(
-            mlflow_parameters = mlflow_parameters
-        )
-        
-        experiment_id = mlflow_get_or_create_experiment(
-            mlflow_client = mlflow_client,
-            experiment_name = mlflow_parameters['experiment-name']
-        )
-
-        run_id = mlflow_start_run(
-            mlflow_client = mlflow_client,
-            experiment_id = experiment_id, 
-            run_name = = mlflow_parameters['run-name'], 
-            tags = mlflow_parameters['run-tags']
-        )
-
+        # remember that metrics only takes integers or floats
         for statistics in collected_statistics:
             mlflow_log_metrics(
                 mlflow_client = mlflow_client,
@@ -78,6 +90,12 @@ def das1_internal_data_analysis(
                 metrics = statistics, 
                 step = 0
             ) 
+
+        mlflow_change_run_status(
+            mlflow_client = mlflow_client, 
+            run_id = run_id, 
+            status = 'FINISHED'
+        )
 
         return True
     except Exception as e:
