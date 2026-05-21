@@ -36,7 +36,8 @@ def kubeflow_manage_run(
     run_name: str,
     experiment_name: str,
     pipeline_arguments: any,
-    timeout: int
+    timeout: int,
+    cache_steps: bool
 ):
     try:
         import time as t
@@ -51,7 +52,7 @@ def kubeflow_manage_run(
         run_name = run_name,
         experiment_name = experiment_name,
         arguments = pipeline_arguments,
-        enable_caching = True
+        enable_caching = cache_steps
     )
 
     run_status = kubeflow_wait_run(
