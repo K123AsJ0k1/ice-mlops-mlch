@@ -148,6 +148,7 @@ def data_collector(
             worker_index = worker_index,
             actor_index = actor_index,
             batch_index = batch_index,
+            used_key = key_name,
             text_input = text_input_ref,
             analysis_parameters = analysis_parameters
         ))
@@ -157,8 +158,10 @@ def data_collector(
         done_actor_refs, provider_actor_refs = ray.wait(provider_actor_refs)
         for output_ref in done_actor_refs: 
             result = ray.get(output_ref)
+            batch_index = result['batch']
             language_stats = result['language-stats']
             key_name = result['key']
+            print('Batch', batch_index, 'Key', key_name)
             for stat_name, value in language_stats.items():
                 collected_stats[key_name][stat_name] = value
     

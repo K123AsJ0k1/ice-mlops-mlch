@@ -95,14 +95,19 @@ def das1_internal_data_analysis(
         
         # remember that metrics only takes integers or floats
         print('Logging metrics into MLflow')
-        for statistics in collected_statistics:
-            print(statistics)
-            mlflow_log_metrics(
-                mlflow_client = mlflow_client,
-                run_id = run_id, 
-                metrics = statistics, 
-                step = 0
-            ) 
+        print(collected_statistics)
+        for worker_results in collected_statistics:
+            for worker_result in worker_results:
+                for key_name, key_metrics in worker_result.items():
+                    #print(statistics)
+                    print('Adding ', key_name, ' stats')
+                    print(key_metrics)
+                    mlflow_log_metrics(
+                        mlflow_client = mlflow_client,
+                        run_id = run_id, 
+                        metrics = key_metrics, 
+                        step = 0
+                    ) 
         print('Completing MLflow run')
         mlflow_change_run_status(
             mlflow_client = mlflow_client, 

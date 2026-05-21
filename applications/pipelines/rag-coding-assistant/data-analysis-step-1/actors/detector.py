@@ -32,9 +32,6 @@ class Detector:
             # The model is loaded directly into this Actor's private RAM
             self.model = fasttext.load_model(temp_file.name)
         
-        from icebreaker.fast_text.use import fasttext_get_stats
-        self.get_stats = fasttext_get_stats
-
     def batch_fasttext_stats(
         self,
         worker_index: int,
@@ -44,15 +41,16 @@ class Detector:
         text_input: list,
         analysis_parameters: any
     ) -> any:
-        
-        language_stats = self.get_stats(
+        #print('Running fasttext stats')
+        from icebreaker.fast_text.use import fasttext_get_stats
+        language_stats = fasttext_get_stats(
             model = self.model,
             texts = text_input,
             default_value = analysis_parameters['language-default'],
             default_threshold = analysis_parameters['language-threshold'],
             label_replacer = analysis_parameters['language-replacer']
         )
-
+        #print('Collecting result')
         result = {
             'worker': worker_index,
             'actor': actor_index,
