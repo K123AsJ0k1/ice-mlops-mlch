@@ -11,6 +11,7 @@ from tasks.collector import data_collector
 from icebreaker.mlflow.setup import mlflow_setup_client
 from icebreaker.mlflow.use import mlflow_get_or_create_experiment, mlflow_start_run, mlflow_log_metrics, mlflow_change_run_status
 from icebreaker.pararellism.division import division_split_input
+from icebreaker.misc.dict import flatten_nested_dict
 
 def das1_internal_data_analysis(
     job_parameters: any
@@ -95,16 +96,22 @@ def das1_internal_data_analysis(
         
         # remember that metrics only takes integers or floats
         print('Logging metrics into MLflow')
-        print(collected_statistics)
-        for key_name, key_metrics in collected_statistics.items():
-            print('Adding ', key_name, ' stats')
-            print(key_metrics)
-            mlflow_log_metrics(
-                mlflow_client = mlflow_client,
-                run_id = run_id, 
-                metrics = key_metrics, 
-                step = 0
-            ) 
+        flattened_statistics = flatten_nested_dict(
+            target_dict = collected_statistics,
+            parent_key = '',
+            seperator = '-'
+        )
+        #print(collected_statistics)
+        #for key_name, key_metrics in collected_statistics.items():
+        #    print('Adding ', key_name, ' stats')
+        #    print(key_metrics)
+        print(flattened_statistics)
+        mlflow_log_metrics(
+            mlflow_client = mlflow_client,
+            run_id = run_id, 
+            metrics = flattened_statistics, 
+            step = 0
+        ) 
         print('Completing MLflow run')
         mlflow_change_run_status(
             mlflow_client = mlflow_client, 

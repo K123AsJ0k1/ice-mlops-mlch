@@ -153,7 +153,7 @@ def data_collector(
             analysis_parameters = analysis_parameters
         ))
         batch_index += 1
-    print(collected_stats)
+    #print(collected_stats)
     while len(provider_actor_refs):
         done_actor_refs, provider_actor_refs = ray.wait(provider_actor_refs)
         for output_ref in done_actor_refs: 
@@ -161,7 +161,7 @@ def data_collector(
             batch_index = result['batch']
             language_stats = result['language-stats']
             key_name = result['key']
-            print('Batch', batch_index, 'Key', key_name)
+            #print('Batch', batch_index, 'Key', key_name)
             for stat_name, value in language_stats.items():
                 collected_stats[key_name][stat_name] = value
     
