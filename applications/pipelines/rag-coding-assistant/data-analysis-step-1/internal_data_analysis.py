@@ -16,17 +16,18 @@ def das1_internal_data_analysis(
     job_parameters: any
 ):
     try:  
+        print('Parameters')
         process_parameters = job_parameters['process']
         storage_parameters = job_parameters['storage']
         data_parameters = job_parameters['data']
         model_parameters = job_parameters['model']
 
         mlflow_parameters = storage_parameters['mlflow-parameters']
-
+        print('Setup MLflow')
         mlflow_client = mlflow_setup_client(
             mlflow_parameters = mlflow_parameters
         )
-
+        
         experiment_id = mlflow_get_or_create_experiment(
             mlflow_client = mlflow_client,
             name = mlflow_parameters['experiment-name']
@@ -38,17 +39,17 @@ def das1_internal_data_analysis(
             run_name = mlflow_parameters['run-name'], 
             tags = mlflow_parameters['run-tags']
         )
-
+        print('MLflow setup')
         # This should be divided into batches based on worker number
+        print('Dividing work')
         input_data = data_parameters['input']
-
         given_worker_number = process_parameters['worker-number']
 
         worker_batches = division_split_input(
             job_input = input_data, 
             num_workers = given_worker_number
         )
-
+        print('Putting data into refs')
         worker_batch_refs = []
         for worker_batch in worker_batches:
             worker_batch_refs.append(ray.put(worker_batch))
@@ -91,6 +92,7 @@ def das1_internal_data_analysis(
                 collected_statistics.extend(ray.get(output_ref))
         
         # remember that metrics only takes integers or floats
+        print('Logging metrics into MLflow')
         for statistics in collected_statistics:
             mlflow_log_metrics(
                 mlflow_client = mlflow_client,
@@ -98,7 +100,7 @@ def das1_internal_data_analysis(
                 metrics = statistics, 
                 step = 0
             ) 
-
+        print('Completing MLflow run')
         mlflow_change_run_status(
             mlflow_client = mlflow_client, 
             run_id = run_id, 
