@@ -46,6 +46,17 @@ def ray_store_job(
     for root, dirs, files in os.walk(working_directory_path):
         for file_name in files:
             file_path = os.path.join(root, file_name)
+            #print(file_path)
+            #print(directory_name)
+            #print(file_name)
+            object_path = []
+            directory_found = False
+            for name in file_path.split('/'):
+                if name == directory_name:
+                    directory_found = True
+                if directory_found:
+                    object_path.append(name)
+            #print(object_path)
             with open(file_path, 'rb') as stored_data:
                 stored_metadata = {'version': 1}
                 object_stored = object_storage_interaction(
@@ -61,10 +72,7 @@ def ray_store_job(
                         'path-replacers': {
                             'name': 'RAY'
                         },
-                        'path-names': [
-                            directory_name,
-                            file_name
-                        ],
+                        'path-names': object_path,
                         'overwrite': True,
                         'debug-prints': True
                     },
@@ -120,38 +128,39 @@ def ray_download_job(
     runtime_directory = Path(download_path + '/' + directory_name)
     if not object_stored is None:
         for object_path, values in object_stored.items():
-            if directory_name in object_path:
-                file_path_split = object_path.split('/')[2:]
-                file_directory_path = '/'.join(file_path_split)
-                
-                local_file_path = Path(download_path + '/' + file_directory_path)
-                local_file_path.parent.mkdir(parents=True, exist_ok=True)   
-                if runtime_requirements in str(local_file_path):
-                    runtime_requirements = local_file_path
-                file_object = object_storage_interaction(
-                    storage_client = storage_client,
-                    lock_parameters = {},
-                    lock_location = None,
-                    parameters = {
-                        'mode': 'get',
-                        'bucket-target': storage_parameters['bucket-target'],
-                        'bucket-prefix': storage_parameters['bucket-prefix'],
-                        'bucket-user': storage_parameters['bucket-user'],
-                        'debug-prints': True,
-                        'object-name': 'root',
-                        'path-replacers': {
-                            'name': object_path
-                        },
-                        'path-names': [],
-                        'overwrite': False
-                    }, 
-                    object_data = None,
-                    object_metadata = None
-                )
-                file_data = file_object[0]
-                with open(local_file_path, 'wb') as local_file:
-                    local_file.write(file_data)
-                
+            if 'CODE' in object_path:
+                if directory_name in object_path:
+                    file_path_split = object_path.split('/')[2:]
+                    file_directory_path = '/'.join(file_path_split)
+                    
+                    local_file_path = Path(download_path + '/' + file_directory_path)
+                    local_file_path.parent.mkdir(parents=True, exist_ok=True)   
+                    if runtime_requirements in str(local_file_path):
+                        runtime_requirements = local_file_path
+                    file_object = object_storage_interaction(
+                        storage_client = storage_client,
+                        lock_parameters = {},
+                        lock_location = None,
+                        parameters = {
+                            'mode': 'get',
+                            'bucket-target': storage_parameters['bucket-target'],
+                            'bucket-prefix': storage_parameters['bucket-prefix'],
+                            'bucket-user': storage_parameters['bucket-user'],
+                            'debug-prints': True,
+                            'object-name': 'root',
+                            'path-replacers': {
+                                'name': object_path
+                            },
+                            'path-names': [],
+                            'overwrite': False
+                        }, 
+                        object_data = None,
+                        object_metadata = None
+                    )
+                    file_data = file_object[0]
+                    with open(local_file_path, 'wb') as local_file:
+                        local_file.write(file_data)
+                    
     end_time = t.time()
     total_time = round(end_time-start_time,5)
     print('Spent seconds', total_time)
