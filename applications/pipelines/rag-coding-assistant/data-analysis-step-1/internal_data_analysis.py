@@ -49,6 +49,8 @@ def das1_internal_data_analysis(
             job_input = input_data, 
             num_workers = given_worker_number
         )
+        print('Batch amount', len(worker_batches))
+        print(worker_batches)
         print('Putting data into refs')
         worker_batch_refs = []
         for worker_batch in worker_batches:
@@ -58,7 +60,7 @@ def das1_internal_data_analysis(
         actor_number = min(given_actor_number,len(worker_batches))
         
         swift_parameters = storage_parameters['swift-parameters']
-        model_parameters = storage_parameters['model-parameters']
+        #model_parameters = storage_parameters['model-parameters']
         print('Creating ' + str(actor_number) + ' provider actors')
         actor_refs = []
         for i in range(0, actor_number):
@@ -94,6 +96,7 @@ def das1_internal_data_analysis(
         # remember that metrics only takes integers or floats
         print('Logging metrics into MLflow')
         for statistics in collected_statistics:
+            print(statistics)
             mlflow_log_metrics(
                 mlflow_client = mlflow_client,
                 run_id = run_id, 

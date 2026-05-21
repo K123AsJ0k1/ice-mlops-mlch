@@ -1,2 +1,2 @@
-# cache-bust: v1
+# cache-bust: v2
 icebreaker[swift, data, lang_detect, pararellism, logging] @ git+https://github.com/K123AsJ0k1/ice-mlops-mlch.git@main#subdirectory=applications/packages/icebreaker
