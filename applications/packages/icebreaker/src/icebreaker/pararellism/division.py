@@ -181,3 +181,20 @@ def division_load_balanced_cluster_round_robin(
         assigned[target].append(item_tuple)
         cluster_load[target] += item_tuple[-1]
     return assigned
+
+def division_split_input(
+    job_input: list, 
+    num_workers: int
+) -> any:
+    if num_workers <= 0:
+        raise ValueError("Number of workers must be greater than 0.")
+        
+    # Handle edge case where you have more workers than actual files
+    if num_workers > len(input_paths):
+        num_workers = len(input_paths)
+        
+    # Determine the standard size of each batch
+    batch_size = math.ceil(len(input_paths) / num_workers)
+    
+    # Slice the original list into sub-lists
+    return [input_paths[i : i + batch_size] for i in range(0, len(input_paths), batch_size)]
