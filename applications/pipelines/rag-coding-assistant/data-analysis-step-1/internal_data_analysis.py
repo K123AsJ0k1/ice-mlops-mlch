@@ -13,11 +13,13 @@ from icebreaker.mlflow.use import mlflow_get_or_create_experiment, mlflow_start_
 from icebreaker.pararellism.division import division_split_input
 
 def das1_internal_data_analysis(
-    process_parameters: any,
-    storage_parameters: any,
-    data_parameters: any
+    job_parameters: any
 ):
     try:  
+        process_parameters = job_parameters['process']
+        storage_parameters = job_parameters['storage']
+        data_parameters = job_parameters['data']
+        model_parameters = job_parameters['model']
 
         mlflow_parameters = storage_parameters['mlflow-parameters']
 
@@ -53,24 +55,30 @@ def das1_internal_data_analysis(
         # We assume that actor number isn't ridiculus
         given_actor_number = process_parameters['actor-number']
         actor_number = min(given_actor_number,len(worker_batches))
-
+        
+        swift_parameters = storage_parameters['swift-parameters']
+        model_parameters = storage_parameters['model-parameters']
         print('Creating ' + str(actor_number) + ' provider actors')
         actor_refs = []
         for i in range(0, actor_number):
-            actor_refs.append(Detector.remote())
+            actor_refs.append(Detector.remote(
+                swift_parameters = swift_parameters,
+                model_parameters = model_parameters
+            ))
 
         print('Starting data collector tasks')
         task_1_refs = [] 
         worker_index = 1
         actor_index = 0
-        for file_batch_ref in worker_batch_refs:
+        for worker_batch_ref in worker_batch_refs:
             actor_ref = actor_refs[actor_index]
             task_1_refs.append(data_collector.remote(
                 worker_index = worker_index,
                 actor_index = actor_index + 1,
                 actor_ref = actor_ref,
+                storage_parameters = storage_parameters,
                 data_parameters = data_parameters,
-                file_tuples = file_batch_ref
+                task_batch = worker_batch_ref
             ))
             worker_index += 1
             actor_index = (actor_index + 1) % actor_number
@@ -119,16 +127,14 @@ if __name__ == "__main__":
         print(pkg_name,' version is ',version(pkg_name))
     
     print('Getting input')
-    job_input = json.loads(sys.argv[1])
-    process_parameters = job_input['process']
-    storage_parameters = job_input['storage']
-    data_parameters = job_input['data']
+    job_parameters = json.loads(sys.argv[1])
+    #process_parameters = job_input['process']
+    #storage_parameters = job_input['storage']
+    #data_parameters = job_input['data']
 
     print('Running DAS1 internal data analysis')
     task_status = das1_internal_data_analysis(
-        process_parameters = process_parameters,
-        storage_parameters = storage_parameters,
-        data_parameters = data_parameters
+        job_parameters = job_parameters
     )
 
     print('Job success:' + str(task_status))

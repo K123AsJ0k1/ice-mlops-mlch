@@ -30,7 +30,7 @@ def data_collector(
     setup_swift_client = swift_setup_client(
         swift_parameters = swift_parameters
     )
-    print('Swift client setup')
+    print('Swift client setup') 
 
     analysis_parameters = data_parameters['analysis-parameters']
     data_storage = storage_parameters['data-storage']
