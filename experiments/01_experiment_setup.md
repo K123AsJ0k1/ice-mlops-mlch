@@ -134,6 +134,8 @@ The Python and Ray versions have differences between enviroments with HPC platfo
 
 ## Setup
 
+### Local Development enviroment
+
 1. Create a python virtual enviroment
 
 ```
@@ -165,3 +167,126 @@ If there are problems, you can uninstall the package to fix it with
 ```
 pip uninstall icebreaker
 ```
+
+### Local-cloud-HPC OSS 
+
+The OSS MLOps platform was setup in the following way:
+
+1. Confirm your docker engine works
+
+```
+docker info
+```
+
+2. Check that nvidia-smi works
+
+```
+nvidia-smi
+```
+
+3. Clone the OSS repository and run the setup script
+
+```
+git clone git@github.com:K123AsJ0k1/multi-cloud-hpc-oss-mlops-platform.git
+cd multi-cloud-hpc-oss-mlops-platform
+chmod +x integration-setup.sh
+./integration-setup.sh
+```
+
+2. Give these options
+
+```
+Setup integration (y/n) (default is [n]): y
+
+Please choose the deployment option:
+[1] Kubeflow (all components)
+[2] Kubeflow (some components removed)
+[3] Standalone KFP
+[4] Standalone KFP and Kserve
+Enter the number of your choice [1-4] (default is [1]): 3
+
+Install local Docker registry? (y/n) (default is [y]): y
+
+Setup GPU Cluster (Requires atleast 1 GPU) (y/n) (default is [n]): y
+
+Install Ray? (It requires ~4 additional CPUs) (y/n) (default is [n]): n
+```
+
+3. After the setup in complete, check that all pods are running (might need 20 mins)
+
+```
+kubectl get pods -A
+```
+
+4. Run nvshare tests
+
+```
+kubectl apply -f https://raw.githubusercontent.com/grgalex/nvshare/main/tests/kubernetes/manifests/nvshare-tf-pod-1.yaml && \
+kubectl apply -f https://raw.githubusercontent.com/grgalex/nvshare/main/tests/kubernetes/manifests/nvshare-tf-pod-2.yaml
+```
+
+5. Confirm that GPU is being used
+
+```
+nvidia-smi
+```
+
+6. Confirm that tests passed
+
+```
+kubectl logs nvshare-tf-matmul-1 -f
+
+kubectl logs nvshare-tf-matmul-2 -f
+```
+
+7. Deploy Kuberay (fix path in the future)
+
+```
+cd multi-cloud-hpc-oss-mlops-platform/experiments/deployments/ray
+helm repo add kuberay https://ray-project.github.io/kuberay-helm/
+helm repo update
+helm install kuberay-operator kuberay/kuberay-operator --version 1.0.0
+helm install raycluster kuberay/ray-cluster --version 1.0.0 -f cloud-vm-1-kuberay-values.yaml
+```
+
+8. Confirm that ray head and worker are running
+
+```
+kubectl get pods
+```
+
+9. Check the ray head and worker logs
+
+```
+kubectl logs raycluster-kuberay-head-() -n default
+kubectl logs raycluster-kuberay-worker-() -n default
+```
+
+8. Deploy Apache Airflow (Will take a moment. Maybe this should be done in the setup script or atleast fix path in the future) 
+
+```
+(assuming the forwarder postres is running)
+cd multi-cloud-hpc-oss-mlops-platform/integration/forwarder/airflow
+helm repo add apache-airflow https://airflow.apache.org
+helm upgrade --install airflow apache-airflow/airflow --namespace forwarder -f apache-airflow-values.yaml
+```
+
+9. Deploy storages  (fix path in the future)
+
+```
+cd multi-cloud-hpc-oss-mlops-platform/tutorials/integration/studying/parts/part-4/kustomize
+kubectl apply -k storage
+```
+
+10. Deploy Ollama-Webui stack (fix path in the future)
+
+```
+cd multi-cloud-hpc-oss-mlops-platform/tutorials/integration/studying/parts/part-4/kustomize
+kubectl apply -k language
+```
+
+11. Configure istio (fix path in the future)
+
+12. Configure SSH
+
+13. Start controllers in local and cloud enviroments
