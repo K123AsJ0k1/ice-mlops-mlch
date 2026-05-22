@@ -159,8 +159,8 @@ def ray_multi_submit(
             )
 
             if 0 < len(used_parameters):
-                used_job_file = used_parameters['main-file']
-                used_runtime = used_parameters['runtime']
+                used_job_file = used_parameters['job']['main-file']
+                used_runtime = used_parameters['job']['runtime']
                 
                 cluster_job_id = ray_submit_job(
                     ray_client = cluster_client,
