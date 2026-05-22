@@ -79,38 +79,41 @@ def ray_serve_route(
     return route_status_code, route_returned_text
 
 def ray_get_clients(
-    configured_clusters: any
+    configured_clusters: any,
+    cluster_parameters: any
 ) -> any:
     try:
         from .setup import ray_setup_client
         from ..misc.dict import create_nested_dict
     except ImportError as e:
         raise ImportError("Failed to import", e)
-
+    
     cluster_clients = {}
     for env, env_config in configured_clusters.items():
         env_clusters = env_config['clusters']
         for env_cluster, details in env_clusters.items():
-            kubernetes_dash_address = details['network']['kubernetes']['dash'] 
-            cluster_ray_client = ray_setup_client(
-                dashboard_address = kubernetes_dash_address,
-                loop_timeout = 1,
-                test_timeout = 1,
-                wait_timeout = 1
-            )
-            if cluster_ray_client is None:
-                print('Cluster', env, env_cluster, kubernetes_dash_address, 'was not found') 
-            else:
-                print('Cluster', env, env_cluster, kubernetes_dash_address, 'was found')
-                if not env in env_clusters:
-                    used_path = env + '-clusters-' + env_cluster
-                    cluster_clients = create_nested_dict(
-                        target_dict = cluster_clients,
-                        key_path = used_path,
-                        separator = '-'
-                    )
-                cluster_clients[env]['clusters'][env_cluster] = details
-                cluster_clients[env]['clusters'][env_cluster]['client'] = cluster_ray_client
+            targeted_cluster = env + '-' + env_cluster
+            if targeted_cluster in cluster_parameters:
+                kubernetes_dash_address = details['network']['kubernetes']['dash'] 
+                cluster_ray_client = ray_setup_client(
+                    dashboard_address = kubernetes_dash_address,
+                    loop_timeout = 1,
+                    test_timeout = 1,
+                    wait_timeout = 1
+                )
+                if cluster_ray_client is None:
+                    print('Cluster', env, env_cluster, kubernetes_dash_address, 'was not found') 
+                else:
+                    print('Cluster', env, env_cluster, kubernetes_dash_address, 'was found')
+                    if not env in env_clusters:
+                        used_path = env + '-clusters-' + env_cluster
+                        cluster_clients = create_nested_dict(
+                            target_dict = cluster_clients,
+                            key_path = used_path,
+                            separator = '-'
+                        )
+                    cluster_clients[env]['clusters'][env_cluster] = details
+                    cluster_clients[env]['clusters'][env_cluster]['client'] = cluster_ray_client
     return cluster_clients
 
 def ray_cluster_parameters(
