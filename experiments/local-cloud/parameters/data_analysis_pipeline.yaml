@@ -47,6 +47,7 @@ process_parameters:
           bucket-target: 'experiment'
           bucket-prefix: 'mlch'
           bucket-user: 'user@example.com'   
+          object-prefix: 'ICEbreaker-tutorial'
       model:
         bucket-name: 'mlch-exp-user-example-com'
         object-path: 'MODELS/fasttext/lid.176.bin'
