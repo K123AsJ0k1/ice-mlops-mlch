@@ -17,8 +17,8 @@ class MLflowParameters(BaseModel):
     run_tags: Dict[str, str] = Field(alias = 'run-tags')
 
 class StorageParameters(BaseModel):
-    swift: SwiftParameters = Field(alias = 'swift_parameters')
-    mlflow: MLflowParameters = Field(alias = 'mlflow_parameters')
+    swift: SwiftParameters = Field(alias = 'swift-parameters')
+    mlflow: MLflowParameters = Field(alias = 'mlflow-parameters')
 
 class IntegrationParameters(BaseModel):
     cluster_yamls: Dict = Field(alias = 'cluster-yamls')
@@ -41,6 +41,8 @@ class Step(BaseModel):
     cluster: Dict[str,ClusterParameters] = Field(alias = 'cluster-parameters')
     
 class Parameters(BaseModel):
+    run_name: str = Field(alias = 'run-name')
+    experiment_name: str = Field(alias = 'experiment-name')
     storage: StorageParameters = Field(alias = 'storage_parameters')
     integration: IntegrationParameters = Field(alias = 'integration_parameters')
     process: Dict[str, Step] = Field(alias = 'process_parameters')
