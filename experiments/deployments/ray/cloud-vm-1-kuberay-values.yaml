@@ -1,6 +1,6 @@
 image:
   repository: rayproject/ray 
-  tag: ray:2.49.2-py312-cu121
+  tag: 2.49.2-py312-cu121
   pullPolicy: IfNotPresent
 
 head:
