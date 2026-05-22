@@ -6,9 +6,11 @@ from kfp import dsl
         "icebreaker[swift, ray, pararellism] @ git+https://github.com/K123AsJ0k1/ice-mlops-mlch.git@main#subdirectory=applications/packages/icebreaker"
     ]
 )
-def internal_data_analysis(
+def multi_submission_step(
     storage_parameters: dict,
-    integration_parameters: dict
+    integration_parameters: dict,
+    process_parameters: dict,
+    step_key: str
 ):
     import time as t
     start_time = t.time()
@@ -37,29 +39,27 @@ def internal_data_analysis(
     )
     print('Swift client setup')
     local_cloud_cluster_yamls = integration_parameters['cluster-yamls']
-    local_cloud_resource_weights = integration_parameters['resource-weights']
-
+    cluster_parameters = process_parameters[step_key]['cluster-parameters']
+    
     # Checks what clusters are available and then divides the work
     cluster_clients = ray_get_clients(
-        configured_clusters = local_cloud_cluster_yamls
+        configured_clusters = local_cloud_cluster_yamls,
+        cluster_parameters = cluster_parameters
     )
-
+    print(cluster_clients)
     if 0 < len(cluster_clients):
         print('Clusters available')
-
         code_storage = storage_parameters['code-storage']
-        ray_details = integration_parameters['ray-details']
-        ray_runtime = ray_details['runtime']
-
-        # Downloads the ray script
-        job_directory, job_requirements = ray_download_job(
-            storage_client = setup_swift_client,
-            storage_parameters = code_storage,
-            ray_runtime = ray_runtime
-        )
         
-        ray_details['runtime']['working_dir'] = job_directory
-        ray_details['runtime']['pip'] = job_requirements
+        for cluster, details in cluster_parameters.items():
+            cluster_job_runtime = details['job']['runtime']
+            job_directory, job_requirements = ray_download_job(
+                storage_client = setup_swift_client,
+                storage_parameters = code_storage,
+                ray_runtime = cluster_job_runtime
+            )
+            cluster_parameters[cluster]['job']['runtime']['working_dir'] = job_directory
+            cluster_parameters[cluster]['job']['runtime']['pip'] = job_requirements
         
         # Splits the work
         print('Creating a cluster data distribution')
@@ -67,6 +67,7 @@ def internal_data_analysis(
             ray_clusters = cluster_clients
         )
         print(formatted_clusters)
+        local_cloud_resource_weights = integration_parameters['resource-weights']
         local_cloud_cluster_weights = division_cluster_weights(
             resource_weights = local_cloud_resource_weights,
             formatted_clusters = formatted_clusters
@@ -75,10 +76,11 @@ def internal_data_analysis(
         print(local_cloud_cluster_weights)
         if 0 < len(local_cloud_cluster_weights):
             data_storage = storage_parameters['data-storage']
+            object_prefix = cluster_parameters['general-parameters']['storage']['data-storage']['object-prefix']
             dataset_tuple_list = data_list_objects(
                 storage_client = setup_swift_client,
                 storage_parameters = data_storage,
-                object_prefix = 'ICEbreaker-tutorial'
+                object_prefix = object_prefix
             )
             # This is affected by the order the input sets
             print('Dividing data')
@@ -90,7 +92,7 @@ def internal_data_analysis(
             cluster_job_ids = ray_multi_submit(
                 cluster_clients = cluster_clients,
                 cluster_inputs = clustered_dataset_paths,
-                ray_details = ray_details
+                cluster_parameters = cluster_parameters
             )
 
             job_logs = ray_multi_wait(
@@ -111,33 +113,26 @@ def internal_data_analysis(
     total_time = round(end_time-start_time,5)
     print('Spent seconds', total_time)
 
-@dsl.component(
-    base_image = "python:3.12.3",
-    packages_to_install = []
-)
-def external_data_analysis(
-    storage_parameters: dict,
-    integration_parameters: dict
-):
-    print('External data test')
-
 @dsl.pipeline(
     name = "data-analysis-pipeline",
     description = "Internal and external data analysis"
 )
 def data_analysis_pipeline(
     storage_parameters: dict,
-    integration_parameters: dict
+    integration_parameters: dict,
+    process_parameters: dict
 ):
-    task_1 = internal_data_analysis(
+    task_1 = multi_submission_step(
         storage_parameters = storage_parameters,
-        integration_parameters = integration_parameters
+        integration_parameters = integration_parameters,
+        process_parameters = process_parameters,
+        step_key = 'step-1'
     )
 
-    task_2 = external_data_analysis(
-        storage_parameters = storage_parameters,
-        integration_parameters = integration_parameters
-    ).after(task_1)
+    #task_2 = multi_submission_step(
+    #    storage_parameters = storage_parameters,
+    #    integration_parameters = integration_parameters
+    #).after(task_1)
     
     
     
