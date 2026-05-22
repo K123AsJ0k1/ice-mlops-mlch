@@ -18,9 +18,9 @@ def das1_internal_data_analysis(
 ):
     try:  
         print('Parameters')
-        process_parameters = job_parameters['process']
         storage_parameters = job_parameters['storage']
         data_parameters = job_parameters['data']
+        process_parameters = job_parameters['process']
         model_parameters = job_parameters['model']
 
         mlflow_parameters = storage_parameters['mlflow-parameters']
