@@ -116,58 +116,58 @@ def ray_get_clients(
                     cluster_clients[env]['clusters'][env_cluster]['client'] = cluster_ray_client
     return cluster_clients
 
-def ray_cluster_parameters(
+def ray_input_parameters(
     cluster_name: any,
     cluster_inputs: any,
-    ray_details: any
+    cluster_parameters: any
 ) -> any:
     try:
         import copy
     except ImportError as e:
         raise ImportError("Failed to import", e)
-    cluster_parameters = {}
+    input_parameters = {}
     for cluster_key, input in cluster_inputs.items():
         if cluster_name in cluster_key:
-            cluster_parameters = copy.deepcopy(ray_details['general-parameters'])
-            template_parameters = copy.deepcopy(ray_details['cluster-parameters'])  
+            input_parameters = copy.deepcopy(cluster_parameters[cluster_name]['general-parameters'])
+            template_parameters = copy.deepcopy(cluster_parameters[cluster_name]['cluster-parameters'])  
             
             for param_key in template_parameters.keys():
                 if 'data' in param_key:
                     template_parameters[param_key]['input'] = cluster_inputs[cluster_key]
             
-            cluster_parameters.update(template_parameters)
+            input_parameters.update(template_parameters)
             break
-    return cluster_parameters
+    return input_parameters
             
 def ray_multi_submit(
     cluster_clients: any,
     cluster_inputs: any,
-    ray_details: any
+    cluster_parameters: any
 ) -> list:
     cluster_job_ids = []
 
     for env, env_details in cluster_clients.items():
         clusters = env_details['clusters']
-        for cluster, cluster_details in clusters.items():
+        for env_cluster, cluster_details in clusters.items():
             cluster_client = cluster_details['client']
-            
-            cluster_parameters = ray_cluster_parameters(
-                cluster_name = cluster,
+            targeted_cluster = env + '-' + env_cluster
+            used_parameters = ray_input_parameters(
+                cluster_name = targeted_cluster,
                 cluster_inputs = cluster_inputs,
-                ray_details = ray_details
+                cluster_parameters = cluster_parameters
             )
 
             if 0 < len(cluster_parameters):
-                cluster_job_file = ray_details['job-file']
-                cluster_runtime = ray_details['runtime']
+                used_job_file = used_parameters['main-file']
+                used_runtime = used_parameters['runtime']
                 
                 cluster_job_id = ray_submit_job(
                     ray_client = cluster_client,
-                    ray_parameters = cluster_parameters,    
-                    ray_job_file = cluster_job_file,
-                    ray_runtime = cluster_runtime
+                    ray_parameters = used_parameters,    
+                    ray_job_file = used_job_file,
+                    ray_runtime = used_runtime
                 )
-                print('Submitted job ', cluster_job_file, ' into cluster ', env, cluster)
+                print('Submitted job ', used_job_file, ' into cluster ', targeted_cluster)
                 cluster_job_ids.append((cluster_client, cluster_job_id))
     return cluster_job_ids
 
