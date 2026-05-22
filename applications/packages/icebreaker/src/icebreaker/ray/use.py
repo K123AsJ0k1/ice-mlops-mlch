@@ -119,7 +119,7 @@ def ray_get_clients(
 def ray_input_parameters(
     cluster_name: any,
     cluster_inputs: any,
-    cluster_parameters: any
+    step_parameters: any
 ) -> any:
     try:
         import copy
@@ -128,8 +128,8 @@ def ray_input_parameters(
     input_parameters = {}
     for cluster_key, input in cluster_inputs.items():
         if cluster_name in cluster_key:
-            input_parameters = copy.deepcopy(cluster_parameters[cluster_name]['general-parameters'])
-            template_parameters = copy.deepcopy(cluster_parameters[cluster_name]['cluster-parameters'])  
+            input_parameters = copy.deepcopy(step_parameters['general-parameters'])
+            template_parameters = copy.deepcopy(step_parameters['cluster-parameters'][cluster_name])  
             
             for param_key in template_parameters.keys():
                 if 'data' in param_key:
@@ -142,7 +142,7 @@ def ray_input_parameters(
 def ray_multi_submit(
     cluster_clients: any,
     cluster_inputs: any,
-    cluster_parameters: any
+    step_parameters: any
 ) -> list:
     cluster_job_ids = []
 
@@ -154,10 +154,10 @@ def ray_multi_submit(
             used_parameters = ray_input_parameters(
                 cluster_name = targeted_cluster,
                 cluster_inputs = cluster_inputs,
-                cluster_parameters = cluster_parameters
+                cluster_parameters = step_parameters
             )
 
-            if 0 < len(cluster_parameters):
+            if 0 < len(used_parameters):
                 used_job_file = used_parameters['main-file']
                 used_runtime = used_parameters['runtime']
                 
