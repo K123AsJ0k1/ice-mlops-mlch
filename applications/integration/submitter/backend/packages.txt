@@ -1,0 +1,4 @@
+redis==6.4.0
+celery==5.5.3
+apache-airflow-client==3.0.2
+requests==2.32.5

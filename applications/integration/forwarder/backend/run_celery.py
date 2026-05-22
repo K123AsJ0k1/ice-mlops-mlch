@@ -1,0 +1,49 @@
+import os
+import warnings 
+# Make run with Python3 run_celery.py
+warnings.filterwarnings("ignore")
+if __name__ == '__main__':
+    #os.environ['REDIS_ENDPOINT'] = '127.0.0.1'
+    #os.environ['REDIS_PORT'] = '6379'
+    #os.environ['REDIS_DB'] = '0'
+
+    #os.environ['CELERY_CONCURRENCY'] = '8'
+    # options are info or warning
+    #os.environ['CELERY_LOGLEVEL'] = 'info'
+    
+    #os.environ['FLOWER_ENDPOINT'] = '127.0.0.1'
+    #os.environ['FLOWER_PORT'] = '7601'
+    #os.environ['FLOWER_USERNAME'] = 'flower123'
+    #os.environ['FLOWER_PASSWORD'] = 'flower456' 
+
+    #os.environ['PROMETHEUS_PORT'] = '7602'
+
+    #os.environ['AIRFLOW_HOST'] = 'http://localhost:8090'
+    #os.environ['AIRFLOW_USERNAME'] = 'admin'
+    #os.environ['AIRFLOW_PASSWORD'] = 'admin'
+
+    # This is necessery to enable worker progapation
+    prometheus_directory = os.path.abspath('prometheus')
+    os.environ['PROMETHEUS_MULTIPROC_DIR'] = prometheus_directory
+    
+    from setup_celery import setup_celery_app
+    
+    celery_concurrency = '--concurrency='
+    celery_loglevel = '--loglevel='
+    celery_logfile = '--logfile='
+    
+    used_concurrency = celery_concurrency + os.environ.get('CELERY_CONCURRENCY')
+    used_loglevel = celery_loglevel + os.environ.get('CELERY_LOGLEVEL')
+    
+    celery, log_path = setup_celery_app()
+    
+    used_logpath = celery_logfile + log_path
+
+    celery.worker_main(
+        argv = [
+            'worker', 
+            used_concurrency, 
+            used_loglevel, 
+            used_logpath
+        ]
+    )

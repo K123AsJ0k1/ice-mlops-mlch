@@ -1,0 +1,10 @@
+apache-airflow-providers-ssh
+apache-airflow-providers-sftp
+python-swiftclient
+paramiko==3.5.1
+python-decouple
+pydantic
+redis
+pandas
+pyarrow
+apache-airflow-client==3.0.2
