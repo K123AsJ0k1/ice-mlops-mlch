@@ -154,7 +154,7 @@ def ray_multi_submit(
             used_parameters = ray_input_parameters(
                 cluster_name = targeted_cluster,
                 cluster_inputs = cluster_inputs,
-                cluster_parameters = step_parameters
+                step_parameters = step_parameters
             )
 
             if 0 < len(used_parameters):
