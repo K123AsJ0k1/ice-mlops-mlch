@@ -13,6 +13,7 @@ def get_validated_yamls(
         with open(file_path, 'r') as f:
             yaml_dict = yaml.safe_load(f)
         file_name = str(file_path).split('/')[-1].split('.')[0]
-        pydantic_validation = yaml_validator.model_validate(yaml_dict)
+        if not yaml_validator is None:
+            pydantic_validation = yaml_validator.model_validate(yaml_dict)
         yaml_dicts[file_name] = yaml_dict
     return yaml_dicts

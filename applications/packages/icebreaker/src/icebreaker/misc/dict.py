@@ -95,12 +95,9 @@ def update_nested_dict(
         elif isinstance(value, list):
             target_value = target_dict.get(key)
             update_list_value = value[0]
-            #print('General list')
-            #print(key, value)
             if isinstance(target_value, list):
                 target_list_value = target_value[0]
                 if isinstance(update_list_value, dict) and isinstance(target_list_value, dict):
-                    #print('List dict')
                     updated_list = []
                     index = 0
                     for i in range(0, len(value)):
@@ -118,6 +115,7 @@ def update_nested_dict(
             else:
                 target_dict[key] = value
         else:
+            print(key, value)
             # This will fail for updates that want 
             # to add a dict as the last value
             # Example is target {'languages': 'fill'} and update {'languages': {'python': 'fill'}}
@@ -144,6 +142,11 @@ def split_dict_by_length(
     dict_lists: dict, 
     list_length: int
 ):
+    try:
+        import math
+    except ImportError as e:
+        raise ImportError("Failed to import", e)
+
     max_len = max(len(v) for v in dict_lists.values())
     
     num_chunks = math.ceil(max_len / list_length)
@@ -152,3 +155,28 @@ def split_dict_by_length(
         start = i * list_length
         end = start + list_length
         yield {k: v[start:end] for k, v in dict_lists.items() if v[start:end]}
+
+def fill_nested_dict(
+    target_dict: any,
+    fill_values: any
+):
+    try:
+        import copy
+    except ImportError as e:
+        raise ImportError("Failed to import", e)
+    updated_dict = copy.deepcopy(target_dict)  
+    
+    def fill_nested_walk(
+        t_node: any, 
+        o_node: any
+    ):
+        for key, value in t_node.items():
+            if isinstance(value, dict) and isinstance(o_node.get(key), dict):
+                # If it's a nested dict, climb deeper down both trees together
+                fill_nested_walk(value, o_node[key])
+            elif value == 'fill' and key in o_node:
+                # If it's a 'fill' placeholder, swap it with the override value
+                t_node[key] = o_node[key]
+
+    fill_nested_walk(updated_dict, fill_values)  
+    return updated_dict
