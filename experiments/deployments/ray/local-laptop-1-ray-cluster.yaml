@@ -29,7 +29,7 @@ services:
       exp_network:
         ipv4_address: 172.29.0.15
   ray-worker:
-    image: rayproject/ray:2.49.0-py312-cpu
+    image: rayproject/ray:2.49.2-py312-cpu
     container_name: ray-worker
     hostname: ray-worker
     depends_on:
