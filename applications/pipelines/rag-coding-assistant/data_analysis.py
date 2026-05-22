@@ -94,7 +94,7 @@ def multi_submission_step(
             cluster_job_ids = ray_multi_submit(
                 cluster_clients = cluster_clients,
                 cluster_inputs = clustered_dataset_paths,
-                step_parameters = step_cluster_parameters
+                step_parameters = step_parameters
             )
 
             job_logs = ray_multi_wait(
