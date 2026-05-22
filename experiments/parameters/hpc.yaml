@@ -1,5 +1,5 @@
 clusters:
-  puhti:
+  puhti: 
     resources:
       nodes: 'head-worker-1'
       cpu: '8'

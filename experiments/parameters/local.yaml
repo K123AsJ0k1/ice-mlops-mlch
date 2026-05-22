@@ -1,5 +1,5 @@
 clusters:
-  lt1:
+  lt1: 
     resources:
       nodes: 'head'
       cpu: '12'
