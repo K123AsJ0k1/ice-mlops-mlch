@@ -117,7 +117,7 @@ def das2_external_data_analysis(
 
         return True
     except Exception as e:
-        print('das1 internal data analysis error', e)
+        print('das2 external data analysis error', e)
         return False
 
 if __name__ == "__main__":
@@ -130,6 +130,7 @@ if __name__ == "__main__":
         'pandas',
         'pyarrow',
         'fasttext',
+        'magika',
         'numpy',
         'mlflow'
     ]
@@ -138,12 +139,9 @@ if __name__ == "__main__":
     
     print('Getting input')
     job_parameters = json.loads(sys.argv[1])
-    #process_parameters = job_input['process']
-    #storage_parameters = job_input['storage']
-    #data_parameters = job_input['data']
-
+    
     print('Running DAS1 internal data analysis')
-    task_status = das1_internal_data_analysis(
+    task_status = das2_external_data_analysis(
         job_parameters = job_parameters
     )
 

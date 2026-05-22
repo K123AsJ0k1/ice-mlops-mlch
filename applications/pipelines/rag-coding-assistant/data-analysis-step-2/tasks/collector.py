@@ -1,5 +1,5 @@
 import ray
-import pickle
+import pickle 
 import time as t
 from icebreaker.swift.setup import swift_setup_client
 from icebreaker.storage.management import object_storage_interaction
@@ -94,7 +94,7 @@ def data_collector(
             text_input = text_input_ref_1,
             analysis_parameters = analysis_parameters
         ))
-
+        # format-(type)-amount
         text_input_ref_2 = ray.put(pandas_df[format_column])
         provider_actor_refs.append(actor_ref.batch_magika_stats.remote(
             worker_index = worker_index,

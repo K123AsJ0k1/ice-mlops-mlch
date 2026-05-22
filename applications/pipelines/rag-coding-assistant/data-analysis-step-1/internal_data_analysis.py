@@ -101,11 +101,7 @@ def das1_internal_data_analysis(
             parent_key = '',
             seperator = '-'
         )
-        #print(collected_statistics)
-        #for key_name, key_metrics in collected_statistics.items():
-        #    print('Adding ', key_name, ' stats')
-        #    print(key_metrics)
-        print(flattened_statistics)
+        
         mlflow_log_metrics(
             mlflow_client = mlflow_client,
             run_id = run_id, 
@@ -142,10 +138,7 @@ if __name__ == "__main__":
     
     print('Getting input')
     job_parameters = json.loads(sys.argv[1])
-    #process_parameters = job_input['process']
-    #storage_parameters = job_input['storage']
-    #data_parameters = job_input['data']
-
+    
     print('Running DAS1 internal data analysis')
     task_status = das1_internal_data_analysis(
         job_parameters = job_parameters

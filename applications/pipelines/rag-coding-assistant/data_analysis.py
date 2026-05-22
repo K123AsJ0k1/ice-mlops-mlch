@@ -55,6 +55,7 @@ def multi_submission_step(
         
         for cluster, details in step_cluster_parameters.items():
             cluster_job_runtime = details['job']['runtime']
+            # remove the need to download the same files
             job_directory, job_requirements = ray_download_job(
                 storage_client = setup_swift_client,
                 storage_parameters = code_storage,
@@ -124,11 +125,18 @@ def data_analysis_pipeline(
     integration_parameters: dict,
     process_parameters: dict
 ):
-    task_1 = multi_submission_step(
+    #task_1 = multi_submission_step(
+    #    storage_parameters = storage_parameters,
+    #    integration_parameters = integration_parameters,
+    #    process_parameters = process_parameters,
+    #    step_key = 'step-1'
+    #)
+
+    task_2 = multi_submission_step(
         storage_parameters = storage_parameters,
         integration_parameters = integration_parameters,
         process_parameters = process_parameters,
-        step_key = 'step-1'
+        step_key = 'step-2'
     )
 
     #task_2 = multi_submission_step(
