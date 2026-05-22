@@ -39,27 +39,29 @@ def multi_submission_step(
     )
     print('Swift client setup')
     local_cloud_cluster_yamls = integration_parameters['cluster-yamls']
-    cluster_parameters = process_parameters[step_key]['cluster-parameters']
+    step_parameters = process_parameters[step_key]
+    step_general_parameters = step_parameters['general-parameters']
+    step_cluster_parameters = step_parameters['cluster-parameters']
     
     # Checks what clusters are available and then divides the work
     cluster_clients = ray_get_clients(
         configured_clusters = local_cloud_cluster_yamls,
-        cluster_parameters = cluster_parameters
+        cluster_parameters = step_cluster_parameters
     )
     print(cluster_clients)
     if 0 < len(cluster_clients):
         print('Clusters available')
         code_storage = storage_parameters['code-storage']
         
-        for cluster, details in cluster_parameters.items():
+        for cluster, details in step_cluster_parameters.items():
             cluster_job_runtime = details['job']['runtime']
             job_directory, job_requirements = ray_download_job(
                 storage_client = setup_swift_client,
                 storage_parameters = code_storage,
                 ray_runtime = cluster_job_runtime
             )
-            cluster_parameters[cluster]['job']['runtime']['working_dir'] = job_directory
-            cluster_parameters[cluster]['job']['runtime']['pip'] = job_requirements
+            step_parameters['cluster-parameters'][cluster]['job']['runtime']['working_dir'] = job_directory
+            step_parameters['cluster-parameters'][cluster]['job']['runtime']['pip'] = job_requirements
         
         # Splits the work
         print('Creating a cluster data distribution')
@@ -76,7 +78,7 @@ def multi_submission_step(
         print(local_cloud_cluster_weights)
         if 0 < len(local_cloud_cluster_weights):
             data_storage = storage_parameters['data-storage']
-            object_prefix = cluster_parameters['general-parameters']['storage']['data-storage']['object-prefix']
+            object_prefix = step_general_parameters['storage']['data-storage']['object-prefix']
             dataset_tuple_list = data_list_objects(
                 storage_client = setup_swift_client,
                 storage_parameters = data_storage,
@@ -92,7 +94,7 @@ def multi_submission_step(
             cluster_job_ids = ray_multi_submit(
                 cluster_clients = cluster_clients,
                 cluster_inputs = clustered_dataset_paths,
-                cluster_parameters = cluster_parameters
+                step_parameters = step_cluster_parameters
             )
 
             job_logs = ray_multi_wait(
