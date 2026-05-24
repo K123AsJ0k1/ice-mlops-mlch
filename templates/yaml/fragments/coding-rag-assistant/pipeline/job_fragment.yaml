@@ -1,2 +1,4 @@
-worker-number: 'fill'
-actor-number: 'fill'
+main-file: 'fill'
+runtime:
+  working_dir: 'fill'
+  pip: 'fill'
