@@ -1,0 +1,8 @@
+general-parameters:
+  storage:
+    swift-parameters: 'fill'
+    mlflow-parameters: '{{mlflow_fragment}}'
+    data-storage: 'fill'
+  model: 'fill'
+  data: 'fill'
+cluster-parameters: '{{cluster_fragment}}'

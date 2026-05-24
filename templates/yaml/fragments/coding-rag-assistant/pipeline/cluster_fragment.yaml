@@ -1,0 +1,3 @@
+replace:
+  process: '{{process_fragment}}'
+  job: '{{job_fragment}}'
