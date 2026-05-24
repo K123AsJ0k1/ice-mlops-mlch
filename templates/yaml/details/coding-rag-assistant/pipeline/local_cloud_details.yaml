@@ -1,7 +1,5 @@
-run-name: 'local-cloud-data-analysis-run'
-experiment-name: 'local-cloud-rag-assistant-experiment'
-storage_parameters:
-  mlflow-parameters: 
+storage:
+  mlflow: 
     tracking-uri: 'http://mlflow.mlflow.svc.cluster.local:5000'
     s3-endpoint-url: 'http://mlflow-minio-service.mlflow.svc.cluster.local:9000'
     experiment-name: 'mlch-code-assistant-rag-pipeline'
@@ -21,16 +19,17 @@ storage_parameters:
     bucket-target: 'pipeline'
     bucket-prefix: 'mlch'
     bucket-user: 'user@example.com' 
-integration_parameters:
+integration:
   resource-weights:
       nodes: 0.2
       cpu: 0.3 
       ram: 0.4
       gpu: 0.05
       vram: 0.05
+processing:
   step-1:
-    general-parameters:
-      mlflow-parameters: 
+    general:
+      mlflow: 
         tracking-uri: 'http://mlflow.mlflow.svc.cluster.local:5000'
         s3-endpoint-url: 'http://mlflow-minio-service.mlflow.svc.cluster.local:9000'
         experiment-name: 'mlch-code-assistant-rag-pipeline'
@@ -58,7 +57,7 @@ integration_parameters:
           format-replacer:
             py: 'python'
             sh: 'bash'
-    cluster-parameters:
+    cluster:
       cloud-vm1:
         process:
           worker-number: 4
@@ -69,9 +68,9 @@ integration_parameters:
             working_dir: 'data-analysis-script-1'
             pip: 'data-analysis-script-1/requirements.txt'
   step-2:
-    general-parameters:
+    general:
       storage:
-        mlflow-parameters: 
+        mlflow: 
           tracking-uri: 'http://mlflow.mlflow.svc.cluster.local:5000'
           s3-endpoint-url: 'http://mlflow-minio-service.mlflow.svc.cluster.local:9000'
           experiment-name: 'mlch-code-assistant-rag-pipeline'
@@ -97,7 +96,7 @@ integration_parameters:
           format-column: 'question'
           format-threshold: 0.80
           format-replacer: {}
-    cluster-parameters:
+    cluster:
       cloud-vm1:
         process:
           worker-number: 4
@@ -108,9 +107,9 @@ integration_parameters:
             working_dir: 'data-analysis-script-2'
             pip: 'data-analysis-script-2/requirements.txt'
   step-3:
-    general-parameters:
+    general:
       storage:
-        mlflow-parameters: 
+        mlflow: 
           tracking-uri: 'http://mlflow.mlflow.svc.cluster.local:5000'
           s3-endpoint-url: 'http://mlflow-minio-service.mlflow.svc.cluster.local:9000'
           experiment-name: 'mlch-code-assistant-rag-pipeline'
@@ -136,7 +135,7 @@ integration_parameters:
           format-column: 'answer'
           format-threshold: 0.80
           format-replacer: {}
-    cluster-parameters:
+    cluster:
       cloud-vm1:
         process:
           worker-number: 4
@@ -147,9 +146,9 @@ integration_parameters:
             working_dir: 'data-analysis-script-2'
             pip: 'data-analysis-script-2/requirements.txt'
   step-4:
-    general-parameters:
+    general:
       storage:
-        mlflow-parameters: 
+        mlflow: 
           tracking-uri: 'http://mlflow.mlflow.svc.cluster.local:5000'
           s3-endpoint-url: 'http://mlflow-minio-service.mlflow.svc.cluster.local:9000'
           experiment-name: 'mlch-code-assistant-rag-pipeline'
@@ -181,7 +180,7 @@ integration_parameters:
             lisp: 'bash'
             python: 'bash'
             ini: 'bash'
-    cluster-parameters:
+    cluster:
       cloud-vm1:
         process:
           worker-number: 4

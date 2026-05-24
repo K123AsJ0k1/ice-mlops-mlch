@@ -1,5 +1,5 @@
-swift-parameters: '{{dict_fragment}}'
-mlflow-parameters: '{{dict_fragment}}'
+swift: '{{dict_fragment}}'
+mlflow: '{{dict_fragment}}'
 data-storage: 'fill'
 code-storage: 'fill' 
 log-storage: 'fill'

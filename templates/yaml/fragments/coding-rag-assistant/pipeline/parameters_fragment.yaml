@@ -1,5 +1,5 @@
 run-name: 'fill' 
 experiment-name: 'fill'
-storage_parameters: '{{dict_fragment}}'
-integration_parameters: '{{dict_fragment}}'
-processing_parameters: '{{dict_fragment}}' 
+storage: '{{dict_fragment}}'
+integration: '{{dict_fragment}}'
+processing: '{{dict_fragment}}' 
