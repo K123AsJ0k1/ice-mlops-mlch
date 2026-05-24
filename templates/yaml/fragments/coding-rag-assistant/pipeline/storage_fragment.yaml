@@ -1,4 +1,4 @@
-swift-parameters: 'fill'
+swift-parameters: '{{swift_fragment}}'
 mlflow-parameters: '{{mlflow_fragment}}'
 data-storage: 'fill'
 code-storage: 'fill' 
