@@ -1,0 +1,11 @@
+directory: 'fill'
+languages: 
+  python: 'fill'
+workspaces: 
+  - path: 'fill'
+    used-capacity: 'fill'
+    max-capacity: 'fill'
+    used-files: 'fill'
+    max-files: 'fill'
+modules:
+  - 'fill'

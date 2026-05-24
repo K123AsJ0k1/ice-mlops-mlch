@@ -1,0 +1,17 @@
+order: 
+  config: False
+  start: False
+  stop: False
+interaction: 
+  filled: False
+  setup: False
+  running: False
+  complete: False
+  stored: False
+  cleaned: False
+submitter: 
+  operating: False
+  monitoring: False
+  halted: False
+  failed: False
+  success: False

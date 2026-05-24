@@ -1,0 +1,24 @@
+send:
+  - transfer:
+      source: 
+        place: 'fill'
+        path: 'fill'
+        access: 'fill'
+      target:
+        place: 'fill'
+        path: 'fill'
+        access: 'fill'
+    overwrite: False
+get: 
+  - transfer:
+      source:
+        place: 'fill'
+        path: 'fill'
+        access: 'fill'
+      target:
+        place: 'fill'
+        path: 'fill'
+        access: 'fill'
+    remove: False
+    jobs: 
+      - 'fill'

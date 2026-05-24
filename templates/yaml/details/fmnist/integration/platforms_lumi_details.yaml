@@ -1,0 +1,70 @@
+configs: 
+  venv: 
+    name: 'tutorial-venv'
+    path: '/projappl/[CSC_PROJECT_3]'
+    modules:
+      - 'use /appl/local/csc/modulefiles/'
+      - 'load pytorch/2.7'
+    packages: 
+      - 'ray'
+      - 'python-swiftclient'
+      - 'torch'
+      - 'torchmetrics'
+      - 'qdrant-client'
+files:
+  send: 
+    - transfer:
+        source: 
+          place: 'local'
+          path: '/inputs/ray/tutorial-fmnist-cnn-training.py'
+          access: 'None'
+        target:
+          place: 'storage/allas/pipeline'
+          path: '/code/RAY/tutorial-fmnist-cnn-training.py'
+          access: 'None'
+      overwrite: True
+    - transfer:
+        source: 
+          place: 'local'
+          path: '/inputs/slurm/generated/tutorial-lumi-ray-cluster.sh'
+          access: 'None'
+        target:
+          place: 'storage/allas/pipeline'
+          path: '/code/SLURM/tutorial-lumi-ray-cluster.sh'
+          access: 'None'
+      overwrite: True
+    - transfer:
+        source: 
+          place: 'local'
+          path: '/run/secrets/cloud-hpc-ssh'
+          access: 'None'
+        target:
+          place: 'hpc'
+          path: '/users/[CSC_USERNAME]/cloud-hpc.pem'
+          access: 'None'
+      overwrite: False
+    - transfer:
+        source: 
+          place: 'storage/allas/pipeline'
+          path: '/code/SLURM/tutorial-lumi-ray-cluster.sh'
+          access: 'None'
+        target:
+          place: 'hpc'
+          path: '/users/[CSC_USERNAME]/tutorial-lumi-ray-cluster.sh'
+          access: 'None'
+      overwrite: True
+  get: 
+    - transfer:
+        source:
+          place: 'hpc'
+          path: '/users/[CSC_USERNAME]/slurm-{0}.out'
+          access: 'None'
+        target:
+          place: 'storage/allas/pipeline'
+          path: '/logs/slurm-{0}.parquet'
+          access: 'None'
+      remove: False
+      jobs:
+        - 'all'
+jobs:
+  - path: /users/[CSC_USERNAME]/tutorial-lumi-ray-cluster.sh
