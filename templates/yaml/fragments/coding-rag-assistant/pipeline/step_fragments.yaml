@@ -1,8 +1,8 @@
 general-parameters:
   storage:
-    swift-parameters: 'fill'
-    mlflow-parameters: '{{mlflow_fragment}}'
+    swift-parameters: '{{dict_fragment}}'
+    mlflow-parameters: '{{dict_fragment}}'
     data-storage: 'fill'
   model: 'fill'
   data: 'fill'
-cluster-parameters: '{{cluster_fragment}}'
+cluster-parameters: '{{dict_fragment}}'

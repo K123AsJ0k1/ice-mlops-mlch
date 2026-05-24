@@ -1,0 +1,46 @@
+run-name: 'local-cloud-data-analysis-run'
+experiment-name: 'local-cloud-rag-assistant-experiment'
+storage_parameters:
+  mlflow-parameters: 
+    tracking-uri: 'http://mlflow.mlflow.svc.cluster.local:5000'
+    s3-endpoint-url: 'http://mlflow-minio-service.mlflow.svc.cluster.local:9000'
+    experiment-name: 'mlch-code-assistant-rag-pipeline'
+    run-name: 'ray-data-analysis-pipeline'
+    run-tags:
+      workflow-type: 'local-cloud'
+      pipeline-step: 'internal-data-analysis'
+  data-storage: 
+    bucket-target: 'experiment'
+    bucket-prefix: 'mlch'
+    bucket-user: 'user@example.com'   
+  code-storage: 
+    bucket-target: 'pipeline'
+    bucket-prefix: 'mlch'
+    bucket-user: 'user@example.com' 
+  log-storage: 
+    bucket-target: 'pipeline'
+    bucket-prefix: 'mlch'
+    bucket-user: 'user@example.com' 
+integration_parameters:
+  resource-weights:
+      nodes: 0.2
+      cpu: 0.3
+      ram: 0.4
+      gpu: 0.05
+      vram: 0.05
+  step-1:
+    general-parameters:
+      mlflow-parameters: 
+        tracking-uri: 'http://mlflow.mlflow.svc.cluster.local:5000'
+        s3-endpoint-url: 'http://mlflow-minio-service.mlflow.svc.cluster.local:9000'
+        experiment-name: 'mlch-code-assistant-rag-pipeline'
+        run-name: 'ray-data-analysis-pipeline'
+        run-tags:
+          workflow-type: 'local-cloud'
+          pipeline-step: 'internal-data-analysis'
+      data-storage: 
+        bucket-target: 'experiment'
+        bucket-prefix: 'mlch'
+        bucket-user: 'user@example.com'   
+        object-prefix: 'ICEbreaker-tutorial'
+  

@@ -56,6 +56,7 @@ def compose_yaml_dict(
 ) -> dict:
     try:
         import yaml
+        import re
         from misc.dict import check_dict_path, update_dict_value
     except ImportError as e:
         raise ImportError("Failed to import", e)
