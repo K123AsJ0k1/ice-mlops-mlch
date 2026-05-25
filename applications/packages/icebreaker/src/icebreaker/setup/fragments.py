@@ -106,8 +106,7 @@ def compose_yaml_dict(
         import os
         import yaml
         import re
-        import copy
-        from ..misc.dict import check_dict_path, update_dict_value, update_nested_dict
+        from ..misc.dict import check_dict_path, update_dict_value
     except ImportError as e:
         raise ImportError("Setup/fragments failed to import", e)
     
@@ -151,43 +150,40 @@ def compose_yaml_dict(
         fragment_dicts = fragment_dicts,
         detail_dicts = detail_dicts
     )
-    '''
-    for detail_dict in detail_dicts:
-        for details_key, details_values in detail_dict.items():
-            if details_key in pipeline_dict:
-                update_dict = { details_key: details_values }
-                #print(f"Updating root configuration path for: {details_key}\n")
-                modified_dict = update_nested_dict(
-                    target_dict = pipeline_dict,
-                    update_dict = update_dict
-                )
-                pipeline_dict = copy.deepcopy(modified_dict)
-
+    
     for input_key, input_value in dict_inputs.items():
         path_exists = check_dict_path(
             target_dict = pipeline_dict,
             key_path = input_key,
-            separator = '-'
+            separator = '|'
         )
-        #print(input_key)
         if path_exists:
             update_dict_value(
                 target_dict = pipeline_dict,
                 key_path = input_key,
-                separator = '-',
+                separator = '|',
                 new_value = input_value
             )
     
     if 0 < len(pipeline_dict):
-        output_path = output_folder + '/' + output_name
-        print('Creating output file: ' + str(output_path))
-        with open(output_path, 'w') as f:
-            yaml.safe_dump(
-                pipeline_dict,
-                f,
-                indent = 2,
-                default_flow_style = False,
-                sort_keys = False
-            )
-    '''
+        if 0 < len(output_folder):
+            for root, dirs, files in os.walk(output_folder):
+                print('Checking folder')
+                file_version = 1
+                for file in files:
+                    if output_name in file:
+                        file_version += 1
+                
+                file_name = output_name + '_' + str(file_version) + '.yaml'
+                output_path = os.path.join(root, file_name)
+                print('Creating output file: ' + str(output_path))
+                
+                with open(output_path, 'w') as f:
+                    yaml.safe_dump(
+                        pipeline_dict,
+                        f,
+                        indent = 2,
+                        default_flow_style = False,
+                        sort_keys = False
+                    )
     return pipeline_dict 
