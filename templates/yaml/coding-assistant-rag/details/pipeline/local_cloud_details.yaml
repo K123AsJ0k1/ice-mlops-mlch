@@ -64,10 +64,10 @@ processing:
           workers: 4
           actors: 2
         job:
-          main-file: 'internal_data_analysis.py'
+          main-file: 'main.py'
           runtime:
-            working_dir: 'data-analysis-script-1'
-            pip: 'data-analysis-script-1/requirements.txt'
+            working_dir: 'internal_data_analysis'
+            pip: 'internal_data_analysis/requirements.txt'
   step-2:
     general:
       swift: {}
@@ -100,13 +100,13 @@ processing:
     cluster:
       cloud-vm1:
         process:
-          workers: 4
-          actors: 2
+          workers: 1
+          actors: 1
         job:
-          main-file: 'external_data_analysis.py'
+          main-file: 'main.py'
           runtime:
-            working_dir: 'data-analysis-script-2'
-            pip: 'data-analysis-script-2/requirements.txt'
+            working_dir: 'external_data_analysis'
+            pip: 'external_data_analysis/requirements.txt'
   step-3:
     general:
       swift: {}
@@ -139,13 +139,13 @@ processing:
     cluster:
       cloud-vm1:
         process:
-          workers: 4
-          actors: 2
+          workers: 1
+          actors: 1
         job:
-          main-file: 'external_data_analysis.py'
+          main-file: 'main.py'
           runtime:
-            working_dir: 'data-analysis-script-2'
-            pip: 'data-analysis-script-2/requirements.txt'
+            working_dir: 'external_data_analysis'
+            pip: 'external_data_analysis/requirements.txt'
   step-4:
     general:
       swift: {}
@@ -184,11 +184,11 @@ processing:
     cluster:
       cloud-vm1:
         process:
-          workers: 4
-          actors: 2
+          workers: 1
+          actors: 1
         job:
-          main-file: 'external_data_analysis.py'
+          main-file: 'main.py'
           runtime:
-            working_dir: 'data-analysis-script-2'
-            pip: 'data-analysis-script-2/requirements.txt'
+            working_dir: 'external_data_analysis'
+            pip: 'external_data_analysis/requirements.txt'
   
