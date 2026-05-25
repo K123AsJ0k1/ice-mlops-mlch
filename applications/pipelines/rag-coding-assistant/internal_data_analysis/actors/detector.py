@@ -55,7 +55,7 @@ class Detector:
             'actor': actor_index,
             'batch': batch_index,
             'key': used_key,
-            'language-stats': language_stats
+            'stats': language_stats
         }
         return result
 

@@ -9,7 +9,7 @@ from kfp import dsl
 def multi_submission_step(
     storage: dict,
     integration: dict,
-    process: dict,
+    processing: dict,
     step_key: str
 ):
     import time as t
@@ -39,9 +39,9 @@ def multi_submission_step(
     )
     print('Swift client setup')
     local_cloud_cluster_yamls = integration['cluster-yamls']
-    step_process_parameters = process[step_key]
-    step_general_parameters = step_process_parameters['general']
-    step_cluster_parameters = step_process_parameters['cluster']
+    step_processing_parameters = processing[step_key]
+    step_general_parameters = step_processing_parameters['general']
+    step_cluster_parameters = step_processing_parameters['cluster']
     
     # Checks what clusters are available and then divides the work
     cluster_clients = ray_get_clients(
@@ -61,8 +61,8 @@ def multi_submission_step(
                 storage_parameters = code_storage,
                 ray_runtime = cluster_job_runtime
             )
-            step_process_parameters['cluster'][cluster]['job']['runtime']['working_dir'] = job_directory
-            step_process_parameters['cluster'][cluster]['job']['runtime']['pip'] = job_requirements
+            step_processing_parameters['cluster'][cluster]['job']['runtime']['working_dir'] = job_directory
+            step_processing_parameters['cluster'][cluster]['job']['runtime']['pip'] = job_requirements
         
         # Splits the work
         print('Creating a cluster data distribution')
@@ -95,7 +95,7 @@ def multi_submission_step(
             cluster_job_ids = ray_multi_submit(
                 cluster_clients = cluster_clients,
                 cluster_inputs = clustered_dataset_paths,
-                step_parameters = step_process_parameters
+                step_parameters = step_processing_parameters
             )
 
             job_logs = ray_multi_wait(
@@ -123,13 +123,20 @@ def multi_submission_step(
 def data_analysis_pipeline(
     storage: dict,
     integration: dict,
-    process: dict
+    processing: dict
 ):
-    task_1 = multi_submission_step(
-        storage_parameters = storage,
-        integration_parameters = integration,
-        process_parameters = process,
-        step_key = 'step-1'
+    #task_1 = multi_submission_step(
+    #    storage = storage,
+    #    integration = integration,
+    #    processing = processing,
+    #    step_key = 'step-1'
+    #)
+
+    task_2 = multi_submission_step(
+        storage = storage,
+        integration = integration,
+        processing = processing,
+        step_key = 'step-2'
     )
 
     #task_2 = multi_submission_step(

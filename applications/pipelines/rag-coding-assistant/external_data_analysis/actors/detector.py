@@ -3,7 +3,7 @@ import ray
 @ray.remote(
     num_cpus = 1,
     memory = 0.2 * 1024 * 1024 * 1024
-)
+) 
 class Detector:
     def __init__(
         self,

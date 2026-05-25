@@ -158,10 +158,10 @@ def data_collector(
         for output_ref in done_actor_refs: 
             result = ray.get(output_ref)
             batch_index = result['batch']
-            language_stats = result['language-stats']
+            stats = result['stats']
             key_name = result['key']
-            
-            for stat_name, value in language_stats.items():
+            # For some reason the metrics order isnt consitent
+            for stat_name, value in stats.items():
                 collected_stats[key_name][stat_name] = value
     
     end_time = t.time()

@@ -1,7 +1,7 @@
 import sys
 import ray
 import json
-import time
+import time as t
 
 from importlib.metadata import version
 
@@ -13,17 +13,18 @@ from icebreaker.mlflow.use import mlflow_get_or_create_experiment, mlflow_start_
 from icebreaker.pararellism.division import division_split_input
 from icebreaker.misc.dict import flatten_nested_dict
 
-def das2_external_data_analysis(
+def external_data_analysis(
     job_parameters: any
 ):
     try:  
         print('Parameters')
-        storage_parameters = job_parameters['storage']
-        data_parameters = job_parameters['data']
-        process_parameters = job_parameters['process']
+        swift_parameters = job_parameters['swift']
+        mlflow_parameters = job_parameters['mlflow']
+        data_storage_parameters = job_parameters['data-storage']
+        config_parameters = job_parameters['config']
         model_parameters = job_parameters['model']
+        process_parameters = job_parameters['process']
 
-        mlflow_parameters = storage_parameters['mlflow-parameters']
         print('Setup MLflow')
         mlflow_client = mlflow_setup_client(
             mlflow_parameters = mlflow_parameters
@@ -43,8 +44,8 @@ def das2_external_data_analysis(
         print('MLflow setup')
         # This should be divided into batches based on worker number
         print('Dividing work')
-        input_data = data_parameters['input']
-        given_worker_number = process_parameters['worker-number']
+        input_data = config_parameters['input']
+        given_worker_number = process_parameters['workers']
 
         worker_batches = division_split_input(
             job_input = input_data, 
@@ -57,10 +58,9 @@ def das2_external_data_analysis(
         for worker_batch in worker_batches:
             worker_batch_refs.append(ray.put(worker_batch))
         # We assume that actor number isn't ridiculus
-        given_actor_number = process_parameters['actor-number']
+        given_actor_number = process_parameters['actors']
         actor_number = min(given_actor_number,len(worker_batches))
-        
-        swift_parameters = storage_parameters['swift-parameters']
+         
         print('Creating ' + str(actor_number) + ' provider actors')
         actor_refs = []
         for i in range(0, actor_number):
@@ -79,8 +79,9 @@ def das2_external_data_analysis(
                 worker_index = worker_index,
                 actor_index = actor_index + 1,
                 actor_ref = actor_ref,
-                storage_parameters = storage_parameters,
-                data_parameters = data_parameters,
+                swift_parameters = swift_parameters,
+                data_storage_parameters = data_storage_parameters,
+                config_parameters = config_parameters,
                 task_batch = worker_batch_ref
             ))
             worker_index += 1
@@ -101,7 +102,6 @@ def das2_external_data_analysis(
             seperator = '-'
         )
         
-        print(flattened_statistics)
         mlflow_log_metrics(
             mlflow_client = mlflow_client,
             run_id = run_id, 
@@ -117,10 +117,11 @@ def das2_external_data_analysis(
 
         return True
     except Exception as e:
-        print('das2 external data analysis error', e)
+        print('external data analysis error', e)
         return False
 
 if __name__ == "__main__":
+    start_time = t.time()
     print('Starting Ray job')
     print('Python version is:' + str(sys.version))
     check_packages = [
@@ -140,10 +141,14 @@ if __name__ == "__main__":
     print('Getting input')
     job_parameters = json.loads(sys.argv[1])
     
-    print('Running DAS1 internal data analysis')
-    task_status = das2_external_data_analysis(
+    print('Running external data analysis')
+    task_status = external_data_analysis(
         job_parameters = job_parameters
     )
 
     print('Job success:' + str(task_status))
     print('Ray job Complete')
+
+    end_time = t.time()
+    total_time = round(end_time-start_time,5)
+    print('Spent seconds', total_time)
