@@ -1,9 +1,0 @@
-step-n:
-  general:
-    storage:
-      swift: {}
-      mlflow: '{{value_fragment}}'
-      data-storage: '{{value_fragment}}'
-    model: {}
-    data: {}
-  cluster: '{{dict_fragment}}' 

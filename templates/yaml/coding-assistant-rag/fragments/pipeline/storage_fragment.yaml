@@ -2,4 +2,4 @@ swift: {}
 mlflow: '{{value_fragment}}'
 data-storage: '{{value_fragment}}'
 code-storage: '{{value_fragment}}'
-log-storage: '{{value_fragment}}' 
+log-storage: '{{value_fragment}}'  
