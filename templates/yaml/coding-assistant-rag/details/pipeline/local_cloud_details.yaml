@@ -70,21 +70,20 @@ processing:
             pip: 'data-analysis-script-1/requirements.txt'
   step-2:
     general:
-      storage:
-        swift: {}
-        mlflow: 
-          tracking-uri: 'http://mlflow.mlflow.svc.cluster.local:5000'
-          s3-endpoint-url: 'http://mlflow-minio-service.mlflow.svc.cluster.local:9000'
-          experiment-name: 'mlch-code-assistant-rag-pipeline'
-          run-name: 'ray-data-analysis-pipeline-step-2'
-          run-tags:
-            workflow-type: 'local-cloud'
-            pipeline-step: 'internal-data-analysis'
-        data-storage: 
-          bucket-target: 'experiment'
-          bucket-prefix: 'mlch'
-          bucket-user: 'user@example.com'   
-          object-prefix: 'openai-humaneval'
+      swift: {}
+      mlflow: 
+        tracking-uri: 'http://mlflow.mlflow.svc.cluster.local:5000'
+        s3-endpoint-url: 'http://mlflow-minio-service.mlflow.svc.cluster.local:9000'
+        experiment-name: 'mlch-code-assistant-rag-pipeline'
+        run-name: 'ray-data-analysis-pipeline-step-2'
+        run-tags:
+          workflow-type: 'local-cloud'
+          pipeline-step: 'internal-data-analysis'
+      data-storage: 
+        bucket-target: 'experiment'
+        bucket-prefix: 'mlch'
+        bucket-user: 'user@example.com'   
+        object-prefix: 'openai-humaneval'
       model:
         bucket-name: 'mlch-exp-user-example-com'
         object-path: 'MODELS/fasttext/lid.176.bin'
@@ -110,24 +109,23 @@ processing:
             pip: 'data-analysis-script-2/requirements.txt'
   step-3:
     general:
-      storage:
-        swift: {}
-        mlflow: 
-          tracking-uri: 'http://mlflow.mlflow.svc.cluster.local:5000'
-          s3-endpoint-url: 'http://mlflow-minio-service.mlflow.svc.cluster.local:9000'
-          experiment-name: 'mlch-code-assistant-rag-pipeline'
-          run-name: 'ray-data-analysis-pipeline-step-3'
-          run-tags:
-            workflow-type: 'local-cloud'
-            pipeline-step: 'internal-data-analysis'
-        data-storage: 
-          bucket-target: 'experiment'
-          bucket-prefix: 'mlch'
-          bucket-user: 'user@example.com'   
-          object-prefix: 'mbpp'
+      swift: {}
+      mlflow: 
+        tracking-uri: 'http://mlflow.mlflow.svc.cluster.local:5000'
+        s3-endpoint-url: 'http://mlflow-minio-service.mlflow.svc.cluster.local:9000'
+        experiment-name: 'mlch-code-assistant-rag-pipeline'
+        run-name: 'ray-data-analysis-pipeline-step-3'
+        run-tags:
+          workflow-type: 'local-cloud'
+          pipeline-step: 'internal-data-analysis'
+      data-storage: 
+        bucket-target: 'experiment'
+        bucket-prefix: 'mlch'
+        bucket-user: 'user@example.com'   
+        object-prefix: 'mbpp'
       model:
-        bucket-name: 'mlch-exp-user-example-com'
-        object-path: 'MODELS/fasttext/lid.176.bin'
+          bucket-name: 'mlch-exp-user-example-com'
+          object-path: 'MODELS/fasttext/lid.176.bin'
       data:
         analysis-parameters:
           language-default: 'en'
@@ -150,21 +148,20 @@ processing:
             pip: 'data-analysis-script-2/requirements.txt'
   step-4:
     general:
-      storage:
-        swift: {}
-        mlflow: 
-          tracking-uri: 'http://mlflow.mlflow.svc.cluster.local:5000'
-          s3-endpoint-url: 'http://mlflow-minio-service.mlflow.svc.cluster.local:9000'
-          experiment-name: 'mlch-code-assistant-rag-pipeline'
-          run-name: 'ray-data-analysis-pipeline-step-4'
-          run-tags:
-            workflow-type: 'local-cloud'
-            pipeline-step: 'internal-data-analysis'
-        data-storage: 
-          bucket-target: 'experiment'
-          bucket-prefix: 'mlch'
-          bucket-user: 'user@example.com'   
-          object-prefix: 'bash-command-data'
+      swift: {}
+      mlflow: 
+        tracking-uri: 'http://mlflow.mlflow.svc.cluster.local:5000'
+        s3-endpoint-url: 'http://mlflow-minio-service.mlflow.svc.cluster.local:9000'
+        experiment-name: 'mlch-code-assistant-rag-pipeline'
+        run-name: 'ray-data-analysis-pipeline-step-4'
+        run-tags:
+          workflow-type: 'local-cloud'
+          pipeline-step: 'internal-data-analysis'
+      data-storage: 
+        bucket-target: 'experiment'
+        bucket-prefix: 'mlch'
+        bucket-user: 'user@example.com'   
+        object-prefix: 'bash-command-data'
       model:
         bucket-name: 'mlch-exp-user-example-com'
         object-path: 'MODELS/fasttext/lid.176.bin'

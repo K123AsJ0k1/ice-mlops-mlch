@@ -1,3 +1,0 @@
-cluster-name:
-  process: '{{value_fragment}}'
-  job: '{{dict_fragment}}'
