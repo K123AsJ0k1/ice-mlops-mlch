@@ -198,7 +198,7 @@ processing:
         tracking-uri: 'http://mlflow.mlflow.svc.cluster.local:5000'
         s3-endpoint-url: 'http://mlflow-minio-service.mlflow.svc.cluster.local:9000'
         experiment-name: 'mlch-code-assistant-rag-pipeline'
-        run-name: 'ray-data-analysis-pipeline-step-4'
+        run-name: 'ray-data-analysis-pipeline-step-5'
         run-tags:
           workflow-type: 'local-cloud'
           pipeline-step: 'internal-data-analysis'
@@ -214,23 +214,17 @@ processing:
         analysis-parameters:
           language-default: 'en'
           language-column: 'question'
-          language-threshold: 0.81
+          language-threshold: 0.20
           language-replacer: {}
-          format-default: 'bash'
+          format-default: 'txt'
           format-column: 'answer'
-          format-threshold: 0.98
-          format-replacer:
-            txt: 'bash'
-            batch: 'bash'
-            shell: 'bash'
-            lisp: 'bash'
-            python: 'bash'
-            ini: 'bash'
+          format-threshold: 0.20
+          format-replacer: {}
     cluster:
       cloud-vm1:
         process:
-          workers: 1
-          actors: 1
+          workers: 2
+          actors: 2
         job:
           main-file: 'main.py'
           runtime:
@@ -243,7 +237,7 @@ processing:
         tracking-uri: 'http://mlflow.mlflow.svc.cluster.local:5000'
         s3-endpoint-url: 'http://mlflow-minio-service.mlflow.svc.cluster.local:9000'
         experiment-name: 'mlch-code-assistant-rag-pipeline'
-        run-name: 'ray-data-analysis-pipeline-step-4'
+        run-name: 'ray-data-analysis-pipeline-step-6'
         run-tags:
           workflow-type: 'local-cloud'
           pipeline-step: 'internal-data-analysis'
@@ -259,23 +253,17 @@ processing:
         analysis-parameters:
           language-default: 'en'
           language-column: 'question'
-          language-threshold: 0.81
+          language-threshold: 0.20
           language-replacer: {}
-          format-default: 'bash'
+          format-default: 'txt'
           format-column: 'answer'
-          format-threshold: 0.98
-          format-replacer:
-            txt: 'bash'
-            batch: 'bash'
-            shell: 'bash'
-            lisp: 'bash'
-            python: 'bash'
-            ini: 'bash'
+          format-threshold: 0.20
+          format-replacer: {}
     cluster:
       cloud-vm1:
         process:
-          workers: 1
-          actors: 1
+          workers: 6
+          actors: 2
         job:
           main-file: 'main.py'
           runtime:
@@ -288,7 +276,7 @@ processing:
         tracking-uri: 'http://mlflow.mlflow.svc.cluster.local:5000'
         s3-endpoint-url: 'http://mlflow-minio-service.mlflow.svc.cluster.local:9000'
         experiment-name: 'mlch-code-assistant-rag-pipeline'
-        run-name: 'ray-data-analysis-pipeline-step-4'
+        run-name: 'ray-data-analysis-pipeline-step-7'
         run-tags:
           workflow-type: 'local-cloud'
           pipeline-step: 'internal-data-analysis'
@@ -296,7 +284,7 @@ processing:
         bucket-target: 'experiment'
         bucket-prefix: 'mlch'
         bucket-user: 'user@example.com'   
-        object-prefix: 'opc-sft-stage2-package_instruct'
+        object-prefix: 'opc-sft-stage2-package_instruct' 
       model:
         bucket-name: 'mlch-exp-user-example-com'
         object-path: 'MODELS/fasttext/lid.176.bin'
@@ -304,23 +292,17 @@ processing:
         analysis-parameters:
           language-default: 'en'
           language-column: 'question'
-          language-threshold: 0.81
+          language-threshold: 0.20
           language-replacer: {}
-          format-default: 'bash'
+          format-default: 'txt'
           format-column: 'answer'
-          format-threshold: 0.98
-          format-replacer:
-            txt: 'bash'
-            batch: 'bash'
-            shell: 'bash'
-            lisp: 'bash'
-            python: 'bash'
-            ini: 'bash'
+          format-threshold: 0.20
+          format-replacer: {}
     cluster:
       cloud-vm1:
         process:
-          workers: 1
-          actors: 1
+          workers: 6
+          actors: 2
         job:
           main-file: 'main.py'
           runtime:
@@ -333,7 +315,7 @@ processing:
         tracking-uri: 'http://mlflow.mlflow.svc.cluster.local:5000'
         s3-endpoint-url: 'http://mlflow-minio-service.mlflow.svc.cluster.local:9000'
         experiment-name: 'mlch-code-assistant-rag-pipeline'
-        run-name: 'ray-data-analysis-pipeline-step-4'
+        run-name: 'ray-data-analysis-pipeline-step-8'
         run-tags:
           workflow-type: 'local-cloud'
           pipeline-step: 'internal-data-analysis'
@@ -349,18 +331,12 @@ processing:
         analysis-parameters:
           language-default: 'en'
           language-column: 'question'
-          language-threshold: 0.81
+          language-threshold: 0.20
           language-replacer: {}
-          format-default: 'bash'
+          format-default: 'txt'
           format-column: 'answer'
-          format-threshold: 0.98
-          format-replacer:
-            txt: 'bash'
-            batch: 'bash'
-            shell: 'bash'
-            lisp: 'bash'
-            python: 'bash'
-            ini: 'bash'
+          format-threshold: 0.20
+          format-replacer: {}
     cluster:
       cloud-vm1:
         process:
@@ -378,7 +354,7 @@ processing:
         tracking-uri: 'http://mlflow.mlflow.svc.cluster.local:5000'
         s3-endpoint-url: 'http://mlflow-minio-service.mlflow.svc.cluster.local:9000'
         experiment-name: 'mlch-code-assistant-rag-pipeline'
-        run-name: 'ray-data-analysis-pipeline-step-4'
+        run-name: 'ray-data-analysis-pipeline-step-9'
         run-tags:
           workflow-type: 'local-cloud'
           pipeline-step: 'internal-data-analysis'
@@ -394,18 +370,12 @@ processing:
         analysis-parameters:
           language-default: 'en'
           language-column: 'question'
-          language-threshold: 0.81
+          language-threshold: 0.20
           language-replacer: {}
-          format-default: 'bash'
+          format-default: 'txt'
           format-column: 'answer'
-          format-threshold: 0.98
-          format-replacer:
-            txt: 'bash'
-            batch: 'bash'
-            shell: 'bash'
-            lisp: 'bash'
-            python: 'bash'
-            ini: 'bash'
+          format-threshold: 0.20
+          format-replacer: {}
     cluster:
       cloud-vm1:
         process:
@@ -423,7 +393,7 @@ processing:
         tracking-uri: 'http://mlflow.mlflow.svc.cluster.local:5000'
         s3-endpoint-url: 'http://mlflow-minio-service.mlflow.svc.cluster.local:9000'
         experiment-name: 'mlch-code-assistant-rag-pipeline'
-        run-name: 'ray-data-analysis-pipeline-step-4'
+        run-name: 'ray-data-analysis-pipeline-step-10'
         run-tags:
           workflow-type: 'local-cloud'
           pipeline-step: 'internal-data-analysis'
@@ -439,18 +409,12 @@ processing:
         analysis-parameters:
           language-default: 'en'
           language-column: 'question'
-          language-threshold: 0.81
+          language-threshold: 0.20
           language-replacer: {}
-          format-default: 'bash'
+          format-default: 'txt'
           format-column: 'answer'
-          format-threshold: 0.98
-          format-replacer:
-            txt: 'bash'
-            batch: 'bash'
-            shell: 'bash'
-            lisp: 'bash'
-            python: 'bash'
-            ini: 'bash'
+          format-threshold: 0.20
+          format-replacer: {}
     cluster:
       cloud-vm1:
         process:
@@ -468,7 +432,7 @@ processing:
         tracking-uri: 'http://mlflow.mlflow.svc.cluster.local:5000'
         s3-endpoint-url: 'http://mlflow-minio-service.mlflow.svc.cluster.local:9000'
         experiment-name: 'mlch-code-assistant-rag-pipeline'
-        run-name: 'ray-data-analysis-pipeline-step-4'
+        run-name: 'ray-data-analysis-pipeline-step-11'
         run-tags:
           workflow-type: 'local-cloud'
           pipeline-step: 'internal-data-analysis'
@@ -484,18 +448,12 @@ processing:
         analysis-parameters:
           language-default: 'en'
           language-column: 'question'
-          language-threshold: 0.81
+          language-threshold: 0.20
           language-replacer: {}
-          format-default: 'bash'
+          format-default: 'txt'
           format-column: 'answer'
-          format-threshold: 0.98
-          format-replacer:
-            txt: 'bash'
-            batch: 'bash'
-            shell: 'bash'
-            lisp: 'bash'
-            python: 'bash'
-            ini: 'bash'
+          format-threshold: 0.20
+          format-replacer: {}
     cluster:
       cloud-vm1:
         process:
