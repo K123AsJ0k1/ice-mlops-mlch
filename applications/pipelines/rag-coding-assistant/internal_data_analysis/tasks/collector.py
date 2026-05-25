@@ -11,7 +11,7 @@ from icebreaker.pd_stats.use import (
     stats_pandas_material,
     stats_pandas_paths
 )
-
+ 
 @ray.remote(
     num_cpus = 1,
     memory = 0.2 * 1024 * 1024 * 1024
@@ -28,7 +28,6 @@ def data_collector(
     start_time = t.time()
     print('Task', worker_index, 'Actor', actor_index)
     
-    #swift_parameters = job_parameters['swift']
     print('Setting up swift client')
     setup_swift_client = swift_setup_client(
         swift_parameters = swift_parameters
@@ -36,8 +35,7 @@ def data_collector(
     print('Swift client setup') 
 
     analysis_parameters = config_parameters['analysis-parameters']
-    #data_storage = job_parameters['data-storage']
-
+    
     language_column = analysis_parameters['language-column']
     
     format_column = analysis_parameters['format-column']
@@ -154,7 +152,7 @@ def data_collector(
             analysis_parameters = analysis_parameters
         ))
         batch_index += 1
-    #print(collected_stats)
+    
     while len(provider_actor_refs):
         done_actor_refs, provider_actor_refs = ray.wait(provider_actor_refs)
         for output_ref in done_actor_refs: 
@@ -162,7 +160,7 @@ def data_collector(
             batch_index = result['batch']
             language_stats = result['language-stats']
             key_name = result['key']
-            #print('Batch', batch_index, 'Key', key_name)
+            
             for stat_name, value in language_stats.items():
                 collected_stats[key_name][stat_name] = value
     

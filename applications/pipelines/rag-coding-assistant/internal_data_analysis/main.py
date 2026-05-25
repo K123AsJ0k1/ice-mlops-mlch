@@ -12,8 +12,8 @@ from icebreaker.mlflow.setup import mlflow_setup_client
 from icebreaker.mlflow.use import mlflow_get_or_create_experiment, mlflow_start_run, mlflow_log_metrics, mlflow_change_run_status
 from icebreaker.pararellism.division import division_split_input
 from icebreaker.misc.dict import flatten_nested_dict
-
-def das1_internal_data_analysis(
+ 
+def internal_data_analysis(
     job_parameters: any
 ):
     try:  
@@ -117,7 +117,7 @@ def das1_internal_data_analysis(
 
         return True
     except Exception as e:
-        print('das1 internal data analysis error', e)
+        print('internal data analysis error', e)
         return False
 
 if __name__ == "__main__":
@@ -140,8 +140,8 @@ if __name__ == "__main__":
     print('Getting input')
     job_parameters = json.loads(sys.argv[1])
     
-    print('Running DAS1 internal data analysis')
-    task_status = das1_internal_data_analysis(
+    print('Running internal data analysis')
+    task_status = internal_data_analysis(
         job_parameters = job_parameters
     )
 
