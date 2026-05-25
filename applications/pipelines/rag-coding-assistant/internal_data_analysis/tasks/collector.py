@@ -46,6 +46,10 @@ def data_collector(
     for batch_data in task_batch:
         object_path = batch_data[0]
         key_name = object_path.split('/')[-1].split('.')[0]
+
+        if key_name not in collected_stats:
+            collected_stats[key_name] = {}
+
         stored_dataset = object_storage_interaction(
             storage_client = setup_swift_client,
             lock_parameters = {},
@@ -68,7 +72,6 @@ def data_collector(
         ) 
         pandas_df = pickle.loads(stored_dataset[0])
         
-        collected_stats[key_name] = {}
         # index
         collected_stats[key_name]['index'] = key_name.split('-')[-1]
         # amount
