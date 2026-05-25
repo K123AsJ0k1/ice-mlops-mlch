@@ -7,32 +7,89 @@ def replace_yaml_fragments(
     try:
         import copy
     except ImportError as e:
-        raise ImportError("Failed to import", e)
+        raise ImportError("Setup/fragments failed to import", e)
     
-    if isinstance(base_dict, dict):
-        for target_key, target_value in base_dict.items():
-            if target_key in fragment_dicts:
-                change_dict = {}
-                if target_value == '{{value_fragment}}':
-                    change_dict = copy.deepcopy(fragment_dicts[target_key])
+    # '{{value_fragment}}' = fragment that contains only key-value pairs, not nested dictionaries
+    # '{{list_fragment}}' = fragment that contains lists of dicts that can be nested dictioanries
+    # '{{dict_fragment}}' = fragment that contains dictionaries that are nested dictionaries
+    # 'fill' = default string value meant to be filled later 
+    # {} = default dict value meant to be filled later
+    # 0 = default number value meant to be filled later
 
-                if target_value == '{{list_fragment}}':
-                    change_dict = [copy.deepcopy(fragment_dicts[target_key])]
-                # Consider putting the details in the fragments and then adding them into base dict
-                if target_value == '{{dict_fragment}}':
-                    for detail_dict in detail_dicts:
-                        for details_key, details_values in detail_dict.items():
-                            if target_key == details_key:
-                                change_dict = copy.deepcopy(details_values)
+    def resolve(template_val, details_list, key_name=None):
+        if not isinstance(details_list, list):
+            details_list = [details_list]
+
+        # 1. Global Fragment Template Inheritance
+        if key_name in fragment_dicts:
+            fragment_base = copy.deepcopy(fragment_dicts[key_name])
+            if template_val == '{{list_fragment}}':
+                base_structure = [fragment_base]
+            else:
+                base_structure = fragment_base
+            
+            combined_details = []
+            combined_details.extend(details_list)
+            if template_val not in ['{{dict_fragment}}', '{{value_fragment}}', '{{list_fragment}}']:
+                combined_details.append(template_val)
+            for g_dict in detail_dicts:
+                if isinstance(g_dict, dict) and key_name in g_dict:
+                    combined_details.append(g_dict[key_name])
+            
+            return resolve(base_structure, combined_details, key_name=None)
+
+        # 2. Handle Fragment Placeholders without matching template files
+        if isinstance(template_val, str) and template_val in ['{{dict_fragment}}', '{{value_fragment}}', '{{list_fragment}}']:
+            if details_list:
+                return resolve(details_list[0], details_list)
+            else:
+                return template_val
+
+        # 3. Context-Aware Deep Dictionary Merging
+        if isinstance(template_val, dict):
+            result = {}
+            all_keys = list(template_val.keys())
+            for d in details_list:
+                if isinstance(d, dict):
+                    for k in d.keys():
+                        if k not in all_keys:
+                            all_keys.append(k)
+            
+            for k in all_keys:
+                sub_details = []
+                for d in details_list:
+                    if isinstance(d, dict) and k in d:
+                        sub_details.append(d[k])
                 
-                expanded_dict = replace_yaml_fragments(
-                    base_dict = change_dict,
-                    fragment_dicts = fragment_dicts,
-                    detail_dicts = detail_dicts
-                )
+                if k in template_val:
+                    result[k] = resolve(template_val[k], sub_details, key_name=k)
+                else:
+                    if sub_details:
+                        result[k] = resolve(sub_details[0], sub_details, key_name=k)
+            return result
 
-                base_dict[target_key] = expanded_dict
-    return base_dict
+        # 4. List Structural Parsing
+        elif isinstance(template_val, list):
+            sub_details_flat = []
+            for d in details_list:
+                if isinstance(d, list):
+                    sub_details_flat.extend(d)
+                else:
+                    sub_details_flat.append(d)
+            return [resolve(item, sub_details_flat) for item in template_val]
+
+        # 5. Fixed Scalar Substitution (Prevents Infinite Loops)
+        else:
+            for d in details_list:
+                if d is not None and d != 'fill' and not (isinstance(d, str) and d in ['{{dict_fragment}}', '{{value_fragment}}', '{{list_fragment}}']):
+                    # ONLY recurse if the replacement layer is a structural object (dict/list)
+                    if isinstance(d, (dict, list)):
+                        return resolve(d, details_list)
+                    # If it's a primitive type (str, int, bool), return it directly!
+                    return d
+            return template_val
+
+    return resolve(base_dict, detail_dicts)
 
 def compose_yaml_dict(
     fragments_folder: str,
@@ -52,7 +109,7 @@ def compose_yaml_dict(
         import copy
         from ..misc.dict import check_dict_path, update_dict_value, update_nested_dict
     except ImportError as e:
-        raise ImportError("Failed to import", e)
+        raise ImportError("Setup/fragments failed to import", e)
     
     fragment_dicts = {}
     for root, dirs, files in os.walk(fragments_folder):
@@ -94,17 +151,12 @@ def compose_yaml_dict(
         fragment_dicts = fragment_dicts,
         detail_dicts = detail_dicts
     )
-
+    '''
     for detail_dict in detail_dicts:
         for details_key, details_values in detail_dict.items():
             if details_key in pipeline_dict:
-                #print(details_key)
-                #print(details_values)
-                update_dict = {
-                    details_key: details_values
-                }
-                print(update_dict)
-                print('')
+                update_dict = { details_key: details_values }
+                #print(f"Updating root configuration path for: {details_key}\n")
                 modified_dict = update_nested_dict(
                     target_dict = pipeline_dict,
                     update_dict = update_dict
@@ -117,7 +169,7 @@ def compose_yaml_dict(
             key_path = input_key,
             separator = '-'
         )
-        print(input_key)
+        #print(input_key)
         if path_exists:
             update_dict_value(
                 target_dict = pipeline_dict,
@@ -137,5 +189,5 @@ def compose_yaml_dict(
                 default_flow_style = False,
                 sort_keys = False
             )
-    #pipeline_dict = {}
+    '''
     return pipeline_dict 
