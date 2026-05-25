@@ -115,12 +115,13 @@ def update_nested_dict(
             else:
                 target_dict[key] = value
         else:
-            print(key, value)
-            # This will fail for updates that want 
-            # to add a dict as the last value
-            # Example is target {'languages': 'fill'} and update {'languages': {'python': 'fill'}}
-            # The solution is to just declare python in the target for update
-            target_dict[key] = value
+            if not isinstance(target_dict, str):
+                #print(key, value)
+                # This will fail for updates that want 
+                # to add a dict as the last value
+                # Example is target {'languages': 'fill'} and update {'languages': {'python': 'fill'}}
+                # The solution is to just declare python in the target for update
+                target_dict[key] = value
     return target_dict
 
 def flatten_nested_dict(
