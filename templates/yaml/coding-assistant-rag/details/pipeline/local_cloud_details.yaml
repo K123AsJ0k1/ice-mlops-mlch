@@ -46,7 +46,7 @@ processing:
       model:
         bucket-name: 'mlch-exp-user-example-com'
         object-path: 'MODELS/fasttext/lid.176.bin'
-      data:
+      config:
         analysis-parameters:
           language-default: 'en'
           language-column: 'content'
@@ -61,8 +61,8 @@ processing:
     cluster:
       cloud-vm1:
         process:
-          worker-number: 4
-          actor-number: 2
+          workers: 4
+          actors: 2
         job:
           main-file: 'internal_data_analysis.py'
           runtime:
@@ -87,7 +87,7 @@ processing:
       model:
         bucket-name: 'mlch-exp-user-example-com'
         object-path: 'MODELS/fasttext/lid.176.bin'
-      data:
+      config:
         analysis-parameters:
           language-default: 'en'
           language-column: 'question'
@@ -100,8 +100,8 @@ processing:
     cluster:
       cloud-vm1:
         process:
-          worker-number: 4
-          actor-number: 2
+          workers: 4
+          actors: 2
         job:
           main-file: 'external_data_analysis.py'
           runtime:
@@ -126,7 +126,7 @@ processing:
       model:
           bucket-name: 'mlch-exp-user-example-com'
           object-path: 'MODELS/fasttext/lid.176.bin'
-      data:
+      config:
         analysis-parameters:
           language-default: 'en'
           language-column: 'question'
@@ -139,8 +139,8 @@ processing:
     cluster:
       cloud-vm1:
         process:
-          worker-number: 4
-          actor-number: 2
+          workers: 4
+          actors: 2
         job:
           main-file: 'external_data_analysis.py'
           runtime:
@@ -165,7 +165,7 @@ processing:
       model:
         bucket-name: 'mlch-exp-user-example-com'
         object-path: 'MODELS/fasttext/lid.176.bin'
-      data:
+      config:
         analysis-parameters:
           language-default: 'en'
           language-column: 'question'
@@ -184,8 +184,8 @@ processing:
     cluster:
       cloud-vm1:
         process:
-          worker-number: 4
-          actor-number: 2
+          workers: 4
+          actors: 2
         job:
           main-file: 'external_data_analysis.py'
           runtime:
