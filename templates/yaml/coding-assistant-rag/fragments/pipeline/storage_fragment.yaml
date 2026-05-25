@@ -1,5 +1,5 @@
-swift: 'fill'
+swift: {}
 mlflow: '{{value_fragment}}'
-data-storage: '{{dict_fragment}}'
-code-storage: '{{dict_fragment}}'
-log-storage: '{{dict_fragment}}' 
+data-storage: '{{value_fragment}}'
+code-storage: '{{value_fragment}}'
+log-storage: '{{value_fragment}}' 

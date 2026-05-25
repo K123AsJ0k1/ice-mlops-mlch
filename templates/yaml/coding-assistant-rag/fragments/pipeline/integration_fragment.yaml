@@ -1,2 +1,2 @@
-cluster-yamls: 'fill'
-resource-weights: '{{dict_fragment}}' 
+cluster-yamls: {}
+resource-weights: '{{value_fragment}}' 
