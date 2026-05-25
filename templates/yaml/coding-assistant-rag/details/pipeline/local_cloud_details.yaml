@@ -191,4 +191,318 @@ processing:
           runtime:
             working_dir: 'external_data_analysis'
             pip: 'external_data_analysis/requirements.txt'
-  
+  step-5:
+    general:
+      swift: {}
+      mlflow: 
+        tracking-uri: 'http://mlflow.mlflow.svc.cluster.local:5000'
+        s3-endpoint-url: 'http://mlflow-minio-service.mlflow.svc.cluster.local:9000'
+        experiment-name: 'mlch-code-assistant-rag-pipeline'
+        run-name: 'ray-data-analysis-pipeline-step-4'
+        run-tags:
+          workflow-type: 'local-cloud'
+          pipeline-step: 'internal-data-analysis'
+      data-storage: 
+        bucket-target: 'experiment'
+        bucket-prefix: 'mlch'
+        bucket-user: 'user@example.com'   
+        object-prefix: 'opc-sft-stage2-mceval_instruct'
+      model:
+        bucket-name: 'mlch-exp-user-example-com'
+        object-path: 'MODELS/fasttext/lid.176.bin'
+      config:
+        analysis-parameters:
+          language-default: 'en'
+          language-column: 'question'
+          language-threshold: 0.81
+          language-replacer: {}
+          format-default: 'bash'
+          format-column: 'answer'
+          format-threshold: 0.98
+          format-replacer:
+            txt: 'bash'
+            batch: 'bash'
+            shell: 'bash'
+            lisp: 'bash'
+            python: 'bash'
+            ini: 'bash'
+    cluster:
+      cloud-vm1:
+        process:
+          workers: 1
+          actors: 1
+        job:
+          main-file: 'main.py'
+          runtime:
+            working_dir: 'external_data_analysis'
+            pip: 'external_data_analysis/requirements.txt'
+  step-6:
+    general:
+      swift: {}
+      mlflow: 
+        tracking-uri: 'http://mlflow.mlflow.svc.cluster.local:5000'
+        s3-endpoint-url: 'http://mlflow-minio-service.mlflow.svc.cluster.local:9000'
+        experiment-name: 'mlch-code-assistant-rag-pipeline'
+        run-name: 'ray-data-analysis-pipeline-step-4'
+        run-tags:
+          workflow-type: 'local-cloud'
+          pipeline-step: 'internal-data-analysis'
+      data-storage: 
+        bucket-target: 'experiment'
+        bucket-prefix: 'mlch'
+        bucket-user: 'user@example.com'   
+        object-prefix: 'opc-sft-stage2-evol_instruct'
+      model:
+        bucket-name: 'mlch-exp-user-example-com'
+        object-path: 'MODELS/fasttext/lid.176.bin'
+      config:
+        analysis-parameters:
+          language-default: 'en'
+          language-column: 'question'
+          language-threshold: 0.81
+          language-replacer: {}
+          format-default: 'bash'
+          format-column: 'answer'
+          format-threshold: 0.98
+          format-replacer:
+            txt: 'bash'
+            batch: 'bash'
+            shell: 'bash'
+            lisp: 'bash'
+            python: 'bash'
+            ini: 'bash'
+    cluster:
+      cloud-vm1:
+        process:
+          workers: 1
+          actors: 1
+        job:
+          main-file: 'main.py'
+          runtime:
+            working_dir: 'external_data_analysis'
+            pip: 'external_data_analysis/requirements.txt'
+  step-7:
+    general:
+      swift: {}
+      mlflow: 
+        tracking-uri: 'http://mlflow.mlflow.svc.cluster.local:5000'
+        s3-endpoint-url: 'http://mlflow-minio-service.mlflow.svc.cluster.local:9000'
+        experiment-name: 'mlch-code-assistant-rag-pipeline'
+        run-name: 'ray-data-analysis-pipeline-step-4'
+        run-tags:
+          workflow-type: 'local-cloud'
+          pipeline-step: 'internal-data-analysis'
+      data-storage: 
+        bucket-target: 'experiment'
+        bucket-prefix: 'mlch'
+        bucket-user: 'user@example.com'   
+        object-prefix: 'opc-sft-stage2-package_instruct'
+      model:
+        bucket-name: 'mlch-exp-user-example-com'
+        object-path: 'MODELS/fasttext/lid.176.bin'
+      config:
+        analysis-parameters:
+          language-default: 'en'
+          language-column: 'question'
+          language-threshold: 0.81
+          language-replacer: {}
+          format-default: 'bash'
+          format-column: 'answer'
+          format-threshold: 0.98
+          format-replacer:
+            txt: 'bash'
+            batch: 'bash'
+            shell: 'bash'
+            lisp: 'bash'
+            python: 'bash'
+            ini: 'bash'
+    cluster:
+      cloud-vm1:
+        process:
+          workers: 1
+          actors: 1
+        job:
+          main-file: 'main.py'
+          runtime:
+            working_dir: 'external_data_analysis'
+            pip: 'external_data_analysis/requirements.txt'
+  step-8:
+    general:
+      swift: {}
+      mlflow: 
+        tracking-uri: 'http://mlflow.mlflow.svc.cluster.local:5000'
+        s3-endpoint-url: 'http://mlflow-minio-service.mlflow.svc.cluster.local:9000'
+        experiment-name: 'mlch-code-assistant-rag-pipeline'
+        run-name: 'ray-data-analysis-pipeline-step-4'
+        run-tags:
+          workflow-type: 'local-cloud'
+          pipeline-step: 'internal-data-analysis'
+      data-storage: 
+        bucket-target: 'experiment'
+        bucket-prefix: 'mlch'
+        bucket-user: 'user@example.com'   
+        object-prefix: 'opc-sft-stage2-educational_instruct'
+      model:
+        bucket-name: 'mlch-exp-user-example-com'
+        object-path: 'MODELS/fasttext/lid.176.bin'
+      config:
+        analysis-parameters:
+          language-default: 'en'
+          language-column: 'question'
+          language-threshold: 0.81
+          language-replacer: {}
+          format-default: 'bash'
+          format-column: 'answer'
+          format-threshold: 0.98
+          format-replacer:
+            txt: 'bash'
+            batch: 'bash'
+            shell: 'bash'
+            lisp: 'bash'
+            python: 'bash'
+            ini: 'bash'
+    cluster:
+      cloud-vm1:
+        process:
+          workers: 1
+          actors: 1
+        job:
+          main-file: 'main.py'
+          runtime:
+            working_dir: 'external_data_analysis'
+            pip: 'external_data_analysis/requirements.txt'
+  step-9:
+    general:
+      swift: {}
+      mlflow: 
+        tracking-uri: 'http://mlflow.mlflow.svc.cluster.local:5000'
+        s3-endpoint-url: 'http://mlflow-minio-service.mlflow.svc.cluster.local:9000'
+        experiment-name: 'mlch-code-assistant-rag-pipeline'
+        run-name: 'ray-data-analysis-pipeline-step-4'
+        run-tags:
+          workflow-type: 'local-cloud'
+          pipeline-step: 'internal-data-analysis'
+      data-storage: 
+        bucket-target: 'experiment'
+        bucket-prefix: 'mlch'
+        bucket-user: 'user@example.com'   
+        object-prefix: 'opc-sft-stage1-realuser_instruct'
+      model:
+        bucket-name: 'mlch-exp-user-example-com'
+        object-path: 'MODELS/fasttext/lid.176.bin'
+      config:
+        analysis-parameters:
+          language-default: 'en'
+          language-column: 'question'
+          language-threshold: 0.81
+          language-replacer: {}
+          format-default: 'bash'
+          format-column: 'answer'
+          format-threshold: 0.98
+          format-replacer:
+            txt: 'bash'
+            batch: 'bash'
+            shell: 'bash'
+            lisp: 'bash'
+            python: 'bash'
+            ini: 'bash'
+    cluster:
+      cloud-vm1:
+        process:
+          workers: 1
+          actors: 1
+        job:
+          main-file: 'main.py'
+          runtime:
+            working_dir: 'external_data_analysis'
+            pip: 'external_data_analysis/requirements.txt'
+  step-10:
+    general:
+      swift: {}
+      mlflow: 
+        tracking-uri: 'http://mlflow.mlflow.svc.cluster.local:5000'
+        s3-endpoint-url: 'http://mlflow-minio-service.mlflow.svc.cluster.local:9000'
+        experiment-name: 'mlch-code-assistant-rag-pipeline'
+        run-name: 'ray-data-analysis-pipeline-step-4'
+        run-tags:
+          workflow-type: 'local-cloud'
+          pipeline-step: 'internal-data-analysis'
+      data-storage: 
+        bucket-target: 'experiment'
+        bucket-prefix: 'mlch'
+        bucket-user: 'user@example.com'   
+        object-prefix: 'opc-sft-stage1-filtered_infinity_instruct'
+      model:
+        bucket-name: 'mlch-exp-user-example-com'
+        object-path: 'MODELS/fasttext/lid.176.bin'
+      config:
+        analysis-parameters:
+          language-default: 'en'
+          language-column: 'question'
+          language-threshold: 0.81
+          language-replacer: {}
+          format-default: 'bash'
+          format-column: 'answer'
+          format-threshold: 0.98
+          format-replacer:
+            txt: 'bash'
+            batch: 'bash'
+            shell: 'bash'
+            lisp: 'bash'
+            python: 'bash'
+            ini: 'bash'
+    cluster:
+      cloud-vm1:
+        process:
+          workers: 1
+          actors: 1
+        job:
+          main-file: 'main.py'
+          runtime:
+            working_dir: 'external_data_analysis'
+            pip: 'external_data_analysis/requirements.txt'
+  step-11:
+    general:
+      swift: {}
+      mlflow: 
+        tracking-uri: 'http://mlflow.mlflow.svc.cluster.local:5000'
+        s3-endpoint-url: 'http://mlflow-minio-service.mlflow.svc.cluster.local:9000'
+        experiment-name: 'mlch-code-assistant-rag-pipeline'
+        run-name: 'ray-data-analysis-pipeline-step-4'
+        run-tags:
+          workflow-type: 'local-cloud'
+          pipeline-step: 'internal-data-analysis'
+      data-storage: 
+        bucket-target: 'experiment'
+        bucket-prefix: 'mlch'
+        bucket-user: 'user@example.com'   
+        object-prefix: 'opc-sft-stage1-largescale_diverse_instruct'
+      model:
+        bucket-name: 'mlch-exp-user-example-com'
+        object-path: 'MODELS/fasttext/lid.176.bin'
+      config:
+        analysis-parameters:
+          language-default: 'en'
+          language-column: 'question'
+          language-threshold: 0.81
+          language-replacer: {}
+          format-default: 'bash'
+          format-column: 'answer'
+          format-threshold: 0.98
+          format-replacer:
+            txt: 'bash'
+            batch: 'bash'
+            shell: 'bash'
+            lisp: 'bash'
+            python: 'bash'
+            ini: 'bash'
+    cluster:
+      cloud-vm1:
+        process:
+          workers: 1
+          actors: 1
+        job:
+          main-file: 'main.py'
+          runtime:
+            working_dir: 'external_data_analysis'
+            pip: 'external_data_analysis/requirements.txt'
