@@ -1,8 +1,0 @@
-general:
-  storage:
-    swift: '{{dict_fragment}}'
-    mlflow: '{{dict_fragment}}'
-    data-storage: 'fill'
-  model: 'fill'
-  data: 'fill'
-cluster: '{{dict_fragment}}'

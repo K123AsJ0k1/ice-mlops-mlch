@@ -1,0 +1,5 @@
+swift: 'fill'
+mlflow: '{{value_fragment}}'
+data-storage: '{{dict_fragment}}'
+code-storage: '{{dict_fragment}}'
+log-storage: '{{dict_fragment}}' 

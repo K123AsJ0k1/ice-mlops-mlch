@@ -29,6 +29,7 @@ integration:
 processing:
   step-1:
     general:
+      swift: 'fill'
       mlflow: 
         tracking-uri: 'http://mlflow.mlflow.svc.cluster.local:5000'
         s3-endpoint-url: 'http://mlflow-minio-service.mlflow.svc.cluster.local:9000'
@@ -70,6 +71,7 @@ processing:
   step-2:
     general:
       storage:
+        swift: 'fill'
         mlflow: 
           tracking-uri: 'http://mlflow.mlflow.svc.cluster.local:5000'
           s3-endpoint-url: 'http://mlflow-minio-service.mlflow.svc.cluster.local:9000'
@@ -109,6 +111,7 @@ processing:
   step-3:
     general:
       storage:
+        swift: 'fill'
         mlflow: 
           tracking-uri: 'http://mlflow.mlflow.svc.cluster.local:5000'
           s3-endpoint-url: 'http://mlflow-minio-service.mlflow.svc.cluster.local:9000'
@@ -148,6 +151,7 @@ processing:
   step-4:
     general:
       storage:
+        swift: 'fill'
         mlflow: 
           tracking-uri: 'http://mlflow.mlflow.svc.cluster.local:5000'
           s3-endpoint-url: 'http://mlflow-minio-service.mlflow.svc.cluster.local:9000'

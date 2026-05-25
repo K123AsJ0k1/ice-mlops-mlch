@@ -1,3 +1,0 @@
-replace:
-  process: '{{dict_fragment}}'
-  job: '{{dict_fragment}}'
