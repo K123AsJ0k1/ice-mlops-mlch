@@ -132,7 +132,7 @@ def ray_input_parameters(
             template_parameters = copy.deepcopy(step_parameters['general'])
             
             for param_key in template_parameters.keys():
-                if 'data' in param_key:
+                if 'config' in param_key:
                     template_parameters[param_key]['input'] = cluster_inputs[cluster_key]
             
             input_parameters.update(template_parameters)
