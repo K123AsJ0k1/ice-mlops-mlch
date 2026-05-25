@@ -128,8 +128,8 @@ def ray_input_parameters(
     input_parameters = {}
     for cluster_key, input in cluster_inputs.items():
         if cluster_name in cluster_key:
-            input_parameters = copy.deepcopy(step_parameters['cluster-parameters'][cluster_name])  
-            template_parameters = copy.deepcopy(step_parameters['general-parameters'])
+            input_parameters = copy.deepcopy(step_parameters['cluster'][cluster_name])  
+            template_parameters = copy.deepcopy(step_parameters['general'])
             
             for param_key in template_parameters.keys():
                 if 'data' in param_key:
