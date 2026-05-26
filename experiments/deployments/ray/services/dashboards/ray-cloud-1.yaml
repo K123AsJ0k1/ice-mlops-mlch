@@ -1,0 +1,20 @@
+apiVersion: v1
+kind: Endpoints
+metadata: 
+   name: ray-cloud-1-dash 
+subsets:
+  - addresses:
+    - ip: '192.168.1.19'
+    ports: 
+      - port: 8401
+---
+apiVersion: v1
+kind: Service
+metadata:
+   name: ray-cloud-1-dash 
+spec:
+   type: ClusterIP
+   ports:
+   - protocol: TCP
+     port: 8401
+     targetPort: 8401
