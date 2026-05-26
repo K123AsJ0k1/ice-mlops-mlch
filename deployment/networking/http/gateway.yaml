@@ -30,6 +30,8 @@ spec:
     - "webui.oss"
     - "ray.cloud.dash-1.oss"
     - "ray.cloud.serve-1.oss"
+    - "ray.cloud.dash-2.oss"
+    - "ray.cloud.serve-2.oss"
     - "ray.local.dash-1.oss"
     - "ray.local.serve-1.oss"
     - "ray.local.dash-2.oss"
