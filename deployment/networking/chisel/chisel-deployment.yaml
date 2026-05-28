@@ -21,13 +21,13 @@ spec:
         args:
         - "server"
         - "--port"
-        - "8080"
+        - "8080" 
         - "--auth"
         - "chisel1234:chisel4567"
         - "--reverse"
         ports:
         - containerPort: 8080
-          name: control-port
+          name: control
           protocol: TCP
         - containerPort: 8100
           name: l1-rd

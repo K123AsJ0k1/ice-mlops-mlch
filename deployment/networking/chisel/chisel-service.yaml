@@ -3,7 +3,6 @@ kind: Service
 metadata: 
   name: chisel-server-service
 spec:
-  type: ClusterIP
   selector:
     app: chisel-server
   ports:
@@ -11,7 +10,7 @@ spec:
     port: 8080
     targetPort: 8080
     protocol: TCP
-  - name: local-1-ray-dashboard
+  - name: l1-rd
     port: 8100
     targetPort: 8100
     protocol: TCP

@@ -12,4 +12,4 @@ spec:
     - destination:
         host: chisel-server-service.chisel.svc.cluster.local
         port:
-          number: 8080
+          number: 8080 

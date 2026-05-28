@@ -9,7 +9,7 @@ spec:
   servers:
   - port:
       name: chisel-http
-      number: 206
+      number: 206 
       protocol: HTTP
     hosts:
     - "chisel.oss"
