@@ -1,0 +1,15 @@
+apiVersion: networking.istio.io/v1beta1
+kind: Gateway
+metadata:
+  name: chisel-gateway
+spec:
+  selector:
+    app: istio-ingressgateway
+    istio: ingressgateway
+  servers:
+  - port:
+      name: chisel-http
+      number: 206
+      protocol: HTTP
+    hosts:
+    - "chisel.oss"

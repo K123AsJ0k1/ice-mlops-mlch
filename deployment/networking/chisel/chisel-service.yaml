@@ -1,0 +1,17 @@
+apiVersion: v1
+kind: Service
+metadata: 
+  name: chisel-server-service
+spec:
+  type: ClusterIP
+  selector:
+    app: chisel-server
+  ports:
+  - name: control
+    port: 8080
+    targetPort: 8080
+    protocol: TCP
+  - name: local-1-ray-dashboard
+    port: 8100
+    targetPort: 8100
+    protocol: TCP

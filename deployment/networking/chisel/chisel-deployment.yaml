@@ -1,0 +1,42 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: chisel-server
+  labels:
+    app: chisel-server
+spec: 
+  replicas: 1
+  selector:
+    matchLabels:
+      app: chisel-server
+  template:
+    metadata:
+      labels:
+        app: chisel-server
+    spec:
+      containers:
+      - name: chisel-server
+        image: jpillora/chisel:1.10.0
+        imagePullPolicy: IfNotPresent
+        command:
+        - "chisel"
+        - "server"
+        - "--auth"
+        - "chisel1234:chisel4567"
+        - "--reverse"
+        - "--port"
+        - "8080"
+        ports:
+        - containerPort: 8080
+          name: control-port
+          protocol: TCP
+        - containerPort: 8100
+          name: local-1-ray-dashboard
+          protocol: TCP
+        resources:
+          limits:
+            cpu: "500m"
+            memory: "256Mi"
+          requests:
+            cpu: "100m"
+            memory: "64Mi"

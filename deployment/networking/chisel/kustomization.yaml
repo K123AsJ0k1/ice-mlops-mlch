@@ -1,0 +1,9 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namespace: chisel
+resources: 
+- chisel-namespace.yaml
+- chisel-deployment.yaml
+- chisel-service.yaml 
+- chisel-gateway.yaml
+- chisel-virtualservice.yaml
