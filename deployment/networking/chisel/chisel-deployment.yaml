@@ -19,7 +19,6 @@ spec:
         image: jpillora/chisel:1.10.0
         imagePullPolicy: IfNotPresent
         command:
-        - "chisel"
         - "server"
         - "--auth"
         - "chisel1234:chisel4567"
