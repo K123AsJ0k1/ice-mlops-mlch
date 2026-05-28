@@ -24,7 +24,7 @@ services:
           cpus: '12'
           memory: '13g' 
     extra_hosts:
-      - "host.docker.internal:host-gateway"
+      - "mlflow.oss:host-gateway"
     networks:
       exp_network:
         ipv4_address: 172.29.0.15
@@ -42,7 +42,7 @@ services:
       resources:
         limits:
          memory: '1g'
-    extra_hosts:
-      - "host.docker.internal:host-gateway"
+    eextra_hosts:
+      - "mlflow.oss:host-gateway"
     networks:
       - exp_network

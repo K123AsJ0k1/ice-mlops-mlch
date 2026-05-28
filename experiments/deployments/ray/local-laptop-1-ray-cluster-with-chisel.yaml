@@ -22,9 +22,7 @@ services:
       resources:
         limits:
           cpus: '12'
-          memory: '87g' 
-    extra_hosts:
-      - "mlflow.oss:host-gateway"
+          memory: '13g' 
     networks:
       exp_network:
         ipv4_address: 172.29.0.15
@@ -42,7 +40,18 @@ services:
       resources:
         limits:
          memory: '1g'
-    extra_hosts:
-      - "mlflow.oss:host-gateway"
     networks:
       - exp_network
+  chisel-client:
+    image: jpillora/chisel:1.10.0
+    container_name: chisel-client
+    hostname: chisel-client
+    depends_on:
+      - ray-head
+    restart: no
+    networks:
+      - exp_network
+    extra_hosts:
+      - "chisel.oss:86.50.169.209"
+    # R:0.0.0.0:port means bind on ALL interfaces inside the K8s pod so K8s services can reach it
+    command: client --auth chisel1234:chisel4567 http://chisel.oss:7008 R:0.0.0.0:8100:ray-head:8265
