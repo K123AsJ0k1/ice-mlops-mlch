@@ -18,13 +18,13 @@ spec:
       - name: chisel-server
         image: jpillora/chisel:1.10.0
         imagePullPolicy: IfNotPresent
-        command:
+        args:
         - "server"
+        - "--port"
+        - "8080"
         - "--auth"
         - "chisel1234:chisel4567"
         - "--reverse"
-        - "--port"
-        - "8080"
         ports:
         - containerPort: 8080
           name: control-port
