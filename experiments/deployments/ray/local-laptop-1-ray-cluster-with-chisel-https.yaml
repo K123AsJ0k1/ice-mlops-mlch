@@ -1,0 +1,68 @@
+networks:
+  exp_network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.29.0.0/16
+
+services:
+  ray-head:
+    image: rayproject/ray:2.49.2-py312-cpu
+    container_name: ray-head
+    hostname: ray-head
+    restart: no
+    ports:
+      - '127.0.0.1:6379:6379'
+      - '127.0.0.1:8265:8265'
+      - '127.0.0.1:10001:10001'
+      - '127.0.0.1:8350:8350'
+    shm_size: '2gb'
+    command: bash -c "ray start --head --num-cpus=12 --object-store-memory=200000000 --port=6379 --dashboard-host=0.0.0.0 --dashboard-port=8265 --ray-client-server-port=10001 --block"
+    deploy:
+      resources:
+        limits:
+          cpus: '12'
+          memory: '13g' 
+    networks:
+      exp_network:
+        ipv4_address: 172.29.0.15
+  ray-worker:
+    image: rayproject/ray:2.49.2-py312-cpu
+    container_name: ray-worker
+    hostname: ray-worker
+    depends_on:
+      - ray-head
+    shm_size: '1gb'
+    command: bash -c "ray start --num-cpus=0 --object-store-memory=100000000 --address=ray-head:6379 --block"
+    deploy:
+      mode: replicated
+      replicas: '1'
+      resources:
+        limits:
+         memory: '1g'
+    networks:
+      - exp_network
+  chisel-client:
+    image: jpillora/chisel:1.10.0
+    container_name: chisel-client
+    hostname: chisel-client
+    depends_on:
+      - ray-head
+    restart: no
+    secrets:
+    - cpouta-oss-crt
+    networks:
+      - exp_network
+    extra_hosts:
+      - "chisel.oss:86.50.169.209"
+    # R:0.0.0.0:port means bind on ALL interfaces inside the K8s pod so K8s services can reach it
+    command: > 
+      client 
+      --auth chisel1234:chisel4567 
+      --tls-ca /run/secrets/cpouta-oss-crt 
+      https://chisel.oss:7008 
+      R:0.0.0.0:8100:ray-head:8265
+  
+secrets:
+  cpouta-oss-crt:
+    file: /home/()/.ssh/oss_platform_ca.crt
