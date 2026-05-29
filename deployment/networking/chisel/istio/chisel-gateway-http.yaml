@@ -8,11 +8,8 @@ spec:
     istio: ingressgateway
   servers:
   - port:
-      name: https-chisel
+      name: chisel-http
       number: 206 
-      protocol: HTTPS
-    tls:
-      mode: SIMPLE
-      credentialName: chisel-credential
+      protocol: HTTP
     hosts:
     - "chisel.oss"
