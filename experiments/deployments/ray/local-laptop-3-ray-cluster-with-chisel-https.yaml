@@ -7,7 +7,7 @@ networks:
 
 services:
   ray-head:
-    image: rayproject/ray:2.49.2-py312-cpu
+    image: rayproject/ray:2.49.2-py312-cu128
     container_name: ray-head
     hostname: ray-head
     restart: no
@@ -17,17 +17,22 @@ services:
       - '127.0.0.1:10001:10001'
       - '127.0.0.1:8350:8350'
     shm_size: '2gb'
-    command: bash -c "ray start --head --num-cpus=12 --object-store-memory=200000000 --port=6379 --dashboard-host=0.0.0.0 --dashboard-port=8265 --ray-client-server-port=10001 --block"
+    command: bash -c "ray start --head --num-cpus=30 --num-gpus=1 --object-store-memory=200000000 --port=6379 --dashboard-host=0.0.0.0 --dashboard-port=8265 --ray-client-server-port=10001 --block"
     deploy:
       resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
         limits:
-          cpus: '12'
-          memory: '13g' 
+         cpus: '30'
+         memory: '15g'
     networks:
       exp_network:
         ipv4_address: 172.29.0.15
   ray-worker:
-    image: rayproject/ray:2.49.2-py312-cpu
+    image: rayproject/ray:2.49.2-py312-cu128
     container_name: ray-worker
     hostname: ray-worker
     depends_on:
@@ -40,14 +45,14 @@ services:
       resources:
         limits:
          memory: '1g'
-    networks:
+    networks: 
       - exp_network
   chisel-client:
     image: jpillora/chisel:1.10.0
     container_name: chisel-client
     hostname: chisel-client
     depends_on:
-      - ray-head 
+      - ray-head
     restart: no
     secrets:
       - cpouta-oss-crt
@@ -65,4 +70,4 @@ services:
   
 secrets: 
   cpouta-oss-crt:
-    file: /home/()/.ssh/oss_platform_ca.crt
+    file: ()/.ssh/oss_platform_ca.crt
