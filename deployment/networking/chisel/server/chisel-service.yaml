@@ -14,3 +14,27 @@ spec:
     port: 8100
     targetPort: 8100
     protocol: TCP
+  - name: l1-rs
+    port: 8301
+    targetPort: 8301
+    protocol: TCP
+  - name: l2-rd
+    port: 8101
+    targetPort: 8101
+    protocol: TCP
+  - name: l2-rs
+    port: 8302
+    targetPort: 8302
+    protocol: TCP
+  - name: l3-rd
+    port: 8103
+    targetPort: 8103
+    protocol: TCP
+  - name: c2-rs
+    port: 8401
+    targetPort: 8401
+    protocol: TCP
+  - name: l2-rs
+    port: 8451
+    targetPort: 8451
+    protocol: TCP

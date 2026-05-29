@@ -1,0 +1,16 @@
+apiVersion: networking.istio.io/v1beta1
+kind: VirtualService
+metadata:
+  name: chisel-virtualservice
+  namespace: istio-system
+spec:
+  hosts:
+  - "chisel.oss"
+  gateways:
+  - chisel-gateway
+  http:
+  - route:
+    - destination:
+        host: chisel-server-service.chisel.svc.cluster.local
+        port:
+          number: 8080 

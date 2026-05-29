@@ -32,6 +32,27 @@ spec:
         - containerPort: 8100
           name: l1-rd
           protocol: TCP
+        - containerPort: 8301 
+          name: l1-rs
+          protocol: TCP
+        - containerPort: 8101
+          name: l2-rd
+          protocol: TCP
+        - containerPort: 8302 
+          name: l2-rs
+          protocol: TCP
+        - containerPort: 8102
+          name: l3-rd
+          protocol: TCP
+        - containerPort: 8303 
+          name: l3-rs
+          protocol: TCP
+        - containerPort: 8401
+          name: c2-rd
+          protocol: TCP
+        - containerPort: 8451 
+          name: c2-rs
+          protocol: TCP
         resources:
           limits:
             cpu: "500m"
