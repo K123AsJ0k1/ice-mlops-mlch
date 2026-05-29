@@ -2,6 +2,7 @@ apiVersion: networking.istio.io/v1beta1
 kind: VirtualService
 metadata:
   name: chisel-virtualservice
+  namespace: istio-system
 spec:
   hosts:
   - "chisel.oss"
