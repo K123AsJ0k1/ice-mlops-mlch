@@ -36,7 +36,7 @@ spec:
         - name: SSHD_GATEWAY_PORTS
           value: "true"
         - name: ALLOW_FORWARDING_TO
-          value: "*"
+          value: "any"
         volumeMounts:
         - name: public-key-volume
           mountPath: /config/.ssh/authorized_keys
