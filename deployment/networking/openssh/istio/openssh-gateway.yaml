@@ -1,0 +1,16 @@
+apiVersion: networking.istio.io/v1alpha3
+kind: Gateway
+metadata:
+  name: openssh-gateway
+  namespace: istio-system
+spec:
+  selector: 
+    app: istio-ingressgateway
+    istio: ingressgateway 
+  servers:
+  - port:
+      number: 207
+      name: tcp-ssh
+      protocol: TCP
+    hosts:
+    - "*"

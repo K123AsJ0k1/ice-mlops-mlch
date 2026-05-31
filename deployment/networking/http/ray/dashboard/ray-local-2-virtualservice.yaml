@@ -10,6 +10,6 @@ spec:
   http:
   - route:
     - destination:
-        host: ray-local-2-dash.integration.svc.cluster.local
+        host: chisel-server-service.chisel.svc.cluster.local
         port:
           number: 8101

@@ -1,0 +1,46 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata: 
+  name: openssh-server
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: openssh-server
+  template:
+    metadata:
+      labels:
+        app: openssh-server
+    spec:
+      containers:
+      - name: openssh-server
+        image: lscr.io/linuxserver/openssh-server:10.2_p1-r0-ls226
+        ports:
+        - containerPort: 2222
+          name: ssh
+        env:
+        - name: PUID
+          value: "1000"
+        - name: PGID
+          value: "1000"
+        - name: TZ
+          value: "Etc/UTC"
+        - name: PUBLIC_KEY_FILE
+          value: "/config/.ssh/authorized_keys"
+        - name: USER_NAME
+          value: "mlch-bridge-user"
+        - name: PASSWORD_ACCESS
+          value: False
+        - name: SSHD_ALLOW_TCP_FORWARDING
+          value: "true"
+        - name: SSHD_GATEWAY_PORTS
+          value: "true"
+        volumeMounts:
+        - name: public-key-volume
+          mountPath: /config/.ssh/authorized_keys
+          subPath: authorized_keys 
+          readOnly: true
+      volumes:
+      - name: public-key-volume
+        secret:
+          secretName: ssh-public-keys 

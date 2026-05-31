@@ -1,0 +1,18 @@
+apiVersion: networking.istio.io/v1alpha3
+kind: VirtualService
+metadata:
+  name: openssh-virtualservice
+  namespace: istio-system
+spec:
+  hosts:
+  - "*" 
+  gateways:
+  - openssh-gateway
+  tcp:
+  - match:
+    - port: 207
+    route:
+    - destination:
+        host: openssh-server-service.openssh.svc.cluster.local
+        port:
+          number: 2222

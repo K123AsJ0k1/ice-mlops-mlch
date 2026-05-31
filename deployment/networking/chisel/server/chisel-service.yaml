@@ -27,8 +27,12 @@ spec:
     targetPort: 8302
     protocol: TCP
   - name: l3-rd
-    port: 8103
-    targetPort: 8103
+    port: 8102
+    targetPort: 8102
+    protocol: TCP
+  - name: l3-rs
+    port: 8303
+    targetPort: 8303
     protocol: TCP
   - name: c2-rs
     port: 8401
