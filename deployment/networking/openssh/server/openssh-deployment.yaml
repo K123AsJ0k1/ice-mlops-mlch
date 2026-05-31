@@ -30,7 +30,7 @@ spec:
         - name: USER_NAME
           value: "mlch-bridge-user"
         - name: PASSWORD_ACCESS
-          value: False
+          value: "false"
         - name: SSHD_ALLOW_TCP_FORWARDING
           value: "true"
         - name: SSHD_GATEWAY_PORTS
