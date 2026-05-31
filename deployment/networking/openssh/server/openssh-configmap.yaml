@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: openssh-custom-init
+data:
+  99-enable-forwarding.sh: |
+    #!/bin/with-contenv bash
+    CONFIG_FILE="/config/sshd/sshd_config"
+    
+    # Wait for the file to exist if the container is initializing it for the first time
+    while [ ! -f "$CONFIG_FILE" ]; do sleep 1; done
+
+    # Fix the values directly in the file
+    sed -i 's/AllowTcpForwarding no/AllowTcpForwarding yes/g' $CONFIG_FILE
+    sed -i 's/GatewayPorts no/GatewayPorts clientspecified/g' $CONFIG_FILE

@@ -31,18 +31,19 @@ spec:
           value: "mlch-bridge-user"
         - name: PASSWORD_ACCESS
           value: "false"
-        - name: SSHD_ALLOW_TCP_FORWARDING
-          value: "true"
-        - name: SSHD_GATEWAY_PORTS
-          value: "true"
-        - name: ALLOW_FORWARDING_TO
-          value: "any"
         volumeMounts:
         - name: public-key-volume
           mountPath: /config/.ssh/authorized_keys
           subPath: authorized_keys 
           readOnly: true
+        - name: custom-init-volume
+          mountPath: /custom-cont-init.d/99-enable-forwarding.sh
+          subPath: 99-enable-forwarding.sh
       volumes:
       - name: public-key-volume
         secret:
           secretName: ssh-public-keys 
+      - name: custom-init-volume
+        configMap:
+          name: openssh-custom-init
+          defaultMode: 0755
