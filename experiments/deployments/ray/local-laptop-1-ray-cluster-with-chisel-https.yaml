@@ -56,7 +56,7 @@ services:
     extra_hosts:
       - "chisel.oss:86.50.169.209"
     # R:0.0.0.0:port means bind on ALL interfaces inside the K8s pod so K8s services can reach it
-    command: > 
+    command: >  
       client 
       --auth chisel1234:chisel4567 
       --tls-ca /run/secrets/cpouta-oss-crt 
@@ -70,7 +70,6 @@ services:
       qdrant-service.storage.svc.cluster.local:7201:0.0.0.0:7201
       redis-service.storage.svc.cluster.local:6379:0.0.0.0:6379
 
-  
 secrets: 
   cpouta-oss-crt:
     file: /home/()/.ssh/oss_platform_ca.crt
