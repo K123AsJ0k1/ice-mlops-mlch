@@ -13,15 +13,17 @@ where = ["src"]
 
 notebook = [
     "PyYAML",
-    "pyarrow",
     "apache-airflow-client==3.0.2",
-    "keystoneauth1",
-    "python-keystoneclient",
     "kfp==2.16.1"
 ]
 
 swift = [
     "python-swiftclient"
+]
+
+swift_auth = [
+    "keystoneauth1",
+    "python-keystoneclient",
 ]
 
 data = [
@@ -58,5 +60,5 @@ logging = [
 ]
 
 all = [
-    "icebreaker[notebook, swift, data, lang_detect, code_detect, redis, flower, ray, pararellism, logging]"
+    "icebreaker[notebook, swift, swift_auth, data, lang_detect, code_detect, redis, flower, ray, pararellism, logging]"
 ]
