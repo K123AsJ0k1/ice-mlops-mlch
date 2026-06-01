@@ -63,12 +63,12 @@ services:
       https://chisel.oss:7008 
       R:0.0.0.0:8401:ray-head:8265
       R:0.0.0.0:8451:ray-head:8350
-      mlflow.mlflow.svc.cluster.local:5000:0.0.0.0:5000
-      minio-service.storage.svc.cluster.local:9100:0.0.0.0:9100
-      mongo-service.storage.svc.cluster.local:27017:0.0.0.0:27017
-      neo4j-service.storage.svc.cluster.local:7687:0.0.0.0:7687
-      qdrant-service.storage.svc.cluster.local:7201:0.0.0.0:7201
-      redis-service.storage.svc.cluster.local:6379:0.0.0.0:637
+      0.0.0.0:5000:mlflow.mlflow.svc.cluster.local:5000
+      0.0.0.0:9100:minio-service.storage.svc.cluster.local:9100
+      0.0.0.0:27017:mongo-service.storage.svc.cluster.local:27017
+      0.0.0.0:7687:neo4j-service.storage.svc.cluster.local:7687
+      0.0.0.0:7201:qdrant-service.storage.svc.cluster.local:7201
+      0.0.0.0:6379:redis-service.storage.svc.cluster.local:6379
   
 secrets: 
   cpouta-oss-crt:
