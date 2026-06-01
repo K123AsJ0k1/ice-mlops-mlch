@@ -34,11 +34,11 @@ spec:
     port: 8303
     targetPort: 8303
     protocol: TCP
-  - name: c2-rs
+  - name: c2-rd
     port: 8401
     targetPort: 8401
     protocol: TCP
-  - name: l2-rs
+  - name: c2-rs
     port: 8451
     targetPort: 8451
     protocol: TCP
