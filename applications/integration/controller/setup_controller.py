@@ -80,9 +80,8 @@ def setup_controller(
     controlled_path = controlled_dimension + '-clusters-' + controlled_cluster 
     compose_file_path = yaml_dict['compose_path']
     check_interval = yaml_dict['check_interval']
-    #while True:
     current_state = "UNKNOWN"
-    for i in range(0,5):
+    while True:
         print('Getting cluster')
         object_content = swift_get_object_content(
             swift_client = swift_client,
