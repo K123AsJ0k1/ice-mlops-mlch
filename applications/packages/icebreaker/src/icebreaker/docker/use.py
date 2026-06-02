@@ -111,6 +111,7 @@ def docker_manage_compose(
     wanted_state: bool
 ):
     print(f"Managing compose file: {file_path}")
+    print(f"Current state: {current_state}")
     if current_state == 'UNKNOWN':
         print('Checking current compose state')
         check_docker_compose = docker_check_compose(
@@ -120,14 +121,16 @@ def docker_manage_compose(
             current_state = 'RUNNING'
         else:
             current_state = 'STOPPED'
-
+    print(f"Wanted state: {wanted_state}")
     if not current_state == 'RUNNING' and wanted_state:
+        print('Starting docker compose file')
         start_state = docker_start_compose(
             file_path = file_path
         ) 
         if start_state:
             current_state = 'RUNNING'
     if not current_state == 'STOPPED' and not wanted_state:
+        print('Stopping docker compose file')
         stop_state = docker_stop_compose(
             file_path = file_path
         )

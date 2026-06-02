@@ -12,9 +12,16 @@ where = ["src"]
 [project.optional-dependencies]
 
 notebook = [
-    "PyYAML",
     "apache-airflow-client==3.0.2",
     "kfp==2.16.1"
+]
+
+yaml = [
+    "PyYAML"
+]
+
+env = [
+    "python-decouple"
 ]
 
 swift = [
