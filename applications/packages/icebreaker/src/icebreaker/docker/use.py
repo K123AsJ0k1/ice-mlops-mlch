@@ -11,15 +11,8 @@ def docker_start_compose(
     if not os.path.exists(file_path):
         print(f"File not found at {file_path}")
         return False
-
-    compose_up_command = [
-        "docker", 
-        "compose", 
-        "-f", 
-        file_path, 
-        "up", 
-        "-d"
-    ]
+    
+    compose_up_command = f'docker compose -f "{file_path}" up -d'
 
     result = subprocess.run(
         compose_up_command,
@@ -47,14 +40,8 @@ def docker_stop_compose(
     if not os.path.exists(file_path):
         print(f"File not found at {file_path}")
         return False
-
-    compose_down_command = [
-        "docker", 
-        "compose", 
-        "-f", 
-        file_path, 
-        "down"
-    ]
+    
+    compose_down_command = f'docker compose -f "{file_path}" down'
 
     result = subprocess.run(
         compose_down_command,
@@ -83,25 +70,20 @@ def docker_check_compose(
         print(f"File not found at {file_path}")
         return False
     
-    compose_check_command = [
-        "docker", 
-        "compose", 
-        "-f", 
-        file_path, 
-        "ps", 
-        "--format", 
-        "json"
-    ]
+    compose_check_command = f'docker compose -f "{file_path}" ps --format json'
 
     try:
         result = subprocess.run(
             compose_check_command,
             capture_output=True,
             text=True,
-            check=True
+            check=True,
+            shell=True
         )
 
-        return len(result.stdout.strip()) > 2 
+        output = result.stdout.strip()
+        
+        return len(output) > 2 
     except Exception as e:
         return False
     
