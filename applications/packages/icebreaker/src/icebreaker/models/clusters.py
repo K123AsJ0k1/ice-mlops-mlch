@@ -22,6 +22,7 @@ class Network(BaseModel):
 class Cluster(BaseModel):
     resources: Resources = Field(alias = 'resources')
     network: Network = Field(alias = 'network')
+    activate: bool = Field(False, alias = 'activate')
 
 class Clusters(BaseModel):
     clusters: Dict[str, Cluster] = Field(default_factory = list, alias = 'times')

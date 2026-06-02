@@ -32,7 +32,7 @@ def docker_start_compose(
         print("Environment started successfully.")
         return True
     else:
-        print(f"Failed to start environment.\nError:\n{result.stderr}")
+        print(f"Failed to start environment: {result.stderr}")
         return False
 
 def docker_stop_compose(
@@ -67,5 +67,72 @@ def docker_stop_compose(
         print("Environment stopped and cleaned up successfully.")
         return True
     else:
-        print(f"Failed to stop environment.\nError:\n{result.stderr}")
+        print(f"Failed to stop environment: {result.stderr}")
         return False
+    
+def docker_check_compose(
+    file_path: str
+) -> bool:
+    try:
+        import subprocess
+        import os
+    except ImportError as e:
+        raise ImportError("docker/use failed to import", e)
+    
+    if not os.path.exists(file_path):
+        print(f"File not found at {file_path}")
+        return False
+    
+    compose_check_command = [
+        "docker", 
+        "compose", 
+        "-f", 
+        file_path, 
+        "ps", 
+        "--format", 
+        "json"
+    ]
+
+    try:
+        result = subprocess.run(
+            compose_check_command,
+            capture_output=True,
+            text=True,
+            check=True
+        )
+
+        return len(result.stdout.strip()) > 2 
+    except Exception as e:
+        return False
+    
+def docker_manage_compose(
+    file_path: str,
+    current_state: str,
+    wanted_state: bool
+):
+    print(f"Managing compose file: {file_path}")
+    if current_state == 'UNKNOWN':
+        print('Checking current compose state')
+        check_docker_compose = docker_check_compose(
+            file_path = file_path
+        )
+        if check_docker_compose:
+            current_state = 'RUNNING'
+        else:
+            current_state = 'STOPPED'
+
+    if not current_state == 'RUNNING' and wanted_state:
+        start_state = docker_start_compose(
+            file_path = file_path
+        ) 
+        if start_state:
+            current_state = 'RUNNING'
+    if not current_state == 'STOPPED' and not wanted_state:
+        stop_state = docker_stop_compose(
+            file_path = file_path
+        )
+        if stop_state:
+            current_state == 'STOPPED'
+    return current_state
+
+        

@@ -1,4 +1,5 @@
 
+
 def create_pipeline_inputs(
     fragments_folder: str,
     fragments_prefix: str,
@@ -14,7 +15,7 @@ def create_pipeline_inputs(
     try:
         from .fragments import compose_yaml_dict
     except ImportError as e:
-        raise ImportError("Failed to import", e)
+        raise ImportError("setup/pipeline failed to import", e)
 
     pipeline_inputs = []
     index = 1
@@ -45,9 +46,9 @@ def send_pipeline_inputs(
     try:
         import time as t
         import copy
-        from .interactions.integration import integration_task_interaction
+        from ..interactions.integration import integration_task_interaction
     except ImportError as e:
-        raise ImportError("Failed to import", e)
+        raise ImportError("setup/pipeline failed to import", e)
 
     route_outputs = []
     for pipeline_input in pipeline_inputs:
@@ -78,9 +79,9 @@ def get_pipeline_inputs(
     try:
         import copy
         import pickle
-        from .storage.management import object_storage_interaction
+        from ..storage.management import object_storage_interaction
     except ImportError as e:
-        raise ImportError("Failed to import", e)
+        raise ImportError("setup/pipeline failed to import", e)
 
     fetched_objects = []
     for number in range(start_index, end_index + 1):
@@ -107,10 +108,10 @@ def modify_pipeline_inputs(
     try:
         import time as t
         import copy
-        from .misc.dict import create_nested_dict, update_dict_value
-        from .interactions.integration import integration_task_interaction
+        from ..misc.dict import create_nested_dict, update_dict_value
+        from ..interactions.integration import integration_task_interaction
     except ImportError as e:
-        raise ImportError("Failed to import", e)
+        raise ImportError("setup/pipeline failed to import", e)
 
     index = 0
     route_outputs = []
@@ -160,7 +161,7 @@ def generate_pipeline_files(
     try:
         import re 
     except ImportError as e:
-        raise ImportError("Failed to import", e)
+        raise ImportError("setup/pipeline failed to import", e)
 
     for input_path in input_paths:
         file_name = input_path.split('/')[-1]
@@ -187,10 +188,10 @@ def store_pipeline_files(
     try:
         import time as t
         import copy
-        from .misc.dict import get_dict_value
-        from .storage.management import object_storage_interaction
+        from ..misc.dict import get_dict_value
+        from ..storage.management import object_storage_interaction
     except ImportError as e:
-        raise ImportError("Failed to import", e)
+        raise ImportError("setup/pipeline failed to import", e)
 
     pipeline_index = 1
     stored_files = []

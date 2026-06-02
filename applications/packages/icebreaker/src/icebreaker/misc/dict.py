@@ -164,7 +164,7 @@ def fill_nested_dict(
     try:
         import copy
     except ImportError as e:
-        raise ImportError("Failed to import", e)
+        raise ImportError("misc/dict failed to import", e)
     updated_dict = copy.deepcopy(target_dict)  
     
     def fill_nested_walk(

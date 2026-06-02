@@ -1,10 +1,14 @@
-import yaml
-from pathlib import Path
 
 def get_validated_yamls(
     relative_paths: list,
     yaml_validator: any
 ) -> dict:
+    try:
+        import yaml
+        from pathlib import Path
+    except ImportError as e:
+        raise ImportError("misc/dict failed to import", e)
+
     yaml_dicts = {}
     for relative_path in relative_paths:
         directory_path = Path.cwd()
