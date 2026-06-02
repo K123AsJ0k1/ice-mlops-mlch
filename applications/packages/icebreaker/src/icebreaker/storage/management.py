@@ -58,8 +58,6 @@ def set_object_path(
 
 def object_storage_interaction(
     storage_client: any,
-    lock_parameters: any,
-    lock_location: str,
     parameters: any, 
     object_data: any,
     object_metadata: any
@@ -94,6 +92,8 @@ def object_storage_interaction(
         lock_name = ''
 
         specified_lock_parameters = {}
+        lock_parameters = parameters['lock-parameters']
+        lock_location = parameters['lock-location']
         if lock_location in lock_parameters:
             print('Using ' + str(lock_location) + ' lock')
             specified_lock_parameters = lock_parameters[lock_location]

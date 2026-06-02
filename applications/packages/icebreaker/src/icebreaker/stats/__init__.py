@@ -1,1 +1,1 @@
-# src/icebreaker/analysis/__init__.py
+# src/icebreaker/stats/__init__.py
