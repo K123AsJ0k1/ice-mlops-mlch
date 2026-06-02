@@ -51,7 +51,7 @@ def docker_stop_compose(
     )
 
     if result.returncode == 0:
-        print("Environment stopped and cleaned up successfully.")
+        print("Environment stopped successfully.")
         return True
     else:
         print(f"Failed to stop environment: {result.stderr}")
