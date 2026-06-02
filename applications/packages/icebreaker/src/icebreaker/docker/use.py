@@ -1,5 +1,5 @@
 
-def docker_start_compose(
+def docker_up_compose(
     file_path: str
 ) -> bool:
     try:
@@ -41,7 +41,7 @@ def docker_stop_compose(
         print(f"File not found at {file_path}")
         return False
     
-    compose_down_command = f'docker compose -f "{file_path}" down'
+    compose_down_command = f'docker compose -f "{file_path}" stop'
 
     result = subprocess.run(
         compose_down_command,
@@ -82,7 +82,7 @@ def docker_check_compose(
         )
 
         output = result.stdout.strip()
-        
+
         return len(output) > 2 
     except Exception as e:
         return False
@@ -106,7 +106,7 @@ def docker_manage_compose(
     print(f"Wanted state: {wanted_state}")
     if not current_state == 'RUNNING' and wanted_state:
         print('Starting docker compose file')
-        start_state = docker_start_compose(
+        start_state = docker_up_compose(
             file_path = file_path
         ) 
         if start_state:
@@ -117,7 +117,7 @@ def docker_manage_compose(
             file_path = file_path
         )
         if stop_state:
-            current_state == 'STOPPED'
+            current_state = 'STOPPED'
     return current_state
 
         
