@@ -1,0 +1,7 @@
+env_path: '()/.ssh/.env-controller'
+object_bucket: 'mlch-pipe-user-example-com'
+object_path: 'MANAGEMENT/local-cloud-cluster.pkl'
+controlled_dimension: 'local'
+controlled_cluster: 'lt1'
+compose_path: '()/ice-mlops-mlch/experiments/deployments/ray/()'
+check_interval: 30
