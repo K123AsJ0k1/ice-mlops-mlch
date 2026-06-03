@@ -1,11 +1,9 @@
 from airflow.sdk import DAG, task
-
+ 
 from airflow.providers.standard.operators.trigger_dagrun import TriggerDagRunOperator
-   
-from functions.interactions.fill import fill_platform_interaction
-  
+
 with DAG(
-    dag_id = "submitter-fill-operation", 
+    dag_id = "submitter-check-operation", 
     start_date = None, 
     schedule = None,
     catchup = False,
@@ -14,30 +12,35 @@ with DAG(
         "swift-parameters": {},
         "bucket-parameters": {},
         "storage-parameters": {},
-        "platform-parameters": {} 
+        "platform-parameters": {}
     },
     tags = [
         "integration",
         "platforms",
-        "fill",
+        "setup",
         "operation",
         "level-2"
     ]
-) as dag: 
-    @task()
-    def operate_fill_interaction(
+) as dag:  
+    @task() 
+    def operate_check_interaction(
         params: any
     ):
-        expand_inputs = fill_platform_interaction(
+        try:
+            from functions.interactions.check import check_platform_interaction
+        except ImportError as e:
+            raise ImportError("monitoring-dags/check failed to import", e)
+
+        expand_inputs = check_platform_interaction(
             swift_parameters = params['swift-parameters'],
             bucket_parameters = params['bucket-parameters'],
             storage_parameters = params['storage-parameters'],
             platfrom_parameters = params['platform-parameters']
         )
         print('Storing ' + str(len(expand_inputs)) + ' objects')
-        return expand_inputs
- 
-    storage_kwargs = operate_fill_interaction()
+        return expand_inputs 
+
+    storage_kwargs = operate_check_interaction()
 
     trigger_dags = TriggerDagRunOperator.partial(
         task_id = 'submitter_storage_interaction',

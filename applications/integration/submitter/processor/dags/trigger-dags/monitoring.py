@@ -2,8 +2,6 @@ from airflow.sdk import DAG, task
 
 from airflow.providers.standard.operators.trigger_dagrun import TriggerDagRunOperator
 
-from functions.interactions.objects import objects_get_monitored
-  
 with DAG(
     dag_id = "submitter-monitoring-trigger", 
     start_date = None, 
@@ -23,11 +21,16 @@ with DAG(
         "trigger",
         "level-0"
     ] 
-) as dag:
+) as dag: 
     @task()
     def monitor_platforms(
         params: str
     ): 
+        try:
+            from functions.interactions.objects import objects_get_monitored
+        except ImportError as e:
+            raise ImportError("trigger-dags/monitoring failed to import", e)
+
         expand_inputs = objects_get_monitored(
             swift_parameters = params['swift-parameters'],
             bucket_parameters = params['bucket-parameters'],

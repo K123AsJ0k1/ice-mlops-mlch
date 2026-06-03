@@ -2,10 +2,8 @@ from airflow.sdk import DAG, task
 
 from airflow.providers.standard.operators.trigger_dagrun import TriggerDagRunOperator
 
-from functions.interactions.objects import objects_get_operated
-  
 with DAG(
-    dag_id = "submitter-operating-trigger", 
+    dag_id = "submitter-orchestrating-trigger", 
     start_date = None, 
     schedule = None,
     catchup = False,
@@ -19,15 +17,20 @@ with DAG(
     tags = [
         "integration",
         "platforms",
-        "operating",
+        "orchestrating", 
         "trigger",
         "level-0"
     ] 
-) as dag:
+) as dag: 
     @task()
-    def operate_platforms(
+    def orchestrate_platforms(
         params: str
     ): 
+        try:
+            from functions.interactions.objects import objects_get_operated
+        except ImportError as e:
+            raise ImportError("trigger-dags/operating failed to import", e)
+        
         expand_inputs = objects_get_operated(
             swift_parameters = params['swift-parameters'],
             bucket_parameters = params['bucket-parameters'],
@@ -38,7 +41,7 @@ with DAG(
         print('Operating ' + str(len(expand_inputs)) + ' platforms')
         return expand_inputs
     
-    platform_kwargs = operate_platforms()
+    platform_kwargs = orchestrate_platforms()
     
     trigger_dags = TriggerDagRunOperator.partial(
         task_id = 'submitter_interaction_sequences',

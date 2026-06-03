@@ -1,9 +1,9 @@
 from airflow.sdk import DAG, task
 
 from airflow.providers.standard.operators.trigger_dagrun import TriggerDagRunOperator
-# Maybe give a better name
+
 with DAG(
-    dag_id = "submitter-interaction-sequence", 
+    dag_id = "submitter-operating-sequence", 
     start_date = None, 
     schedule = None,
     catchup = False,
@@ -17,7 +17,7 @@ with DAG(
     tags = [
         "integration",
         "platforms",
-        "interaction",
+        "operating",
         "sequence",
         "level-1"
     ]

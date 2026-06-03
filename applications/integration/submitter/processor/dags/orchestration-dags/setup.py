@@ -2,7 +2,7 @@ from airflow.sdk import DAG, task
  
 from airflow.providers.standard.operators.trigger_dagrun import TriggerDagRunOperator
 
-from functions.interactions.setup import setup_platform_interaction
+#from functions.interactions.setup import setup_platform_interaction
 
 with DAG(
     dag_id = "submitter-setup-operation", 
@@ -28,9 +28,13 @@ with DAG(
     def operate_setup_interaction(
         params: any
     ):
-        # If setup is empty, do nothing
-        platform = params['platform-parameters']['name']
-        print('Operating setup interaction in:' + str(platform))
+        try:
+            from functions.interactions.setup import setup_platform_interaction
+        except ImportError as e:
+            raise ImportError("orchestration-dags/setup failed to import", e)
+
+        #platform = params['platform-parameters']['name']
+        #print('Operating setup interaction in:' + str(platform))
         expand_inputs = setup_platform_interaction(
             swift_parameters = params['swift-parameters'],
             bucket_parameters = params['bucket-parameters'],

@@ -17,7 +17,7 @@ with DAG(
         "interaction",
         "level-3"
     ] 
-) as dag:
+) as dag: 
     @task() 
     def storage_interaction(
         params: any

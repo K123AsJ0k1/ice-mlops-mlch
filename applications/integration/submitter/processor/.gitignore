@@ -2,3 +2,5 @@ config/
 #dags/
 logs/
 plugins/
+*.yaml
+*.md
