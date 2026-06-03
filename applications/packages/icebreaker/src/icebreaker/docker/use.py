@@ -1,6 +1,7 @@
 
 def docker_up_compose(
-    file_path: str
+    file_path: str,
+    print_function: any
 ) -> bool:
     try:
         import subprocess
@@ -9,7 +10,7 @@ def docker_up_compose(
         raise ImportError("docker/use failed to import", e)
     
     if not os.path.exists(file_path):
-        print(f"File not found at {file_path}")
+        print_function(f"File not found at {file_path}")
         return False
     
     compose_up_command = f'docker compose -f "{file_path}" up -d'
@@ -22,14 +23,15 @@ def docker_up_compose(
     )
 
     if result.returncode == 0:
-        print("Environment started successfully.")
+        print_function("Environment started successfully.")
         return True
     else:
-        print(f"Failed to start environment: {result.stderr}")
+        print_function(f"Failed to start environment: {result.stderr}")
         return False
 
 def docker_stop_compose(
-    file_path: str
+    file_path: str,
+    print_function: any
 ) -> bool:
     try:
         import subprocess
@@ -51,14 +53,15 @@ def docker_stop_compose(
     )
 
     if result.returncode == 0:
-        print("Environment stopped successfully.")
+        print_function("Environment stopped successfully.")
         return True
     else:
-        print(f"Failed to stop environment: {result.stderr}")
+        print_function(f"Failed to stop environment: {result.stderr}")
         return False
     
 def docker_check_compose(
-    file_path: str
+    file_path: str,
+    print_function: any
 ) -> bool:
     try:
         import subprocess
@@ -67,7 +70,7 @@ def docker_check_compose(
         raise ImportError("docker/use failed to import", e)
     
     if not os.path.exists(file_path):
-        print(f"File not found at {file_path}")
+        print_function(f"File not found at {file_path}")
         return False
     
     compose_check_command = f'docker compose -f "{file_path}" ps --format json'
@@ -90,31 +93,35 @@ def docker_check_compose(
 def docker_manage_compose(
     file_path: str,
     current_state: str,
-    wanted_state: bool
+    wanted_state: bool,
+    print_function: any
 ):
-    print(f"Managing compose file: {file_path}")
-    print(f"Current state: {current_state}")
+    print_function(f"Managing compose file: {file_path}")
+    print_function(f"Current state: {current_state}")
     if current_state == 'UNKNOWN':
-        print('Checking current compose state')
+        print_function('Checking current compose state')
         check_docker_compose = docker_check_compose(
-            file_path = file_path
+            file_path = file_path,
+            print_function = print_function
         )
         if check_docker_compose:
             current_state = 'RUNNING'
         else:
             current_state = 'STOPPED'
-    print(f"Wanted state: {wanted_state}")
+    print_function(f"Wanted state: {wanted_state}")
     if not current_state == 'RUNNING' and wanted_state:
-        print('Starting docker compose file')
+        print_function('Starting docker compose file')
         start_state = docker_up_compose(
-            file_path = file_path
+            file_path = file_path,
+            print_function = print_function
         ) 
         if start_state:
             current_state = 'RUNNING'
     if not current_state == 'STOPPED' and not wanted_state:
-        print('Stopping docker compose file')
+        print_function('Stopping docker compose file')
         stop_state = docker_stop_compose(
-            file_path = file_path
+            file_path = file_path,
+            print_function = print_function
         )
         if stop_state:
             current_state = 'STOPPED'
