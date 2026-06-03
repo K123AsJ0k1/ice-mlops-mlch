@@ -3,13 +3,15 @@ def logger_setup_configuration(
     logger_name: str
 ) -> any:
     try:
+        import sys
         import logging
         import os
         from datetime import datetime
     except ImportError as e:
         raise ImportError("logger/use failed to import", e)
-
-    script_dir = os.path.dirname(os.path.abspath(__file__))
+    
+    main_script_path = os.path.abspath(sys.argv[0])
+    script_dir = os.path.dirname(main_script_path)
     
     logs_dir = os.path.join(script_dir, "logs")
     os.makedirs(logs_dir, exist_ok=True)
@@ -37,6 +39,6 @@ def logger_setup_configuration(
     console_handler.setFormatter(logging.Formatter(log_format, datefmt=date_format))
     logger.addHandler(console_handler)
 
-    print(f"Logging initialized. Archive file created at: {full_log_path}\n")
+    logger.info(f"Logging initialized. Archive file created at: {full_log_path}")
 
     return logger
