@@ -1,7 +1,5 @@
 from airflow.sdk import DAG, task
 
-from functions.interactions.storage import storage_object_interaction
-
 with DAG(
     dag_id = "submitter-storage-interaction", 
     start_date = None, 
@@ -18,12 +16,17 @@ with DAG(
         "storage",
         "interaction",
         "level-3"
-    ]
+    ] 
 ) as dag:
-    @task()
+    @task() 
     def storage_interaction(
         params: any
     ):
+        try:
+            from functions.interactions.storage import storage_object_interaction
+        except ImportError as e:
+            raise ImportError("interaction-dags/storage failed to import", e)
+        
         interaction_status = storage_object_interaction(
             swift_parameters = params['swift-parameters'],
             bucket_parameters = params['bucket-parameters'],

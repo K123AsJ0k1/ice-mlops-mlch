@@ -54,7 +54,7 @@ def storage_orchestration_interaction(
                 object_data = None,
                 object_metadata = None 
             )
-    
+     
     if store_action == 'modify':
         object_key = storage_parameters['object-key']
         object_input = storage_parameters['object-input']

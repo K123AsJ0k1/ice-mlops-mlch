@@ -1,7 +1,5 @@
 from airflow.sdk import DAG, task
- 
-from functions.interactions.observability_test import observability_submitter_interaction
- 
+  
 with DAG(
     dag_id = "submitter-observability-interaction", 
     start_date = None, 
@@ -25,6 +23,11 @@ with DAG(
     def observability_interaction(
         params: any
     ):
+        try:
+            from functions.interactions.observability_test import observability_submitter_interaction
+        except ImportError as e:
+            raise ImportError("interaction-dags/observability failed to import", e)
+
         interaction_status = observability_submitter_interaction(
             swift_parameters = params['swift-parameters'],
             bucket_parameters = params['bucket-parameters'],
