@@ -1,10 +1,5 @@
-apache-airflow-providers-ssh
-apache-airflow-providers-sftp
-python-swiftclient
+apache-airflow-providers-ssh==5.0.2
+apache-airflow-providers-sftp==5.8.0
 paramiko==3.5.1
-python-decouple
-pydantic
-redis
-pandas
-pyarrow
-apache-airflow-client==3.0.2
+apache-airflow-client==3.2.1
+icebreaker[yaml, env, swift, data, redis] @ git+https://github.com/K123AsJ0k1/ice-mlops-mlch.git@main#subdirectory=applications/packages/icebreaker
