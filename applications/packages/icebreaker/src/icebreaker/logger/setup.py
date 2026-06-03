@@ -1,5 +1,5 @@
 
-def setup_orchestrator_logger(
+def logger_setup_configuration(
     logger_name: str
 ) -> any:
     try:
@@ -37,7 +37,6 @@ def setup_orchestrator_logger(
     console_handler.setFormatter(logging.Formatter(log_format, datefmt=date_format))
     logger.addHandler(console_handler)
 
-    # Print a header directly to the console indicating where the file is saving
     print(f"Logging initialized. Archive file created at: {full_log_path}\n")
 
     return logger
