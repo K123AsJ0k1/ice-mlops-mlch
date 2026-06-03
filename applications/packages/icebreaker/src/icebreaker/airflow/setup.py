@@ -8,7 +8,7 @@ def airflow_get_token(
         import requests
         from pydantic import BaseModel 
     except ImportError as e:
-        raise ImportError("Failed to import", e)
+        raise ImportError("airflow/setup failed to import", e)
 
     url = f"{host}/auth/token"
     payload = {
@@ -40,7 +40,7 @@ def airflow_setup_configuration(
     try:
         from airflow_client.client import Configuration
     except ImportError as e:
-        raise ImportError("Failed to import", e)
+        raise ImportError("airflow/setup failed to import", e)
 
     configuration = Configuration(
         host = airflow_host
@@ -52,7 +52,7 @@ def airflow_setup_configuration(
     )
     return configuration 
 
-def airflow_cli_connections(
+def airflow_create_connections(
     secret_file: str,
     compose_file: str
 ): 
@@ -61,7 +61,16 @@ def airflow_cli_connections(
         import yaml
         import json
     except ImportError as e:
-        raise ImportError("Failed to import", e)
+        raise ImportError("airflow/setup failed to import", e)
+    
+    airflow_connections = []
+    if not os.path.exists(secret_file):
+        print(f"Secret file not found at {secret_file}")
+        return airflow_connections
+    
+    if not os.path.exists(compose_file):
+        print(f"Compose file not found at {compose_file}")
+        return airflow_connections
     
     secret_dict = None
     with open(secret_file, 'r') as f:
@@ -70,7 +79,6 @@ def airflow_cli_connections(
     secret_platforms = secret_dict['platforms']
     secret_connections = secret_dict['connections']
     
-    airflow_connections = []
     for p_type, values in secret_platforms.items():
         for name, parameters  in values.items():
             connection_type = parameters['type']
@@ -82,7 +90,7 @@ def airflow_cli_connections(
                 connection_path = key_parameters['path']
                 connection_phrase = key_parameters['phrase']
                 connection_id = p_type + '-' + name
-    
+
                 values = {
                     'conn_type': 'ssh',
                     'login': connection_user,
@@ -113,3 +121,22 @@ def airflow_cli_connections(
             
                 airflow_connections.append(' '.join(cli_command))
     return airflow_connections
+
+def airflow_apply_connections(
+    connection_commands: list
+):
+    try:
+        from ..sub_pcs.use import subprocess_run_command
+    except ImportError as e:
+        raise ImportError("airflow/setup failed to import", e)
+
+    # For some reason there might be empty runs for the first command
+    # This can be fixed by running the missing commands as is
+    print_results = []
+    for connection_command in connection_commands:
+        result_print, error_print = subprocess_run_command(
+            command = connection_command
+        )
+        print_results.append(result_print)
+    
+    return print_results
