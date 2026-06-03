@@ -51,3 +51,65 @@ def airflow_setup_configuration(
         password = airflow_password
     )
     return configuration 
+
+def airflow_cli_connections(
+    secret_file: str,
+    compose_file: str
+): 
+    try:
+        import os
+        import yaml
+        import json
+    except ImportError as e:
+        raise ImportError("Failed to import", e)
+    
+    secret_dict = None
+    with open(secret_file, 'r') as f:
+        secret_dict = yaml.safe_load(f)
+
+    secret_platforms = secret_dict['platforms']
+    secret_connections = secret_dict['connections']
+    
+    airflow_connections = []
+    for p_type, values in secret_platforms.items():
+        for name, parameters  in values.items():
+            connection_type = parameters['type']
+            if connection_type == 'ssh':
+                connection_host = parameters['address']
+                connection_user = parameters['user']
+                connection_key = parameters['key']
+                key_parameters = secret_connections[connection_type][connection_key]
+                connection_path = key_parameters['path']
+                connection_phrase = key_parameters['phrase']
+                connection_id = p_type + '-' + name
+    
+                values = {
+                    'conn_type': 'ssh',
+                    'login': connection_user,
+                    'password': connection_phrase,
+                    'host': connection_host,
+                    'port': 22,
+                    'extra': {
+                        'key_file': connection_path
+                    }
+                }
+    
+                compose_command = "-f " + os.path.abspath(compose_file)
+                connection_name = "'" + connection_id + "'"
+                connection_json = "'" + json.dumps(values) + "'"
+                cli_command = [
+                    "docker", 
+                    "compose", 
+                    compose_command,
+                    "run", 
+                    "airflow-worker",
+                    "airflow", 
+                    "connections", 
+                    "add",
+                    connection_name,
+                    "--conn-json",
+                    connection_json
+                ]
+            
+                airflow_connections.append(' '.join(cli_command))
+    return airflow_connections
