@@ -13,9 +13,8 @@ with DAG(
     },
     tags = [
         "integration",
-        "platforms",
-        "setup",
-        "operation",
+        "observability",
+        "interaction",
         "level-3"
     ]
 ) as dag: 
@@ -24,7 +23,7 @@ with DAG(
         params: any
     ):
         try:
-            from functions.interactions.observability_test import observability_submitter_interaction
+            from interaction_dags.sub_func.observability import observability_submitter_interaction
         except ImportError as e:
             raise ImportError("interaction-dags/observability failed to import", e)
 

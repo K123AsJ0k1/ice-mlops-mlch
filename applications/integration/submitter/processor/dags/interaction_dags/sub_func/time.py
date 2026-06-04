@@ -1,9 +1,9 @@
-import copy
+#import copy
 
-import time as t
+#import time as t
 
-from functions.dict import update_nested_dict, get_dict_value, update_dict_value, create_nested_dict
-
+#from functions.dict import update_nested_dict, get_dict_value, update_dict_value, create_nested_dict
+'''
 def time_edit_list(
     value_list: list,
     used_keys: any,
@@ -55,6 +55,14 @@ def time_orch_update(
     storage_parameters: any,
     orch_dict: any,
 ):  
+    try:
+        import copy
+        import time as t
+
+        from icebreaker.misc.dict import update_nested_dict, get_dict_value, update_dict_value, create_nested_dict
+    except ImportError as e:
+        raise ImportError("interaction-dags/sub_func/storage failed to import", e)
+
     changed_orch = copy.deepcopy(orch_dict)
     if 'general-time' in storage_parameters:
         general_time_path = 'times'
@@ -181,4 +189,4 @@ def time_orch_update(
         )
 
     return changed_orch
-    
+'''

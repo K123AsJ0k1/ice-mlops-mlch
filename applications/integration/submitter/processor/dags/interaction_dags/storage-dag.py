@@ -17,13 +17,13 @@ with DAG(
         "interaction",
         "level-3"
     ] 
-) as dag: 
+) as dag:  
     @task() 
     def storage_interaction(
         params: any
     ):
         try:
-            from functions.interactions.storage import storage_object_interaction
+            from interaction_dags.sub_func.storage import storage_object_interaction 
         except ImportError as e:
             raise ImportError("interaction-dags/storage failed to import", e)
         

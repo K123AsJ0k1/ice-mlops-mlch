@@ -1,24 +1,24 @@
-import copy
-import re
+#import copy
+#import re
 
-import pandas as pd
+#import pandas as pd
 
-from datetime import datetime, timezone, time
+#from datetime import datetime, timezone, time
 
-from functions.dict import split_dict_by_length
+#from functions.dict import split_dict_by_length
 
-from functions.flower.use import flower_get_tasks
-from functions.flower.utility import flower_format_tasks
+#from functions.flower.use import flower_get_tasks
+#from functions.flower.utility import flower_format_tasks
 
-from functions.airflow.setup import airflow_setup_configuration
-from functions.airflow.use import airflow_get_metrics
-from functions.airflow.utility import airflow_format_metrics, airflow_format_logs
+#from functions.airflow.setup import airflow_setup_configuration
+#from functions.airflow.use import airflow_get_metrics
+#from functions.airflow.utility import airflow_format_metrics, airflow_format_logs
 
-from functions.swift.setup import swift_setup_client
-from functions.storage.management import object_storage_interaction, set_object_path
+#from functions.swift.setup import swift_setup_client
+#from functions.storage.management import object_storage_interaction, set_object_path
 
-from functions.utility.pyarrow import pyarrow_serialize_dataframe
-
+#from functions.utility.pyarrow import pyarrow_serialize_dataframe
+# Check imports
 def observability_table_path(
     source_type: str,
     case_name: str, 
@@ -26,6 +26,12 @@ def observability_table_path(
     end_times: list,
     debug_prints: bool
 ) -> str:
+    try:
+        from datetime import datetime, timezone
+        from icebreaker.storage.management import set_object_path
+    except ImportError as e:
+        raise ImportError("interaction-dags/sub_func/observability failed to import", e)
+
     table_object_path = None
     if 0 < len(start_times) or 0 < len(end_times):
         # These are in UTC+0
@@ -72,10 +78,16 @@ def observability_table_path(
             debug_prints = debug_prints
         )
     return table_object_path
-
+# Check imports
 def observability_table_timerange(
     object_name: str
 ) -> any:
+    try:
+        import re
+        from datetime import time
+    except ImportError as e:
+        raise ImportError("interaction-dags/sub_func/observability failed to import", e)
+
     time_match = re.search(r'(\d{2}-\d{2}-\d{2})-range-(\d{2}-\d{2}-\d{2})', object_name)
     timerange = None
     if time_match:
@@ -113,7 +125,7 @@ def observability_range_check(
                 path_exists = True
                 
     return path_exists
-
+# Check imports
 def observability_table_timestamp(
     source_type: str,
     case_name: str,
@@ -121,6 +133,12 @@ def observability_table_timestamp(
     table_name: str,
     debug_prints: bool
 ) -> str:
+    try:
+        from datetime import datetime, timezone
+        from icebreaker.storage.management import set_object_path
+    except ImportError as e:
+        raise ImportError("interaction-dags/sub_func/observability failed to import", e)
+
     table_object_path = None
     if 0 < timestamp:
         timestamp_dt_object = datetime.fromtimestamp(timestamp, tz = timezone.utc)
@@ -156,13 +174,19 @@ def observability_table_timestamp(
             debug_prints = debug_prints
         )
     return table_object_path
-
+# Check imports
 def observability_flower_interaction(
     swift_client: any,
     bucket_parameters: any,
     storage_parameters: any,
     object_list: any
 ):
+    try:
+        from icebreaker.flower.use import flower_get_tasks
+        from icebreaker.flower.utility import flower_format_tasks
+    except ImportError as e:
+        raise ImportError("interaction-dags/sub_func/observability failed to import", e)
+
     print('Observability flower interaction')
     data_stored = False
     
