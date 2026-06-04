@@ -8,7 +8,6 @@ with DAG(
     is_paused_upon_creation = False,
     params = {
         "swift-parameters": {},
-        "bucket-parameters": {},
         "storage-parameters": {},
         "process-parameters": {}
     },
@@ -24,14 +23,14 @@ with DAG(
         params: str
     ): 
         try:
-            from interaction_dags.sub_func.configure import configure_cloud_interaction
+            from interaction_dags.local_func.configure import configure_cloud_interaction
         except ImportError as e:
             raise ImportError("interaction-dags/configure failed to import", e)
-
-        print('Configure cloud')
-        # This is single target, the thing can be made multi target
-        interaction_status = configure_cloud_interaction()
-
+        interaction_status = configure_cloud_interaction(
+            swift_parameters = params['swift-parameters'],
+            storage_parameters = params['storage-parameters'],
+            process_parameters = params['process-parameters'],
+        )
         return interaction_status
     
     task_result = configure_interaction()

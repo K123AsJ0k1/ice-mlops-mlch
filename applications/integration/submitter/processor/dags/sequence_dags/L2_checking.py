@@ -1,9 +1,9 @@
 from airflow.sdk import DAG, task
 
 from airflow.providers.standard.operators.trigger_dagrun import TriggerDagRunOperator
-
-with DAG(
-    dag_id = "submitter-operating-sequence", 
+# Should be okay, but check trigger_dag_id and parameters
+with DAG( 
+    dag_id = "submitter-checking-sequence", 
     start_date = None, 
     schedule = None,
     catchup = False,
@@ -16,47 +16,38 @@ with DAG(
     },
     tags = [
         "integration",
-        "platforms",
-        "operating",
+        "platforms", 
+        "checking",
         "sequence",
-        "level-1"
+        "level-2"
     ]
-) as dag:
+) as dag: 
     @task()
     def get_sequence_parameters(
         params: str
-    ):  
+    ):   
         platform = params['platform-parameters']['name']
         print('Running interactions in:' + str(platform))
         return params
-    
+     
     parameters = get_sequence_parameters()
 
-    fill_sub_dag = TriggerDagRunOperator(
-        task_id = 'submitter_fill_operation',
-        trigger_dag_id = 'submitter-fill-operation', 
+    check_sub_dag = TriggerDagRunOperator(
+        task_id = 'submitter_check_operation',
+        trigger_dag_id = 'submitter-check-operation', 
         conf = parameters,
         wait_for_completion = True,
         poke_interval = 20,
         reset_dag_run = False
     )
 
-    setup_sub_dag = TriggerDagRunOperator(
-        task_id = 'submitter_setup_operation',
-        trigger_dag_id = 'submitter-setup-operation', 
-        conf = parameters,
-        wait_for_completion = True,
-        poke_interval = 20,
-        reset_dag_run = False
-    )
-    
-    run_sub_dag = TriggerDagRunOperator(
-        task_id = 'submitter_run_operation',
-        trigger_dag_id = 'submitter-run-operation', 
+    collect_sub_dag = TriggerDagRunOperator(
+        task_id = 'submitter_collect_operation',
+        trigger_dag_id = 'submitter-collect-operation', 
         conf = parameters,
         wait_for_completion = True,
         poke_interval = 20,
         reset_dag_run = False
     )
 
-    parameters >> fill_sub_dag >> setup_sub_dag >> run_sub_dag
+    parameters >> check_sub_dag >> collect_sub_dag

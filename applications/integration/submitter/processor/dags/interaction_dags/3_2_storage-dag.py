@@ -1,7 +1,7 @@
 from airflow.sdk import DAG, task
-  
+
 with DAG(
-    dag_id = "submitter-observability-interaction", 
+    dag_id = "submitter-storage-interaction", 
     start_date = None, 
     schedule = None,
     catchup = False,
@@ -13,25 +13,25 @@ with DAG(
     },
     tags = [
         "integration",
-        "observability",
+        "storage",
         "interaction",
         "level-3"
-    ]
-) as dag: 
-    @task()
-    def observability_interaction(
+    ] 
+) as dag:  
+    @task() 
+    def storage_interaction(
         params: any
     ):
-        try:
-            from interaction_dags.sub_func.observability import observability_submitter_interaction
+        try: 
+            from interaction_dags.local_func.storage import storage_object_interaction 
         except ImportError as e:
-            raise ImportError("interaction-dags/observability failed to import", e)
-
-        interaction_status = observability_submitter_interaction(
+            raise ImportError("interaction-dags/storage failed to import", e)
+        
+        interaction_status = storage_object_interaction(
             swift_parameters = params['swift-parameters'],
             bucket_parameters = params['bucket-parameters'],
             storage_parameters = params['storage-parameters']
         )
         return interaction_status
-
-    task_result = observability_interaction()
+    
+    task_result = storage_interaction()

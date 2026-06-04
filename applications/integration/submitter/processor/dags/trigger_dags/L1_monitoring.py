@@ -1,9 +1,9 @@
 from airflow.sdk import DAG, task
 
 from airflow.providers.standard.operators.trigger_dagrun import TriggerDagRunOperator
-
+# Should be okay, but check parameters
 with DAG(
-    dag_id = "submitter-orchestrating-trigger", 
+    dag_id = "submitter-monitoring-trigger", 
     start_date = None, 
     schedule = None,
     catchup = False,
@@ -17,37 +17,36 @@ with DAG(
     tags = [
         "integration",
         "platforms",
-        "orchestrating", 
+        "monitoring",
         "trigger",
-        "level-0"
+        "level-1"
     ] 
 ) as dag: 
     @task()
-    def orchestrate_platforms(
+    def monitor_platforms(
         params: str
     ): 
         try:
-            from functions.interactions.objects import objects_get_operated
+            from trigger_dags.local_func.U1_objects import unit_1_objects_get_operated
         except ImportError as e:
-            raise ImportError("trigger-dags/operating failed to import", e)
-        
-        expand_inputs = objects_get_operated(
+            raise ImportError("trigger-dags/monitoring failed to import", e)
+
+        expand_inputs = objects_get_monitored(
             swift_parameters = params['swift-parameters'],
             bucket_parameters = params['bucket-parameters'],
             storage_parameters = params['storage-parameters'],
-            process_parameters = params['process-parameters'],
+            process_parameters = params['process-parameters']
         )
         
-        print('Operating ' + str(len(expand_inputs)) + ' platforms')
-        return expand_inputs
+        print('Monitoring ' + str(len(expand_inputs)) + ' platforms')
+        return expand_inputs 
     
-    platform_kwargs = orchestrate_platforms()
+    platform_kwargs = monitor_platforms()
     
     trigger_dags = TriggerDagRunOperator.partial(
-        task_id = 'submitter_interaction_sequences',
+        task_id = 'submitter_checking_sequences',
         wait_for_completion = False,
         reset_dag_run = False
     ).expand_kwargs(platform_kwargs)
 
     platform_kwargs >> trigger_dags
-    

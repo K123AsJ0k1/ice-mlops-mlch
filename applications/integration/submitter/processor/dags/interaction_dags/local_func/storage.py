@@ -20,7 +20,7 @@ def storage_orchestration_interaction(
     bucket_user = bucket_parameters['user']
     debug_prints = storage_parameters['debug-prints']
 
-    object_key = '1'
+    object_key = '1' 
     stored_data = {}
     stored_metadata = {'version': 1}
     if store_action == 'create':

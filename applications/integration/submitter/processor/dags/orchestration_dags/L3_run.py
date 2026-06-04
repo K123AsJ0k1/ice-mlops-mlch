@@ -1,15 +1,14 @@
 from airflow.sdk import DAG, task
  
 from airflow.providers.standard.operators.trigger_dagrun import TriggerDagRunOperator
-
-#from functions.interactions.setup import setup_platform_interaction
-
+# Should be okay 
 with DAG(
-    dag_id = "submitter-setup-operation", 
+    dag_id = "submitter-run-orchestration", 
     start_date = None, 
     schedule = None,
     catchup = False,
     is_paused_upon_creation = False,
+    max_active_runs = 1,
     params = {
         "swift-parameters": {},
         "bucket-parameters": {},
@@ -19,32 +18,30 @@ with DAG(
     tags = [
         "integration",
         "platforms",
-        "setup",
-        "operation",
+        "run",
+        "orchestration",
         "level-2"
-    ]
-) as dag:
+    ] 
+) as dag: 
     @task()
-    def operate_setup_interaction(
+    def run_orchestration(
         params: any
     ):
         try:
-            from functions.interactions.setup import setup_platform_interaction
+            from orchestration_dags.local_func.run import run_platform_interaction
         except ImportError as e:
-            raise ImportError("orchestration-dags/setup failed to import", e)
+            raise ImportError("orchestration_dags/run failed to import", e)
 
-        #platform = params['platform-parameters']['name']
-        #print('Operating setup interaction in:' + str(platform))
-        expand_inputs = setup_platform_interaction(
+        expand_inputs = run_platform_interaction(
             swift_parameters = params['swift-parameters'],
             bucket_parameters = params['bucket-parameters'],
             storage_parameters = params['storage-parameters'],
             platfrom_parameters = params['platform-parameters']
         )
         print('Storing ' + str(len(expand_inputs)) + ' objects')
-        return expand_inputs
+        return expand_inputs 
 
-    storage_kwargs = operate_setup_interaction()
+    storage_kwargs = run_orchestration()
 
     trigger_dags = TriggerDagRunOperator.partial(
         task_id = 'submitter_storage_interaction',

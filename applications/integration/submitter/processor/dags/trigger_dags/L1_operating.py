@@ -1,9 +1,9 @@
 from airflow.sdk import DAG, task
 
 from airflow.providers.standard.operators.trigger_dagrun import TriggerDagRunOperator
-   
+# Should be okay, but check parameters
 with DAG(
-    dag_id = "submitter-fill-operation", 
+    dag_id = "submitter-orchestrating-trigger", 
     start_date = None, 
     schedule = None,
     catchup = False,
@@ -12,40 +12,42 @@ with DAG(
         "swift-parameters": {},
         "bucket-parameters": {},
         "storage-parameters": {},
-        "platform-parameters": {} 
+        "process-parameters": {}
     },
     tags = [
         "integration",
         "platforms",
-        "fill",
-        "operation",
-        "level-2"
-    ]
+        "orchestrating", 
+        "trigger",
+        "level-0"
+    ] 
 ) as dag: 
     @task()
-    def operate_fill_interaction(
-        params: any
-    ):
+    def orchestrate_platforms(
+        params: str
+    ): 
         try:
-            from functions.interactions.fill import fill_platform_interaction
+            from trigger_dags.local_func.U1_objects import unit_1_objects_get_operated
         except ImportError as e:
-            raise ImportError("orchestration-dags/fill failed to import", e)
-
-        expand_inputs = fill_platform_interaction(
+            raise ImportError("trigger-dags/operating failed to import", e)
+        
+        expand_inputs = objects_get_operated(
             swift_parameters = params['swift-parameters'],
             bucket_parameters = params['bucket-parameters'],
             storage_parameters = params['storage-parameters'],
-            platfrom_parameters = params['platform-parameters']
+            process_parameters = params['process-parameters'],
         )
-        print('Storing ' + str(len(expand_inputs)) + ' objects')
+        
+        print('Operating ' + str(len(expand_inputs)) + ' platforms')
         return expand_inputs
- 
-    storage_kwargs = operate_fill_interaction()
-
+    
+    platform_kwargs = orchestrate_platforms() 
+    
     trigger_dags = TriggerDagRunOperator.partial(
-        task_id = 'submitter_storage_interaction',
+        task_id = 'submitter_interaction_sequences',
         wait_for_completion = False,
         reset_dag_run = False
-    ).expand_kwargs(storage_kwargs)
+    ).expand_kwargs(platform_kwargs)
 
-    storage_kwargs >> trigger_dags
+    platform_kwargs >> trigger_dags
+    

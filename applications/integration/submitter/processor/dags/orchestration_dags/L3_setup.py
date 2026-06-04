@@ -1,11 +1,9 @@
 from airflow.sdk import DAG, task
  
 from airflow.providers.standard.operators.trigger_dagrun import TriggerDagRunOperator
-
-from functions.interactions.collect import collect_platform_interaction
-
+# Should be okay 
 with DAG(
-    dag_id = "submitter-collect-operation", 
+    dag_id = "submitter-setup-orchestration", 
     start_date = None, 
     schedule = None,
     catchup = False,
@@ -20,20 +18,20 @@ with DAG(
         "integration",
         "platforms",
         "setup",
-        "operation",
+        "orchestration",
         "level-2"
-    ]
+    ] 
 ) as dag:
     @task()
-    def operate_collect_interaction(
+    def setup_orchestration(
         params: any
-    ): 
+    ):
         try:
-            from functions.interactions.collect import collect_platform_interaction
+            from orchestration_dags.local_func.setup import setup_platform_interaction
         except ImportError as e:
-            raise ImportError("monitoring-dags/collect failed to import", e)
+            raise ImportError("orchestration_dags/setup failed to import", e)
 
-        expand_inputs = collect_platform_interaction(
+        expand_inputs = setup_platform_interaction(
             swift_parameters = params['swift-parameters'],
             bucket_parameters = params['bucket-parameters'],
             storage_parameters = params['storage-parameters'],
@@ -42,7 +40,7 @@ with DAG(
         print('Storing ' + str(len(expand_inputs)) + ' objects')
         return expand_inputs
 
-    storage_kwargs = operate_collect_interaction()
+    storage_kwargs = setup_orchestration() 
 
     trigger_dags = TriggerDagRunOperator.partial(
         task_id = 'submitter_storage_interaction',

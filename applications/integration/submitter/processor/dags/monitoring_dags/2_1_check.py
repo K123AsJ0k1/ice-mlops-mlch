@@ -1,14 +1,13 @@
 from airflow.sdk import DAG, task
  
 from airflow.providers.standard.operators.trigger_dagrun import TriggerDagRunOperator
-  
+
 with DAG(
-    dag_id = "submitter-run-operation", 
+    dag_id = "submitter-check-orchestration", 
     start_date = None, 
     schedule = None,
     catchup = False,
     is_paused_upon_creation = False,
-    max_active_runs = 1,
     params = {
         "swift-parameters": {},
         "bucket-parameters": {},
@@ -18,30 +17,30 @@ with DAG(
     tags = [
         "integration",
         "platforms",
-        "run",
+        "setup",
         "operation",
         "level-2"
-    ]
-) as dag: 
-    @task()
-    def operate_run_interaction(
+    ]  
+) as dag:  
+    @task() 
+    def check_orchestration( 
         params: any
     ):
         try:
-            from functions.interactions.run import run_platform_interaction
+            from functions.interactions.check import check_platform_interaction
         except ImportError as e:
-            raise ImportError("orchestration-dags/run failed to import", e)
+            raise ImportError("monitoring_dags/check failed to import", e)
 
-        expand_inputs = run_platform_interaction(
+        expand_inputs = check_platform_interaction(
             swift_parameters = params['swift-parameters'],
             bucket_parameters = params['bucket-parameters'],
             storage_parameters = params['storage-parameters'],
             platfrom_parameters = params['platform-parameters']
         )
         print('Storing ' + str(len(expand_inputs)) + ' objects')
-        return expand_inputs
+        return expand_inputs 
 
-    storage_kwargs = operate_run_interaction()
+    storage_kwargs = check_orchestration()
 
     trigger_dags = TriggerDagRunOperator.partial(
         task_id = 'submitter_storage_interaction',

@@ -30,7 +30,7 @@ def observability_table_path(
         from datetime import datetime, timezone
         from icebreaker.storage.management import set_object_path
     except ImportError as e:
-        raise ImportError("interaction-dags/sub_func/observability failed to import", e)
+        raise ImportError("interaction_dags/local_func/observability failed to import", e)
 
     table_object_path = None
     if 0 < len(start_times) or 0 < len(end_times):
@@ -86,7 +86,7 @@ def observability_table_timerange(
         import re
         from datetime import time
     except ImportError as e:
-        raise ImportError("interaction-dags/sub_func/observability failed to import", e)
+        raise ImportError("interaction_dags/local_func/observability failed to import", e)
 
     time_match = re.search(r'(\d{2}-\d{2}-\d{2})-range-(\d{2}-\d{2}-\d{2})', object_name)
     timerange = None
@@ -137,7 +137,7 @@ def observability_table_timestamp(
         from datetime import datetime, timezone
         from icebreaker.storage.management import set_object_path
     except ImportError as e:
-        raise ImportError("interaction-dags/sub_func/observability failed to import", e)
+        raise ImportError("interaction_dags/local_func/observability failed to import", e)
 
     table_object_path = None
     if 0 < timestamp:
@@ -182,10 +182,12 @@ def observability_flower_interaction(
     object_list: any
 ):
     try:
+        import pandas as pd
         from icebreaker.flower.use import flower_get_tasks
         from icebreaker.flower.utility import flower_format_tasks
+        from icebreaker.pyarrow.use import pyarrow_serialize_dataframe
     except ImportError as e:
-        raise ImportError("interaction-dags/sub_func/observability failed to import", e)
+        raise ImportError("interaction_dags/local_func/observability failed to import", e)
 
     print('Observability flower interaction')
     data_stored = False
@@ -306,6 +308,16 @@ def observability_airflow_interaction(
     storage_parameters: any,
     object_list: any
 ):
+    try:
+        import pandas as pd
+        from icebreaker.pyarrow.use import pyarrow_serialize_dataframe
+        from icebreaker.airflow.setup import airflow_setup_configuration
+        from icebreaker.airflow.use import airflow_get_metrics
+        from icebreaker.airflow.utility import airflow_format_metrics, airflow_format_logs
+        from icebreaker.misc.dict import split_dict_by_length
+    except ImportError as e:
+        raise ImportError("interaction_dags/local_func/observability failed to import", e)
+
     print('Observability airflow interaction')
     data_stored = False
 
@@ -476,6 +488,12 @@ def observability_submitter_interaction(
     bucket_parameters: any,
     storage_parameters: any  
 ) -> any:  
+    try:
+        from icebreaker.swift.setup import swift_setup_client
+        from icebreaker.storage.management import object_storage_interaction
+    except ImportError as e:
+        raise ImportError("interaction_dags/local_func/observability failed to import", e)
+
     print('Observability submitter interaction')
     # This uses apache-airflow-client==3.0.2
     # Updating will create changes, which show as validation errors

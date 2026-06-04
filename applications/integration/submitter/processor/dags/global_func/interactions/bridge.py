@@ -1,15 +1,21 @@
-from airflow.providers.ssh.operators.ssh import SSHHook
-from airflow.providers.sftp.hooks.sftp import SFTPHook
+#from airflow.providers.ssh.operators.ssh import SSHHook
+#from airflow.providers.sftp.hooks.sftp import SFTPHook
  
-from functions.interface.ssh import ssh_create_command, ssh_check_command
-from functions.utility.misc import ssh_run_command
+#from functions.interface.ssh import ssh_create_command, ssh_check_command
+#from functions.utility.misc import ssh_run_command
 
-from functions.locking import concurrency_get_client, concurrency_check_lock, concurrency_get_lock, concurrency_release_lock
+#from functions.locking import concurrency_get_client, concurrency_check_lock, concurrency_get_lock, concurrency_release_lock
 # Works  
-def platform_ssh_interface(
+def bridge_ssh_interface(
     target_platform: str,
     interface_command: any
 ) -> any:
+    try:
+        #from datetime import datetime, timezone
+        #from icebreaker.storage.management import set_object_path
+    except ImportError as e:
+        raise ImportError("global_func//observability failed to import", e)
+
     print('Using SSH interface')
     interface_output = None
     if 0 < len(interface_command):
@@ -36,10 +42,16 @@ def platform_ssh_interface(
             ssh_client.close()
     return interface_output
 # Works
-def platform_sftp_interface(
+def bridge_sftp_interface(
     target_platform: str,
     interface_command: any
 ) -> any:
+    try:
+        from datetime import datetime, timezone
+        from icebreaker.storage.management import set_object_path
+    except ImportError as e:
+        raise ImportError("interaction-dags/sub_func/observability failed to import", e)
+
     print('Using SFTP interface')
     interface_output = None
     print('Given command: ' + str(interface_command))
@@ -67,11 +79,17 @@ def platform_sftp_interface(
             interface_output = True
     return interface_output
 # Works
-def platform_interface_interaction(
+def bridge_interface_interaction(
     storage_parameters: any,
     lock_location: str,
     interaction_parameters: any
 ) -> any:
+    try:
+        #from datetime import datetime, timezone
+        #from icebreaker.storage.management import set_object_path
+    except ImportError as e:
+        raise ImportError("interaction-dags/sub_func/observability failed to import", e)
+
     print('Platform interface interaction')
     interface_output = None
     lock_parameters = storage_parameters['lock'][lock_location]
@@ -100,12 +118,12 @@ def platform_interface_interaction(
         if lock_created:
             try:
                 if interaction_interface == 'ssh':
-                    interface_output = platform_ssh_interface(
+                    interface_output = bridge_ssh_interface(
                         target_platform = target_platform,
                         interface_command = interface_command
                     )
                 if interaction_interface == 'sftp': 
-                    interface_output = platform_sftp_interface(
+                    interface_output = bridge_sftp_interface(
                         target_platform = target_platform,
                         interface_command = interface_command
                     )

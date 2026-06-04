@@ -1,9 +1,9 @@
 from airflow.sdk import DAG, task
-
+ 
 from airflow.providers.standard.operators.trigger_dagrun import TriggerDagRunOperator
 
 with DAG(
-    dag_id = "submitter-monitoring-trigger", 
+    dag_id = "submitter-collect-orchestration", 
     start_date = None, 
     schedule = None,
     catchup = False,
@@ -12,41 +12,40 @@ with DAG(
         "swift-parameters": {},
         "bucket-parameters": {},
         "storage-parameters": {},
-        "process-parameters": {}
+        "platform-parameters": {}
     },
     tags = [
         "integration",
         "platforms",
-        "monitoring",
-        "trigger",
-        "level-0"
+        "setup",
+        "operation",
+        "level-2"
     ] 
-) as dag: 
+) as dag:
     @task()
-    def monitor_platforms(
-        params: str
+    def collect_orchestration(
+        params: any
     ): 
         try:
-            from functions.interactions.objects import objects_get_monitored
+            from functions.interactions.collect import collect_platform_interaction
         except ImportError as e:
-            raise ImportError("trigger-dags/monitoring failed to import", e)
+            raise ImportError("monitoring_dags/collect failed to import", e)
 
-        expand_inputs = objects_get_monitored(
+        expand_inputs = collect_platform_interaction(
             swift_parameters = params['swift-parameters'],
             bucket_parameters = params['bucket-parameters'],
             storage_parameters = params['storage-parameters'],
-            process_parameters = params['process-parameters']
+            platfrom_parameters = params['platform-parameters']
         )
-        
-        print('Monitoring ' + str(len(expand_inputs)) + ' platforms')
+        print('Storing ' + str(len(expand_inputs)) + ' objects')
         return expand_inputs
-    
-    platform_kwargs = monitor_platforms()
-    
+
+    storage_kwargs = collect_orchestration()
+
     trigger_dags = TriggerDagRunOperator.partial(
-        task_id = 'main_trigger_subdags',
+        task_id = 'submitter_storage_interaction',
         wait_for_completion = False,
         reset_dag_run = False
-    ).expand_kwargs(platform_kwargs)
+    ).expand_kwargs(storage_kwargs)
 
-    platform_kwargs >> trigger_dags
+    storage_kwargs >> trigger_dags
