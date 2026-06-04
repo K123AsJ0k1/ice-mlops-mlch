@@ -38,7 +38,7 @@ def setup_controller(
     
     swift_user = env_dict.get('CSC_USERNAME')
     swift_password = env_dict.get('CSC_PASSWORD')
-    swift_project_name = env_dict.get('CSC_PROJECT_1')
+    swift_project_name = env_dict.get('CSC_PROJECT')
     swift_domain_name = env_dict.get('CSC_USER_DOMAIN_NAME')
     
     swift_token = env_dict.get('SWIFT_TOKEN')
