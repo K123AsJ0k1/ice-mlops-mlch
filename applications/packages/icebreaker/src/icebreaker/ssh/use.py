@@ -1,4 +1,3 @@
-import re
 
 def ssh_create_command(
     commands: any
@@ -15,6 +14,10 @@ def ssh_create_command(
 def ssh_check_command(
     string_command: str
 ) -> bool:
+    try:
+        import re
+    except ImportError as e:
+        raise ImportError("ssh/use failed to import", e)
     # This is too strict
     # Accepts single or && chained commands
     pattern = r"^[^&|;]+(?:\s+&&\s+[^&|;]+)*$"
