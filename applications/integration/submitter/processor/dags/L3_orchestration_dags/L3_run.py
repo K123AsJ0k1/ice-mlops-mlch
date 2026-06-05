@@ -28,11 +28,11 @@ with DAG(
         params: any
     ):
         try:
-            from orchestration_dags.local_func.run import run_platform_interaction
+            from L3_orchestration_dags.tasks.run_tasks import run_task_platform_interaction
         except ImportError as e:
             raise ImportError("L3_orchestration_dags/L3_run failed to import", e)
 
-        expand_inputs = run_platform_interaction(
+        expand_inputs = run_task_platform_interaction(
             swift_parameters = params['swift-parameters'],
             bucket_parameters = params['bucket-parameters'],
             storage_parameters = params['storage-parameters'],

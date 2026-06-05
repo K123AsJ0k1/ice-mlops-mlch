@@ -1,6 +1,6 @@
 
 # check imports and function inputs
-def run_platform_interaction(
+def run_task_platform_interaction(
     swift_parameters: any,
     bucket_parameters: any,
     storage_parameters: any,
@@ -34,6 +34,8 @@ def run_platform_interaction(
         from icebreaker.swift.setup import swift_setup_client
         from icebreaker.storage.management import object_storage_interaction
         from icebreaker.misc.dict import get_dict_value, create_nested_dict, update_dict_value
+        from L3_orchestration_dags.actions.run_actions import run_action_submit_job
+        from functions.actions.monitor_actions import monitor_action_check_jobs
     except ImportError as e:
         raise ImportError("L3_orchestration_dags/tasks/fill_tasks failed to import", e) 
 
@@ -131,7 +133,7 @@ def run_platform_interaction(
                                 job_interaction = job_status['interaction']
                                 if job_order['start']:
                                     if not job_interaction['submitted']:
-                                        job_id = run_submit_job(
+                                        job_id = run_action_submit_job(
                                             storage_parameters = storage_parameters,
                                             lock_location = storage_parameters['airflow-lock-location'],
                                             target_platform = target_platform,
@@ -141,7 +143,7 @@ def run_platform_interaction(
                                         
                                         t.sleep(2)
 
-                                        current_jobs = monitor_check_jobs(
+                                        current_jobs = monitor_action_check_jobs(
                                             storage_parameters = storage_parameters,
                                             lock_location = storage_parameters['airflow-lock-location'],
                                             target_platform = target_platform,

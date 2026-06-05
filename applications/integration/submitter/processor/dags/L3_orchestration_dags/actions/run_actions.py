@@ -1,9 +1,4 @@
-#from functions.general import fill_list_values
-
-#from functions.interface.slurm import slurm_sbatch_job, slurm_format_sbatch
-#from functions.interactions.platform import platform_interface_interaction
-  
-# Works
+# Check imports and confirm function
 def run_action_submit_job(
     storage_parameters: any,
     lock_location: str,
@@ -12,12 +7,10 @@ def run_action_submit_job(
     file_path: str
 ) -> any:
     try: 
-        #from functions.interactions.bridge import bridge_ssh_interface
-        #from icebreaker.linux.utility import linux_format_pwd
-        #from icebreaker.csc.utility import csc_parse_workspaces
-        #from icebreaker.lmod.utility import lmod_parse_list
-        #from icebreaker.python.utility import python_parse_version
         from icebreaker.slurm.use import slurm_sbatch_job
+        from icebreaker.slurm.utility import slurm_format_sbatch
+        from icebreaker.misc.general import fill_list_values
+        from functions.interactions.bridge import bridge_ssh_interface
     except ImportError as e:
         raise ImportError("L3_orchestration_dags/actions/run_actions failed to import", e)
 
@@ -34,7 +27,7 @@ def run_action_submit_job(
         ]
     )
 
-    interaction_output = platform_interface_interaction(
+    interaction_output = bridge_ssh_interface(
         storage_parameters = storage_parameters,
         lock_location = lock_location,
         interaction_parameters = {

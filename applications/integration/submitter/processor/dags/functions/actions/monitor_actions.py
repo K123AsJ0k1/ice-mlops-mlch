@@ -4,7 +4,7 @@
 #from functions.interactions.platform import platform_interface_interaction
 
 # Works
-def monitor_check_jobs(
+def monitor_action_check_jobs(
     storage_parameters: any,
     lock_location: str,
     target_platform: str,
@@ -12,7 +12,9 @@ def monitor_check_jobs(
 ) -> any:
     try:
         from icebreaker.slurm.use import slurm_squeue_jobs
-        #from icebreaker
+        from icebreaker.misc.general import fill_list_values
+        from functions.interactions.bridge import bridge_ssh_interface
+        from icebreaker.slurm.utility import slurm_format_squeue
     except ImportError as e:
         raise ImportError("L3_orchestration_dags/tasks/fill_tasks failed to import", e) 
 
@@ -28,7 +30,7 @@ def monitor_check_jobs(
         ]
     )
     
-    interaction_output = platform_interface_interaction(
+    interaction_output = bridge_ssh_interface(
         storage_parameters = storage_parameters,
         lock_location = lock_location,
         interaction_parameters = {
