@@ -1,20 +1,23 @@
-from functions.interface.sftp import sftp_list_directory
-from functions.interactions.platform import platform_interface_interaction
- 
 # Works
-def sftp_get_directory_list(
+def sftp_action_get_directory_list(
     storage_parameters: any,
     lock_location: str,
     target_platform: str,
     target_path: str
 ) -> any:
+    try:
+        from functions.utility.sftp import sftp_list_directory
+        from functions.interactions.bridge import bridge_interface_interaction
+    except ImportError as e:
+        raise ImportError("functions/actions/sftp failed to import", e) 
+
     print('Run list directory')
 
     directory_command = sftp_list_directory(
         target_path = target_path
     )
 
-    file_list = platform_interface_interaction(
+    file_list = bridge_interface_interaction(
         storage_parameters = storage_parameters,
         lock_location = lock_location,
         interaction_parameters = {

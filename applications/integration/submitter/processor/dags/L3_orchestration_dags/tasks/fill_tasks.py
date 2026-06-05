@@ -9,9 +9,10 @@ def fill_task_hpc_interaction(
     try:
         import copy
         import time as t
-        from global_functions.utility.airflow import airflow_check_connection
+        from functions.utility.airflow import airflow_check_connection
         from icebreaker.misc.dict import create_nested_dict, update_dict_value
-        from L3_orchestration_dags.utility.fill_utility import fill_utility_get_details, fill_utility_platform_commands
+        from L3_orchestration_dags.utility.fill_utility import fill_utility_platform_commands
+        from L3_orchestration_dags.actions.fill_actions import fill_action_utility_get_details
     except ImportError as e:
         raise ImportError("L3_orchestration_dags/tasks/fill_tasks failed to import", e) 
 
@@ -45,7 +46,7 @@ def fill_task_hpc_interaction(
                     print('Filling object ' + str(object_name))
                     properties_dict = {}
                     for key in fill_commands.keys():
-                        given_value = fill_utility_get_details(
+                        given_value = fill_action_utility_get_details(
                             storage_parameters = storage_parameters,
                             lock_location = storage_parameters['airflow-lock-location'], 
                             target_platform = target_platform,

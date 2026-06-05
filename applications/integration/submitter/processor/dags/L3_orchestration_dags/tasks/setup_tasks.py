@@ -13,7 +13,7 @@
 
 #from functions.actions.setup import setup_venv_create, setup_venv_install, setup_venv_check, setup_venv_packages, setup_send_file
 #from functions.actions.general import general_list_directory
-# Works
+# Check imports and confirm function
 def setup_task_hpc_configs(
     storage_parameters: any,
     lock_location: str,
@@ -21,13 +21,18 @@ def setup_task_hpc_configs(
     orchestration: any
 ) -> any:
     try:
-        #import copy
-        #import time as t
-        #from global_functions.utility.airflow import airflow_check_connection
-        #from icebreaker.misc.dict import create_nested_dict, update_dict_value
-        #from L3_orchestration_dags.utility.fill_utility import fill_utility_get_details, fill_utility_platform_commands
-        from L3_orchestration_dags.tasks.setup_tasks import setup_utility_platform_commands, setup_utility_platform_conditions
+        
         from icebreaker.csc.utility import csc_workspace_check
+        from L3_orchestration_dags.utility.setup_utility import (
+            setup_utility_platform_commands,
+            setup_utility_platform_conditions
+        )
+        from L3_orchestration_dags.actions.setup_actions import (
+            setup_action_venv_create,
+            setup_action_venv_install,
+            setup_action_venv_check,
+            setup_action_venv_packages
+        )
     except ImportError as e:
         raise ImportError("L3_orchestration_dags/tasks/fill_tasks failed to import", e) 
 
@@ -61,7 +66,7 @@ def setup_task_hpc_configs(
                     )
                 if check == 'venv-create':
                     if not condition_results[1]:
-                        check_result = setup_venv_create(
+                        check_result = setup_action_venv_create(
                             storage_parameters = storage_parameters,
                             lock_location = lock_location,
                             target_platform = target_platform,
@@ -70,7 +75,7 @@ def setup_task_hpc_configs(
                         )
                 if check == 'venv-install':
                     if 0 < len(condition_results[3]):
-                        check_result = setup_venv_install(
+                        check_result = setup_action_venv_install(
                             storage_parameters = storage_parameters,
                             lock_location = lock_location,
                             target_platform = target_platform,
@@ -80,7 +85,7 @@ def setup_task_hpc_configs(
             if 'list-bool-true' == wanted:
                 if check == 'venv-check': 
                     if condition_results[0]:
-                        check_result = setup_venv_check(
+                        check_result = setup_action_venv_check(
                             storage_parameters = storage_parameters,
                             lock_location = lock_location,
                             target_platform = target_platform,
@@ -89,7 +94,7 @@ def setup_task_hpc_configs(
                         )
                 if check == 'venv-packages':
                     if condition_results[1] or condition_results[2]:
-                        check_result = setup_venv_packages(
+                        check_result = setup_action_venv_packages(
                             storage_parameters = storage_parameters,
                             lock_location = lock_location,
                             target_platform = target_platform,
@@ -105,7 +110,7 @@ def setup_task_hpc_configs(
                     print('Config conditions: ', condition_results)
                     status = True
     return status
-    
+# Check imports and confirm function
 def setup_task_hpc_files(
     swift_client: any,
     bucket_parameters: any,
@@ -115,11 +120,9 @@ def setup_task_hpc_files(
     orchestration: any
 ) -> any:
     try:
-        import copy
-        import time as t
-        from global_functions.utility.airflow import airflow_check_connection
-        from icebreaker.misc.dict import create_nested_dict, update_dict_value
-        from L3_orchestration_dags.utility.fill_utility import fill_utility_get_details, fill_utility_platform_commands
+        from icebreaker.misc.dict import get_dict_value
+        from functions.actions.sftp_actions import sftp_action_get_directory_list
+        from L3_orchestration_dags.actions.setup_actions import setup_action_send_file
     except ImportError as e:
         raise ImportError("L3_orchestration_dags/tasks/fill_tasks failed to import", e) 
 
@@ -156,7 +159,7 @@ def setup_task_hpc_files(
             for workspace in platform_properties_workspace:
                 workspace_path = workspace['path']
                 if workspace_path in target_file_path:
-                    file_list = general_list_directory(
+                    file_list = sftp_action_get_directory_list(
                         storage_parameters = storage_parameters,
                         lock_location = lock_location,
                         target_platform = target_platform,
@@ -173,7 +176,7 @@ def setup_task_hpc_files(
                             operation_results.append(operation_result)
                     
                     if run_operation:
-                        operation_result = setup_send_file(
+                        operation_result = setup_action_send_file(
                             swift_client = swift_client,
                             bucket_parameters = bucket_parameters,
                             storage_parameters = storage_parameters,
@@ -190,7 +193,7 @@ def setup_task_hpc_files(
             status = False
             break
     return status
-# works
+# Check imports and confirm function
 def setup_task_hpc_interaction(
     swift_parameters: any,
     bucket_parameters: any,
@@ -200,9 +203,11 @@ def setup_task_hpc_interaction(
     try:
         import copy
         import time as t
-        from global_functions.utility.airflow import airflow_check_connection
+        import pickle
+        from functions.utility.airflow import airflow_check_connection
         from icebreaker.misc.dict import create_nested_dict, update_dict_value
-        from L3_orchestration_dags.utility.fill_utility import fill_utility_get_details, fill_utility_platform_commands
+        from icebreaker.swift.setup import swift_setup_client
+        from icebreaker.storage.management import object_storage_interaction
     except ImportError as e:
         raise ImportError("L3_orchestration_dags/tasks/fill_tasks failed to import", e) 
 
@@ -250,7 +255,7 @@ def setup_task_hpc_interaction(
                 )
                 orch_data = pickle.loads(orch_object[0])
                 
-                config_status = setup_platform_configs(
+                config_status = setup_task_hpc_configs(
                     storage_parameters = storage_parameters,
                     lock_location = storage_parameters['airflow-lock-location'],
                     target_platform = target_platform,
@@ -258,7 +263,7 @@ def setup_task_hpc_interaction(
                 )
                 print('Config setup success: ' + str(config_status))
                 
-                files_status = setup_platform_files(
+                files_status = setup_task_hpc_files(
                     swift_client = swift_client,
                     bucket_parameters = bucket_parameters,
                     storage_parameters = storage_parameters,

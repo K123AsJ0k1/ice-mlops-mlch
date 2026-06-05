@@ -1,5 +1,5 @@
 # Check imports and confirm function
-def setup_venv_check(
+def setup_action_venv_check(
     storage_parameters: any,
     lock_location: str,
     target_platform: str,
@@ -52,7 +52,7 @@ def setup_venv_check(
     print('Venv exists: ' + str(venv_exists))
     return venv_exists
 # Check imports and confirm function
-def setup_venv_create(
+def setup_action_venv_create(
     storage_parameters: any,
     lock_location: str,
     target_platform: str,
@@ -119,7 +119,7 @@ def setup_venv_create(
     print('Venv created: ' + str(venv_exists))
     return venv_exists
 # Check imports and confirm function
-def setup_venv_packages(
+def setup_action_venv_packages(
     storage_parameters: any,
     lock_location: str,
     target_platform: str,
@@ -180,7 +180,7 @@ def setup_venv_packages(
     print('Found missing packages:', missing_packages)
     return missing_packages
 # Check imports and confirm function
-def setup_venv_install(
+def setup_action_venv_install(
     storage_parameters: any,
     lock_location: str,
     target_platform: str,
@@ -241,7 +241,7 @@ def setup_venv_install(
     print('Packages installed: ' + str(venv_installed))
     return venv_installed
 # Check imports and confirm function
-def setup_send_file(
+def setup_action_send_file(
     swift_client: any,
     bucket_parameters: any,
     storage_parameters: any,
@@ -255,7 +255,7 @@ def setup_send_file(
         from functions.utility.file import file_write_data, file_chmod_command
         from functions.utility.sftp import stfp_store_file
         from functions.interactions.bridge import bridge_ssh_interface
-        from functions.actions.sftp import sftp_get_directory_list
+        from functions.actions.sftp_actions import sftp_actions_get_directory_list
     except ImportError as e:
         raise ImportError("L3_orchestration_dags/actions/setup_actions failed to import", e)
 
@@ -321,7 +321,7 @@ def setup_send_file(
         remote_file_path_split = remote_file_path.split('/')
         remote_directory = '/'.join(remote_file_path_split[:-1])
 
-        file_list = sftp_get_directory_list(
+        file_list = sftp_actions_get_directory_list(
             storage_parameters = storage_parameters,
             lock_location = lock_location,
             target_platform = target_platform,

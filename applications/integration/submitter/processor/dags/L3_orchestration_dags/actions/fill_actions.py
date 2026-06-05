@@ -1,5 +1,5 @@
 # Check imports and confirm function
-def fill_utility_get_details(
+def fill_action_utility_get_details(
     storage_parameters: any,
     lock_location: str,
     target_platform: str,
