@@ -27,11 +27,11 @@ with DAG(
         params: any
     ):
         try:
-            from functions.interactions.check import check_platform_interaction
+            from L3_monitoring_dags.tasks.check_tasks import check_task_platform_interaction
         except ImportError as e:
             raise ImportError("monitoring_dags/check failed to import", e)
 
-        expand_inputs = check_platform_interaction(
+        expand_inputs = check_task_platform_interaction(
             swift_parameters = params['swift-parameters'],
             bucket_parameters = params['bucket-parameters'],
             storage_parameters = params['storage-parameters'],

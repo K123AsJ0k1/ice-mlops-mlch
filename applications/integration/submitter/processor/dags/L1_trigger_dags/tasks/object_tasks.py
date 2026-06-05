@@ -1,4 +1,3 @@
-
 # check imports and function inputs
 def object_task_get_operated(
     swift_parameters: any,
