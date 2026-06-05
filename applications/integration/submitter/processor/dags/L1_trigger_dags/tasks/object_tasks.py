@@ -1,5 +1,5 @@
 
-# Check imports and the inputs of code
+# check imports and function inputs
 def object_task_get_operated(
     swift_parameters: any,
     bucket_parameters: any,
@@ -12,7 +12,7 @@ def object_task_get_operated(
         from icebreaker.storage.management import object_storage_interaction
         from icebreaker.misc.dict import get_dict_value
     except ImportError as e:
-        raise ImportError("trigger_dags/local_func/objects failed to import", e)
+        raise ImportError("L1_trigger_dags/tasks/object_tasks failed to import", e)
     # Join bucket and storage parameters
     swift_client = swift_setup_client(
         swift_parameters = swift_parameters
@@ -149,7 +149,7 @@ def object_task_get_operated(
         sequence_dag_inputs.append(expand_input)
     return sequence_dag_inputs
 # Maybe consider refactoring these two into one later
-# Check imports and the inputs of code
+# check imports and function inputs
 def object_task_get_monitored(
     swift_parameters: any,
     bucket_parameters: any,
@@ -162,7 +162,7 @@ def object_task_get_monitored(
         from icebreaker.storage.management import object_storage_interaction
         from icebreaker.misc.dict import get_dict_value
     except ImportError as e:
-        raise ImportError("trigger_dags/local_func/objects failed to import", e)
+        raise ImportError("L1_trigger_dags/tasks/object_tasks failed to import", e)
     # Join bucket and storage parameters
     swift_client = swift_setup_client(
         swift_parameters = swift_parameters

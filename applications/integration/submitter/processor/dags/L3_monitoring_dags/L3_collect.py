@@ -19,7 +19,7 @@ with DAG(
         "platforms",
         "setup",
         "operation",
-        "level-2"
+        "level-3"
     ] 
 ) as dag:
     @task()

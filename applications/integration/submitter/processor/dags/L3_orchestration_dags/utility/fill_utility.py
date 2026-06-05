@@ -1,5 +1,5 @@
 
-# check imports and function
+# check imports and function inputs
 def fill_utility_platform_commands(
     target_platform: str
 ) -> any:

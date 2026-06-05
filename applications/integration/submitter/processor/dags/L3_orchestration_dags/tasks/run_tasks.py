@@ -1,29 +1,40 @@
-#import pickle
-#import copy
 
-#import time as t
-
-#from functions.dict import get_dict_value, create_nested_dict, update_dict_value
-
-#from functions.utility.misc import base_check_connection
-#from functions.utility.platform import platform_run_commands
-
-#from functions.swift.setup import swift_setup_client
-#from functions.storage.management import object_storage_interaction
-
-#from functions.actions.run import run_submit_job
-#from functions.actions.monitor import monitor_check_jobs
-# Works 
+# check imports and function inputs
 def run_platform_interaction(
     swift_parameters: any,
     bucket_parameters: any,
     storage_parameters: any,
     platfrom_parameters: any
 ) -> any:
+    try:
+        import copy
+        import time as t
+        from global_functions.utility.airflow import airflow_check_connection
+        from icebreaker.misc.dict import create_nested_dict, update_dict_value
+
+        #import pickle
+        #import copy
+
+        #import time as t
+
+        #from functions.dict import get_dict_value, create_nested_dict, update_dict_value
+
+        #from functions.utility.misc import base_check_connection
+        #from functions.utility.platform import platform_run_commands
+
+        #from functions.swift.setup import swift_setup_client
+        #from functions.storage.management import object_storage_interaction
+
+        #from functions.actions.run import run_submit_job
+        #from functions.actions.monitor import monitor_check_jobs
+    except ImportError as e:
+        raise ImportError("L3_orchestration_dags/tasks/fill_tasks failed to import", e) 
+
+
     storage_dag_inputs = []
     platform_name = platfrom_parameters['name']
     target_platform = 'hpc-' + platform_name
-    connection_exists = base_check_connection(
+    connection_exists = airflow_check_connection(
         connection_id = target_platform
     )
     print('Checking connections for ' + str(target_platform))

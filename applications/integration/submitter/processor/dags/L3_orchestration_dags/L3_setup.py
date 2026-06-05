@@ -3,12 +3,11 @@ from airflow.sdk import DAG, task
 from airflow.providers.standard.operators.trigger_dagrun import TriggerDagRunOperator
 # Should be okay 
 with DAG(
-    dag_id = "submitter-run-orchestration", 
+    dag_id = "submitter-setup-orchestration", 
     start_date = None, 
     schedule = None,
     catchup = False,
     is_paused_upon_creation = False,
-    max_active_runs = 1,
     params = {
         "swift-parameters": {},
         "bucket-parameters": {},
@@ -18,30 +17,30 @@ with DAG(
     tags = [
         "integration",
         "platforms",
-        "run",
+        "setup",
         "orchestration",
-        "level-2"
+        "level-3"
     ] 
-) as dag: 
+) as dag:
     @task()
-    def run_orchestration(
+    def setup_orchestration(
         params: any
     ):
         try:
-            from orchestration_dags.local_func.run import run_platform_interaction
+            from orchestration_dags.local_func.setup import setup_platform_interaction
         except ImportError as e:
-            raise ImportError("orchestration_dags/run failed to import", e)
+            raise ImportError("L3_orchestration_dags/L3_setup failed to import", e)
 
-        expand_inputs = run_platform_interaction(
+        expand_inputs = setup_platform_interaction(
             swift_parameters = params['swift-parameters'],
             bucket_parameters = params['bucket-parameters'],
             storage_parameters = params['storage-parameters'],
             platfrom_parameters = params['platform-parameters']
         )
         print('Storing ' + str(len(expand_inputs)) + ' objects')
-        return expand_inputs 
+        return expand_inputs
 
-    storage_kwargs = run_orchestration()
+    storage_kwargs = setup_orchestration() 
 
     trigger_dags = TriggerDagRunOperator.partial(
         task_id = 'submitter_storage_interaction',

@@ -1,5 +1,5 @@
 
-# works 
+# check imports and function inputs
 def fill_task_hpc_interaction( 
     swift_parameters: any,
     bucket_parameters: any,
@@ -11,9 +11,9 @@ def fill_task_hpc_interaction(
         import time as t
         from global_functions.utility.airflow import airflow_check_connection
         from icebreaker.misc.dict import create_nested_dict, update_dict_value
-        from orchestration_dags.utility.fill_utility import fill_utility_get_details, fill_utility_platform_commands
+        from L3_orchestration_dags.utility.fill_utility import fill_utility_get_details, fill_utility_platform_commands
     except ImportError as e:
-        raise ImportError("orchestration_dags/local_func/fill failed to import", e) 
+        raise ImportError("L3_orchestration_dags/tasks/fill_tasks failed to import", e) 
 
     storage_dag_inputs = [] 
     platform_name = platfrom_parameters['name']

@@ -14,14 +14,25 @@
 #from functions.actions.setup import setup_venv_create, setup_venv_install, setup_venv_check, setup_venv_packages, setup_send_file
 #from functions.actions.general import general_list_directory
 # Works
-def setup_platform_configs(
+def setup_task_hpc_configs(
     storage_parameters: any,
     lock_location: str,
     target_platform: str,
     orchestration: any
 ) -> any:
+    try:
+        #import copy
+        #import time as t
+        #from global_functions.utility.airflow import airflow_check_connection
+        #from icebreaker.misc.dict import create_nested_dict, update_dict_value
+        #from L3_orchestration_dags.utility.fill_utility import fill_utility_get_details, fill_utility_platform_commands
+        from L3_orchestration_dags.tasks.setup_tasks import setup_utility_platform_commands, setup_utility_platform_conditions
+        from icebreaker.csc.utility import csc_workspace_check
+    except ImportError as e:
+        raise ImportError("L3_orchestration_dags/tasks/fill_tasks failed to import", e) 
+
     status = False
-    setup_commands = platform_setup_commands(
+    setup_commands = setup_utility_platform_commands(
         target_platform = target_platform
     ) 
     if 0 < len(setup_commands):
@@ -30,7 +41,7 @@ def setup_platform_configs(
         properties_path = platforms_path + '-properties'
         configs_path = platforms_path + '-configs'
         
-        platform_conditions = platform_setup_conditions(
+        platform_conditions = setup_utility_platform_conditions(
             orchestration = orchestration,
             properties_path = properties_path,
             configs_path = configs_path
@@ -44,7 +55,7 @@ def setup_platform_configs(
             check_result = False
             if 'value-bool-true' == wanted:
                 if check == 'workspace-check':
-                    check_result = path_workspace_check(
+                    check_result = csc_workspace_check(
                         properties = platform_conditions[index]['params'][0],
                         configs = platform_conditions[index]['params'][1]
                     )
@@ -95,7 +106,7 @@ def setup_platform_configs(
                     status = True
     return status
     
-def setup_platform_files(
+def setup_task_hpc_files(
     swift_client: any,
     bucket_parameters: any,
     storage_parameters: any,
@@ -103,6 +114,15 @@ def setup_platform_files(
     target_platform: str,
     orchestration: any
 ) -> any:
+    try:
+        import copy
+        import time as t
+        from global_functions.utility.airflow import airflow_check_connection
+        from icebreaker.misc.dict import create_nested_dict, update_dict_value
+        from L3_orchestration_dags.utility.fill_utility import fill_utility_get_details, fill_utility_platform_commands
+    except ImportError as e:
+        raise ImportError("L3_orchestration_dags/tasks/fill_tasks failed to import", e) 
+
     status = True
 
     platform_name = target_platform.split('-')[-1]
@@ -171,16 +191,25 @@ def setup_platform_files(
             break
     return status
 # works
-def setup_platform_interaction(
+def setup_task_hpc_interaction(
     swift_parameters: any,
     bucket_parameters: any,
     storage_parameters: any,
     platfrom_parameters: any
 ) -> any:
+    try:
+        import copy
+        import time as t
+        from global_functions.utility.airflow import airflow_check_connection
+        from icebreaker.misc.dict import create_nested_dict, update_dict_value
+        from L3_orchestration_dags.utility.fill_utility import fill_utility_get_details, fill_utility_platform_commands
+    except ImportError as e:
+        raise ImportError("L3_orchestration_dags/tasks/fill_tasks failed to import", e) 
+
     storage_dag_inputs = []
     platform_name = platfrom_parameters['name']
     target_platform = 'hpc-' + platform_name
-    connection_exists = base_check_connection(
+    connection_exists = airflow_check_connection(
         connection_id = target_platform
     ) 
     print('Checking connections for ' + str(target_platform))
