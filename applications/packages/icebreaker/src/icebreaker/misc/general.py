@@ -156,3 +156,17 @@ def get_unix_time(
         tzinfo = timezone.utc
     ).timestamp()
     return time 
+
+def fill_list_values(
+    target: list,
+    values: list
+) -> list:
+    i = 0
+    for index, item in enumerate(target):
+        if item is None:
+            if i < len(values):
+                target[index] = values[i]
+                i += 1
+                continue
+            break
+    return target
