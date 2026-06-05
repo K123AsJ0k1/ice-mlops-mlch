@@ -3,9 +3,9 @@ def concurrency_get_client(
     lock_parameters: any
 ) -> bool:
     try:
-        from .redis.setup import redis_setup_instance
+        from ..redis.setup import redis_setup_instance
     except ImportError as e:
-        raise ImportError("Failed to import", e)
+        raise ImportError("interactions/concurrency failed to import", e)
 
     lock_client = None
     client_connected = False
@@ -29,10 +29,10 @@ def concurrency_check_lock(
     lock_client: any
 ) -> any:
     try:
-        from .redis.setup import redis_client_check
-        from .redis.use import redis_name_lock, redis_lock_checking
+        from ..redis.setup import redis_client_check
+        from ..redis.use import redis_name_lock, redis_lock_checking
     except ImportError as e:
-        raise ImportError("Failed to import", e)
+        raise ImportError("interactions/concurrency failed to import", e)
 
     lock_active = False
     lock_name = ''
@@ -58,10 +58,10 @@ def concurrency_get_lock(
     lock_name: str
 ) -> any:
     try:
-        from .redis.setup import redis_client_check
-        from .redis.use import redis_lock_interaction
+        from ..redis.setup import redis_client_check
+        from ..redis.use import redis_lock_interaction
     except ImportError as e:
-        raise ImportError("Failed to import", e)
+        raise ImportError("interactions/concurrency failed to import", e)
 
     lock_created = False
     client_lock = None
@@ -81,10 +81,10 @@ def concurrency_release_lock(
     client_lock: any
 ) -> bool:
     try:
-        from .redis.setup import redis_client_check
-        from .redis.use import redis_lock_interaction
+        from ..redis.setup import redis_client_check
+        from ..redis.use import redis_lock_interaction
     except ImportError as e:
-        raise ImportError("Failed to import", e)
+        raise ImportError("interactions/concurrency failed to import", e)
 
     lock_released = False
     if redis_client_check(storage_client = lock_client):
