@@ -1,4 +1,3 @@
-
 # check imports and function inputs
 def fill_task_hpc_interaction( 
     swift_parameters: any,

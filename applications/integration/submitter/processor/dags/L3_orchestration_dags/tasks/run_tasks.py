@@ -7,15 +7,13 @@ def run_platform_interaction(
     platfrom_parameters: any
 ) -> any:
     try:
-        import copy
-        import time as t
-        from global_functions.utility.airflow import airflow_check_connection
-        from icebreaker.misc.dict import create_nested_dict, update_dict_value
+        #import copy
+        #import time as t
+        #from global_functions.utility.airflow import airflow_check_connection
+        #from icebreaker.misc.dict import create_nested_dict, update_dict_value
 
         #import pickle
         #import copy
-
-        #import time as t
 
         #from functions.dict import get_dict_value, create_nested_dict, update_dict_value
 
@@ -27,6 +25,15 @@ def run_platform_interaction(
 
         #from functions.actions.run import run_submit_job
         #from functions.actions.monitor import monitor_check_jobs
+        import time as t
+        import pickle
+        import copy
+        
+        from functions.utility.airflow import airflow_check_connection
+        from L3_orchestration_dags.utility.run_utility import run_utility_platform_commands
+        from icebreaker.swift.setup import swift_setup_client
+        from icebreaker.storage.management import object_storage_interaction
+        from icebreaker.misc.dict import get_dict_value, create_nested_dict, update_dict_value
     except ImportError as e:
         raise ImportError("L3_orchestration_dags/tasks/fill_tasks failed to import", e) 
 
@@ -42,7 +49,7 @@ def run_platform_interaction(
         platform_setup_objects = platfrom_parameters['object-names']['run']
         print('Checking amount of objects ' + str(len(platform_setup_objects)))
         if 0 < len(platform_setup_objects):
-            run_commands = platform_run_commands(
+            run_commands = run_utility_platform_commands(
                 target_platform = target_platform
             )
             if 0 < len(run_commands):

@@ -1,3 +1,4 @@
+# check imports and function inputs
 def setup_utility_platform_commands(
     target_platform: str
 ) -> any:
@@ -113,7 +114,7 @@ def setup_utility_platform_commands(
             setup_commands[key] = value
         return setup_commands
     return {}
-
+# check imports and function inputs
 def setup_utility_platform_conditions(
     orchestration: any,
     properties_path: str,

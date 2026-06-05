@@ -1,18 +1,3 @@
-#import pickle
-#import copy
-#import time as t
- 
-#from functions.dict import get_dict_value, create_nested_dict, update_dict_value
-
-#from functions.utility.misc import base_check_connection
-#from functions.utility.platform import platform_setup_commands, platform_setup_conditions
-#from functions.utility.path import path_workspace_check
-
-#from functions.swift.setup import swift_setup_client
-#from functions.storage.management import object_storage_interaction
-
-#from functions.actions.setup import setup_venv_create, setup_venv_install, setup_venv_check, setup_venv_packages, setup_send_file
-#from functions.actions.general import general_list_directory
 # Check imports and confirm function
 def setup_task_hpc_configs(
     storage_parameters: any,
