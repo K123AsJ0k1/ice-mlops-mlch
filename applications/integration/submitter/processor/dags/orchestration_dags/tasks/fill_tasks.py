@@ -1,13 +1,4 @@
-#import copy
-#import time as t
 
-#from functions.dict import create_nested_dict, update_dict_value
-
-#from functions.utility.misc import base_check_connection
-#from functions.utility.platform import platform_fill_commands
-
-#from functions.actions.fill import fill_get_details 
- 
 # works 
 def fill_task_hpc_interaction( 
     swift_parameters: any,
@@ -16,15 +7,15 @@ def fill_task_hpc_interaction(
     platfrom_parameters: any
 ) -> any:  
     try:
-        #from orchestration_dags.local_func.fill import fill_platform_interaction
         import copy
         import time as t
-        from global_func.utility.airflow import airflow_check_connection
+        from global_functions.utility.airflow import airflow_check_connection
         from icebreaker.misc.dict import create_nested_dict, update_dict_value
+        from orchestration_dags.utility.fill_utility import fill_utility_get_details, fill_utility_platform_commands
     except ImportError as e:
-        raise ImportError("orchestration_dags/local_func/fill failed to import", e)
+        raise ImportError("orchestration_dags/local_func/fill failed to import", e) 
 
-    storage_dag_inputs = []
+    storage_dag_inputs = [] 
     platform_name = platfrom_parameters['name']
     target_platform = 'hpc-' + platform_name
     connection_exists = airflow_check_connection(
@@ -35,7 +26,7 @@ def fill_task_hpc_interaction(
         platform_fill_objects = platfrom_parameters['object-names']['fill']
         print('Checking amount of objects ' + str(len(platform_fill_objects)))
         if 0 < len(platform_fill_objects):
-            fill_commands = platform_fill_commands(
+            fill_commands = fill_utility_platform_commands(
                 target_platform = target_platform
             ) 
             if 0 < len(fill_commands):
@@ -54,7 +45,7 @@ def fill_task_hpc_interaction(
                     print('Filling object ' + str(object_name))
                     properties_dict = {}
                     for key in fill_commands.keys():
-                        given_value = fill_get_details(
+                        given_value = fill_utility_get_details(
                             storage_parameters = storage_parameters,
                             lock_location = storage_parameters['airflow-lock-location'], 
                             target_platform = target_platform,

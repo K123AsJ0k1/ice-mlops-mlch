@@ -1,18 +1,12 @@
-#from airflow.providers.ssh.operators.ssh import SSHHook
-#from airflow.providers.sftp.hooks.sftp import SFTPHook
- 
-#from functions.interface.ssh import ssh_create_command, ssh_check_command
-#from functions.utility.misc import ssh_run_command
 
-#from functions.locking import concurrency_get_client, concurrency_check_lock, concurrency_get_lock, concurrency_release_lock
-# Works  
+# Check imports and function
 def bridge_ssh_interface(
     target_platform: str,
     interface_command: any
 ) -> any:
     try:
-        #from datetime import datetime, timezone
-        #from icebreaker.storage.management import set_object_path
+        from icebreaker.ssh.use import ssh_create_command
+        from airflow.providers.ssh.operators.ssh import SSHHook
     except ImportError as e:
         raise ImportError("global_func//observability failed to import", e)
 
@@ -33,22 +27,25 @@ def bridge_ssh_interface(
             ssh_client = ssh_hook.get_conn()
 
             print('Running command')
-            interface_output = ssh_run_command(
-                client = ssh_client,
-                command = ssh_command
-            )
+            stdin, stdout, stdeer = ssh_client.exec_command(ssh_command)
+            formatted_print = stdout.read().decode('utf-8')
+            formatted_error = stdeer.read().decode('utf-8')
+
+            if 0 < len(formatted_print):
+                interface_output = formatted_print
+            else:
+                interface_output = formatted_error
 
             print('Closing SSH connection')
             ssh_client.close()
     return interface_output
-# Works
+# Check imports and function
 def bridge_sftp_interface(
     target_platform: str,
     interface_command: any
 ) -> any:
     try:
-        from datetime import datetime, timezone
-        from icebreaker.storage.management import set_object_path
+        from airflow.providers.sftp.hooks.sftp import SFTPHook
     except ImportError as e:
         raise ImportError("interaction-dags/sub_func/observability failed to import", e)
 
@@ -78,15 +75,14 @@ def bridge_sftp_interface(
             )
             interface_output = True
     return interface_output
-# Works
+# Check imports and function
 def bridge_interface_interaction(
     storage_parameters: any,
     lock_location: str,
     interaction_parameters: any
 ) -> any:
     try:
-        #from datetime import datetime, timezone
-        #from icebreaker.storage.management import set_object_path
+        from icebreaker.interactions.concurrency import concurrency_get_client, concurrency_check_lock, concurrency_get_lock, concurrency_release_lock
     except ImportError as e:
         raise ImportError("interaction-dags/sub_func/observability failed to import", e)
 
