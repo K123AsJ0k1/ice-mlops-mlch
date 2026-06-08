@@ -7,7 +7,7 @@ def sftp_list_directory(
 def stfp_store_file(
     local_file_path: str,
     remote_file_path: str
-) -> any:
+) -> any: 
     command = ['store-file', remote_file_path, local_file_path]
     return command
 

@@ -1,7 +1,6 @@
 # check imports and function inputs
 def sftp_action_get_directory_list(
     storage_parameters: any,
-    lock_location: str,
     target_platform: str,
     target_path: str
 ) -> any:
@@ -11,20 +10,24 @@ def sftp_action_get_directory_list(
     except ImportError as e:
         raise ImportError("functions/actions/sftp failed to import", e) 
 
-    print('Run list directory')
+    print('Run sftp action get directory list')
 
     directory_command = sftp_list_directory(
         target_path = target_path
     )
 
-    file_list = bridge_interface_interaction(
-        storage_parameters = storage_parameters,
-        lock_location = lock_location,
-        interaction_parameters = {
-            'platform': target_platform,
-            'interface': 'sftp',
-            'command': directory_command
-        }
-    )
+    file_list = []
+    try:
+        file_list = bridge_interface_interaction(
+            storage_parameters = storage_parameters,
+            interaction_parameters = {
+                'platform': target_platform,
+                'interface': 'sftp',
+                'command': directory_command
+            }
+        )
+    except Exception as e:
+        print('sftp_action_get_directory_list failed')
+
     print('Listed files: ', file_list)
     return file_list

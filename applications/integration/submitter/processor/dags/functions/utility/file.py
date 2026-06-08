@@ -9,7 +9,8 @@ def file_storage_path(
     # Might need chancing
     directory = 'submitter/files'
     os.makedirs(directory, exist_ok=True)
-    file_path = directory + '/' + name
+    #file_path = directory + '/' + name
+    file_path = os.path.join(directory, name)
     return file_path
 # check imports and function inputs
 def file_write_data(

@@ -1,5 +1,5 @@
 from airflow.sdk import DAG, task
-
+# Should be fine
 with DAG(
     dag_id = "submitter-configure-interaction", 
     start_date = None, 
@@ -9,13 +9,13 @@ with DAG(
     params = {
         "swift-parameters": {},
         "storage-parameters": {},
-        "process-parameters": {}
+        "platfrom-parameters": {}
     },
     tags = [
         "integration",
         "configure",
         "interaction",
-        "level-3"
+        "level-4"
     ] 
 ) as dag:
     @task()
@@ -30,7 +30,7 @@ with DAG(
         interaction_status = configure_task_cloud_interaction(
             swift_parameters = params['swift-parameters'],
             storage_parameters = params['storage-parameters'],
-            process_parameters = params['process-parameters'],
+            platfrom_parameters = params['platfrom-parameters']
         )
         return interaction_status
     

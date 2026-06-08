@@ -9,7 +9,7 @@ def bridge_ssh_interface(
         from airflow.providers.ssh.operators.ssh import SSHHook
     except ImportError as e:
         raise ImportError("global_func//observability failed to import", e)
-
+ 
     print('Using SSH interface')
     interface_output = None
     if 0 < len(interface_command):
@@ -78,7 +78,6 @@ def bridge_sftp_interface(
 # Check imports and function
 def bridge_interface_interaction(
     storage_parameters: any,
-    lock_location: str,
     interaction_parameters: any
 ) -> any:
     try:
@@ -88,43 +87,66 @@ def bridge_interface_interaction(
 
     print('Platform interface interaction')
     interface_output = None
-    lock_parameters = storage_parameters['lock'][lock_location]
+
+    operate_storage = True
+    lock_expected = False
+    lock_client = None
+    lock_active = False
+    lock_name = ''
+
     target_platform = interaction_parameters['platform']
     interaction_interface = interaction_parameters['interface']
     interface_command = interaction_parameters['command']
 
-    lock_client = concurrency_get_client(
-        lock_parameters = lock_parameters
-    )
+    specified_lock_parameters = {}
+    lock_parameters = storage_parameters['lock-parameters']
+    lock_location = storage_parameters['airflow-lock-location']
+    if lock_location in lock_parameters:
+        print('Using ' + str(lock_location) + ' lock')
+        specified_lock_parameters = lock_parameters[lock_location]
 
-    lock_parameters['group'] = target_platform
-    lock_parameters['resource'] = interaction_interface
+    if 0 < len(specified_lock_parameters):
+        lock_expected = True
 
-    lock_active, lock_name = concurrency_check_lock(
-        lock_parameters = lock_parameters,
-        lock_client = lock_client
-    )
+    if lock_expected:
+        specified_lock_parameters['group'] = target_platform
+        specified_lock_parameters['resource'] = interaction_interface
 
-    if not lock_active:
+        lock_client = concurrency_get_client(
+            lock_parameters = lock_parameters
+        )
+
+    if lock_expected and not lock_client is None:
+        lock_active, lock_name = concurrency_check_lock(
+            lock_parameters = lock_parameters,
+            lock_client = lock_client
+        )
+
+    if lock_expected and not lock_active:
         lock_created, client_lock = concurrency_get_lock(
             lock_client = lock_client,
             lock_name = lock_name
         )
 
-        if lock_created:
-            try:
-                if interaction_interface == 'ssh':
-                    interface_output = bridge_ssh_interface(
-                        target_platform = target_platform,
-                        interface_command = interface_command
-                    )
-                if interaction_interface == 'sftp': 
-                    interface_output = bridge_sftp_interface(
-                        target_platform = target_platform,
-                        interface_command = interface_command
-                    )
-            except Exception as e:
-                print('Platform interface interaction error: ' + str(e))
+    if lock_expected and not lock_created:
+        operate_storage = False
+
+    if operate_storage:
+        try:
+            if interaction_interface == 'ssh':
+                interface_output = bridge_ssh_interface(
+                    target_platform = target_platform,
+                    interface_command = interface_command
+                )
+            if interaction_interface == 'sftp': 
+                interface_output = bridge_sftp_interface(
+                    target_platform = target_platform,
+                    interface_command = interface_command
+                )
+        except Exception as e:
+            print('Platform interface interaction error: ' + str(e))
+        
+        if lock_expected and lock_created:
             lock_released = concurrency_release_lock(
                 lock_client = lock_client,
                 client_lock = client_lock
