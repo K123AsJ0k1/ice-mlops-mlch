@@ -233,7 +233,7 @@ def slurm_fix_sacct(
         fixed_sacct[name] = fixed_values
     return fixed_sacct
 
-def format_slurm_logs(
+def slurm_format_logs(
     file_path: str
 ) -> any:
     log_text = None
