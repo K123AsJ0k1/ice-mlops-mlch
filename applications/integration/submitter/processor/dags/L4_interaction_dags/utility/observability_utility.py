@@ -1,4 +1,4 @@
-# Check imports and inputs
+# check imports and function inputs
 def observability_utility_table_path(
     source_type: str,
     case_name: str, 
@@ -58,7 +58,7 @@ def observability_utility_table_path(
             debug_prints = debug_prints
         )
     return table_object_path
-# Check imports and inputs
+# check imports and function inputs
 def observability_utility_table_timerange(
     object_name: str
 ) -> any:
@@ -76,7 +76,7 @@ def observability_utility_table_timerange(
         end_t = time(*map(int, end_str.split('-')))
         timerange = (start_t, end_t)
     return timerange
-# Check imports and inputs
+# check imports and function inputs
 def observability_utility_range_check(
     existing_paths: list, 
     object_path: str
@@ -105,7 +105,7 @@ def observability_utility_range_check(
                 path_exists = True
                 
     return path_exists
-# Check imports and inputs
+# check imports and function inputs
 def observability_utility_table_timestamp(
     source_type: str,
     case_name: str,

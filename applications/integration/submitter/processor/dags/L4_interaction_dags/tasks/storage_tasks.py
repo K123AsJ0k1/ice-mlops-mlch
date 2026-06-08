@@ -1,4 +1,4 @@
-# Check imports and inputs
+# check imports and function inputs
 def storage_task_object_interaction(
     swift_parameters: any,
     bucket_parameters: any,

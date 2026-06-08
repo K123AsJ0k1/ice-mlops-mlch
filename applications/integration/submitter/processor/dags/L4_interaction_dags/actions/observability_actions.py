@@ -140,7 +140,11 @@ def observability_action_airflow_interaction(
         from icebreaker.airflow.use import airflow_get_metrics
         from icebreaker.airflow.utility import airflow_format_metrics, airflow_format_logs
         from icebreaker.misc.dict import split_dict_by_length
-        from L4_interaction_dags.utility.observability_utility import observability_utility_table_path, observability_utility_range_check, observability_utility_table_timestamp
+        from L4_interaction_dags.utility.observability_utility import (
+            observability_utility_table_path, 
+            observability_utility_range_check, 
+            observability_utility_table_timestamp
+        )
     except ImportError as e:
         raise ImportError("interaction_dags/local_func/observability failed to import", e)
 

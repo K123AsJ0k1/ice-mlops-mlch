@@ -1,4 +1,4 @@
-# Check imports and inputs
+# check imports and function inputs
 def storage_action_orchestration_interaction(
     swift_client: any,
     bucket_parameters: any,
