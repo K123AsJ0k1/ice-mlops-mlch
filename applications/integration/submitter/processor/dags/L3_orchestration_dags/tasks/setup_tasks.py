@@ -19,7 +19,7 @@ def setup_task_hpc_configs(
             setup_action_venv_packages
         )
     except ImportError as e:
-        raise ImportError("L3_orchestration_dags/tasks/fill_tasks failed to import", e) 
+        raise ImportError("L3_orchestration_dags/tasks/setup_tasks failed to import", e) 
 
     status = False
     setup_commands = setup_utility_platform_commands(
@@ -109,7 +109,7 @@ def setup_task_hpc_files(
         from functions.actions.sftp_actions import sftp_action_get_directory_list
         from L3_orchestration_dags.actions.setup_actions import setup_action_send_file
     except ImportError as e:
-        raise ImportError("L3_orchestration_dags/tasks/fill_tasks failed to import", e) 
+        raise ImportError("L3_orchestration_dags/tasks/setup_tasks failed to import", e) 
 
     status = True
 
@@ -194,7 +194,7 @@ def setup_task_hpc_interaction(
         from icebreaker.swift.setup import swift_setup_client
         from icebreaker.storage.management import object_storage_interaction
     except ImportError as e:
-        raise ImportError("L3_orchestration_dags/tasks/fill_tasks failed to import", e) 
+        raise ImportError("L3_orchestration_dags/tasks/setup_tasks failed to import", e) 
 
     storage_dag_inputs = []
     platform_name = platfrom_parameters['name']

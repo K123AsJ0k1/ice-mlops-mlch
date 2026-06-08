@@ -1,31 +1,19 @@
-#import pickle
-#import copy
-#import time as t
-
-#from functions.dict import get_dict_value, create_nested_dict, update_dict_value
-
-#from functions.utility.misc import base_check_connection
-#from functions.utility.platform import platform_check_commands
-
-#from functions.actions.monitor import monitor_check_jobs, monitor_cancel_job
-
-#from functions.swift.setup import swift_setup_client
-#from functions.storage.management import object_storage_interaction
 # Works for halted, check when cancelling 
 def check_task_platform_interaction(
     swift_parameters: any,
     bucket_parameters: any,
     storage_parameters: any,
     platfrom_parameters: any   
-) -> any:
+) -> any: 
     try:
         import copy
         import time as t
         import pickle
         from functions.utility.airflow import airflow_check_connection
         from icebreaker.misc.dict import create_nested_dict, update_dict_value
-        from L3_orchestration_dags.utility.fill_utility import fill_utility_platform_commands
-        from L3_orchestration_dags.actions.fill_actions import fill_action_utility_get_details
+        from L3_monitoring_dags.utility.check_utility import check_utility_platform_commands
+        from functions.actions.monitor_actions import monitor_action_check_jobs
+        from L3_monitoring_dags.actions.check_actions import check_action_cancel_job
         from icebreaker.swift.setup import swift_setup_client
         from icebreaker.misc.dict import get_dict_value
         from icebreaker.storage.management import object_storage_interaction
@@ -43,7 +31,7 @@ def check_task_platform_interaction(
         platform_setup_objects = platfrom_parameters['object-names']['check']
         print('Checking amount of objects ' + str(len(platform_setup_objects)))
         if 0 < len(platform_setup_objects):
-            check_commands = platform_check_commands(
+            check_commands = check_utility_platform_commands(
                 target_platform = target_platform
             )
             if 0 < len(check_commands):
@@ -109,7 +97,7 @@ def check_task_platform_interaction(
                     if interaction_timeout:
                         t.sleep(2)
                     
-                    current_jobs = monitor_check_jobs(
+                    current_jobs = monitor_action_check_jobs(
                         storage_parameters = storage_parameters,
                         lock_location = storage_parameters['airflow-lock-location'],
                         target_platform = target_platform,
@@ -138,7 +126,7 @@ def check_task_platform_interaction(
                                         job_exists = True
                                         if order_states['stop'] or job_order['stop']:
                                             print('Stopping running job')
-                                            checked_jobs = monitor_cancel_job(
+                                            checked_jobs = check_action_cancel_job(
                                                 storage_parameters = storage_parameters,
                                                 lock_location = storage_parameters['airflow-lock-location'],
                                                 target_platform = target_platform,

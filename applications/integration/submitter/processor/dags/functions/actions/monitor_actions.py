@@ -3,7 +3,7 @@
 #from functions.interface.slurm import slurm_squeue_jobs, slurm_scancel_job, slurm_format_squeue
 #from functions.interactions.platform import platform_interface_interaction
 
-# Works
+# check imports and function inputs
 def monitor_action_check_jobs(
     storage_parameters: any,
     lock_location: str,
@@ -17,7 +17,6 @@ def monitor_action_check_jobs(
         from icebreaker.slurm.utility import slurm_format_squeue
     except ImportError as e:
         raise ImportError("L3_orchestration_dags/tasks/fill_tasks failed to import", e) 
-
 
     print('Run check jobs')
 

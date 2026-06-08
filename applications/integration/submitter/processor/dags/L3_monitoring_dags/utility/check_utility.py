@@ -1,11 +1,18 @@
-def platform_check_commands(
+# check imports and function inputs
+def check_utility_platform_commands(
     target_platform: str
 ) -> any:
+    try: 
+        from icebreaker.csc.use import csc_source_command
+    except ImportError as e:
+        raise ImportError("orchestration_dags/utility/fill_utility failed to import", e)
+
     setup_commands = {
         'slurm-check': [],
         'slurm-cancel': []
-    }
+    } 
     # Is sourcing needed here
+    # The scancel and squeue commands could be added here
     platform_commands = {
         'hpc-puhti': {
             'slurm-check': [

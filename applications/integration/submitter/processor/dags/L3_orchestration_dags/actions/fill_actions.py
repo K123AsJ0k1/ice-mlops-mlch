@@ -13,7 +13,7 @@ def fill_action_utility_get_details(
         from icebreaker.lmod.utility import lmod_parse_list
         from icebreaker.python.utility import python_parse_version
     except ImportError as e:
-        raise ImportError("orchestration_dags/utility/fill_utility failed to import", e)
+        raise ImportError("orchestration_dags/actions/fill_actions failed to import", e)
 
     print('Running get details')
     

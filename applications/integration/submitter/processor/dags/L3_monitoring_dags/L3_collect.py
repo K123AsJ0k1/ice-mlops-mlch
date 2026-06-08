@@ -27,7 +27,7 @@ with DAG(
         params: any
     ): 
         try:
-            from functions.interactions.collect import collect_platform_interaction
+            from L3_monitoring_dags.tasks.collect_tasks import collect_platform_interaction
         except ImportError as e:
             raise ImportError("monitoring_dags/collect failed to import", e)
 
