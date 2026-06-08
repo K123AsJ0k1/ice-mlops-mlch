@@ -1,4 +1,4 @@
-# Works
+# check imports and function inputs
 def sftp_action_get_directory_list(
     storage_parameters: any,
     lock_location: str,

@@ -1,35 +1,5 @@
-#import pickle
-#import copy
-#import time as t
-
-#from functions.general import set_indexed_placeholders
-#from functions.dict import get_dict_value, create_nested_dict, update_dict_value
-
-#from functions.utility.misc import base_check_connection
-#from functions.utility.files import files_storage_path
-
-#from functions.swift.setup import swift_setup_client
-#from functions.storage.management import object_storage_interaction
-
-#from functions.actions.general import general_list_directory
-#from functions.actions.collect import collect_get_file, collect_get_sacct
-
-#from functions.utility.platform import platform_collect_commands
-# Works
-def check_job_validity(
-    valid_jobs: list,
-    job_index: int
-) -> bool:
-    valid = False
-    for filter in valid_jobs:
-        if filter == 'all':
-            valid = True
-            break
-        if filter == str(job_index):
-            valid = True
-    return valid
-# Works
-def get_job_files(
+# check imports and function inputs
+def collect_task_get_job_files(
     storage_parameters: any,
     lock_location: str,
     target_platform: str,
@@ -38,6 +8,15 @@ def get_job_files(
     job_id: str,
     job_index: int
 ) -> list:
+    try:
+        from L3_monitoring_dags.utility.collect_utility import collect_utility_job_validity
+        from icebreaker.misc.general import set_indexed_placeholders
+        from functions.actions.sftp_actions import sftp_action_get_directory_list
+        from functions.utility.file import file_storage_path
+        from L3_monitoring_dags.actions.collect_actions import collect_action_get_file
+    except ImportError as e:
+        raise ImportError("functions/actions/sftp failed to import", e) 
+
     platform_files = []
     for operation in get_files:
         print(operation)
@@ -45,7 +24,7 @@ def get_job_files(
         transfer_source = transfer['source']
         transfer_target = transfer['target']
         valid_jobs = operation['jobs']
-        operation_valid = check_job_validity(
+        operation_valid = collect_utility_job_validity(
             valid_jobs = valid_jobs,
             job_index = job_index
         )
@@ -72,7 +51,7 @@ def get_job_files(
                                 ]
                             )
                         
-                        file_list = general_list_directory(
+                        file_list = sftp_action_get_directory_list(
                             storage_parameters = storage_parameters,
                             lock_location = lock_location,
                             target_platform = target_platform,
@@ -83,12 +62,12 @@ def get_job_files(
                         if source_file_name in file_list:
                             target_file_name = target_file_path.split('/')[-1]
                             local_name = target_platform + '-' + target_file_name
-                            local_file_path = files_storage_path(
+                            local_file_path = file_storage_path(
                                 name = local_name
                             )
                             bucket_target = transfer_target['place'].split('/')[-1]
                             data_type = 'object-' + target_file_path.split('/')[1]
-                            file_path = collect_get_file(
+                            file_path = collect_action_get_file(
                                 storage_parameters = storage_parameters,
                                 lock_location = lock_location,
                                 target_platform = target_platform,
@@ -101,21 +80,27 @@ def get_job_files(
                                 'file-path': file_path
                             })
     return platform_files
-# Works
-def get_job_metrics(
+# check imports and function inputs
+def collect_task_get_job_metrics(
     storage_parameters: any,
     lock_location: str,
     target_platform: str,
     job_id: str
 ) -> list:
-    collect_commands = platform_collect_commands(
+    try:
+        from L3_monitoring_dags.utility.collect_utility import collect_utility_platform_commands
+        from L3_monitoring_dags.actions.collect_actions import collect_action_get_sacct
+    except ImportError as e:
+        raise ImportError("functions/actions/sftp failed to import", e) 
+    
+    collect_commands = collect_utility_platform_commands(
         target_platform = target_platform
     )
     platform_metrics = []
     if 0 < len(collect_commands):
         for name in collect_commands.keys():
             if name == 'slurm-sacct':
-                sacct_path = collect_get_sacct(
+                sacct_path = collect_action_get_sacct(
                     storage_parameters = storage_parameters,
                     lock_location = lock_location,
                     target_platform = target_platform,
@@ -130,17 +115,29 @@ def get_job_metrics(
                     'file-path': sacct_path
                 })
     return platform_metrics
-# Works    
-def collect_platform_interaction(
+# check imports and function inputs
+def collect_task_hpc_interaction(
     swift_parameters: any,
     bucket_parameters: any,
     storage_parameters: any,
     platfrom_parameters: any   
 ) -> any:
+    try:
+        import pickle
+        import copy
+        import time as t
+        from functions.utility.airflow import airflow_check_connection
+        from L3_monitoring_dags.utility.collect_utility import collect_utility_platform_commands
+        from icebreaker.swift.setup import swift_setup_client
+        from icebreaker.storage.management import object_storage_interaction
+        from icebreaker.misc.dict import get_dict_value, create_nested_dict, update_dict_value
+    except ImportError as e:
+        raise ImportError("functions/actions/sftp failed to import", e) 
+    
     storage_dag_inputs = []
     platform_name = platfrom_parameters['name']
     target_platform = 'hpc-' + platform_name
-    connection_exists = base_check_connection(
+    connection_exists = airflow_check_connection(
         connection_id = target_platform
     )
     print('Checking connections for ' + str(target_platform))
@@ -148,7 +145,7 @@ def collect_platform_interaction(
         platform_collect_objects = platfrom_parameters['object-names']['collect']
         print('Checking amount of objects ' + str(len(platform_collect_objects)))
         if 0 < len(platform_collect_objects):
-            collect_commands = platform_collect_commands(
+            collect_commands = collect_utility_platform_commands(
                 target_platform = target_platform
             )
             if 0 < len(collect_commands):
@@ -234,7 +231,7 @@ def collect_platform_interaction(
                         print(job_interaction)
                         if job_submitter['halted']:
                             if not job_interaction['stored']:
-                                platform_files = get_job_files(
+                                platform_files = collect_task_get_job_files(
                                     storage_parameters = storage_parameters,
                                     lock_location = storage_parameters['airflow-lock-location'],
                                     target_platform = target_platform,
@@ -247,7 +244,7 @@ def collect_platform_interaction(
                                 if interaction_timeout:
                                     t.sleep(20)
 
-                                platform_metrics = get_job_metrics(
+                                platform_metrics = collect_task_get_job_metrics(
                                     storage_parameters = storage_parameters,
                                     lock_location = storage_parameters['airflow-lock-location'],
                                     target_platform = target_platform,

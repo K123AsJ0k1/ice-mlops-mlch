@@ -14,7 +14,6 @@ def check_action_cancel_job(
     except ImportError as e:
         raise ImportError("L3_orchestration_dags/tasks/fill_tasks failed to import", e) 
 
-
     print('Run cancel job')
 
     scancel_command = slurm_scancel_job(

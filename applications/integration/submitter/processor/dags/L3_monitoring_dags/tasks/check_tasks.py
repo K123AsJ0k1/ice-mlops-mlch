@@ -1,3 +1,4 @@
+# check imports and function inputs
 # Works for halted, check when cancelling 
 def check_task_platform_interaction(
     swift_parameters: any,

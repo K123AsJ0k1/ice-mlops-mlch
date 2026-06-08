@@ -1,3 +1,4 @@
+# check imports and function inputs
 def file_storage_path(
     name: str
 ) -> str:
@@ -10,7 +11,7 @@ def file_storage_path(
     os.makedirs(directory, exist_ok=True)
     file_path = directory + '/' + name
     return file_path
-
+# check imports and function inputs
 def file_write_data(
     name: str,
     data: any
@@ -24,7 +25,7 @@ def file_write_data(
         if isinstance(data, str):
             f.write(data)
     return file_path
-
+# check imports and function inputs
 def file_chmod_command(
     file_path: str
 ) -> list:

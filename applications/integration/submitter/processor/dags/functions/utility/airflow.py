@@ -1,4 +1,4 @@
-
+# check imports and function inputs
 def airflow_check_connection(
     connection_id: str
 ) -> bool:
