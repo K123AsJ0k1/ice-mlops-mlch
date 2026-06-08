@@ -33,10 +33,14 @@ def controller_create_files(
                                         created_file_content[key] = value
                                 created_file_content = yaml.dump(created_file_content, default_flow_style = False)
 
-                        created_file_path = file_configuration['file_path']
-                        if 0 < len(created_file_path):
+                        directory_path = file_configuration['directory_path']
+                        file_name = file_configuration['file_name']
+                        replace_file = file_configuration['replace']
+                        if 0 < len(directory_path):
                             created_files.append({
-                                'file_path': created_file_path,
+                                'directory_path': directory_path,
+                                'file_name': file_name,
+                                'replace': replace_file,
                                 'file_content': created_file_content
                             })
     return created_files       
