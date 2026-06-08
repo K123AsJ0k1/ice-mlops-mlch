@@ -23,11 +23,11 @@ with DAG(
         params: any
     ):
         try:
-            from interaction_dags.local_func.observability import observability_submitter_interaction
+            from L4_interaction_dags.tasks.observability_tasks import observability_task_submitter_interaction
         except ImportError as e:
             raise ImportError("interaction-dags/observability failed to import", e)
 
-        interaction_status = observability_submitter_interaction(
+        interaction_status = observability_task_submitter_interaction(
             swift_parameters = params['swift-parameters'],
             bucket_parameters = params['bucket-parameters'],
             storage_parameters = params['storage-parameters']

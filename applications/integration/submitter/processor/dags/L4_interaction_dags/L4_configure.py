@@ -23,10 +23,10 @@ with DAG(
         params: str
     ): 
         try:
-            from interaction_dags.local_func.configure import configure_cloud_interaction
+            from L4_interaction_dags.tasks.configure_tasks import configure_task_cloud_interaction
         except ImportError as e:
             raise ImportError("interaction-dags/configure failed to import", e)
-        interaction_status = configure_cloud_interaction(
+        interaction_status = configure_task_cloud_interaction(
             swift_parameters = params['swift-parameters'],
             storage_parameters = params['storage-parameters'],
             process_parameters = params['process-parameters'],

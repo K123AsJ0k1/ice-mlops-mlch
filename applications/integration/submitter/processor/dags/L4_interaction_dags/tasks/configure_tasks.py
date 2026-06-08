@@ -1,5 +1,5 @@
  
-def configure_cloud_interaction(
+def configure_task_cloud_interaction(
     swift_parameters: str, 
     storage_parameters: str,
     process_parameters: str

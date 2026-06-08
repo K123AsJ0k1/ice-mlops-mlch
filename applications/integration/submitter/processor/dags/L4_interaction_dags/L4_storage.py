@@ -23,11 +23,11 @@ with DAG(
         params: any
     ):
         try: 
-            from interaction_dags.local_func.storage import storage_object_interaction 
+            from L4_interaction_dags.tasks.storage_tasks import storage_task_object_interaction
         except ImportError as e:
             raise ImportError("interaction-dags/storage failed to import", e)
         
-        interaction_status = storage_object_interaction(
+        interaction_status = storage_task_object_interaction(
             swift_parameters = params['swift-parameters'],
             bucket_parameters = params['bucket-parameters'],
             storage_parameters = params['storage-parameters']
