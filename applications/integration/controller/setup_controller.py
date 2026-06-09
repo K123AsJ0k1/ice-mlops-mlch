@@ -48,7 +48,7 @@ def setup_controller(
     
     logger.info('Creating swift parameters')
     setup_swift_parameters = {}
-    if not swift_user == '[CSC_USERNAME]' or swift_password == '[CSC_PASSWORD]':
+    if not swift_user == '[CSC_USERNAME]' or not swift_password == '[CSC_PASSWORD]':
         logger.info('Username and password exist')
         setup_swift_parameters = swift_get_parameters(
             secret_parameters = {
