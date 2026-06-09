@@ -255,7 +255,7 @@ def setup_action_send_file(
         from functions.utility.file import file_write_data, file_chmod_command
         from functions.utility.sftp import stfp_store_file
         from functions.interactions.bridge import bridge_ssh_interface
-        from functions.actions.sftp_actions import sftp_actions_get_directory_list
+        from functions.actions.sftp_actions import sftp_action_get_directory_list
     except ImportError as e:
         raise ImportError("L3_orchestration_dags/actions/setup_actions failed to import", e)
 
@@ -307,7 +307,7 @@ def setup_action_send_file(
             local_file_path = local_file_path,
             remote_file_path = remote_file_path
         )
-        
+        # This needs to change
         send_result = bridge_ssh_interface(
             storage_parameters = storage_parameters,
             lock_location = lock_location,
@@ -321,7 +321,7 @@ def setup_action_send_file(
         remote_file_path_split = remote_file_path.split('/')
         remote_directory = '/'.join(remote_file_path_split[:-1])
 
-        file_list = sftp_actions_get_directory_list(
+        file_list = sftp_action_get_directory_list(
             storage_parameters = storage_parameters,
             lock_location = lock_location,
             target_platform = target_platform,

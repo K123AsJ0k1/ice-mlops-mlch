@@ -49,7 +49,7 @@ def observability_task_submitter_interaction(
         object_data = None,
         object_metadata = None 
     )
-
+ 
     data_stored = observability_action_flower_interaction(
         swift_client = swift_client,
         bucket_parameters = bucket_parameters,

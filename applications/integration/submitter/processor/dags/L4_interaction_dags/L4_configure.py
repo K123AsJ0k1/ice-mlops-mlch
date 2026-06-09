@@ -28,7 +28,6 @@ with DAG(
             raise ImportError("interaction-dags/configure failed to import", e)
     
         interaction_status = configure_task_cloud_interaction(
-            swift_parameters = params['swift-parameters'],
             storage_parameters = params['storage-parameters'],
             platfrom_parameters = params['platfrom-parameters']
         )
