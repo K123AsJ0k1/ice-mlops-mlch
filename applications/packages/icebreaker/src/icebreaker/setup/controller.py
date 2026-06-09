@@ -26,6 +26,7 @@ def controller_create_files(
                             if '.txt' in file:
                                 for placeholder, value in file_configuration['values'].items():
                                     created_file_content = created_file_content.replace(placeholder, str(value))
+                                created_file_content += '\n'
                             if '.yaml' in file:
                                 created_file_content = yaml.safe_load(created_file_content)
                                 for key, value in file_configuration['values'].items():

@@ -24,13 +24,13 @@ env = [
     "python-decouple"
 ]
 
-swift = [
+swift_client = [
     "python-swiftclient"
 ]
 
 swift_auth = [
     "keystoneauth1",
-    "python-keystoneclient",
+    "python-keystoneclient"
 ]
 
 data = [
@@ -67,5 +67,5 @@ logging = [
 ]
 
 all = [
-    "icebreaker[notebook, swift, swift_auth, data, lang_detect, code_detect, redis, flower, ray, pararellism, logging]"
+    "icebreaker[notebook, swift_client, swift_auth, data, lang_detect, code_detect, redis, flower, ray, pararellism, logging]"
 ]
