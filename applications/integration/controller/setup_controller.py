@@ -14,7 +14,8 @@ def setup_controller(
     input_path: str
 ):
     logger = logger_setup_configuration(
-        logger_name = 'controller'
+        logger_name = 'controller',
+        logger_timezone = 'Europe/Helsinki'
     )
     
     logger.info("Starting Ray-Chisel micro-controller")
