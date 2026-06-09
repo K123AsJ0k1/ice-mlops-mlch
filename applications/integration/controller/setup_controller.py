@@ -48,7 +48,7 @@ def setup_controller(
     
     logger.info('Creating swift parameters')
     setup_swift_parameters = {}
-    if 0 < len(swift_user) and 0 < len(swift_password):
+    if not swift_user == '[CSC_USERNAME]' or swift_password == '[CSC_PASSWORD]':
         logger.info('Username and password exist')
         setup_swift_parameters = swift_get_parameters(
             secret_parameters = {
@@ -61,7 +61,7 @@ def setup_controller(
                 'swift-pre-auth-url': swift_pre_auth_url
             }
         )
-    if 0 < len(swift_token):
+    if len(setup_swift_parameters) == 0 and not swift_token == '[SWIFT_TOKEN]':
         logger.info('Token exists')
         setup_swift_parameters = {
             'pre-auth-token': swift_token,
