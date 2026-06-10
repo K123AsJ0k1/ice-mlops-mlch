@@ -14,8 +14,6 @@ def data_list_objects(
 
     object_stored = object_storage_interaction(
         storage_client = storage_client,
-        lock_parameters = {},
-        lock_location = None,
         parameters = {
             'mode': 'list',
             'bucket-target': storage_parameters['bucket-target'],
@@ -27,8 +25,10 @@ def data_list_objects(
             },
             'path-names': [],
             'overwrite': True,
-            'debug-prints': True
-        },
+            'debug-prints': True,
+            'lock-parameters': {},
+            'lock-location': ''
+        }, 
         object_data = None,
         object_metadata = None
     ) 

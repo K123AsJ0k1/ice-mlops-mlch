@@ -4,7 +4,8 @@ def fasttext_get_stats(
     texts: list,
     default_value: str,
     default_threshold: str,
-    label_replacer: any
+    label_replacer: any,
+    batch_mode: bool
 ):  
     try:
         import statistics
@@ -42,33 +43,36 @@ def fasttext_get_stats(
         else:
             language_amounts[language_label]['amount'] += 1
             if not label_confidence == 0.0:
-                language_amounts[language_label]['confidences'].append(label_confidence)
+                language_amounts[language_label]['confidence'].append(label_confidence)
 
+    collected_statistics['language-default-amount'] = language_default_amount
     for label, data in language_amounts.items():
         column_prefix = 'language-' + label
         language_amount_column = column_prefix + '-amount'
     
-        label_amount = data['amount']
-        label_confidences = data['confidences']             
+        collected_statistics[language_amount_column] = data['amount']
 
-        confidence_min_column = column_prefix + '-confidence-min'
-        confidence_min = 0
-        confidence_max_column = column_prefix + '-confidence-max'
-        confidence_max = 0
-        confidence_mean_column = column_prefix + '-confidence-mean'
-        confidence_mean = 0
-        confidence_median_column = column_prefix + '-confidence-median'
-        confidence_median = 0
-        if 0 < len(label_confidences):
-            confidence_min = min(label_confidences)
-            confidence_max = max(label_confidences)
-            confidence_mean = statistics.mean(label_confidences)
-            confidence_median = statistics.median(label_confidences)
-        
-        collected_statistics[language_amount_column] = label_amount
-        collected_statistics[confidence_min_column] = confidence_min
-        collected_statistics[confidence_max_column] = confidence_max
-        collected_statistics[confidence_mean_column] = confidence_mean
-        collected_statistics[confidence_median_column] = confidence_median
-    collected_statistics['language-default-amount'] = language_default_amount
+        if batch_mode:
+            format_confidences_column = column_prefix + '-confidence'
+            collected_statistics[format_confidences_column] = data['confidence'] 
+        else:
+            label_confidences = data['confidence']             
+            confidence_min_column = column_prefix + '-confidence-min'
+            confidence_min = 0
+            confidence_max_column = column_prefix + '-confidence-max'
+            confidence_max = 0
+            confidence_mean_column = column_prefix + '-confidence-mean'
+            confidence_mean = 0
+            confidence_median_column = column_prefix + '-confidence-median'
+            confidence_median = 0
+            if 0 < len(label_confidences):
+                confidence_min = min(label_confidences)
+                confidence_max = max(label_confidences)
+                confidence_mean = statistics.mean(label_confidences)
+                confidence_median = statistics.median(label_confidences)
+            
+            collected_statistics[confidence_min_column] = confidence_min
+            collected_statistics[confidence_max_column] = confidence_max
+            collected_statistics[confidence_mean_column] = confidence_mean
+            collected_statistics[confidence_median_column] = confidence_median
     return collected_statistics
