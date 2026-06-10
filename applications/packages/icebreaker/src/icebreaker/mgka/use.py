@@ -52,10 +52,10 @@ def magika_get_stats(
         collected_statistics[format_amount_column] = data['amount']
 
         if batch_mode:
-            format_confidences_column = column_prefix + '-confidence'
-            collected_statistics[format_confidences_column] = data['confidence'] 
+            format_confidence_column = column_prefix + '-confidence'
+            collected_statistics[format_confidence_column] = data['confidence'] 
         else:
-            label_confidences = data['confidence']             
+            label_confidence = data['confidence']             
 
             confidence_min_column = column_prefix + '-confidence-min'
             confidence_min = 0
@@ -65,11 +65,11 @@ def magika_get_stats(
             confidence_mean = 0
             confidence_median_column = column_prefix + '-confidence-median'
             confidence_median = 0
-            if 0 < len(label_confidences):
-                confidence_min = min(label_confidences)
-                confidence_max = max(label_confidences)
-                confidence_mean = statistics.mean(label_confidences)
-                confidence_median = statistics.median(label_confidences)
+            if 0 < len(label_confidence):
+                confidence_min = min(label_confidence)
+                confidence_max = max(label_confidence)
+                confidence_mean = statistics.mean(label_confidence)
+                confidence_median = statistics.median(label_confidence)
             
             collected_statistics[confidence_min_column] = confidence_min
             collected_statistics[confidence_max_column] = confidence_max
