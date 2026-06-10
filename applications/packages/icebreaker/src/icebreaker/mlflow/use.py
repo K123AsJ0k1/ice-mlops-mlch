@@ -33,12 +33,13 @@ def mlflow_log_metrics(
     step: int
 ) -> None:
     for key, val in metrics.items():
-        mlflow_client.log_metric(
-            run_id = run_id, 
-            key = key, 
-            value = val, 
-            step = step
-        )
+        if not isinstance(val, list):
+            mlflow_client.log_metric(
+                run_id = run_id, 
+                key = key, 
+                value = val, 
+                step = step
+            )
 
 def mlflow_log_artifact(
     mlflow_client: any,
