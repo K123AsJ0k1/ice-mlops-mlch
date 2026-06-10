@@ -20,12 +20,13 @@ storage:
     bucket-prefix: 'mlch'
     bucket-user: 'user@example.com' 
 integration:
+  cluster-name: 'local-cloud-cluster'
   resource-weights:
-      nodes: 0.2
-      cpu: 0.3 
-      ram: 0.4
-      gpu: 0.05
-      vram: 0.05
+    nodes: 0.2
+    cpu: 0.3 
+    ram: 0.4
+    gpu: 0.05
+    vram: 0.05
 processing:
   step-1:
     general:
@@ -301,7 +302,16 @@ processing:
     cluster:
       cloud-vm1:
         process:
-          workers: 6
+          workers: 4
+          actors: 2
+        job:
+          main-file: 'main.py'
+          runtime:
+            working_dir: 'external_data_analysis'
+            pip: 'external_data_analysis/requirements.txt'
+      cloud-vm2:
+        process:
+          workers: 5
           actors: 2
         job:
           main-file: 'main.py'
