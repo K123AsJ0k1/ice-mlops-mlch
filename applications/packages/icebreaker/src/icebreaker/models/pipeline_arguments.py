@@ -29,6 +29,7 @@ class StorageParameters(BaseModel):
     log: TypeStorage = Field(alias = 'log-storage')
 
 class IntegrationParameters(BaseModel):
+    cluster_name: str = Field(alias = 'cluster-name')
     cluster_yamls: Dict = Field(alias = 'cluster-yamls')
     resource_weights: Dict[str, float] = Field(alias = 'resource-weights')
 

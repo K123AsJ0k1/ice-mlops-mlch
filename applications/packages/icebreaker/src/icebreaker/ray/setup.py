@@ -61,8 +61,6 @@ def ray_store_job(
                 stored_metadata = {'version': 1}
                 object_stored = object_storage_interaction(
                     storage_client = storage_client,
-                    lock_parameters = {},
-                    lock_location = 'no-lock',
                     parameters = {
                         'mode': 'send',
                         'bucket-target': storage_parameters['bucket-target'],
@@ -74,7 +72,9 @@ def ray_store_job(
                         },
                         'path-names': object_path,
                         'overwrite': True,
-                        'debug-prints': True
+                        'debug-prints': True,
+                        'lock-parameters': {},
+                        'lock-location': ''
                     },
                     object_data = stored_data,
                     object_metadata = stored_metadata
