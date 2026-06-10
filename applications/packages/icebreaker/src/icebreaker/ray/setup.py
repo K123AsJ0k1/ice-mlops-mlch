@@ -34,9 +34,8 @@ def ray_store_job(
 ):
     try:
         import os
-        import json
         import time as t
-        from ..storage.management import object_storage_interaction, set_object_path, set_bucket_name
+        from ..storage.management import object_storage_interaction
     except ImportError as e:
         raise ImportError("Failed to import", e)
 
@@ -46,9 +45,6 @@ def ray_store_job(
     for root, dirs, files in os.walk(working_directory_path):
         for file_name in files:
             file_path = os.path.join(root, file_name)
-            #print(file_path)
-            #print(directory_name)
-            #print(file_name)
             object_path = []
             directory_found = False
             for name in file_path.split('/'):
@@ -56,7 +52,6 @@ def ray_store_job(
                     directory_found = True
                 if directory_found:
                     object_path.append(name)
-            #print(object_path)
             with open(file_path, 'rb') as stored_data:
                 stored_metadata = {'version': 1}
                 object_stored = object_storage_interaction(
@@ -100,8 +95,6 @@ def ray_download_job(
 
     object_stored = object_storage_interaction(
         storage_client = storage_client,
-        lock_parameters = {},
-        lock_location = None,
         parameters = {
             'mode': 'list',
             'bucket-target': storage_parameters['bucket-target'],
@@ -113,7 +106,9 @@ def ray_download_job(
             },
             'path-names': [],
             'overwrite': True,
-            'debug-prints': True
+            'debug-prints': True,
+            'lock-parameters': {},
+            'lock-location': ''
         },
         object_data = None,
         object_metadata = None
@@ -140,8 +135,6 @@ def ray_download_job(
                         final_requirements = str(local_file_path)
                     file_object = object_storage_interaction(
                         storage_client = storage_client,
-                        lock_parameters = {},
-                        lock_location = None,
                         parameters = {
                             'mode': 'get',
                             'bucket-target': storage_parameters['bucket-target'],
@@ -153,7 +146,9 @@ def ray_download_job(
                                 'name': object_path
                             },
                             'path-names': [],
-                            'overwrite': False
+                            'overwrite': False,
+                            'lock-parameters': {},
+                            'lock-location': ''
                         }, 
                         object_data = None,
                         object_metadata = None

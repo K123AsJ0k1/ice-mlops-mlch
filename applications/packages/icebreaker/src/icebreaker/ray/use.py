@@ -224,7 +224,6 @@ def ray_store_logs(
     job_logs: any
 ):
     try:
-        import os
         import pickle
         import time as t
         from ..storage.management import object_storage_interaction
@@ -239,8 +238,6 @@ def ray_store_logs(
             object_name = job_id + '.pkl'
             object_stored = object_storage_interaction(
                 storage_client = storage_client,
-                lock_parameters = {},
-                lock_location = 'no-lock',
                 parameters = {
                     'mode': 'send',
                     'bucket-target': storage_parameters['bucket-target'],
@@ -255,7 +252,9 @@ def ray_store_logs(
                         object_name
                     ],
                     'overwrite': True,
-                    'debug-prints': True
+                    'debug-prints': True,
+                    'lock-parameters': {},
+                    'lock-location': ''
                 },
                 object_data = formatted_data,
                 object_metadata = stored_metadata
