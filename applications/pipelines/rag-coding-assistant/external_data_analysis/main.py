@@ -45,11 +45,15 @@ def external_data_analysis(
         # This should be divided into batches based on worker number
         print('Dividing work')
         input_data = config_parameters['input']
-        given_worker_number = process_parameters['workers']
-
+        input_amount = len(input_data)
+        worker_number = process_parameters['workers']
+        print(f'Amount of inputs {input_amount}')
+        print(f'Suggested amount of workers {worker_number}')
+        suitable_worker_number = min(process_parameters['workers'], input_amount)
+        print(f'Selected amount of workers {suitable_worker_number}')
         worker_batches = division_split_input(
             job_input = input_data, 
-            num_workers = given_worker_number
+            num_workers = suitable_worker_number
         )
         print('Batches created for ', len(worker_batches), ' workers')
         print(worker_batches)
@@ -58,12 +62,15 @@ def external_data_analysis(
         for worker_batch in worker_batches:
             worker_batch_refs.append(ray.put(worker_batch))
         # We assume that actor number isn't ridiculus
-        given_actor_number = process_parameters['actors']
-        actor_number = min(given_actor_number,len(worker_batches))
-         
+        amount_of_batches = len(worker_batches)
+        actor_number = process_parameters['actors']
+        print(f'Amount of batches {amount_of_batches}')
+        print(f'Suggested amount of actors {actor_number}')
+        suitable_actor_number = min(actor_number,amount_of_batches)
+        print(f'Selected amount of actors {suitable_actor_number}')
         print('Creating ' + str(actor_number) + ' provider actors')
         actor_refs = []
-        for i in range(0, actor_number):
+        for i in range(0, suitable_actor_number):
             actor_refs.append(Detector.remote(
                 swift_parameters = swift_parameters,
                 model_parameters = model_parameters
@@ -86,22 +93,23 @@ def external_data_analysis(
             ))
             worker_index += 1
             actor_index = (actor_index + 1) % actor_number
-        
+         
         print('Waiting data collector tasks')
         collected_statistics = {} 
         while len(task_1_refs):
             done_task_1_refs, task_1_refs = ray.wait(task_1_refs)
             for output_ref in done_task_1_refs:
                 collected_statistics.update(ray.get(output_ref))
-        
+        print(collected_statistics)
         # remember that metrics only takes integers or floats
-        print('Logging metrics into MLflow')
+        print('Flattening output')
         flattened_statistics = flatten_nested_dict(
             target_dict = collected_statistics,
             parent_key = '',
             seperator = '-'
         )
-        
+        print(flattened_statistics)
+        print('Logging metrics into MLflow')
         mlflow_log_metrics(
             mlflow_client = mlflow_client,
             run_id = run_id, 

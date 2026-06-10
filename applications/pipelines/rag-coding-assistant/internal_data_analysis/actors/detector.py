@@ -47,7 +47,8 @@ class Detector:
             texts = text_input,
             default_value = analysis_parameters['language-default'],
             default_threshold = analysis_parameters['language-threshold'],
-            label_replacer = analysis_parameters['language-replacer']
+            label_replacer = analysis_parameters['language-replacer'],
+            batch_mode = True
         )
         
         result = {

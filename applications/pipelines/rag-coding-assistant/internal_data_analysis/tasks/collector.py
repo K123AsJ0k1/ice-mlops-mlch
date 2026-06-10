@@ -1,5 +1,6 @@
 import ray
 import pickle
+import statistics
 import time as t
 from icebreaker.swift.setup import swift_setup_client
 from icebreaker.storage.management import object_storage_interaction
@@ -143,18 +144,23 @@ def data_collector(
             collection_key = key_name,
             column_prefix = 'paths',
             collected_statistics = collected_stats
-        )
-        # Speaking language-(type)
-        text_input_ref = ray.put(pandas_df[language_column])
-        provider_actor_refs.append(actor_ref.batch_fasttext_stats.remote(
-            worker_index = worker_index,
-            actor_index = actor_index,
-            batch_index = batch_index,
-            used_key = key_name,
-            text_input = text_input_ref,
-            analysis_parameters = analysis_parameters
-        ))
-        batch_index += 1
+        ) 
+        
+        chunk_size = 1000
+        total_rows = len(pandas_df)
+        for i in range(0, total_rows, chunk_size):
+            lang_chunk = pandas_df[language_column].iloc[i : i + chunk_size].tolist()
+            text_input_ref = ray.put(lang_chunk)
+            # Speaking language-(type)
+            provider_actor_refs.append(actor_ref.batch_fasttext_stats.remote(
+                worker_index = worker_index,
+                actor_index = actor_index,
+                batch_index = batch_index,
+                used_key = key_name,
+                text_input = text_input_ref,
+                analysis_parameters = analysis_parameters
+            ))
+            batch_index += 1
     
     while len(provider_actor_refs):
         done_actor_refs, provider_actor_refs = ray.wait(provider_actor_refs)
@@ -163,9 +169,47 @@ def data_collector(
             batch_index = result['batch']
             stats = result['stats']
             key_name = result['key']
-            # For some reason the metrics order isnt consitent
+            
             for stat_name, value in stats.items():
-                collected_stats[key_name][stat_name] = value
+                if isinstance(value, (int, float)):
+                    if stat_name in collected_stats[key_name]:
+                        collected_stats[key_name][stat_name] += value
+                    else:
+                        collected_stats[key_name][stat_name] = value
+                if isinstance(value, list):
+                    if stat_name in collected_stats[key_name]:
+                        collected_stats[key_name][stat_name].extend(value)
+                    else:
+                        collected_stats[key_name][stat_name] = value
+                else:
+                    collected_stats[key_name][stat_name] = value
+    list_keys = []
+    for key, value in collected_stats.items():
+        if 'confidence' in key:
+            if isinstance(value, list):      
+                list_keys.append(key)    
+                confidence_min_column = key + '-min'
+                confidence_min = 0
+                confidence_max_column = key + '-max'
+                confidence_max = 0
+                confidence_mean_column = key + '-mean'
+                confidence_mean = 0
+                confidence_median_column = key + '-median'
+                confidence_median = 0
+                if 0 < len(value):
+                    confidence_min = min(value)
+                    confidence_max = max(value)
+                    confidence_mean = statistics.mean(value)
+                    confidence_median = statistics.median(value)
+                collected_stats[confidence_min_column] = confidence_min
+                collected_stats[confidence_max_column] = confidence_max
+                collected_stats[confidence_mean_column] = confidence_mean
+                collected_stats[confidence_median_column] = confidence_median
+    # Removes list keys 
+    for key in list_keys:
+        if key in collected_stats:
+            print(f'Removing key {key}')
+            del collected_stats[key]
     
     end_time = t.time()
     total_time = round(end_time-start_time,5)

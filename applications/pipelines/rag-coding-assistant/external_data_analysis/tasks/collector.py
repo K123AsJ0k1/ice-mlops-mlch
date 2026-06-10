@@ -64,7 +64,7 @@ def data_collector(
             },
             object_data = None,
             object_metadata = None
-        ) 
+        )  
         pandas_df = pyarrow_deserialize_dataframe(serialized_dataframe = stored_dataset[0])
 
         amount = pandas_df.shape[0]
@@ -137,28 +137,31 @@ def data_collector(
                     collected_stats[key_name][stat_name] = value
     list_keys = []
     for key, value in collected_stats.items():
-        if 'confidence' in key:         
-            list_keys.append(key)    
-            confidence_min_column = key + '-min'
-            confidence_min = 0
-            confidence_max_column = key + '-max'
-            confidence_max = 0
-            confidence_mean_column = key + '-mean'
-            confidence_mean = 0
-            confidence_median_column = key + '-median'
-            confidence_median = 0
-            if 0 < len(value):
-                confidence_min = min(value)
-                confidence_max = max(value)
-                confidence_mean = statistics.mean(value)
-                confidence_median = statistics.median(value)
-            collected_stats[confidence_min_column] = confidence_min
-            collected_stats[confidence_max_column] = confidence_max
-            collected_stats[confidence_mean_column] = confidence_mean
-            collected_stats[confidence_median_column] = confidence_median
-
+        if 'confidence' in key:
+            if isinstance(value, list):      
+                list_keys.append(key)    
+                confidence_min_column = key + '-min'
+                confidence_min = 0
+                confidence_max_column = key + '-max'
+                confidence_max = 0
+                confidence_mean_column = key + '-mean'
+                confidence_mean = 0
+                confidence_median_column = key + '-median'
+                confidence_median = 0
+                if 0 < len(value):
+                    confidence_min = min(value)
+                    confidence_max = max(value)
+                    confidence_mean = statistics.mean(value)
+                    confidence_median = statistics.median(value)
+                collected_stats[confidence_min_column] = confidence_min
+                collected_stats[confidence_max_column] = confidence_max
+                collected_stats[confidence_mean_column] = confidence_mean
+                collected_stats[confidence_median_column] = confidence_median
+    # Removes list keys 
     for key in list_keys:
-        value = collected_stats.pop(key, None)
+        if key in collected_stats:
+            print(f'Removing key {key}')
+            del collected_stats[key]
 
     end_time = t.time()
     total_time = round(end_time-start_time,5)
