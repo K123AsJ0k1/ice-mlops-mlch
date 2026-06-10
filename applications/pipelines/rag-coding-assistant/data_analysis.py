@@ -176,11 +176,11 @@ def data_analysis_pipeline(
     integration: dict,
     processing: dict
 ):
-    # works
-    task_0 = cluster_setup_step(
-        storage = storage,
-        integration = integration
-    )
+    # Success
+    #task_0 = cluster_setup_step(
+    #    storage = storage,
+    #    integration = integration
+    #)
 
     # success
     #task_1 = multi_submission_step(
@@ -214,12 +214,12 @@ def data_analysis_pipeline(
     #    step_key = 'step-4'
     #)
 
-    #task_5 = multi_submission_step(
-    #    storage = storage,
-    #    integration = integration,
-    #    processing = processing,
-    #    step_key = 'step-5'
-    #)
+    task_5 = multi_submission_step(
+        storage = storage,
+        integration = integration,
+        processing = processing,
+        step_key = 'step-5'
+    )
 
     #task_2 = multi_submission_step(
     #    storage_parameters = storage_parameters,

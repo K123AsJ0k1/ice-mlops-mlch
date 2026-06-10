@@ -1,5 +1,5 @@
 import ray
-import pickle 
+import statistics
 import time as t
 from icebreaker.swift.setup import swift_setup_client
 from icebreaker.storage.management import object_storage_interaction
@@ -47,8 +47,6 @@ def data_collector(
 
         stored_dataset = object_storage_interaction(
             storage_client = setup_swift_client,
-            lock_parameters = {},
-            lock_location = None,
             parameters = {
                 'mode': 'get',
                 'bucket-target': data_storage_parameters['bucket-target'],
@@ -60,7 +58,9 @@ def data_collector(
                     'name': object_path
                 },
                 'path-names': [],
-                'overwrite': True
+                'overwrite': True,
+                'lock-parameters': {},
+                'lock-location': ''
             },
             object_data = None,
             object_metadata = None
@@ -85,27 +85,33 @@ def data_collector(
             collected_statistics = collected_stats[key_name]
         )
 
-        # Speaking language-(type)
-        text_input_ref_1 = ray.put(pandas_df[language_column])
-        provider_actor_refs.append(actor_ref.batch_fasttext_stats.remote(
-            worker_index = worker_index,
-            actor_index = actor_index,
-            batch_index = batch_index,
-            used_key = key_name,
-            text_input = text_input_ref_1,
-            analysis_parameters = analysis_parameters
-        ))
-        # format-(type)-amount
-        text_input_ref_2 = ray.put(pandas_df[format_column])
-        provider_actor_refs.append(actor_ref.batch_magika_stats.remote(
-            worker_index = worker_index,
-            actor_index = actor_index,
-            batch_index = batch_index,
-            used_key = key_name,
-            text_input = text_input_ref_2,
-            analysis_parameters = analysis_parameters
-        ))
+        chunk_size = 1000
+        total_rows = len(pandas_df)
+        for i in range(0, total_rows, chunk_size):
+            lang_chunk = pandas_df[language_column].iloc[i : i + chunk_size].tolist()
+            format_chunk = pandas_df[format_column].iloc[i : i + chunk_size].tolist()
 
+            # Speaking language-(type)
+            text_input_ref_1 = ray.put(lang_chunk)
+            provider_actor_refs.append(actor_ref.batch_fasttext_stats.remote(
+                worker_index = worker_index,
+                actor_index = actor_index,
+                batch_index = batch_index,
+                used_key = key_name,
+                text_input = text_input_ref_1,
+                analysis_parameters = analysis_parameters
+            ))
+            # format-(type)-amount
+            text_input_ref_2 = ray.put(format_chunk)
+            provider_actor_refs.append(actor_ref.batch_magika_stats.remote(
+                worker_index = worker_index,
+                actor_index = actor_index,
+                batch_index = batch_index,
+                used_key = key_name,
+                text_input = text_input_ref_2,
+                analysis_parameters = analysis_parameters
+            ))
+        
         batch_index += 1
     
     while len(provider_actor_refs):
@@ -115,9 +121,45 @@ def data_collector(
             batch_index = result['batch']
             stats = result['stats']
             key_name = result['key']
+            
             for stat_name, value in stats.items():
-                collected_stats[key_name][stat_name] = value
-    
+                if isinstance(value, (int, float)):
+                    if stat_name in collected_stats[key_name]:
+                        collected_stats[key_name][stat_name] += value
+                    else:
+                        collected_stats[key_name][stat_name] = value
+                if isinstance(value, list):
+                    if stat_name in collected_stats[key_name]:
+                        collected_stats[key_name][stat_name].extend(value)
+                    else:
+                        collected_stats[key_name][stat_name] = value
+                else:
+                    collected_stats[key_name][stat_name] = value
+    list_keys = []
+    for key, value in collected_stats.items():
+        if 'confidence' in key:         
+            list_keys.append(key)    
+            confidence_min_column = key + '-min'
+            confidence_min = 0
+            confidence_max_column = key + '-max'
+            confidence_max = 0
+            confidence_mean_column = key + '-mean'
+            confidence_mean = 0
+            confidence_median_column = key + '-median'
+            confidence_median = 0
+            if 0 < len(value):
+                confidence_min = min(value)
+                confidence_max = max(value)
+                confidence_mean = statistics.mean(value)
+                confidence_median = statistics.median(value)
+            collected_stats[confidence_min_column] = confidence_min
+            collected_stats[confidence_max_column] = confidence_max
+            collected_stats[confidence_mean_column] = confidence_mean
+            collected_stats[confidence_median_column] = confidence_median
+
+    for key in list_keys:
+        value = collected_stats.pop(key, None)
+
     end_time = t.time()
     total_time = round(end_time-start_time,5)
     print('Spent seconds', total_time)

@@ -2,6 +2,7 @@ import ray
  
 @ray.remote(
     num_cpus = 1,
+    num_gpus = 1,
     memory = 0.2 * 1024 * 1024 * 1024
 ) 
 class Detector:
@@ -50,7 +51,8 @@ class Detector:
             texts = text_input,
             default_value = analysis_parameters['language-default'],
             default_threshold = analysis_parameters['language-threshold'],
-            label_replacer = analysis_parameters['language-replacer']
+            label_replacer = analysis_parameters['language-replacer'],
+            batch_mode = True
         )
         
         result = {
@@ -77,7 +79,8 @@ class Detector:
             texts = text_input,
             default_value = analysis_parameters['format-default'],
             default_threshold = analysis_parameters['format-threshold'],
-            label_replacer = analysis_parameters['format-replacer']
+            label_replacer = analysis_parameters['format-replacer'],
+            batch_mode = True
         )
 
         result = {

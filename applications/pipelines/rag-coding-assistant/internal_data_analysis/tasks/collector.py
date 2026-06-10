@@ -52,8 +52,6 @@ def data_collector(
 
         stored_dataset = object_storage_interaction(
             storage_client = setup_swift_client,
-            lock_parameters = {},
-            lock_location = None,
             parameters = {
                 'mode': 'get',
                 'bucket-target': data_storage_parameters['bucket-target'],
@@ -65,7 +63,9 @@ def data_collector(
                     'name': object_path
                 },
                 'path-names': [],
-                'overwrite': True
+                'overwrite': True,
+                'lock-parameters': {},
+                'lock-location': ''
             },
             object_data = None,
             object_metadata = None
