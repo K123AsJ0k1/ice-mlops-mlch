@@ -51,7 +51,7 @@ def external_data_analysis(
             job_input = input_data, 
             num_workers = given_worker_number
         )
-        print('Batch amount', len(worker_batches))
+        print('Batches created for ', len(worker_batches), ' workers')
         print(worker_batches)
         print('Putting data into refs')
         worker_batch_refs = []

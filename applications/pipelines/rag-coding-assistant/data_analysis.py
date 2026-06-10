@@ -1,9 +1,60 @@
 from kfp import dsl
- 
+
 @dsl.component(
     base_image = "python:3.12.3",
     packages_to_install = [
-        "icebreaker[swift, ray, pararellism] @ git+https://github.com/K123AsJ0k1/ice-mlops-mlch.git@main#subdirectory=applications/packages/icebreaker"
+        "icebreaker[swift_client, ray, pararellism] @ git+https://github.com/K123AsJ0k1/ice-mlops-mlch.git@main#subdirectory=applications/packages/icebreaker"
+    ]
+)
+def cluster_setup_step(
+    storage: dict,
+    integration: dict
+):
+    import time as t
+    start_time = t.time()
+
+    from icebreaker.swift.setup import swift_setup_client 
+    from icebreaker.objects.use import objects_store_data 
+
+    print('Storage parameters')
+    swift_parameters = storage['swift']
+    print('Setting up swift client')
+    setup_swift_client = swift_setup_client(
+        swift_parameters = swift_parameters
+    )
+    code_storage = storage['code-storage']
+    cluster_name = integration['cluster-name']
+    cluster_yamls = integration['cluster-yamls']
+    object_name = cluster_name + '.pkl'
+    print('Storing cluster yamls')
+    store_status = objects_store_data(
+        swift_client = setup_swift_client,
+        storage_parameters = {
+            'bucket-target': code_storage['bucket-target'],
+            'bucket-prefix': code_storage['bucket-prefix'],
+            'bucket-user': code_storage['bucket-user'],
+            'object-name': 'mana',
+            'object-serialization': 'pickle',
+            'path-replacers': {
+                'name': object_name
+            },
+            'path-names': [],
+            'debug-prints': True,
+            'lock-parameters': {},
+            'lock-location': None,
+            'overwrite': True
+        },
+        object_data = cluster_yamls
+    )
+    
+    end_time = t.time()
+    total_time = round(end_time-start_time,5)
+    print('Spent seconds', total_time)
+    
+@dsl.component(
+    base_image = "python:3.12.3",
+    packages_to_install = [
+        "icebreaker[swift_client, ray, pararellism] @ git+https://github.com/K123AsJ0k1/ice-mlops-mlch.git@main#subdirectory=applications/packages/icebreaker"
     ]
 )
 def multi_submission_step(
@@ -125,25 +176,49 @@ def data_analysis_pipeline(
     integration: dict,
     processing: dict
 ):
+    # works
+    task_0 = cluster_setup_step(
+        storage = storage,
+        integration = integration
+    )
+
+    # success
     #task_1 = multi_submission_step(
     #    storage = storage,
     #    integration = integration,
     #    processing = processing,
     #    step_key = 'step-1'
     #)
-
-    task_2 = multi_submission_step(
-        storage = storage,
-        integration = integration,
-        processing = processing,
-        step_key = 'step-2'
-    )
-
+    
+    # success
     #task_2 = multi_submission_step(
-    #    storage_parameters = storage_parameters,
-    #    integration_parameters = integration_parameters,
-    #    process_parameters = process_parameters,
+    #    storage = storage,
+    #    integration = integration,
+    #    processing = processing,
     #    step_key = 'step-2'
+    #)
+
+    # success
+    #task_3 = multi_submission_step(
+    #    storage = storage,
+    #    integration = integration,
+    #    processing = processing,
+    #    step_key = 'step-3'
+    #)
+
+    # success
+    #task_4 = multi_submission_step(
+    #    storage = storage,
+    #    integration = integration,
+    #    processing = processing,
+    #    step_key = 'step-4'
+    #)
+
+    #task_5 = multi_submission_step(
+    #    storage = storage,
+    #    integration = integration,
+    #    processing = processing,
+    #    step_key = 'step-5'
     #)
 
     #task_2 = multi_submission_step(
