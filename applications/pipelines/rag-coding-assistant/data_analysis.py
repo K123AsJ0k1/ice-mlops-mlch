@@ -183,20 +183,21 @@ def data_analysis_pipeline(
     #)
 
     # success
-    task_1 = multi_submission_step(
-        storage = storage,
-        integration = integration,
-        processing = processing,
-        step_key = 'step-1'
-    )
-    
-    # success
-    #task_2 = multi_submission_step(
+    # Internal data
+    #task_1 = multi_submission_step(
     #    storage = storage,
     #    integration = integration,
     #    processing = processing,
-    #    step_key = 'step-2'
+    #    step_key = 'step-1'
     #)
+    
+    # success
+    task_2 = multi_submission_step(
+        storage = storage,
+        integration = integration,
+        processing = processing,
+        step_key = 'step-2'
+    )
 
     # success
     #task_3 = multi_submission_step(

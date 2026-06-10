@@ -102,15 +102,16 @@ def internal_data_analysis(
             done_task_1_refs, task_1_refs = ray.wait(task_1_refs)
             for output_ref in done_task_1_refs:
                 collected_statistics.update(ray.get(output_ref))
-        
+        print(collected_statistics)
         # remember that metrics only takes integers or floats
-        print('Logging metrics into MLflow')
+        print('Flattening output')
         flattened_statistics = flatten_nested_dict(
             target_dict = collected_statistics,
             parent_key = '',
             seperator = '-'
         )
-        
+        print(flattened_statistics)
+        print('Logging metrics into MLflow')
         mlflow_log_metrics(
             mlflow_client = mlflow_client,
             run_id = run_id, 
