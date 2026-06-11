@@ -27,6 +27,7 @@ class StorageParameters(BaseModel):
     data: TypeStorage = Field(alias = 'data-storage')
     code: TypeStorage = Field(alias = 'code-storage')
     log: TypeStorage = Field(alias = 'log-storage')
+    time_name: str = Field(alias = 'time-name')
 
 class IntegrationParameters(BaseModel):
     cluster_name: str = Field(alias = 'cluster-name')

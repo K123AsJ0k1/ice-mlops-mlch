@@ -3,11 +3,13 @@
 def objects_store_data(
     swift_client: any,
     storage_parameters: any,
-    object_data: any
+    object_data: any,
+    object_metadata: any
 ) -> bool:
     try:
         import pickle
         from ..storage.management import object_storage_interaction
+        from ..pyarrow.use import pyarrow_serialize_dataframe
     except ImportError as e:
         raise ImportError("clusters/use failed to import", e)
     
@@ -15,7 +17,12 @@ def objects_store_data(
     if storage_parameters['object-serialization'] == 'pickle':
         print('Formatted to pickle')
         stored_data = pickle.dumps(object_data)
-    stored_metadata = {'version': 1}
+    if storage_parameters['object-serialization'] == 'parquet':
+        print('Formatted to parquet')
+        stored_data = pyarrow_serialize_dataframe(dataframe = object_data)
+    stored_metadata = object_metadata
+    if 0 < len(object_metadata):
+        stored_metadata = {'version': 1}
 
     if stored_data is None:
         return False

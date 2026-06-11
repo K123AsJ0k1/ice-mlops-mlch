@@ -41,10 +41,13 @@ def kubeflow_manage_run(
 ):
     try:
         import time as t
+        from ..misc.time import time_run_update
     except ImportError as e:
         raise ImportError("Failed to import", e)
 
     time_start = t.time()
+
+    
     
     print('Submitting pipeline')
     run_details = kfp_client.create_run_from_pipeline_func(

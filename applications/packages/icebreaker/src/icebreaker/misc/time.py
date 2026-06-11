@@ -5,16 +5,16 @@ def time_edit_list(
     time_name: any,
     start_time: int,
     end_time: int,
-    list_index: int
+    time_index: int
 ) -> list:
     if 0 < start_time and 0 < end_time:
         total_time = (end_time-start_time)
         total_time = round(total_time, 5)
-        if -1 < list_index and list_index < len(value_list):
-            value_list[list_index][used_keys[0]] = time_name
-            value_list[list_index][used_keys[1]] = start_time
-            value_list[list_index][used_keys[2]] = end_time
-            value_list[list_index][used_keys[3]] = total_time
+        if -1 < time_index and time_index < len(value_list):
+            value_list[time_index][used_keys[0]] = time_name
+            value_list[time_index][used_keys[1]] = start_time
+            value_list[time_index][used_keys[2]] = end_time
+            value_list[time_index][used_keys[3]] = total_time
         else:
             value_list.append(
                 {
@@ -25,9 +25,9 @@ def time_edit_list(
                 }
             )
     elif 0 < start_time:
-        if -1 < list_index and list_index < len(value_list):
-            value_list[list_index][used_keys[0]] = time_name
-            value_list[list_index][used_keys[1]] = start_time
+        if -1 < time_index and time_index < len(value_list):
+            value_list[time_index][used_keys[0]] = time_name
+            value_list[time_index][used_keys[1]] = start_time
         else:
             value_list.append(
                 {
@@ -38,11 +38,11 @@ def time_edit_list(
                 }
             )
     elif 0 < end_time:
-        if -1 < list_index and list_index < len(value_list):
-            total_time = end_time - value_list[list_index][used_keys[1]]
+        if -1 < time_index and time_index < len(value_list):
+            total_time = end_time - value_list[time_index][used_keys[1]]
             total_time = round(total_time, 5)
-            value_list[list_index][used_keys[2]] = end_time
-            value_list[list_index][used_keys[3]] = total_time
+            value_list[time_index][used_keys[2]] = end_time
+            value_list[time_index][used_keys[3]] = total_time
         else:
             for entry in reversed(value_list):
                 if 0 == entry[used_keys[3]]:
@@ -54,9 +54,127 @@ def time_edit_list(
     last_index = len(value_list) - 1 
     return value_list, last_index
 
+def time_run_update(
+    storage_client: any,
+    storage_parameters: any,
+    object_name: str,
+    time_name: str,
+    start_time: int,
+    end_time: int,
+    time_index: int
+) -> bool:
+    try:
+        import pandas as pd
+        from ..storage.management import object_storage_interaction
+        from ..objects.use import objects_get_data, objects_store_data
+    except ImportError as e: 
+        raise ImportError("misc/time failed to import", e)
+
+    object_list = object_storage_interaction(
+        storage_client = storage_client,
+        parameters = {
+            'mode': 'list',
+            'bucket-target': storage_parameters['bucket-target'],
+            'bucket-prefix': storage_parameters['bucket-prefix'],
+            'bucket-user': storage_parameters['bucket-user'],
+            'object-name': 'root',
+            'path-replacers': {
+                'name': 'key'
+            },
+            'path-names': [],
+            'overwrite': True,
+            'debug-prints': True,
+            'lock-parameters': {},
+            'lock-location': ''
+        }, 
+        object_data = None,
+        object_metadata = None
+    ) 
+
+    current_key_amount = 0
+    existing_object_path = ''
+    if 0 < len(object_list):
+        for object_path, values in object_list.items():
+            if object_name in object_path:
+                checked_name = object_path.split('/')[-1].split('.')[0]
+                if object_name == checked_name:
+                    existing_object_path = object_path
+                else:
+                    current_key_amount += 1
+    next_key = current_key_amount + 1
+
+    time_dict_list = []
+    object_type = 'time'
+    used_object_name = object_name + '-' + str(next_key)
+    name_replacer = used_object_name + '.parquet'
+    stored_metadata = {'version': 1}
+    if 0 < len(existing_object_path):
+        formatted_data = objects_get_data(
+            swift_client = storage_client,
+            storage_parameters = {
+                'bucket-target': storage_parameters['bucket-target'],
+                'bucket-prefix': storage_parameters['bucket-prefix'],
+                'bucket-user': storage_parameters['bucket-user'],
+                'object-name': 'root',
+                'object-serialization': 'parquet',
+                'path-replacers': {
+                    'name': existing_object_path
+                },
+                'path-names': [],
+                'debug-prints': True,
+                'lock-parameters': {},
+                'lock-location': None,
+                'overwrite': True
+            },
+            dict_format = False
+        )
+        time_dict_list = formatted_data[0].to_dict(orient = 'records')
+        object_type = 'root'
+        name_replacer = existing_object_path
+        stored_metadata = formatted_data[-1]
+        used_object_name = existing_object_path.split('/')[-1].split('.')[0]
+        
+    modified_dict_list, modified_dict_index = time_edit_list(
+        value_list = time_dict_list,
+        used_keys = [
+            'name',
+            'start',
+            'end',
+            'total'
+        ],
+        time_name = time_name,
+        start_time = start_time,
+        end_time = end_time,
+        time_index = time_index
+    )
+    print(modified_dict_list)
+    stored_data = pd.DataFrame(modified_dict_list)
+    print(object_type, name_replacer)
+    object_stored = objects_store_data(
+        swift_client = storage_client,
+        storage_parameters = {
+            'bucket-target': storage_parameters['bucket-target'],
+            'bucket-prefix': storage_parameters['bucket-prefix'],
+            'bucket-user': storage_parameters['bucket-user'],
+            'object-name': object_type,
+            'object-serialization': 'parquet',
+            'path-replacers': {
+                'name': name_replacer
+            },
+            'path-names': [],
+            'debug-prints': True,
+            'lock-parameters': {},
+            'lock-location': None,
+            'overwrite': True
+        },
+        object_data = stored_data,
+        object_metadata = stored_metadata
+    )
+    return None, modified_dict_index, used_object_name
+        
 def time_orch_update(
     storage_parameters: any,
-    orch_dict: any,
+    orch_dict: any
 ):  
     try:
         import copy
