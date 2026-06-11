@@ -33,6 +33,7 @@ def mlflow_log_metrics(
     step: int
 ) -> None:
     for key, val in metrics.items():
+        # Doesn't filter for some reason
         if not isinstance(val, list) or not isinstance(val, dict):
             mlflow_client.log_metric(
                 run_id = run_id, 

@@ -85,6 +85,7 @@ def ray_download_job(
     ray_runtime: any
 ):
     try:
+        import os
         from pathlib import Path
         import time as t
         from ..storage.management import object_storage_interaction
@@ -133,29 +134,31 @@ def ray_download_job(
                     local_file_path.parent.mkdir(parents=True, exist_ok=True)   
                     if runtime_requirements in str(local_file_path):
                         final_requirements = str(local_file_path)
-                    file_object = object_storage_interaction(
-                        storage_client = storage_client,
-                        parameters = {
-                            'mode': 'get',
-                            'bucket-target': storage_parameters['bucket-target'],
-                            'bucket-prefix': storage_parameters['bucket-prefix'],
-                            'bucket-user': storage_parameters['bucket-user'],
-                            'debug-prints': True,
-                            'object-name': 'root',
-                            'path-replacers': {
-                                'name': object_path
-                            },
-                            'path-names': [],
-                            'overwrite': False,
-                            'lock-parameters': {},
-                            'lock-location': ''
-                        }, 
-                        object_data = None,
-                        object_metadata = None
-                    )
-                    file_data = file_object[0]
-                    with open(local_file_path, 'wb') as local_file:
-                        local_file.write(file_data)
+
+                    if not local_file_path.exists():
+                        file_object = object_storage_interaction(
+                            storage_client = storage_client,
+                            parameters = {
+                                'mode': 'get',
+                                'bucket-target': storage_parameters['bucket-target'],
+                                'bucket-prefix': storage_parameters['bucket-prefix'],
+                                'bucket-user': storage_parameters['bucket-user'],
+                                'debug-prints': True,
+                                'object-name': 'root',
+                                'path-replacers': {
+                                    'name': object_path
+                                },
+                                'path-names': [],
+                                'overwrite': False,
+                                'lock-parameters': {},
+                                'lock-location': ''
+                            }, 
+                            object_data = None,
+                            object_metadata = None
+                        )
+                        file_data = file_object[0]
+                        with open(local_file_path, 'wb') as local_file:
+                            local_file.write(file_data)
                     
     end_time = t.time()
     total_time = round(end_time-start_time,5)
