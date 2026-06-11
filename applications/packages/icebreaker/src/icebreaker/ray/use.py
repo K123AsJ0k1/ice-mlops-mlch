@@ -167,7 +167,7 @@ def ray_multi_submit(
                     ray_job_file = used_job_file,
                     ray_runtime = used_runtime
                 )
-                print('Submitted job ', used_job_file, ' into cluster ', targeted_cluster)
+                print(f'Submitted job {cluster_job_id} with starting file {used_job_file} into cluster {targeted_cluster}')
                 cluster_job_ids.append((cluster_client, cluster_job_id))
     return cluster_job_ids
 
