@@ -32,6 +32,10 @@ class IntegrationParameters(BaseModel):
     cluster_name: str = Field(alias = 'cluster-name')
     cluster_yamls: Dict = Field(alias = 'cluster-yamls')
     resource_weights: Dict[str, float] = Field(alias = 'resource-weights')
+    multi_loop_amount: int = Field(alias = 'multi-loop-amount')
+    multi_loop_wait: int = Field(alias = 'multi-loop-wait')
+    job_loop_amount: int = Field(alias = 'job-loop-amount')
+    job_loop_wait: int = Field(alias = 'job-loop-wait')
 
 class ProcessParameters(BaseModel):
     worker: int = Field(alias = 'workers')
