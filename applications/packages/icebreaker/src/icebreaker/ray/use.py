@@ -22,8 +22,8 @@ def ray_wait_job(
     ray_client: any,
     ray_waited_status: list,
     ray_job_id: int, 
-    loop_timeout: int,
-    wait_timeout: int,
+    job_loop_amount: int,
+    job_loop_wait: int,
     status_print: bool
 ) -> any:
     try:
@@ -31,10 +31,9 @@ def ray_wait_job(
     except ImportError as e:
         raise ImportError("Failed to import", e)
 
-    start = t.time()
     job_status = None
     job_logs = None
-    while t.time() - start <= loop_timeout:
+    for round in range(job_loop_amount):
         status = ray_client.get_job_status(ray_job_id)
         if status_print:
             print(f"status: {status}")
@@ -42,7 +41,7 @@ def ray_wait_job(
             job_status = status
             job_logs = ray_client.get_job_logs(ray_job_id)
             break
-        t.sleep(wait_timeout)
+        t.sleep(job_loop_wait)
     return job_status, job_logs
 
 def ray_serve_route(
@@ -173,8 +172,10 @@ def ray_multi_submit(
 
 def ray_multi_wait(
     cluster_job_ids: any,
-    amount_of_loops: int,
-    loop_wait: int
+    multi_loop_amount: int,
+    multi_loop_wait: int,
+    job_loop_amount: int,
+    job_loop_wait: int
 ):
     try:
         import time as t
@@ -191,7 +192,7 @@ def ray_multi_wait(
         JobStatus.STOPPED
     ]
 
-    for round in range(amount_of_loops):
+    for round in range(multi_loop_amount):
         if not monitored_jobs:
             break
 
@@ -202,8 +203,8 @@ def ray_multi_wait(
                 ray_client = cluster_client,
                 ray_waited_status = waited_job_status,
                 ray_job_id = job_id, 
-                loop_timeout = 5,
-                wait_timeout = 5,
+                job_loop_amount = job_loop_amount,
+                job_loop_wait = job_loop_wait,
                 status_print = False
             )
 
@@ -214,14 +215,15 @@ def ray_multi_wait(
                 }
                 monitored_jobs.remove(item)
             
-        t.sleep(loop_wait)
+        t.sleep(multi_loop_wait)
     return collected_logs
 
 def ray_store_logs(
     storage_client: any,
     storage_parameters: any,
     job_directory: str,
-    job_logs: any
+    job_logs: any,
+    object_prefix: str
 ):
     try:
         import pickle
@@ -235,7 +237,7 @@ def ray_store_logs(
         for job_id, data in job_logs.items():
             stored_metadata = {'version': 1}
             formatted_data = pickle.dumps(data)
-            object_name = job_id + '.pkl'
+            object_name = object_prefix + '-' + job_id + '.pkl'
             object_stored = object_storage_interaction(
                 storage_client = storage_client,
                 parameters = {
