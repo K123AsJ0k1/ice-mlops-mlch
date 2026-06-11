@@ -37,6 +37,7 @@ def objects_get_data(
     try:
         import pickle
         from ..storage.management import object_storage_interaction
+        from ..pyarrow.use import pyarrow_deserialize_dataframe
     except ImportError as e:
         raise ImportError("clusters/use failed to import", e)
     
@@ -51,6 +52,8 @@ def objects_get_data(
     object_data = None
     if storage_parameters['object-serialization'] == 'pickle':
         object_data = pickle.loads(stored_object[0])
+    if storage_parameters['object-serialization'] == 'parquet':
+        object_data = pyarrow_deserialize_dataframe(serialized_dataframe = stored_object[0])
 
     object_general_metadata = stored_object[1]
     object_custom_metadata = stored_object[2]

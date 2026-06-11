@@ -68,7 +68,7 @@ def external_data_analysis(
         print(f'Suggested amount of actors {actor_number}')
         suitable_actor_number = min(actor_number,amount_of_batches)
         print(f'Selected amount of actors {suitable_actor_number}')
-        print('Creating ' + str(actor_number) + ' provider actors')
+        #print('Creating ' + str(actor_number) + ' provider actors')
         actor_refs = []
         for i in range(0, suitable_actor_number):
             actor_refs.append(Detector.remote(
@@ -100,7 +100,7 @@ def external_data_analysis(
             done_task_1_refs, task_1_refs = ray.wait(task_1_refs)
             for output_ref in done_task_1_refs:
                 collected_statistics.update(ray.get(output_ref))
-        print(collected_statistics)
+        #print(collected_statistics)
         # remember that metrics only takes integers or floats
         print('Flattening output')
         flattened_statistics = flatten_nested_dict(
@@ -108,7 +108,7 @@ def external_data_analysis(
             parent_key = '',
             seperator = '-'
         )
-        print(flattened_statistics)
+        #print(flattened_statistics)
         print('Logging metrics into MLflow')
         mlflow_log_metrics(
             mlflow_client = mlflow_client,

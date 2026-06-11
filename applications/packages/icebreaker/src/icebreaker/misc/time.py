@@ -1,19 +1,20 @@
 
 def time_edit_list(
     value_list: list,
-    used_keys: any,
+    used_keys: list,
     time_name: any,
     start_time: int,
-    end_time: int
+    end_time: int,
+    list_index: int
 ) -> list:
     if 0 < start_time and 0 < end_time:
         total_time = (end_time-start_time)
         total_time = round(total_time, 5)
-        if value_list[-1][used_keys[0]] == 'fill':
-            value_list[-1][used_keys[0]] = time_name
-            value_list[-1][used_keys[1]] = start_time
-            value_list[-1][used_keys[2]] = end_time
-            value_list[-1][used_keys[3]] = total_time
+        if -1 < list_index and list_index < len(value_list):
+            value_list[list_index][used_keys[0]] = time_name
+            value_list[list_index][used_keys[1]] = start_time
+            value_list[list_index][used_keys[2]] = end_time
+            value_list[list_index][used_keys[3]] = total_time
         else:
             value_list.append(
                 {
@@ -24,9 +25,9 @@ def time_edit_list(
                 }
             )
     elif 0 < start_time:
-        if value_list[-1][used_keys[0]] == 'fill':
-            value_list[-1][used_keys[0]] = time_name
-            value_list[-1][used_keys[1]] = start_time
+        if -1 < list_index and list_index < len(value_list):
+            value_list[list_index][used_keys[0]] = time_name
+            value_list[list_index][used_keys[1]] = start_time
         else:
             value_list.append(
                 {
@@ -37,14 +38,21 @@ def time_edit_list(
                 }
             )
     elif 0 < end_time:
-        for entry in reversed(value_list):
-            if 0 == entry[used_keys[3]]:
-                entry[used_keys[0]] = time_name
-                entry[used_keys[2]] = end_time
-                total_time = end_time - entry[used_keys[1]]
-                total_time = round(total_time, 5)
-                entry[used_keys[3]] = total_time
-    return value_list
+        if -1 < list_index and list_index < len(value_list):
+            total_time = end_time - value_list[list_index][used_keys[1]]
+            total_time = round(total_time, 5)
+            value_list[list_index][used_keys[2]] = end_time
+            value_list[list_index][used_keys[3]] = total_time
+        else:
+            for entry in reversed(value_list):
+                if 0 == entry[used_keys[3]]:
+                    entry[used_keys[0]] = time_name
+                    entry[used_keys[2]] = end_time
+                    total_time = end_time - entry[used_keys[1]]
+                    total_time = round(total_time, 5)
+                    entry[used_keys[3]] = total_time
+    last_index = len(value_list) - 1 
+    return value_list, last_index
 
 def time_orch_update(
     storage_parameters: any,

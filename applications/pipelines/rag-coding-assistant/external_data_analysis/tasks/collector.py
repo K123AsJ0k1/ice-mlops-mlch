@@ -34,8 +34,9 @@ def data_collector(
     
     language_column = analysis_parameters['language-column']    
     format_column = analysis_parameters['format-column']
-
+    
     collected_stats = {}
+    list_stats = {}
     provider_actor_refs = []
     batch_index = 1
     for batch_data in task_batch:
@@ -44,6 +45,7 @@ def data_collector(
 
         if key_name not in collected_stats:
             collected_stats[key_name] = {}
+            list_stats[key_name] = {}
 
         stored_dataset = object_storage_interaction(
             storage_client = setup_swift_client,
@@ -130,38 +132,30 @@ def data_collector(
                         collected_stats[key_name][stat_name] = value
                 if isinstance(value, list):
                     if stat_name in collected_stats[key_name]:
-                        collected_stats[key_name][stat_name].extend(value)
+                        list_stats[key_name][stat_name].extend(value)
                     else:
-                        collected_stats[key_name][stat_name] = value
-                else:
-                    collected_stats[key_name][stat_name] = value
-    list_keys = []
-    for key, value in collected_stats.items():
-        if 'confidence' in key:
-            if isinstance(value, list):      
-                list_keys.append(key)    
-                confidence_min_column = key + '-min'
+                        list_stats[key_name][stat_name] = value
+    
+    for key_name, stat_values in list_stats.items():
+        for stat_name, list_value in stat_values.items():
+            if 'confidence' in stat_name:
+                confidence_min_column = key_name + '-' + stat_name + '-min'
                 confidence_min = 0
-                confidence_max_column = key + '-max'
+                confidence_max_column = key_name + '-' + stat_name + '-max'
                 confidence_max = 0
-                confidence_mean_column = key + '-mean'
+                confidence_mean_column = key_name + '-' + stat_name + '-mean'
                 confidence_mean = 0
-                confidence_median_column = key + '-median'
+                confidence_median_column = key_name + '-' + stat_name + '-median'
                 confidence_median = 0
-                if 0 < len(value):
-                    confidence_min = min(value)
-                    confidence_max = max(value)
-                    confidence_mean = statistics.mean(value)
-                    confidence_median = statistics.median(value)
+                if 0 < len(list_value): 
+                    confidence_min = min(list_value)
+                    confidence_max = max(list_value)
+                    confidence_mean = statistics.mean(list_value)
+                    confidence_median = statistics.median(list_value)
                 collected_stats[confidence_min_column] = confidence_min
                 collected_stats[confidence_max_column] = confidence_max
                 collected_stats[confidence_mean_column] = confidence_mean
                 collected_stats[confidence_median_column] = confidence_median
-    # Removes list keys 
-    for key in list_keys:
-        if key in collected_stats:
-            print(f'Removing key {key}')
-            del collected_stats[key]
 
     end_time = t.time()
     total_time = round(end_time-start_time,5)

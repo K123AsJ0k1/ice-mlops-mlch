@@ -148,19 +148,24 @@ def multi_submission_step(
                 cluster_inputs = clustered_dataset_paths,
                 step_parameters = step_processing_parameters
             )
-
+            
             job_logs = ray_multi_wait(
                 cluster_job_ids = cluster_job_ids,
-                amount_of_loops = 100,
-                loop_wait = 5
+                multi_loop_amount = integration['multi-loop-amount'],
+                multi_loop_wait = integration['multi-loop-wait'],
+                job_loop_amount = integration['job-loop-amount'],
+                job_loop_wait = integration['job-loop-wait']
             )
             
             log_storage = storage['log-storage']
+            cluster_name = integration['cluster-name']
+            log_object_prefix = cluster_name + '-' + step_key
             ray_store_logs(
                 storage_client = setup_swift_client,
                 storage_parameters = log_storage,
                 job_directory = job_directory,
-                job_logs = job_logs
+                job_logs = job_logs,
+                object_prefix = log_object_prefix
             )
                 
     end_time = t.time()
@@ -181,15 +186,20 @@ def data_analysis_pipeline(
     #    storage = storage,
     #    integration = integration
     #)
-
+    task_2 = multi_submission_step(
+        storage = storage,
+        integration = integration,
+        processing = processing,
+        step_key = 'step-2'
+    )
+    '''
     # success
-    # Internal data
-    #task_1 = multi_submission_step(
-    #    storage = storage,
-    #    integration = integration,
-    #    processing = processing,
-    #    step_key = 'step-1'
-    #)
+    task_1 = multi_submission_step(
+        storage = storage,
+        integration = integration,
+        processing = processing,
+        step_key = 'step-1'
+    )
     
     # success
     task_2 = multi_submission_step(
@@ -197,31 +207,38 @@ def data_analysis_pipeline(
         integration = integration,
         processing = processing,
         step_key = 'step-2'
-    )
+    ).after(task_1)
 
     # success
-    #task_3 = multi_submission_step(
-    #    storage = storage,
-    #    integration = integration,
-    #    processing = processing,
-    #    step_key = 'step-3'
-    #)
+    task_3 = multi_submission_step(
+        storage = storage,
+        integration = integration,
+        processing = processing,
+        step_key = 'step-3'
+    ).after(task_2)
 
     # success
-    #task_4 = multi_submission_step(
-    #    storage = storage,
-    #    integration = integration,
-    #    processing = processing,
-    #    step_key = 'step-4'
-    #)
+    task_4 = multi_submission_step(
+        storage = storage,
+        integration = integration,
+        processing = processing,
+        step_key = 'step-4'
+    ).after(task_3)
 
-    #task_5 = multi_submission_step(
-    #    storage = storage,
-    #    integration = integration,
-    #    processing = processing,
-    #    step_key = 'step-5'
-    #)
+    task_5 = multi_submission_step(
+        storage = storage,
+        integration = integration,
+        processing = processing,
+        step_key = 'step-5'
+    ).after(task_4)
 
+    task_6 = multi_submission_step(
+        storage = storage,
+        integration = integration,
+        processing = processing,
+        step_key = 'step-6'
+    ).after(task_5)
+    '''
     #task_2 = multi_submission_step(
     #    storage_parameters = storage_parameters,
     #    integration_parameters = integration_parameters
