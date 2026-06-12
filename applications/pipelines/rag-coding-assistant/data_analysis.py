@@ -3,7 +3,7 @@ from kfp import dsl
 @dsl.component(
     base_image = "python:3.12.3",
     packages_to_install = [
-        "icebreaker[swift_client, ray, pararellism] @ git+https://github.com/K123AsJ0k1/ice-mlops-mlch.git@main#subdirectory=applications/packages/icebreaker"
+        "icebreaker[swift_client, data, ray, pararellism] @ git+https://github.com/K123AsJ0k1/ice-mlops-mlch.git@main#subdirectory=applications/packages/icebreaker"
     ]
 )
 def cluster_setup_step(
@@ -50,11 +50,12 @@ def cluster_setup_step(
     end_time = t.time()
     total_time = round(end_time-start_time,5)
     print('Spent seconds', total_time)
+    # Put time collection here
     
 @dsl.component(
     base_image = "python:3.12.3",
     packages_to_install = [
-        "icebreaker[swift_client, ray, pararellism] @ git+https://github.com/K123AsJ0k1/ice-mlops-mlch.git@main#subdirectory=applications/packages/icebreaker"
+        "icebreaker[swift_client, data, ray, pararellism] @ git+https://github.com/K123AsJ0k1/ice-mlops-mlch.git@main#subdirectory=applications/packages/icebreaker"
     ]
 )
 def multi_submission_step(
@@ -80,6 +81,7 @@ def multi_submission_step(
         ray_multi_wait,
         ray_store_logs
     )
+    from icebreaker.misc.time import time_run_update
     
     # Creates connection to allas
     print('Storage parameters')
@@ -169,9 +171,21 @@ def multi_submission_step(
             )
                 
     end_time = t.time()
+    time_storage_parameters = storage['time-storage']
+    time_object_name = time_storage_parameters['object-name']
+    time_name = 'multi-submission-' + step_key 
+    time_stored_1, time_index_1, time_name_1 = time_run_update(
+        storage_client = setup_swift_client,
+        storage_parameters = time_storage_parameters,
+        object_name = time_object_name,
+        time_name = time_name,
+        start_time = start_time,
+        end_time = end_time,
+        time_index = -1
+    )
     total_time = round(end_time-start_time,5)
     print('Spent seconds', total_time)
-
+    
 @dsl.pipeline(
     name = "data-analysis-pipeline",
     description = "Internal and external data analysis"
