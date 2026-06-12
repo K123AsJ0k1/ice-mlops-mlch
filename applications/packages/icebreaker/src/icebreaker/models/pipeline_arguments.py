@@ -21,14 +21,20 @@ class TypeStorage(BaseModel):
     prefix: str = Field(alias = 'bucket-prefix')
     user: str = Field(alias = 'bucket-user')
 
+class TimeStorage(BaseModel):
+    target: str = Field(alias = 'bucket-target')
+    prefix: str = Field(alias = 'bucket-prefix')
+    user: str = Field(alias = 'bucket-user')
+    name: str = Field(alias = 'object-name')
+
 class StorageParameters(BaseModel):
     swift: SwiftParameters = Field(alias = 'swift')
     mlflow: MLflowParameters = Field(alias = 'mlflow')
     data: TypeStorage = Field(alias = 'data-storage')
     code: TypeStorage = Field(alias = 'code-storage')
     log: TypeStorage = Field(alias = 'log-storage')
-    time_name: str = Field(alias = 'time-name')
-
+    time: TimeStorage = Field(alias = 'time-storage')
+    
 class IntegrationParameters(BaseModel):
     cluster_name: str = Field(alias = 'cluster-name')
     cluster_yamls: Dict = Field(alias = 'cluster-yamls')

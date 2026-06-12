@@ -181,3 +181,25 @@ def fill_nested_dict(
 
     fill_nested_walk(updated_dict, fill_values)  
     return updated_dict
+
+def fill_all_nested_dict_values(
+    target_dict: any,
+    fill_values: any
+):
+    try:
+        import copy
+    except ImportError as e:
+        raise ImportError("misc/dict failed to import", e)
+    updated_dict = copy.deepcopy(target_dict)  
+    
+    def fill_nested_walk(t_node: dict):
+        for key, value in t_node.items():
+            # 1. If it's a nested dict, always climb deeper regardless of fill_values structure
+            if isinstance(value, dict):
+                fill_nested_walk(value)
+            # 2. If it's a placeholder and we have a replacement for this key, swap it
+            elif value == 'fill' and key in fill_values:
+                t_node[key] = fill_values[key]
+
+    fill_nested_walk(updated_dict)  
+    return updated_dict

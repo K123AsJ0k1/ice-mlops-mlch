@@ -147,9 +147,9 @@ def time_run_update(
         end_time = end_time,
         time_index = time_index
     )
-    print(modified_dict_list)
+    #print(modified_dict_list)
     stored_data = pd.DataFrame(modified_dict_list)
-    print(object_type, name_replacer)
+    #print(object_type, name_replacer)
     object_stored = objects_store_data(
         swift_client = storage_client,
         storage_parameters = {
@@ -170,7 +170,7 @@ def time_run_update(
         object_data = stored_data,
         object_metadata = stored_metadata
     )
-    return None, modified_dict_index, used_object_name
+    return object_stored, modified_dict_index, used_object_name
         
 def time_orch_update(
     storage_parameters: any,
