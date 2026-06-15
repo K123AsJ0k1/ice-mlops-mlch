@@ -76,3 +76,33 @@ def fasttext_get_stats(
             collected_statistics[confidence_mean_column] = confidence_mean
             collected_statistics[confidence_median_column] = confidence_median
     return collected_statistics
+
+def fasttext_get_language(
+    model: any,
+    texts: list,
+    default_value: str,
+    default_threshold: str,
+    label_replacer: any
+):
+    detected_languages = []
+    language_default_amount = 0
+    for content in texts:
+        cleaned_text = content.replace('\n', ' ')
+        
+        labels, confidences = model.predict(cleaned_text, k=1)  
+        language_label = labels[0].replace('__label__', '')
+        label_confidence = float(confidences[0])
+
+        if 0 < len(label_replacer):
+            if language_label in label_replacer:
+                language_label = label_replacer[language_label]
+
+        if not language_label == default_value:
+            if label_confidence < default_threshold:
+                language_label = default_value
+                label_confidence = 0.0
+                language_default_amount += 1
+        
+        detected_languages.append((language_label, label_confidence))
+    
+    return detected_languages, language_default_amount

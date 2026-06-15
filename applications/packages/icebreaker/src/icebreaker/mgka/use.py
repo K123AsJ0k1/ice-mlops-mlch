@@ -18,7 +18,7 @@ def magika_get_stats(
     for content in texts:
         formatted_text = content.encode('utf-8')
 
-        prediction =  model.identify_bytes(formatted_text)
+        prediction = model.identify_bytes(formatted_text)
         format_label = prediction.output.label
         label_confidence = prediction.score
 
@@ -76,3 +76,33 @@ def magika_get_stats(
             collected_statistics[confidence_mean_column] = confidence_mean
             collected_statistics[confidence_median_column] = confidence_median
     return collected_statistics
+
+def magika_get_format(
+    model: any,
+    texts: any,
+    default_value: str,
+    default_threshold: str,
+    label_replacer: any
+):
+    detected_formats = []
+    format_default_amount = 0
+    for content in texts:
+        formatted_text = content.encode('utf-8')
+
+        prediction = model.identify_bytes(formatted_text)
+        format_label = prediction.output.label
+        label_confidence = prediction.score
+
+        if 0 < len(label_replacer):
+            if format_label in label_replacer:
+                format_label = label_replacer[format_label]
+        
+        if not format_label == default_value:
+            if label_confidence < default_threshold:
+                format_label = default_value
+                label_confidence = 0.0
+                format_default_amount += 1
+        
+        detected_formats.append((format_label, label_confidence))
+    
+    return detected_formats, format_default_amount
