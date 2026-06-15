@@ -47,7 +47,7 @@ def kubeflow_manage_run(
         from ..misc.dict import fill_all_nested_dict_values, update_nested_dict
     except ImportError as e:
         raise ImportError("Failed to import", e)
-
+    
     time_start = t.time()
     time_storage_parameters = pipeline_arguments['storage']['time-storage']
     time_object_name = time_storage_parameters['object-name']
@@ -95,7 +95,7 @@ def kubeflow_manage_run(
     )
 
     print('Run status: ' + str(run_status))
-    
+    # For some reason the time here is smaller than the oters
     time_end = t.time()
     time_stored_2, time_index_2, time_name_2 = time_run_update(
         storage_client = storage_client,

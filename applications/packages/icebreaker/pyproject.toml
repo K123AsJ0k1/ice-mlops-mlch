@@ -39,7 +39,7 @@ data = [
 ]
 
 lang_detect = [
-    "fasttext",
+    "fasttext-wheel"
 ]
 
 code_detect = [
