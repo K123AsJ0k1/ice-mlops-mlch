@@ -77,7 +77,7 @@ def fasttext_get_stats(
             collected_statistics[confidence_median_column] = confidence_median
     return collected_statistics
 
-def fasttext_get_language(
+def fasttext_get_languages(
     model: any,
     texts: list,
     default_value: str,

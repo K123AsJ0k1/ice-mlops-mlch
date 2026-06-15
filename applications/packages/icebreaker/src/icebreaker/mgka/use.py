@@ -77,7 +77,7 @@ def magika_get_stats(
             collected_statistics[confidence_median_column] = confidence_median
     return collected_statistics
 
-def magika_get_format(
+def magika_get_formats(
     model: any,
     texts: any,
     default_value: str,
