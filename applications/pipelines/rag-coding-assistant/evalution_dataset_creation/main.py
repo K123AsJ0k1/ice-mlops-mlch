@@ -5,13 +5,14 @@ import time as t
 
 from importlib.metadata import version
 
-#from actors.detector import Detector
+from actors.detector import Detector
+from tasks.processor import data_processor
 #from tasks.collector import data_collector
 
 from icebreaker.swift.setup import swift_setup_client
 #from icebreaker.mlflow.setup import mlflow_setup_client
 #from icebreaker.mlflow.use import mlflow_get_or_create_experiment, mlflow_start_run, mlflow_log_metrics, mlflow_change_run_status
-#from icebreaker.pararellism.division import division_split_input
+from icebreaker.pararellism.division import division_split_input
 #from icebreaker.misc.dict import flatten_nested_dict
 from icebreaker.misc.time import time_run_update
 
@@ -26,25 +27,7 @@ def evalution_dataset_creation(
         config_parameters = job_parameters['config']
         model_parameters = job_parameters['model']
         process_parameters = job_parameters['process']
-        '''
-        print('Setup MLflow')
-        mlflow_client = mlflow_setup_client(
-            mlflow_parameters = mlflow_parameters
-        )
         
-        experiment_id = mlflow_get_or_create_experiment(
-            mlflow_client = mlflow_client,
-            name = mlflow_parameters['experiment-name']
-        )
-
-        run_id = mlflow_start_run(
-            mlflow_client = mlflow_client,
-            experiment_id = experiment_id, 
-            run_name = mlflow_parameters['run-name'], 
-            tags = mlflow_parameters['run-tags']
-        )
-        print('MLflow setup')
-        '''
         # This should be divided into batches based on worker number
         print('Dividing work')
         input_data = config_parameters['input']
@@ -53,6 +36,7 @@ def evalution_dataset_creation(
         print(f'Amount of inputs {input_amount}')
         print(f'Suggested amount of workers {worker_number}')
         suitable_worker_number = min(process_parameters['workers'], input_amount)
+        # Here the processing considers going through the given object paths to get N row dataset
         print(f'Selected amount of workers {suitable_worker_number}')
         worker_batches = division_split_input(
             job_input = input_data, 
@@ -84,7 +68,7 @@ def evalution_dataset_creation(
         actor_index = 0
         for worker_batch_ref in worker_batch_refs:
             actor_ref = actor_refs[actor_index]
-            task_1_refs.append(data_collector.remote(
+            task_1_refs.append(data_processor.remote( 
                 worker_index = worker_index,
                 actor_index = actor_index + 1,
                 actor_ref = actor_ref,
@@ -102,28 +86,9 @@ def evalution_dataset_creation(
             done_task_1_refs, task_1_refs = ray.wait(task_1_refs)
             for output_ref in done_task_1_refs:
                 collected_statistics.update(ray.get(output_ref))
-        '''
-        # remember that metrics only takes integers or floats
-        print('Flattening output')
-        flattened_statistics = flatten_nested_dict(
-            target_dict = collected_statistics,
-            parent_key = '',
-            seperator = '-'
-        )
-        print('Logging metrics into MLflow')
-        mlflow_log_metrics(
-            mlflow_client = mlflow_client,
-            run_id = run_id, 
-            metrics = flattened_statistics, 
-            step = 0
-        ) 
-        print('Completing MLflow run')
-        mlflow_change_run_status(
-            mlflow_client = mlflow_client, 
-            run_id = run_id, 
-            status = 'FINISHED'
-        )
-        '''
+        
+        # unify the rows and store them into one dataset
+
         return True
     except Exception as e:
         print('external data analysis error', e)

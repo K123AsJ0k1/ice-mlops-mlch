@@ -45,7 +45,7 @@ class Detector:
         analysis_parameters: any
     ) -> any:
         from icebreaker.fast_text.use import fasttext_get_language
-        language_stats = fasttext_get_stats(
+        detected_languages = fasttext_get_language(
             model = self.ft_model,
             texts = text_input,
             default_value = analysis_parameters['language-default'],
@@ -59,7 +59,7 @@ class Detector:
             'actor': actor_index,
             'batch': batch_index,
             'key': used_key,
-            'stats': language_stats
+            'detected': detected_languages
         }
         return result
     
@@ -72,8 +72,8 @@ class Detector:
         text_input: list,
         analysis_parameters: any
     ) -> any:
-        from icebreaker.mgka.use import magika_get_stats
-        format_stats = magika_get_stats(
+        from icebreaker.mgka.use import magika_get_formats
+        detected_formats = magika_get_formats(
             model = self.mk_model,
             texts = text_input,
             default_value = analysis_parameters['format-default'],
@@ -87,6 +87,6 @@ class Detector:
             'actor': actor_index,
             'batch': batch_index,
             'key': used_key,
-            'stats': format_stats
+            'detected': detected_formats
         }
         return result   

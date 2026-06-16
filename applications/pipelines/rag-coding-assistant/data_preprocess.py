@@ -1,7 +1,5 @@
 from kfp import dsl
 
-from kfp import dsl
-
 @dsl.component(
     base_image = "python:3.12.3",
     packages_to_install = [
@@ -47,7 +45,8 @@ def cluster_setup_step(
             'lock-location': None,
             'overwrite': True
         },
-        object_data = cluster_yamls
+        object_data = cluster_yamls,
+        object_metadata = {}
     )
     
     end_time = t.time()
@@ -173,7 +172,7 @@ def multi_submission_step(
                 job_loop_amount = integration['job-loop-amount'],
                 job_loop_wait = integration['job-loop-wait']
             )
-            
+            # Maybe also give cluster name to the log
             log_storage = storage['log-storage']
             cluster_name = integration['cluster-name']
             log_object_prefix = cluster_name + '-' + step_key
@@ -211,6 +210,7 @@ def data_preprocess_pipeline(
     processing: dict
 ):
     # First, use external datasets to create 8000 row evalution dataset
+    # This should all the parquet data, divide it between all the clusters to get n row dataset
     # Success
     task_1 = multi_submission_step(
         storage = storage,
