@@ -77,7 +77,7 @@ def global_distribution_step(
     integration: dict,
     processing: dict,
     step_keys: list 
-):
+) -> list:
     import time as t
     start_time = t.time()
     
@@ -107,6 +107,7 @@ def global_distribution_step(
     )
 
     print(cluster_clients)
+    global_inputs = []
     if 0 < len(cluster_clients):
         print('Creating a cluster data distribution')
         formatted_clusters = division_formatted_clusters(
@@ -120,23 +121,35 @@ def global_distribution_step(
         )
         print(cluster_weights)
         # Map out the exact data slices for each step globally
-        global_distribution = {}
-        for cluster_name, cluster_weight in cluster_weights.items():
-            global_distribution[cluster_name] = {}
+        #global_distribution = {}
+        #for cluster_name, cluster_weight in cluster_weights.items():
+        #    global_distribution[cluster_name] = {}
         data_storage = storage['data-storage']
         
-        for step in step_keys:
-            object_prefix = processing[step]['general']['data-storage']['object-prefix']
+        for step_key in step_keys:
+            object_prefix = processing[step_key]['general']['data-storage']['object-prefix']
             dataset_tuple_list = data_list_objects(
                 storage_client = setup_swift_client,
                 storage_parameters = data_storage,
                 object_prefix = object_prefix
             )
 
-            global_distribution[step] = division_load_balanced_cluster_round_robin(
+            step_division = division_load_balanced_cluster_round_robin(
                 target_list = dataset_tuple_list,
                 cluster_weights = cluster_weights
             )
+
+            for cluster_name, cluster_input in step_division.items():
+                global_inputs.append({
+                    'step_key': step_key,
+                    'cluster_name': cluster_name,
+                    'cluster_input': cluster_input
+                })
+
+            #global_distribution[step] = division_load_balanced_cluster_round_robin(
+            #    target_list = dataset_tuple_list,
+            #    cluster_weights = cluster_weights
+            #)
 
     end_time = t.time()
     '''
@@ -155,8 +168,8 @@ def global_distribution_step(
     '''
     total_time = round(end_time-start_time,5)
     print('Spent seconds', total_time)
-
-    return global_distribution
+    print(global_inputs)
+    return global_inputs
 
 @dsl.component(
     base_image = "python:3.12.3",
@@ -305,15 +318,29 @@ def data_analysis_parallel_pipeline(
         step_keys = step_keys
     )
 
+    #previous_task = global_distribution_task
+    #with dsl.ParallelFor(global_distribution_task.output) as item:
+    #    current_task = single_cluster_step(
+    #        storage = storage,
+    #        integration = integration,
+    #        processing = processing,
+    #        step_key = step_key,
+    #        target_cluster = cluster_name,   
+    #        cluster_input = cluster_input[cluster_name]
+    #    ).after(previous_task)
+    #    previous_task = current_task
+    
     # setup step
-    for step_key in step_keys:
-        step_distribution = global_distribution_task[step_key]
-        for cluster_name, cluster_input in step_distribution.items():    
-            task_1 = single_cluster_step(
-                storage = storage,
-                integration = integration,
-                processing = processing,
-                step_key = step_key,
-                target_cluster = cluster_name,   
-                cluster_input = cluster_input[cluster_name]
-            ).after(global_distribution_task)
+    #previous_task = global_distribution_task
+    #for step_key in step_keys:
+        #step_distribution = global_distribution_task.outputs[step_key]
+        #for cluster_name, cluster_input in step_distribution.items():    
+        #    current_task = single_cluster_step(
+        #        storage = storage,
+        #        integration = integration,
+        #        processing = processing,
+        #        step_key = step_key,
+        #        target_cluster = cluster_name,   
+        #        cluster_input = cluster_input[cluster_name]
+        #    ).after(previous_task)
+        #    previous_task = current_task
