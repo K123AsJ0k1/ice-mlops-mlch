@@ -143,7 +143,10 @@ if __name__ == "__main__":
         'mlflow'
     ]
     for pkg_name in check_packages:
-        print(pkg_name,' version is ',version(pkg_name))
+        try:
+            print(f'{pkg_name} version is {version(pkg_name)}')
+        except Exception as e:
+            print(f'package not found error {e}')
     
     print('Getting input')
     job_parameters = json.loads(sys.argv[1])

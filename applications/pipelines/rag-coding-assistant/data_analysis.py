@@ -15,6 +15,7 @@ def cluster_setup_step(
 
     from icebreaker.swift.setup import swift_setup_client 
     from icebreaker.objects.use import objects_store_data 
+    from icebreaker.misc.time import time_run_update
 
     print('Storage parameters')
     swift_parameters = storage['swift']
@@ -44,13 +45,26 @@ def cluster_setup_step(
             'lock-location': None,
             'overwrite': True
         },
-        object_data = cluster_yamls
+        object_data = cluster_yamls,
+        object_metadata = {}
     )
     
     end_time = t.time()
+
+    time_storage_parameters = storage['time-storage']
+    time_object_name = time_storage_parameters['object-name']
+    time_name = 'cluster-setup-step-7' 
+    time_stored_1, time_index_1, time_name_1 = time_run_update(
+        storage_client = setup_swift_client,
+        storage_parameters = time_storage_parameters,
+        object_name = time_object_name,
+        time_name = time_name,
+        start_time = start_time,
+        end_time = end_time,
+        time_index = -1
+    )
     total_time = round(end_time-start_time,5)
     print('Spent seconds', total_time)
-    # Put time collection here
     
 @dsl.component(
     base_image = "python:3.12.3",
@@ -158,7 +172,7 @@ def multi_submission_step(
                 job_loop_amount = integration['job-loop-amount'],
                 job_loop_wait = integration['job-loop-wait']
             )
-            
+            # Maybe also give cluster name to the log
             log_storage = storage['log-storage']
             cluster_name = integration['cluster-name']
             log_object_prefix = cluster_name + '-' + step_key
@@ -195,19 +209,8 @@ def data_analysis_pipeline(
     integration: dict,
     processing: dict
 ):
-    # Success
-    #task_0 = cluster_setup_step(
-    #    storage = storage,
-    #    integration = integration
-    #)
-    task_2 = multi_submission_step(
-        storage = storage,
-        integration = integration,
-        processing = processing,
-        step_key = 'step-2'
-    )
     '''
-    # success
+    # Success
     task_1 = multi_submission_step(
         storage = storage,
         integration = integration,
@@ -238,25 +241,102 @@ def data_analysis_pipeline(
         processing = processing,
         step_key = 'step-4'
     ).after(task_3)
+    '''
 
-    task_5 = multi_submission_step(
-        storage = storage,
-        integration = integration,
-        processing = processing,
-        step_key = 'step-5'
-    ).after(task_4)
+    #task_5 = cluster_setup_step(
+    #    storage = storage,
+    #    integration = integration
+    #)
 
-    task_6 = multi_submission_step(
+    #task_6 = multi_submission_step(
+    #    storage = storage,
+    #    integration = integration,
+    #    processing = processing,
+    #    step_key = 'step-5'
+    #)
+
+    task_7 = multi_submission_step(
         storage = storage,
         integration = integration,
         processing = processing,
         step_key = 'step-6'
-    ).after(task_5)
+    )
+
+    task_8 = multi_submission_step(
+        storage = storage,
+        integration = integration,
+        processing = processing,
+        step_key = 'step-7'
+    ).after(task_7)
+
+    task_9 = multi_submission_step(
+        storage = storage,
+        integration = integration,
+        processing = processing,
+        step_key = 'step-8'
+    ).after(task_8)
+
+    task_10 = multi_submission_step(
+        storage = storage,
+        integration = integration,
+        processing = processing,
+        step_key = 'step-9'
+    ).after(task_9)
+    
+    task_11 = multi_submission_step(
+        storage = storage,
+        integration = integration,
+        processing = processing,
+        step_key = 'step-10'
+    ).after(task_10)
+
+    task_12 = multi_submission_step(
+        storage = storage,
+        integration = integration,
+        processing = processing,
+        step_key = 'step-11'
+    ).after(task_11)
+    
     '''
-    #task_2 = multi_submission_step(
-    #    storage_parameters = storage_parameters,
-    #    integration_parameters = integration_parameters
-    #).after(task_1)
+    # Success
+    task_7 = cluster_setup_step(
+        storage = storage,
+        integration = integration
+    )
+
+    task_8 = multi_submission_step(
+        storage = storage,
+        integration = integration,
+        processing = processing,
+        step_key = 'step-7'
+    ).after(task_7)
+    '''
+    '''
+    task_9 = multi_submission_step(
+        storage = storage,
+        integration = integration,
+        processing = processing,
+        step_key = 'step-8'
+    ).after(task_8)
+
+    task_10 = multi_submission_step(
+        storage = storage,
+        integration = integration,
+        processing = processing,
+        step_key = 'step-9'
+    ).after(task_9)
+
+    task_11 = multi_submission_step(
+        storage = storage,
+        integration = integration,
+        processing = processing,
+        step_key = 'step-10'
+    ).after(task_10)
     
-    
-    
+    task_12 = multi_submission_step(
+        storage = storage,
+        integration = integration,
+        processing = processing,
+        step_key = 'step-11'
+    ).after(task_11)
+    '''

@@ -5,17 +5,17 @@ import time as t
 
 from importlib.metadata import version
 
-from actors.detector import Detector
-from tasks.collector import data_collector
+#from actors.detector import Detector
+#from tasks.collector import data_collector
 
 from icebreaker.swift.setup import swift_setup_client
-from icebreaker.mlflow.setup import mlflow_setup_client
-from icebreaker.mlflow.use import mlflow_get_or_create_experiment, mlflow_start_run, mlflow_log_metrics, mlflow_change_run_status
-from icebreaker.pararellism.division import division_split_input
-from icebreaker.misc.dict import flatten_nested_dict
+#from icebreaker.mlflow.setup import mlflow_setup_client
+#from icebreaker.mlflow.use import mlflow_get_or_create_experiment, mlflow_start_run, mlflow_log_metrics, mlflow_change_run_status
+#from icebreaker.pararellism.division import division_split_input
+#from icebreaker.misc.dict import flatten_nested_dict
 from icebreaker.misc.time import time_run_update
 
-def external_data_analysis(
+def evalution_dataset_creation(
     job_parameters: any
 ):
     try:  
@@ -26,7 +26,7 @@ def external_data_analysis(
         config_parameters = job_parameters['config']
         model_parameters = job_parameters['model']
         process_parameters = job_parameters['process']
-
+        '''
         print('Setup MLflow')
         mlflow_client = mlflow_setup_client(
             mlflow_parameters = mlflow_parameters
@@ -44,6 +44,7 @@ def external_data_analysis(
             tags = mlflow_parameters['run-tags']
         )
         print('MLflow setup')
+        '''
         # This should be divided into batches based on worker number
         print('Dividing work')
         input_data = config_parameters['input']
@@ -101,6 +102,7 @@ def external_data_analysis(
             done_task_1_refs, task_1_refs = ray.wait(task_1_refs)
             for output_ref in done_task_1_refs:
                 collected_statistics.update(ray.get(output_ref))
+        '''
         # remember that metrics only takes integers or floats
         print('Flattening output')
         flattened_statistics = flatten_nested_dict(
@@ -121,7 +123,7 @@ def external_data_analysis(
             run_id = run_id, 
             status = 'FINISHED'
         )
-
+        '''
         return True
     except Exception as e:
         print('external data analysis error', e)
@@ -142,18 +144,14 @@ if __name__ == "__main__":
         'numpy',
         'mlflow'
     ]
-    # Some cases require fasttext wheel
     for pkg_name in check_packages:
-        try:
-            print(f'{pkg_name} version is {version(pkg_name)}')
-        except Exception as e:
-            print(f'package not found error {e}')
+        print(pkg_name,' version is ',version(pkg_name))
     
     print('Getting input')
     job_parameters = json.loads(sys.argv[1])
     
     print('Running external data analysis')
-    task_status = external_data_analysis(
+    task_status = evalution_dataset_creation(
         job_parameters = job_parameters
     )
 
