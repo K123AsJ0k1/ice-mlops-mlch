@@ -32,7 +32,7 @@ integration:
     ram: 0.4
     gpu: 0.05
     vram: 0.05
-  multi-loop-amount: 8000
+  multi-loop-amount: 20000
   multi-loop-wait: 10
   job-loop-amount: 2
   job-loop-wait: 5
@@ -668,6 +668,23 @@ processing:
           s3-endpoint-url: 'http://chisel-client:9000'
           experiment-name: 'mlch-code-assistant-rag-pipeline'
           run-name: 'ray-data-analysis-pipeline-step-9-cloud-vm2'
+          run-tags:
+            workflow-type: 'local-cloud'
+            pipeline-step: 'internal-data-analysis'
+        process:
+          workers: 10
+          actors: 2
+        job:
+          main-file: 'main.py'
+          runtime:
+            working_dir: 'external_data_analysis'
+            pip: 'external_data_analysis/requirements.txt'
+      local-lt1:
+        mlflow: 
+          tracking-uri: 'http://chisel-client:5000'
+          s3-endpoint-url: 'http://chisel-client:9000'
+          experiment-name: 'mlch-code-assistant-rag-pipeline'
+          run-name: 'ray-data-analysis-pipeline-step-9-local-lt1'
           run-tags:
             workflow-type: 'local-cloud'
             pipeline-step: 'internal-data-analysis'
