@@ -1,18 +1,18 @@
 # works with kfp=2.16.1
 def kubeflow_wait_run(
     kfp_client: any,
-    timeout: int,
-    run_id: str
+    run_id: str,
+    loop_amount: int,
+    loop_wait: int
 ):
-    try:
+    try: 
         import time as t
     except ImportError as e:
         raise ImportError("Failed to import", e)
 
-    start = t.time()
     run_status = None
     print('Checking kubeflow run: ' + str(run_id))
-    while t.time() - start <= timeout:
+    for round in range(loop_amount):
         run_details = kfp_client.get_run(
             run_id = run_id
         )
@@ -27,7 +27,7 @@ def kubeflow_wait_run(
         if run_status == 'ERROR':
             run_status = True
             break
-        t.sleep(10)
+        t.sleep(loop_wait)
     return run_status
 
 def kubeflow_manage_run(
@@ -37,9 +37,10 @@ def kubeflow_manage_run(
     run_name: str,
     experiment_name: str,
     pipeline_arguments: any,
-    timeout: int,
     cache_steps: bool,
-    time_update_object: any
+    time_update_object: any,
+    loop_amount: int,
+    loop_wait: int
 ):
     try:
         import time as t
@@ -90,8 +91,9 @@ def kubeflow_manage_run(
 
     run_status = kubeflow_wait_run(
         kfp_client = kfp_client,
-        timeout = timeout,
-        run_id = run_details.run_id
+        run_id = run_details.run_id,
+        loop_amount = loop_amount,
+        loop_wait = loop_wait
     )
 
     print('Run status: ' + str(run_status))

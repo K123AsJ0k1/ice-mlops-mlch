@@ -65,7 +65,8 @@ def division_formatted_clusters(
 
 def division_cluster_weights(
     resource_weights: any,
-    formatted_clusters: any
+    formatted_clusters: any,
+    cluster_priorities: list
 ) -> any:
     try:
         import numpy as np
@@ -74,14 +75,18 @@ def division_cluster_weights(
     '''
     Example
     'resource-weights': {'CPU': 0.6,'RAM': 0.2,'GPU': 0.2}
+    cluster_priorities = ['vm2', 'lt3', 'lt2', 'vm1', 'lt1']
     '''
     clusters = {}
     for key, value in formatted_clusters.items():
         if 'clusters' in key:
             key_split = key.split('-')
             cluster_key = key_split[0] + '-' + key_split[2]
+            
+            pure_cluster_name = key_split[2] 
             if not cluster_key in clusters:
-                clusters[cluster_key] = {}
+                clusters[cluster_key] = {'_pure_name': pure_cluster_name}
+
             if 'resources' in key:
                 resource_type = key.split('-')[-1]
                 if resource_type in resource_weights:
@@ -126,7 +131,6 @@ def division_cluster_weights(
         return {list(clusters.keys())[0]: 1.0}
 
     resource_names = list(resource_weights.keys())
-
     for c in clusters:
         for r in resource_names:
             if r not in clusters[c]:
@@ -144,6 +148,19 @@ def division_cluster_weights(
     normalized = resource_matrix / max_values
     weighted_scores = normalized @ np.array(list(resource_weights.values()))
     total = weighted_scores.sum()
+
+    if cluster_priorities:
+        # Create a mapping of priority tiers. 
+        # Example: if 5 clusters, highest priority gets 5x multiplier, lowest gets 1x multiplier.
+        total_priorities = len(cluster_priorities)
+        priority_map = {name: (total_priorities - idx) for idx, name in enumerate(cluster_priorities)}
+        
+        # Apply the multiplier to each cluster's resource score
+        for idx, cluster_key in enumerate(clusters.keys()):
+            pure_name = clusters[cluster_key]['_pure_name']
+            # Fallback to 1 if a cluster isn't explicitly listed in priorities
+            multiplier = priority_map.get(pure_name, 1)  
+            weighted_scores[idx] *= multiplier
 
     final_weights = []
     if total == 0:

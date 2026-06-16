@@ -21,7 +21,7 @@ def objects_store_data(
         print('Formatted to parquet')
         stored_data = pyarrow_serialize_dataframe(dataframe = object_data)
     stored_metadata = object_metadata
-    if 0 < len(object_metadata):
+    if 0 == len(object_metadata):
         stored_metadata = {'version': 1}
 
     if stored_data is None:
@@ -114,7 +114,11 @@ def objects_nested_update(
         target_dict = object_data,
         update_dict = object_input
     )
-    object_metadata['version'] = object_metadata['version'] + 1
+
+    if 'version' in object_metadata:
+        object_metadata['version'] = object_metadata['version'] + 1
+    else:
+        object_metadata = {'version': 1}
     stored_metadata = object_metadata
 
     stored_data = None
