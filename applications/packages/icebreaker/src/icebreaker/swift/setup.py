@@ -18,14 +18,14 @@ def swift_get_parameters(
     except ImportError as e:
         raise ImportError("swift/setup failed to import", e)
 
-    swift_auth_url = secret_parameters['swift-auth-url']
-    swift_application_credential_id = secret_parameters['swift-application-credential-id']
-    swift_application_credential_secret = secret_parameters['swift-application-credential-secret']
-    swift_auth_version = secret_parameters['swift-auth-version']
-    swift_project_name = secret_parameters['swift-project-name']
-    swift_user_domain_name = secret_parameters['swift-domain-name']
-    swift_project_domain_name = secret_parameters['swift-domain-name']
-    swift_pre_auth_url = secret_parameters['swift-pre-auth-url']
+    swift_auth_url = secret_parameters['auth-url']
+    swift_application_credential_id = secret_parameters['credential-id']
+    swift_application_credential_secret = secret_parameters['credential-secret']
+    swift_auth_version = secret_parameters['auth-version']
+    swift_project_name = secret_parameters['project-name']
+    swift_user_domain_name = secret_parameters['user-domain-name']
+    swift_project_domain_name = secret_parameters['project-domain-name']
+    swift_pre_auth_url = secret_parameters['pre-auth-url']
 
     auth_plugin = None
     if 0 < len(swift_application_credential_id) and 0 < len(swift_application_credential_secret):
@@ -35,8 +35,8 @@ def swift_get_parameters(
             application_credential_secret = swift_application_credential_secret
         )
     else:
-        swift_user = secret_parameters['swift-user']
-        swift_key = secret_parameters['swift-key']
+        swift_user = secret_parameters['user']
+        swift_key = secret_parameters['key']
         loader = loading.get_plugin_loader('password')
         auth_plugin = loader.load_from_options(
             auth_url = swift_auth_url,
@@ -55,6 +55,7 @@ def swift_get_parameters(
     
     swift_parameters = {
         'last-auth-time': last_auth_time,
+        'auth-url': str(swift_auth_url),
         'credential-id': str(swift_application_credential_id),
         'credential-secret': str(swift_application_credential_secret),
         'pre-auth-token': str(swift_token),
@@ -104,6 +105,7 @@ def swift_renew_client(
         new_swift_parameters = swift_get_parameters(
             secret_parameters = secret_parameters
         )
+        
 
         new_swift_client = swift_setup_client(
             swift_parameters = new_swift_parameters
