@@ -225,6 +225,7 @@ def division_load_balanced_cluster_round_robin(
     # 2. PROPORTIONAL PASS: Calculate quotas for remaining items
     remaining_items_count = total_items - item_idx
     
+    # Use explicit, safely bounded dictionary calculations 
     target_counts = {
         c: max(0, math.floor(cluster_weights[c] * remaining_items_count)) 
         for c in clusters
@@ -238,9 +239,14 @@ def division_load_balanced_cluster_round_robin(
     # 3. Fill the buckets with the remaining items based on quotas
     for c in sorted_clusters:
         quota = target_counts[c]
-        # Ensure we do not slice past array bounds
-        actual_quota = min(quota, total_items - item_idx)
         
+        # FIX: Ensure we never over-slice what is physically left in the remaining item array
+        available_left = total_items - item_idx
+        actual_quota = min(quota, available_left)
+        
+        if actual_quota <= 0:
+            continue
+            
         chunk = weighted_items[item_idx : item_idx + actual_quota]
         assigned[c].extend(chunk)
         item_idx += len(chunk)
