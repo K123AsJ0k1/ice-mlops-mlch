@@ -206,30 +206,46 @@ def division_load_balanced_cluster_round_robin(
     if total_items == 0:
         return assigned
 
-    # 1. Calculate ideal exact target capacities based strictly on the weights
-    # Example: weight 0.40 * 126 items = 50 items targeted for this cluster
-    target_counts = {c: max(0, math.floor(cluster_weights[c] * total_items)) for c in clusters}
+    # --- GUARD CLAUSE ---
+    # If you have more clusters than data inputs, some clusters MUST get 0.
+    # In that scenario, we fall back to giving 1 to as many as possible.
+    if total_items <= len(clusters):
+        for idx, item in enumerate(weighted_items):
+            assigned[clusters[idx]].append(item)
+        return assigned
+
+    item_idx = 0
+
+    # 1. GUARANTEE PASS: Distribute exactly 1 item to every single cluster first
+    # Sort by weight descending so higher priority clusters get the smallest footprint items first
+    sorted_clusters = sorted(clusters, key=lambda c: cluster_weights[c], reverse=True)
     
-    # Enforce minimum batch size rules for clusters that qualify for work
+    for c in sorted_clusters:
+        assigned[c].append(weighted_items[item_idx])
+        item_idx += 1
+
+    # 2. PROPORTIONAL PASS: Calculate quotas for the REMAINING items
+    remaining_items_count = total_items - item_idx
+    
+    target_counts = {
+        c: max(0, math.floor(cluster_weights[c] * remaining_items_count)) 
+        for c in clusters
+    }
+    
+    # Enforce minimum batch size rules for the remaining work allocation
     for c in clusters:
         if target_counts[c] > 0 and target_counts[c] < min_batch_size:
             target_counts[c] = min_batch_size
 
-    # 2. Sort clusters by weight descending so high-priority clusters pick their items first
-    sorted_clusters = sorted(clusters, key=lambda c: cluster_weights[c], reverse=True)
-    
-    item_idx = 0
-    
-    # 3. Primary allocation pass: Fill high priority buckets up to their mathematical quota
+    # 3. Fill the buckets with the remaining items based on their calculated quotas
     for c in sorted_clusters:
         quota = target_counts[c]
-        # Allocate a continuous chunk of items to this cluster
         chunk = weighted_items[item_idx : item_idx + quota]
         assigned[c].extend(chunk)
         item_idx += len(chunk)
         
-    # 4. Clean-up pass: If any remaining fractional items exist due to rounding, 
-    # give them strictly to the highest-weight cluster that has capacity
+    # 4. CLEAN-UP PASS: Handle any remaining fractional items left over due to math.floor
+    # Give all leftover loose items strictly to your highest priority cluster
     while item_idx < total_items:
         highest_priority_cluster = sorted_clusters[0]
         assigned[highest_priority_cluster].append(weighted_items[item_idx])
