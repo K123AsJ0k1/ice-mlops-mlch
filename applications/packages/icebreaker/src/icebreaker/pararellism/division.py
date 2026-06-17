@@ -66,8 +66,8 @@ def division_formatted_clusters(
 def division_cluster_weights(
     resource_weights: any,
     formatted_clusters: any,
-    cluster_priorities: list,
-    temperature: float
+    cluster_priority_percentages: dict,
+    hardware_influence: float = 0.0
 ) -> any:
     try:
         import numpy as np
@@ -75,8 +75,8 @@ def division_cluster_weights(
         raise ImportError("paralellism/division failed to import", e)
     '''
     Example
-    'resource-weights': {'CPU': 0.6,'RAM': 0.2,'GPU': 0.2}
-    cluster_priorities = ['vm2', 'lt3', 'lt2', 'vm1', 'lt1']
+    resource-weights = {'CPU': 0.6,'RAM': 0.2,'GPU': 0.2}
+    cluster_priorities = {'vm2': 0.60, 'lt3': 0.40, 'vm1': 0.0}
     '''
     clusters = {}
     for key, value in formatted_clusters.items():
@@ -143,50 +143,42 @@ def division_cluster_weights(
     ], dtype=float)
 
     max_values = resource_matrix.max(axis=0)
-
     max_values[max_values == 0] = 1.0 
-
     normalized = resource_matrix / max_values
-    weighted_scores = normalized @ np.array(list(resource_weights.values()))
-    total = weighted_scores.sum()
+    hardware_scores = normalized @ np.array(list(resource_weights.values()))
     
-    if 0 < len(cluster_priorities):
-        total_priorities = len(cluster_priorities)
+    # 2. Extract and Normalize User Priority Percentages
+    priority_weights = []
+    for cluster_key in clusters.keys():
+        pure_name = clusters[cluster_key]['_pure_name']
+        # Default to 0% if the cluster wasn't explicitly provided in percentages
+        weight = cluster_priority_percentages.get(pure_name, 0.0)
+        priority_weights.append(weight)
         
-        # 1. Create a clean, linear rank step (e.g., 5, 4, 3, 2, 1)
-        priority_ranks = []
-        for cluster_key in clusters.keys():
-            pure_name = clusters[cluster_key]['_pure_name']
-            # Find its rank index. If not found, place it at the bottom
-            try:
-                rank = total_priorities - cluster_priorities.index(pure_name)
-            except ValueError:
-                rank = 1
-            priority_ranks.append(rank)
-            
-        priority_ranks = np.array(priority_ranks, dtype=float)
-        
-        # 2. Apply Softmax with a Temperature setting to enforce a radical skew
-        # Lower temperature = much more radical distribution favoring top priorities
-        exp_ranks = np.exp(priority_ranks / temperature)
-        priority_weights = exp_ranks / np.sum(exp_ranks)
-        
-        # 3. Combine the hardware capacity with the new radical priority weights
-        weighted_scores = weighted_scores * priority_weights
+    priority_weights = np.array(priority_weights, dtype=float)
+    if priority_weights.sum() > 0:
+        priority_weights = priority_weights / priority_weights.sum()
+    else:
+        # Fallback to equal priorities if configuration is completely empty/zeroed out
+        priority_weights = np.ones(len(clusters)) / len(clusters)
 
-    final_weights = []
+    # 3. Blend Scores
+    # If hardware_influence is 0.0, final_weights strictly mirrors user percentages.
+    final_scores = (hardware_influence * hardware_scores) + ((1.0 - hardware_influence) * priority_weights)
+    
+    total = final_scores.sum()
     if total == 0:
-        # If all clusters scored 0, distribute work equally
         final_weights = np.ones(len(clusters)) / len(clusters)
     else:
-        final_weights = weighted_scores / total
+        final_weights = final_scores / total
 
     return dict(zip(clusters.keys(), final_weights))
 
 def division_load_balanced_cluster_round_robin(
     target_list: any,
     cluster_weights: any,
-    min_batch_size: int
+    min_initial_inputs: int = 1,
+    min_batch_size: int = 1
 ) -> any:
     try:
         import math
@@ -194,7 +186,6 @@ def division_load_balanced_cluster_round_robin(
         raise ImportError("paralellism/division failed to import", e)
 
     clusters = list(cluster_weights.keys())
-
     if not clusters:
         return {} 
 
@@ -206,25 +197,32 @@ def division_load_balanced_cluster_round_robin(
     if total_items == 0:
         return assigned
 
-    # --- GUARD CLAUSE ---
-    # If you have more clusters than data inputs, some clusters MUST get 0.
-    # In that scenario, we fall back to giving 1 to as many as possible.
-    if total_items <= len(clusters):
-        for idx, item in enumerate(weighted_items):
-            assigned[clusters[idx]].append(item)
+    # Sort clusters descending: Highest priority/percentage gets processed first
+    sorted_clusters = sorted(clusters, key=lambda c: cluster_weights[c], reverse=True)
+
+    # --- OVERSUBSCRIPTION GUARD CLAUSE ---
+    # Constraint: If there are more clusters than inputs, clusters with priority get inputs
+    required_initial_total = len(clusters) * min_initial_inputs
+    if total_items < required_initial_total:
+        item_idx = 0
+        # Iterate through sorted priorities and give 1 item to each until exhausted
+        while item_idx < total_items:
+            for c in sorted_clusters:
+                if item_idx >= total_items:
+                    break
+                assigned[c].append(weighted_items[item_idx])
+                item_idx += 1
         return assigned
 
     item_idx = 0
 
-    # 1. GUARANTEE PASS: Distribute exactly 1 item to every single cluster first
-    # Sort by weight descending so higher priority clusters get the smallest footprint items first
-    sorted_clusters = sorted(clusters, key=lambda c: cluster_weights[c], reverse=True)
-    
+    # 1. GUARANTEED PASS: Distribute exactly M inputs to every cluster first
     for c in sorted_clusters:
-        assigned[c].append(weighted_items[item_idx])
-        item_idx += 1
+        for _ in range(min_initial_inputs):
+            assigned[c].append(weighted_items[item_idx])
+            item_idx += 1
 
-    # 2. PROPORTIONAL PASS: Calculate quotas for the REMAINING items
+    # 2. PROPORTIONAL PASS: Calculate quotas for remaining items
     remaining_items_count = total_items - item_idx
     
     target_counts = {
@@ -237,14 +235,17 @@ def division_load_balanced_cluster_round_robin(
         if target_counts[c] > 0 and target_counts[c] < min_batch_size:
             target_counts[c] = min_batch_size
 
-    # 3. Fill the buckets with the remaining items based on their calculated quotas
+    # 3. Fill the buckets with the remaining items based on quotas
     for c in sorted_clusters:
         quota = target_counts[c]
-        chunk = weighted_items[item_idx : item_idx + quota]
+        # Ensure we do not slice past array bounds
+        actual_quota = min(quota, total_items - item_idx)
+        
+        chunk = weighted_items[item_idx : item_idx + actual_quota]
         assigned[c].extend(chunk)
         item_idx += len(chunk)
         
-    # 4. CLEAN-UP PASS: Handle any remaining fractional items left over due to math.floor
+    # 4. CLEAN-UP PASS: Handle any remaining fractional item leftovers (due to math.floor)
     # Give all leftover loose items strictly to your highest priority cluster
     while item_idx < total_items:
         highest_priority_cluster = sorted_clusters[0]
