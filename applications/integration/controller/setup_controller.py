@@ -4,7 +4,7 @@ import yaml
 import pickle
 import time
 from decouple import Config,RepositoryEnv
-from icebreaker.swift.setup import swift_get_parameters, swift_setup_client 
+from icebreaker.swift.setup import swift_get_parameters, swift_setup_client, swift_renew_client  
 from icebreaker.swift.use import swift_get_object_content
 from icebreaker.misc.dict import check_dict_path, get_dict_value
 from icebreaker.docker.use import docker_manage_compose
@@ -37,41 +37,29 @@ def setup_controller(
     
     env_dict = Config(RepositoryEnv(env_path))
     
-    swift_user = env_dict.get('CSC_USERNAME')
-    swift_password = env_dict.get('CSC_PASSWORD')
+    swift_credential_id = env_dict.get('CSC_PROJECT_CRED_ID')
+    swift_credential_secret = env_dict.get('CSC_PROJECT_CRED_SECRET')
     swift_project_name = env_dict.get('CSC_PROJECT')
     swift_domain_name = env_dict.get('CSC_USER_DOMAIN_NAME')
-    
-    swift_token = env_dict.get('SWIFT_TOKEN')
     swift_auth_url = env_dict.get('SWIFT_AUTH_URL')
     swift_auth_version = env_dict.get('SWIFT_AUTH_VERSION')
     swift_pre_auth_url = env_dict.get('SWIFT_PRE_AUTH_URL')
     
     logger.info('Creating swift parameters')
     setup_swift_parameters = {}
-    if not swift_user == '[CSC_USERNAME]' or not swift_password == '[CSC_PASSWORD]':
-        logger.info('Username and password exist')
+    if not swift_credential_id == '[CSC_PROJECT_CRED_ID]' or not swift_credential_secret == '[CSC_PROJECT_CRED_SECRET]':
+        logger.info('Credential id and secret exist')
         setup_swift_parameters = swift_get_parameters(
             secret_parameters = {
                 'swift-auth-url': swift_auth_url,
+                'swift-application-credential-id': swift_credential_id,
+                'swift-application-credential-secret': swift_credential_secret,
                 'swift-auth-version': swift_auth_version,
-                'swift-user': swift_user,
-                'swift-key': swift_password,
                 'swift-project-name': swift_project_name,
                 'swift-domain-name': swift_domain_name,
                 'swift-pre-auth-url': swift_pre_auth_url
             }
         )
-    if len(setup_swift_parameters) == 0 and not swift_token == '[SWIFT_TOKEN]':
-        logger.info('Token exists')
-        setup_swift_parameters = {
-            'pre-auth-token': swift_token,
-            'pre-auth-url': swift_pre_auth_url,
-            'auth-version': swift_auth_version,
-            'project-name': swift_project_name,
-            'user-domain-name': swift_domain_name,
-            'project-domain-name': swift_domain_name,
-        }
     
     logger.info('Setting up swift client')
     swift_client = swift_setup_client(
@@ -120,3 +108,8 @@ def setup_controller(
         )
 
         time.sleep(check_interval)
+        logger.info('Checking swift client renewal')
+        swift_client = swift_renew_client(
+            secret_parameters = setup_swift_parameters,
+            swift_client = swift_client
+        )
