@@ -66,7 +66,8 @@ def division_formatted_clusters(
 def division_cluster_weights(
     resource_weights: any,
     formatted_clusters: any,
-    cluster_priorities: list
+    cluster_priorities: list,
+    skew_factor: float
 ) -> any:
     try:
         import numpy as np
@@ -154,13 +155,17 @@ def division_cluster_weights(
         # Example: if 5 clusters, highest priority gets 5x multiplier, lowest gets 1x multiplier.
         #cluster_names = cluster_priorities.keys()
         total_priorities = len(cluster_priorities)
-        priority_map = {name: (total_priorities - idx) for idx, name in enumerate(cluster_priorities)}
+        #priority_map = {name: (total_priorities - idx) for idx, name in enumerate(cluster_priorities)}
+        priority_map = {
+            name: float(total_priorities - idx) ** skew_factor 
+            for idx, name in enumerate(cluster_priorities)
+        }
         
         # Apply the multiplier to each cluster's resource score
         for idx, cluster_key in enumerate(clusters.keys()):
             pure_name = clusters[cluster_key]['_pure_name']
             # Fallback to 1 if a cluster isn't explicitly listed in priorities
-            multiplier = priority_map.get(pure_name, 1)  
+            multiplier = priority_map.get(pure_name, 1.0) 
             weighted_scores[idx] *= multiplier
 
     final_weights = []
@@ -174,7 +179,8 @@ def division_cluster_weights(
 
 def division_load_balanced_cluster_round_robin(
     target_list: any,
-    cluster_weights: any
+    cluster_weights: any,
+    min_batch_size: int
 ) -> any:
     clusters = list(cluster_weights.keys())
 
@@ -183,21 +189,30 @@ def division_load_balanced_cluster_round_robin(
 
     assigned = {c: [] for c in clusters}
     cluster_load = {c: 0 for c in clusters}
-    # This sorts based on the last tuple value
-    # that is in this case size from smallest to biggest
+    # Sort items based on sizing constraint (smallest to biggest)
     weighted_items = sorted(target_list, key = lambda x: (x[-1]), reverse = False)
     capacities = {c: cluster_weights[c] for c in clusters}
-    for item_tuple in weighted_items:
+    # Process items in dynamic batch chunks 
+    idx = 0
+    total_items = len(weighted_items)
+    
+    while idx < total_items:
+        # 1. Grab a slice of items matching your min_batch_size requirement
+        batch_chunk = weighted_items[idx : idx + min_batch_size]
+        idx += min_batch_size
+        
+        # Calculate the total weight footprint of this entire batch block
+        batch_load = sum(item[-1] for item in batch_chunk)
+        
+        # 2. Find the cluster with the lowest current load-to-capacity ratio
         target = min(
             clusters,
             key=lambda c: cluster_load[c] / capacities[c] if capacities[c] > 0 else float('inf')
         )
         
-        # Guard clause: If ALL available clusters have 0 capacity, 
-        # float('inf') will tie. Python's min() defaults to the first one.
-
-        assigned[target].append(item_tuple)
-        cluster_load[target] += item_tuple[-1]
+        # 3. Assign the entire chunk wholesale to the best suited cluster
+        assigned[target].extend(batch_chunk)
+        cluster_load[target] += batch_load
     return assigned
 
 def division_split_input(
