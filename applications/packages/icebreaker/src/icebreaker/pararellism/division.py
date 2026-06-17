@@ -66,7 +66,7 @@ def division_formatted_clusters(
 def division_cluster_weights(
     resource_weights: any,
     formatted_clusters: any,
-    cluster_priorities: list
+    cluster_priorities: dict
 ) -> any:
     try:
         import numpy as np
@@ -148,12 +148,13 @@ def division_cluster_weights(
     normalized = resource_matrix / max_values
     weighted_scores = normalized @ np.array(list(resource_weights.values()))
     total = weighted_scores.sum()
-
-    if cluster_priorities:
+    
+    if 0 < len(cluster_priorities):
         # Create a mapping of priority tiers. 
         # Example: if 5 clusters, highest priority gets 5x multiplier, lowest gets 1x multiplier.
-        total_priorities = len(cluster_priorities)
-        priority_map = {name: (total_priorities - idx) for idx, name in enumerate(cluster_priorities)}
+        cluster_names = cluster_priorities.keys()
+        total_priorities = len(cluster_names)
+        priority_map = {name: (total_priorities - idx) for idx, name in enumerate(cluster_names)}
         
         # Apply the multiplier to each cluster's resource score
         for idx, cluster_key in enumerate(clusters.keys()):
