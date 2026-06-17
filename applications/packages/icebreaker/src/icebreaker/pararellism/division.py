@@ -72,7 +72,7 @@ def division_cluster_weights(
     try:
         import numpy as np
     except ImportError as e:
-        raise ImportError("Failed to import", e)
+        raise ImportError("paralellism/division failed to import", e)
     '''
     Example
     'resource-weights': {'CPU': 0.6,'RAM': 0.2,'GPU': 0.2}
@@ -188,37 +188,53 @@ def division_load_balanced_cluster_round_robin(
     cluster_weights: any,
     min_batch_size: int
 ) -> any:
+    try:
+        import math
+    except ImportError as e:
+        raise ImportError("paralellism/division failed to import", e)
+
     clusters = list(cluster_weights.keys())
 
     if not clusters:
         return {} 
 
     assigned = {c: [] for c in clusters}
-    cluster_load = {c: 0 for c in clusters}
     # Sort items based on sizing constraint (smallest to biggest)
     weighted_items = sorted(target_list, key = lambda x: (x[-1]), reverse = False)
-    capacities = {c: cluster_weights[c] for c in clusters}
-    # Process items in dynamic batch chunks 
-    idx = 0
     total_items = len(weighted_items)
     
-    while idx < total_items:
-        # 1. Grab a slice of items matching your min_batch_size requirement
-        batch_chunk = weighted_items[idx : idx + min_batch_size]
-        idx += min_batch_size
+    if total_items == 0:
+        return assigned
+
+    # 1. Calculate ideal exact target capacities based strictly on the weights
+    # Example: weight 0.40 * 126 items = 50 items targeted for this cluster
+    target_counts = {c: max(0, math.floor(cluster_weights[c] * total_items)) for c in clusters}
+    
+    # Enforce minimum batch size rules for clusters that qualify for work
+    for c in clusters:
+        if target_counts[c] > 0 and target_counts[c] < min_batch_size:
+            target_counts[c] = min_batch_size
+
+    # 2. Sort clusters by weight descending so high-priority clusters pick their items first
+    sorted_clusters = sorted(clusters, key=lambda c: cluster_weights[c], reverse=True)
+    
+    item_idx = 0
+    
+    # 3. Primary allocation pass: Fill high priority buckets up to their mathematical quota
+    for c in sorted_clusters:
+        quota = target_counts[c]
+        # Allocate a continuous chunk of items to this cluster
+        chunk = weighted_items[item_idx : item_idx + quota]
+        assigned[c].extend(chunk)
+        item_idx += len(chunk)
         
-        # Calculate the total weight footprint of this entire batch block
-        batch_load = sum(item[-1] for item in batch_chunk)
-        
-        # 2. Find the cluster with the lowest current load-to-capacity ratio
-        target = min(
-            clusters,
-            key=lambda c: cluster_load[c] / capacities[c] if capacities[c] > 0 else float('inf')
-        )
-        
-        # 3. Assign the entire chunk wholesale to the best suited cluster
-        assigned[target].extend(batch_chunk)
-        cluster_load[target] += batch_load
+    # 4. Clean-up pass: If any remaining fractional items exist due to rounding, 
+    # give them strictly to the highest-weight cluster that has capacity
+    while item_idx < total_items:
+        highest_priority_cluster = sorted_clusters[0]
+        assigned[highest_priority_cluster].append(weighted_items[item_idx])
+        item_idx += 1
+
     return assigned
 
 def division_split_input(
