@@ -67,7 +67,7 @@ def division_cluster_weights(
     resource_weights: any,
     formatted_clusters: any,
     cluster_priorities: list,
-    skew_factor: float
+    temperature: float
 ) -> any:
     try:
         import numpy as np
@@ -151,22 +151,28 @@ def division_cluster_weights(
     total = weighted_scores.sum()
     
     if 0 < len(cluster_priorities):
-        # Create a mapping of priority tiers. 
-        # Example: if 5 clusters, highest priority gets 5x multiplier, lowest gets 1x multiplier.
-        #cluster_names = cluster_priorities.keys()
         total_priorities = len(cluster_priorities)
-        #priority_map = {name: (total_priorities - idx) for idx, name in enumerate(cluster_priorities)}
-        priority_map = {
-            name: float(total_priorities - idx) ** skew_factor 
-            for idx, name in enumerate(cluster_priorities)
-        }
         
-        # Apply the multiplier to each cluster's resource score
-        for idx, cluster_key in enumerate(clusters.keys()):
+        # 1. Create a clean, linear rank step (e.g., 5, 4, 3, 2, 1)
+        priority_ranks = []
+        for cluster_key in clusters.keys():
             pure_name = clusters[cluster_key]['_pure_name']
-            # Fallback to 1 if a cluster isn't explicitly listed in priorities
-            multiplier = priority_map.get(pure_name, 1.0) 
-            weighted_scores[idx] *= multiplier
+            # Find its rank index. If not found, place it at the bottom
+            try:
+                rank = total_priorities - cluster_priorities.index(pure_name)
+            except ValueError:
+                rank = 1
+            priority_ranks.append(rank)
+            
+        priority_ranks = np.array(priority_ranks, dtype=float)
+        
+        # 2. Apply Softmax with a Temperature setting to enforce a radical skew
+        # Lower temperature = much more radical distribution favoring top priorities
+        exp_ranks = np.exp(priority_ranks / temperature)
+        priority_weights = exp_ranks / np.sum(exp_ranks)
+        
+        # 3. Combine the hardware capacity with the new radical priority weights
+        weighted_scores = weighted_scores * priority_weights
 
     final_weights = []
     if total == 0:
