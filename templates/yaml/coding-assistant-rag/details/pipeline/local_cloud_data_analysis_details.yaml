@@ -27,11 +27,18 @@ storage:
 integration:
   cluster-name: 'local-cloud-cluster'
   resource-weights:
-    nodes: 0.2
-    cpu: 0.3 
-    ram: 0.4
-    gpu: 0.05
-    vram: 0.05
+    cpu: 0.95 
+    ram: 0.05
+  cluster-priority:
+    cloud-vm1: 0.08
+    cloud-vm2: 0.2
+    local-lt1: 0.02
+    local-lt2: 0.10
+    local-lt3: 0.6
+  hardware-influence: 0.0
+  min-initial-inputs: 1
+  min-batch-size: 1
+  workflow-steps: []
   multi-loop-amount: 20000
   multi-loop-wait: 10
   job-loop-amount: 2
