@@ -27,7 +27,7 @@ env = [
 swift = [
     "python-swiftclient",
     "keystoneauth1",
-    "python-keystoneclient
+    "python-keystoneclient"
 ]
 
 data = [
