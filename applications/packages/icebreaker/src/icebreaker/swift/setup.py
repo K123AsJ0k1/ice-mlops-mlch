@@ -22,8 +22,6 @@ def swift_get_parameters(
     swift_application_credential_id = secret_parameters['swift-application-credential-id']
     swift_application_credential_secret = secret_parameters['swift-application-credential-secret']
     swift_auth_version = secret_parameters['swift-auth-version']
-    swift_user = secret_parameters['swift-user']
-    swift_key = secret_parameters['swift-key']
     swift_project_name = secret_parameters['swift-project-name']
     swift_user_domain_name = secret_parameters['swift-domain-name']
     swift_project_domain_name = secret_parameters['swift-domain-name']
@@ -39,6 +37,8 @@ def swift_get_parameters(
         )
     else:
         print('Using user-password for session')
+        swift_user = secret_parameters['swift-user']
+        swift_key = secret_parameters['swift-key']
         loader = loading.get_plugin_loader('password')
         auth_plugin = loader.load_from_options(
             auth_url = swift_auth_url,
