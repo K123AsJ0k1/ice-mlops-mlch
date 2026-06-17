@@ -29,14 +29,12 @@ def swift_get_parameters(
 
     auth_plugin = None
     if 0 < len(swift_application_credential_id) and 0 < len(swift_application_credential_secret):
-        print('Using application credentials for session')
         auth_plugin = v3.ApplicationCredential(
             auth_url = swift_auth_url,
             application_credential_id = swift_application_credential_id,
             application_credential_secret = swift_application_credential_secret
         )
     else:
-        print('Using user-password for session')
         swift_user = secret_parameters['swift-user']
         swift_key = secret_parameters['swift-key']
         loader = loading.get_plugin_loader('password')
@@ -103,7 +101,6 @@ def swift_renew_client(
     elapsed_time = time.time() - last_auth_time
     new_swift_client = swift_client
     if client_refresh_interval <= elapsed_time:
-        print('Creating new client')
         new_swift_parameters = swift_get_parameters(
             secret_parameters = secret_parameters
         )
@@ -111,6 +108,4 @@ def swift_renew_client(
         new_swift_client = swift_setup_client(
             swift_parameters = new_swift_parameters
         )
-    else:
-        print('Returning current client')
     return new_swift_client
