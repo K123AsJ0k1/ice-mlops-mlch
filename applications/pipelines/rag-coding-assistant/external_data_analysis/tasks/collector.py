@@ -1,7 +1,7 @@
 import ray
 import statistics
 import time as t
-from icebreaker.swift.setup import swift_setup_client
+from icebreaker.swift.setup import swift_setup_client, swift_renew_client
 from icebreaker.storage.management import object_storage_interaction
 from icebreaker.pd_stats.use import (
     stats_pandas_content
@@ -25,6 +25,7 @@ def data_collector(
     print('Task', worker_index, 'Actor', actor_index)
     
     print('Setting up swift client')
+    # If you expect the task to last over 8 hours, consider renewal
     setup_swift_client = swift_setup_client(
         swift_parameters = swift_parameters
     )
@@ -40,6 +41,12 @@ def data_collector(
     provider_actor_refs = []
     batch_index = 1
     for batch_data in task_batch:
+        print('Swift client renew check')
+        swift_client = swift_renew_client(
+            secret_parameters = swift_parameters,
+            swift_client = swift_client
+        )
+
         object_path = batch_data[0]
         key_name = object_path.split('/')[-1].split('.')[0]
 

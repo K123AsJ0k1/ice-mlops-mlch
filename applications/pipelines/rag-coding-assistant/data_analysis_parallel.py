@@ -3,7 +3,7 @@ from kfp import dsl
 @dsl.component(
     base_image = "python:3.12.3",
     packages_to_install = [
-        "icebreaker[swift_client, data, ray, pararellism] @ git+https://github.com/K123AsJ0k1/ice-mlops-mlch.git@main#subdirectory=applications/packages/icebreaker"
+        "icebreaker[swift, data, ray, pararellism] @ git+https://github.com/K123AsJ0k1/ice-mlops-mlch.git@main#subdirectory=applications/packages/icebreaker"
     ]
 )
 def cluster_setup_step(
@@ -69,14 +69,13 @@ def cluster_setup_step(
 @dsl.component(
     base_image = "python:3.12.3",
     packages_to_install = [
-        "icebreaker[swift_client, data, ray, pararellism] @ git+https://github.com/K123AsJ0k1/ice-mlops-mlch.git@main#subdirectory=applications/packages/icebreaker"
+        "icebreaker[swift, data, ray, pararellism] @ git+https://github.com/K123AsJ0k1/ice-mlops-mlch.git@main#subdirectory=applications/packages/icebreaker"
     ]
 )
 def global_distribution_step(
     storage: dict,
     integration: dict,
-    processing: dict,
-    step_keys: list 
+    processing: dict 
 ) -> list:
     import time as t
     start_time = t.time()
@@ -101,6 +100,62 @@ def global_distribution_step(
 
     cluster_yamls = integration['cluster-yamls']
     cluster_priority = integration['cluster-priority']
+    workflow_steps = integration['workflow-steps']
+    resource_weights = integration['resource-weights']
+    data_storage = storage['data-storage']
+    skew_factor = integration['skew-factor']
+    min_batch_size = integration['min-batch-size']
+    global_inputs = []
+    if 0 < len(workflow_steps):
+        for step_key in workflow_steps:
+            print(step_key)
+            step_processing_parameters = processing[step_key]
+            step_cluster_parameters = step_processing_parameters['cluster']
+            cluster_clients = ray_get_clients(
+                configured_clusters = cluster_yamls,
+                cluster_parameters = step_cluster_parameters
+            )
+            print(cluster_clients)
+            formatted_clusters = division_formatted_clusters(
+                ray_clusters = cluster_clients
+            )
+            print(cluster_priority)
+            cluster_weights = division_cluster_weights(
+                resource_weights = resource_weights,
+                formatted_clusters = formatted_clusters,
+                cluster_priorities = cluster_priority,
+                skew_factor = skew_factor
+            )
+            print(cluster_weights)
+
+            object_prefix = processing[step_key]['general']['data-storage']['object-prefix']
+            dataset_tuple_list = data_list_objects(
+                storage_client = setup_swift_client,
+                storage_parameters = data_storage,
+                object_prefix = object_prefix
+            )
+
+            cluster_division = division_load_balanced_cluster_round_robin(
+                target_list = dataset_tuple_list,
+                cluster_weights = cluster_weights,
+                min_batch_size = min_batch_size
+            )
+            step_inputs = []
+            for cluster_name, cluster_input in cluster_division.items():
+                print(f'{cluster_name} given batch input size {str(len(cluster_input))}')
+                step_inputs.append({
+                    'cluster_name': cluster_name,
+                    'cluster_input': cluster_input
+                })
+            global_inputs.append(step_inputs)
+
+
+
+
+    '''
+    cluster_yamls = integration['cluster-yamls']
+    cluster_priority = integration['cluster-priority']
+    print(cluster_priority)
     cluster_clients = ray_get_clients(
         configured_clusters = cluster_yamls,
         cluster_parameters = cluster_priority 
@@ -120,13 +175,9 @@ def global_distribution_step(
             cluster_priorities = cluster_priority 
         )
         print(cluster_weights)
-        # Map out the exact data slices for each step globally
-        #global_distribution = {}
-        #for cluster_name, cluster_weight in cluster_weights.items():
-        #    global_distribution[cluster_name] = {}
         data_storage = storage['data-storage']
-        
-        for step_key in step_keys:
+        for step_key in integration['workflow-steps']:
+            print(step_key)
             object_prefix = processing[step_key]['general']['data-storage']['object-prefix']
             dataset_tuple_list = data_list_objects(
                 storage_client = setup_swift_client,
@@ -134,22 +185,18 @@ def global_distribution_step(
                 object_prefix = object_prefix
             )
 
-            step_division = division_load_balanced_cluster_round_robin(
+            cluster_division = division_load_balanced_cluster_round_robin(
                 target_list = dataset_tuple_list,
                 cluster_weights = cluster_weights
             )
-
-            for cluster_name, cluster_input in step_division.items():
-                global_inputs.append({
-                    'step_key': step_key,
+            step_inputs = []
+            for cluster_name, cluster_input in cluster_division.items():
+                step_inputs.append({
                     'cluster_name': cluster_name,
                     'cluster_input': cluster_input
                 })
-
-            #global_distribution[step] = division_load_balanced_cluster_round_robin(
-            #    target_list = dataset_tuple_list,
-            #    cluster_weights = cluster_weights
-            #)
+            global_inputs.append(step_inputs)
+    '''
 
     end_time = t.time()
     '''
@@ -168,13 +215,12 @@ def global_distribution_step(
     '''
     total_time = round(end_time-start_time,5)
     print('Spent seconds', total_time)
-    print(global_inputs)
     return global_inputs
 
 @dsl.component(
     base_image = "python:3.12.3",
     packages_to_install = [
-        "icebreaker[swift_client, data, ray, pararellism] @ git+https://github.com/K123AsJ0k1/ice-mlops-mlch.git@main#subdirectory=applications/packages/icebreaker"
+        "icebreaker[swift, data, ray, pararellism] @ git+https://github.com/K123AsJ0k1/ice-mlops-mlch.git@main#subdirectory=applications/packages/icebreaker"
     ]
 )
 def single_cluster_step(
@@ -297,25 +343,10 @@ def data_analysis_parallel_pipeline(
     integration: dict,
     processing: dict
 ):
-    step_keys = [
-        'step-1',
-        'step-2',
-        'step-3',
-        'step-4',
-        'step-5',
-        'step-6',
-        'step-7',
-        'step-8',
-        'step-9',
-        'step-10',
-        'step-11',
-    ]
-
     global_distribution_task = global_distribution_step(
         storage = storage,
         integration = integration,
-        processing = processing,
-        step_keys = step_keys
+        processing = processing
     )
 
     #previous_task = global_distribution_task
