@@ -51,13 +51,14 @@ def setup_controller(
         logger.info('Credential id and secret exist')
         setup_swift_parameters = swift_get_parameters(
             secret_parameters = {
-                'swift-auth-url': swift_auth_url,
-                'swift-application-credential-id': swift_credential_id,
-                'swift-application-credential-secret': swift_credential_secret,
-                'swift-auth-version': swift_auth_version,
-                'swift-project-name': swift_project_name,
-                'swift-domain-name': swift_domain_name,
-                'swift-pre-auth-url': swift_pre_auth_url
+                'auth-url': swift_auth_url,
+                'credential-id': swift_credential_id,
+                'credential-secret': swift_credential_secret,
+                'auth-version': swift_auth_version,
+                'project-name': swift_project_name,
+                'user-domain-name': swift_domain_name,
+                'project-domain-name': swift_domain_name,
+                'pre-auth-url': swift_pre_auth_url
             }
         )
     
