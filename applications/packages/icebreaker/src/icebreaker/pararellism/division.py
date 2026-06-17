@@ -79,24 +79,30 @@ def division_cluster_weights(
     cluster_priorities = {'vm2': 0.60, 'lt3': 0.40, 'vm1': 0.0}
     '''
     clusters = {}
+    # Normalize resource weights keys to uppercase for reliable matching
+    normalized_resource_weights = {str(k).upper(): v for k, v in resource_weights.items()}
+    resource_names = list(normalized_resource_weights.keys())
+
     for key, value in formatted_clusters.items():
         if 'clusters' in key:
             key_split = key.split('-')
             cluster_key = key_split[0] + '-' + key_split[2]
-            
             pure_cluster_name = key_split[2] 
+            
             if not cluster_key in clusters:
                 clusters[cluster_key] = {'_pure_name': pure_cluster_name}
 
             if 'resources' in key:
-                resource_type = key.split('-')[-1]
-                if resource_type in resource_weights:
-                    if 'gpu' in key:
+                # Read the trailing segment and convert to uppercase to match resource configurations safely
+                resource_type = key.split('-')[-1].upper()
+                
+                if resource_type in normalized_resource_weights:
+                    if 'gpu' in key.lower():
                         if value == 'None':
-                            clusters[cluster_key]['gpu'] = 0
-                            clusters[cluster_key]['vram'] = 0
+                            clusters[cluster_key]['GPU'] = 0
+                            clusters[cluster_key]['VRAM'] = 0
                             continue
-                        clusters[cluster_key]['gpu'] = len(value)
+                        clusters[cluster_key]['GPU'] = len(value)
                         for gpu_details in value:
                             gpu_vram = gpu_details['vram']
                             mib_val = 0
@@ -106,24 +112,24 @@ def division_cluster_weights(
                                 gb_amount = int(gpu_vram.split(' ')[0])
                                 bytes_val = gb_amount * (10**9)
                                 mib_val = bytes_val / (2**20)
-                            clusters[cluster_key]['vram'] = round(mib_val)
+                            clusters[cluster_key]['VRAM'] = round(mib_val)
                         continue
                     else:
-                        if 'ram' in key:
-                            set_value = int(value.split(' ')[0])
+                        if 'ram' in key.lower():
+                            set_value = int(str(value).split(' ')[0])
                             clusters[cluster_key][resource_type] = set_value
                             continue
-                        if 'nodes' in key:
+                        if 'nodes' in key.lower():
                             set_value = 0
-                            if 'head' in value:
+                            if 'head' in str(value):
                                 set_value += 1
-                            if 'worker' in value:
-                                worker_amount = int(value.split('-')[-1])
+                            if 'worker' in str(value):
+                                worker_amount = int(str(value).split('-')[-1])
                                 set_value += worker_amount
                             clusters[cluster_key][resource_type] = set_value
                             continue
                         else:
-                            clusters[cluster_key][resource_type] = value
+                            clusters[cluster_key][resource_type] = float(value)
     
     if not clusters:
         return {}
@@ -131,7 +137,6 @@ def division_cluster_weights(
     if len(clusters) == 1:
         return {list(clusters.keys())[0]: 1.0}
 
-    resource_names = list(resource_weights.keys())
     for c in clusters:
         for r in resource_names:
             if r not in clusters[c]:
@@ -145,13 +150,12 @@ def division_cluster_weights(
     max_values = resource_matrix.max(axis=0)
     max_values[max_values == 0] = 1.0 
     normalized = resource_matrix / max_values
-    hardware_scores = normalized @ np.array(list(resource_weights.values()))
+    hardware_scores = normalized @ np.array(list(normalized_resource_weights.values()))
     
     # 2. Extract and Normalize User Priority Percentages
     priority_weights = []
     for cluster_key in clusters.keys():
         pure_name = clusters[cluster_key]['_pure_name']
-        # Default to 0% if the cluster wasn't explicitly provided in percentages
         weight = cluster_priority_percentages.get(pure_name, 0.0)
         priority_weights.append(weight)
         
@@ -159,11 +163,9 @@ def division_cluster_weights(
     if priority_weights.sum() > 0:
         priority_weights = priority_weights / priority_weights.sum()
     else:
-        # Fallback to equal priorities if configuration is completely empty/zeroed out
         priority_weights = np.ones(len(clusters)) / len(clusters)
 
     # 3. Blend Scores
-    # If hardware_influence is 0.0, final_weights strictly mirrors user percentages.
     final_scores = (hardware_influence * hardware_scores) + ((1.0 - hardware_influence) * priority_weights)
     
     total = final_scores.sum()
@@ -201,11 +203,9 @@ def division_load_balanced_cluster_round_robin(
     sorted_clusters = sorted(clusters, key=lambda c: cluster_weights[c], reverse=True)
 
     # --- OVERSUBSCRIPTION GUARD CLAUSE ---
-    # Constraint: If there are more clusters than inputs, clusters with priority get inputs
     required_initial_total = len(clusters) * min_initial_inputs
     if total_items < required_initial_total:
         item_idx = 0
-        # Iterate through sorted priorities and give 1 item to each until exhausted
         while item_idx < total_items:
             for c in sorted_clusters:
                 if item_idx >= total_items:
@@ -225,7 +225,6 @@ def division_load_balanced_cluster_round_robin(
     # 2. PROPORTIONAL PASS: Calculate quotas for remaining items
     remaining_items_count = total_items - item_idx
     
-    # Use explicit, safely bounded dictionary calculations 
     target_counts = {
         c: max(0, math.floor(cluster_weights[c] * remaining_items_count)) 
         for c in clusters
@@ -240,7 +239,6 @@ def division_load_balanced_cluster_round_robin(
     for c in sorted_clusters:
         quota = target_counts[c]
         
-        # FIX: Ensure we never over-slice what is physically left in the remaining item array
         available_left = total_items - item_idx
         actual_quota = min(quota, available_left)
         
@@ -251,8 +249,7 @@ def division_load_balanced_cluster_round_robin(
         assigned[c].extend(chunk)
         item_idx += len(chunk)
         
-    # 4. CLEAN-UP PASS: Handle any remaining fractional item leftovers (due to math.floor)
-    # Give all leftover loose items strictly to your highest priority cluster
+    # 4. CLEAN-UP PASS: Handle any remaining fractional item leftovers
     while item_idx < total_items:
         highest_priority_cluster = sorted_clusters[0]
         assigned[highest_priority_cluster].append(weighted_items[item_idx])
