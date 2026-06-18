@@ -156,16 +156,16 @@ def division_cluster_weights(
     for cluster_key in clusters.keys():
         weight = cluster_priority_percentages.get(cluster_key, 0.0)
         priority_weights.append(weight)
-    #print(priority_weights)
+    
     priority_weights = np.array(priority_weights, dtype=float)
     if priority_weights.sum() > 0:
         priority_weights = priority_weights / priority_weights.sum()
     else:
         priority_weights = np.ones(len(clusters)) / len(clusters)
-    #print(priority_weights)
+    
     # 3. Blend Scores
     final_scores = (hardware_influence * hardware_scores) + ((1.0 - hardware_influence) * priority_weights)
-    #print(final_scores)
+    
     total = final_scores.sum()
     if total == 0:
         final_weights = np.ones(len(clusters)) / len(clusters)
