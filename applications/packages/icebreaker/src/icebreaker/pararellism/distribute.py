@@ -72,8 +72,5 @@ def distribute_step_inputs(
                 })
     track_inputs = []
     for used_name, step_inputs in cluster_inputs.items():
-        track_inputs.append({
-            'cluster_name': used_name,
-            'cluster_inputs': step_inputs
-        })
+        track_inputs.append(step_inputs)
     return track_inputs
