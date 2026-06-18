@@ -81,15 +81,9 @@ def global_distribution_step(
     start_time = t.time()
     
     from icebreaker.swift.setup import swift_setup_client 
-    from icebreaker.data.use import data_list_objects
-    from icebreaker.pararellism.division import (
-        division_formatted_clusters, 
-        division_cluster_weights,
-        division_load_balanced_cluster_round_robin
-    )
-    from icebreaker.ray.use import ray_get_clients
+    from icebreaker.pararellism.distribute import distribute_step_inputs
     from icebreaker.misc.time import time_run_update
-    
+
     # Creates connection to allas
     print('Storage parameters')
     swift_parameters = storage['swift']
@@ -98,111 +92,17 @@ def global_distribution_step(
         swift_parameters = swift_parameters
     )
 
-    cluster_yamls = integration['cluster-yamls']
-    cluster_priority = integration['cluster-priority']
-    workflow_steps = integration['workflow-steps']
-    resource_weights = integration['resource-weights']
-    data_storage = storage['data-storage']
-    skew_factor = integration['skew-factor']
-    min_batch_size = integration['min-batch-size']
-    global_inputs = []
-    if 0 < len(workflow_steps):
-        for step_key in workflow_steps:
-            print(step_key)
-            step_processing_parameters = processing[step_key]
-            step_cluster_parameters = step_processing_parameters['cluster']
-            cluster_clients = ray_get_clients(
-                configured_clusters = cluster_yamls,
-                cluster_parameters = step_cluster_parameters
-            )
-            print(cluster_clients)
-            formatted_clusters = division_formatted_clusters(
-                ray_clusters = cluster_clients
-            )
-            print(cluster_priority)
-            cluster_weights = division_cluster_weights(
-                resource_weights = resource_weights,
-                formatted_clusters = formatted_clusters,
-                cluster_priorities = cluster_priority,
-                skew_factor = skew_factor
-            )
-            print(cluster_weights)
-
-            object_prefix = processing[step_key]['general']['data-storage']['object-prefix']
-            dataset_tuple_list = data_list_objects(
-                storage_client = setup_swift_client,
-                storage_parameters = data_storage,
-                object_prefix = object_prefix
-            )
-
-            cluster_division = division_load_balanced_cluster_round_robin(
-                target_list = dataset_tuple_list,
-                cluster_weights = cluster_weights,
-                min_batch_size = min_batch_size
-            )
-            step_inputs = []
-            for cluster_name, cluster_input in cluster_division.items():
-                print(f'{cluster_name} given batch input size {str(len(cluster_input))}')
-                step_inputs.append({
-                    'cluster_name': cluster_name,
-                    'cluster_input': cluster_input
-                })
-            global_inputs.append(step_inputs)
-
-
-
-
-    '''
-    cluster_yamls = integration['cluster-yamls']
-    cluster_priority = integration['cluster-priority']
-    print(cluster_priority)
-    cluster_clients = ray_get_clients(
-        configured_clusters = cluster_yamls,
-        cluster_parameters = cluster_priority 
+    global_inputs = distribute_step_inputs(
+        storage_client = setup_swift_client,
+        storage = storage,
+        integration = integration,
+        processing = processing
     )
 
-    print(cluster_clients)
-    global_inputs = []
-    if 0 < len(cluster_clients):
-        print('Creating a cluster data distribution')
-        formatted_clusters = division_formatted_clusters(
-            ray_clusters = cluster_clients
-        )
-        print(formatted_clusters)
-        cluster_weights = division_cluster_weights(
-            resource_weights = integration['resource-weights'],
-            formatted_clusters = formatted_clusters,
-            cluster_priorities = cluster_priority 
-        )
-        print(cluster_weights)
-        data_storage = storage['data-storage']
-        for step_key in integration['workflow-steps']:
-            print(step_key)
-            object_prefix = processing[step_key]['general']['data-storage']['object-prefix']
-            dataset_tuple_list = data_list_objects(
-                storage_client = setup_swift_client,
-                storage_parameters = data_storage,
-                object_prefix = object_prefix
-            )
-
-            cluster_division = division_load_balanced_cluster_round_robin(
-                target_list = dataset_tuple_list,
-                cluster_weights = cluster_weights
-            )
-            step_inputs = []
-            for cluster_name, cluster_input in cluster_division.items():
-                step_inputs.append({
-                    'cluster_name': cluster_name,
-                    'cluster_input': cluster_input
-                })
-            global_inputs.append(step_inputs)
-    '''
-
-    end_time = t.time()
-    '''
     time_storage_parameters = storage['time-storage']
     time_object_name = time_storage_parameters['object-name']
     time_name = 'global-distribution-step'
+    end_time = t.time()
     time_stored_1, time_index_1, time_name_1 = time_run_update(
         storage_client = setup_swift_client,
         storage_parameters = time_storage_parameters,
@@ -212,7 +112,6 @@ def global_distribution_step(
         end_time = end_time,
         time_index = -1
     )
-    '''
     total_time = round(end_time-start_time,5)
     print('Spent seconds', total_time)
     return global_inputs
