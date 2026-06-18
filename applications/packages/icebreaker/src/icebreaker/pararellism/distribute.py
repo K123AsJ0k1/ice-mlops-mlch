@@ -23,7 +23,8 @@ def distribute_step_inputs(
     data_storage = storage['data-storage']
     min_initial_inputs = integration['min-initial-inputs']
     min_batch_size = integration['min-batch-size']
-    cluster_inputs = {}
+    
+    cluster_tracks = {}
     if 0 < len(workflow_steps):
         for step_key in workflow_steps:
             print(f'Distributing step {step_key}')
@@ -60,18 +61,18 @@ def distribute_step_inputs(
                 min_initial_inputs = min_initial_inputs,
                 min_batch_size = min_batch_size
             )
-        
+            
             for cluster_name, cluster_input in cluster_division.items():
                 print(f'{cluster_name} given batch input size {str(len(cluster_input))}')
-                if not cluster_name in cluster_inputs:
-                    cluster_inputs[cluster_name] = []
-
-                cluster_inputs[cluster_name].append({
+                if not cluster_name in cluster_tracks:
+                    cluster_tracks[cluster_name] = []
+                print(cluster_input)
+                cluster_tracks[cluster_name].append({
                     'cluster_step': step_key,
                     'cluster_name': cluster_name,
                     'cluster_input': cluster_input
                 })
     track_inputs = []
-    for used_name, step_inputs in cluster_inputs.items():
-        track_inputs.append(step_inputs)
+    for used_name, track_inputs in cluster_tracks.items():
+        track_inputs.append(track_inputs)
     return track_inputs
