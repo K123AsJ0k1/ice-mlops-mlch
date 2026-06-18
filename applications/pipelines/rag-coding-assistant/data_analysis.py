@@ -114,7 +114,7 @@ def multi_submission_step(
     cluster_clients = ray_get_clients(
         configured_clusters = local_cloud_cluster_yamls,
         cluster_parameters = step_cluster_parameters
-    )
+    ) 
     print(cluster_clients)
     if 0 < len(cluster_clients):
         print('Clusters available')
