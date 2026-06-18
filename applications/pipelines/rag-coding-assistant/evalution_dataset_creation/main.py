@@ -27,7 +27,14 @@ def evalution_dataset_creation(
         config_parameters = job_parameters['config']
         model_parameters = job_parameters['model']
         process_parameters = job_parameters['process']
-        
+         
+        # Idea is that each cluster gets roughly equal amount of 
+        # rows form the datasets they are given with each cluster expected
+        # to create a dataset with a target amount N/D = M
+        # M is then divided between K workers that provide M/K = H rows
+        # Rows H are then unified into a cluster specifici dataset that is
+        # then utilized by the pipeline by either compliling it or as is
+
         # This should be divided into batches based on worker number
         print('Dividing work')
         input_data = config_parameters['input']

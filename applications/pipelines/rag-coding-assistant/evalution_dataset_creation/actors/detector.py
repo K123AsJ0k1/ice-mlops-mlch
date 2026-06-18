@@ -50,9 +50,8 @@ class Detector:
             texts = text_input,
             default_value = analysis_parameters['language-default'],
             default_threshold = analysis_parameters['language-threshold'],
-            label_replacer = analysis_parameters['language-replacer'],
-            batch_mode = True
-        )
+            label_replacer = analysis_parameters['language-replacer']
+        ) 
         
         result = {
             'worker': worker_index,
@@ -78,8 +77,7 @@ class Detector:
             texts = text_input,
             default_value = analysis_parameters['format-default'],
             default_threshold = analysis_parameters['format-threshold'],
-            label_replacer = analysis_parameters['format-replacer'],
-            batch_mode = True
+            label_replacer = analysis_parameters['format-replacer']
         )
 
         result = {
