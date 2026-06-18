@@ -79,7 +79,8 @@ def ray_serve_route(
 
 def ray_get_clients(
     configured_clusters: any,
-    cluster_parameters: any
+    cluster_parameters: any,
+    cluster_filter: list
 ) -> any:
     try:
         from .setup import ray_setup_client
@@ -93,26 +94,27 @@ def ray_get_clients(
         for env_cluster, details in env_clusters.items():
             targeted_cluster = env + '-' + env_cluster
             if targeted_cluster in cluster_parameters:
-                kubernetes_dash_address = details['network']['kubernetes']['dash'] 
-                cluster_ray_client = ray_setup_client(
-                    dashboard_address = kubernetes_dash_address,
-                    loop_timeout = 1,
-                    test_timeout = 1,
-                    wait_timeout = 1
-                )
-                if cluster_ray_client is None:
-                    print('Cluster', env, env_cluster, kubernetes_dash_address, 'was not found') 
-                else:
-                    print('Cluster', env, env_cluster, kubernetes_dash_address, 'was found')
-                    if not env in env_clusters:
-                        used_path = env + '-clusters-' + env_cluster
-                        cluster_clients = create_nested_dict(
-                            target_dict = cluster_clients,
-                            key_path = used_path,
-                            separator = '-'
-                        )
-                    cluster_clients[env]['clusters'][env_cluster] = details
-                    cluster_clients[env]['clusters'][env_cluster]['client'] = cluster_ray_client
+                if targeted_cluster in cluster_filter:
+                    kubernetes_dash_address = details['network']['kubernetes']['dash'] 
+                    cluster_ray_client = ray_setup_client(
+                        dashboard_address = kubernetes_dash_address,
+                        loop_timeout = 1,
+                        test_timeout = 1,
+                        wait_timeout = 1
+                    )
+                    if cluster_ray_client is None:
+                        print('Cluster', env, env_cluster, kubernetes_dash_address, 'was not found') 
+                    else:
+                        print('Cluster', env, env_cluster, kubernetes_dash_address, 'was found')
+                        if not env in env_clusters:
+                            used_path = env + '-clusters-' + env_cluster
+                            cluster_clients = create_nested_dict(
+                                target_dict = cluster_clients,
+                                key_path = used_path,
+                                separator = '-'
+                            )
+                        cluster_clients[env]['clusters'][env_cluster] = details
+                        cluster_clients[env]['clusters'][env_cluster]['client'] = cluster_ray_client
     return cluster_clients
 
 def ray_input_parameters(
@@ -138,12 +140,12 @@ def ray_input_parameters(
             break
     return input_parameters
             
-def ray_multi_submit(
+def ray_parallel_submit(
     cluster_clients: any,
     cluster_inputs: any,
     step_parameters: any
 ) -> list:
-    cluster_job_ids = []
+    parallel_job_ids = []
 
     for env, env_details in cluster_clients.items():
         clusters = env_details['clusters']
@@ -167,10 +169,10 @@ def ray_multi_submit(
                     ray_runtime = used_runtime
                 )
                 print(f'Submitted job {cluster_job_id} with starting file {used_job_file} into cluster {targeted_cluster}')
-                cluster_job_ids.append((cluster_client, cluster_job_id))
-    return cluster_job_ids
+                parallel_job_ids.append((cluster_client, cluster_job_id))
+    return parallel_job_ids
 
-def ray_multi_wait(
+def ray_parallel_wait(
     cluster_job_ids: any,
     multi_loop_amount: int,
     multi_loop_wait: int,
