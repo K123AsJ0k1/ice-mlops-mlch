@@ -109,7 +109,7 @@ def global_distribution_step(
     for index, track_payload in enumerate(track_inputs):
         track_id = f"track_{index}"
         track_ids.append(track_id)
-        
+        #print(track_payload)
         file_path = os.path.join(tracks_output_dir.path, f"{track_id}.json")
         with open(file_path, "w") as f:
             json.dump(track_payload, f)
