@@ -66,7 +66,7 @@ def distribute_step_inputs(
                 print(f'{cluster_name} given batch input size {str(len(cluster_input))}')
                 if not cluster_name in cluster_tracks:
                     cluster_tracks[cluster_name] = []
-                print(cluster_input)
+                
                 cluster_tracks[cluster_name].append({
                     'cluster_step': step_key,
                     'cluster_name': cluster_name,
