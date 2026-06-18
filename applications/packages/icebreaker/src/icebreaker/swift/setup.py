@@ -106,7 +106,6 @@ def swift_renew_client(
             secret_parameters = secret_parameters
         )
         
-
         new_swift_client = swift_setup_client(
             swift_parameters = new_swift_parameters
         )
