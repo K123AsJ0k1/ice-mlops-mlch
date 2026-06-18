@@ -82,7 +82,7 @@ def fasttext_get_languages(
     texts: list,
     default_value: str,
     default_threshold: str,
-    label_replacer: any
+    label_replacer: any 
 ):
     detected_languages = []
     language_default_amount = 0

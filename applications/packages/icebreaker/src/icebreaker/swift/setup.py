@@ -104,7 +104,7 @@ def swift_renew_client(
     if client_refresh_interval <= elapsed_time:
         new_swift_parameters = swift_get_parameters(
             secret_parameters = secret_parameters
-        )
+        ) 
         
         new_swift_client = swift_setup_client(
             swift_parameters = new_swift_parameters

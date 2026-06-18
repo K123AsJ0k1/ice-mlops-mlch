@@ -127,14 +127,14 @@ def ray_input_parameters(
     except ImportError as e:
         raise ImportError("Failed to import", e)
     input_parameters = {}
-    for cluster_key, input in cluster_inputs.items():
+    for cluster_key, cluster_input in cluster_inputs.items():
         if cluster_name in cluster_key:
             input_parameters = copy.deepcopy(step_parameters['cluster'][cluster_name])  
             template_parameters = copy.deepcopy(step_parameters['general'])
             
             for param_key in template_parameters.keys():
                 if 'config' in param_key:
-                    template_parameters[param_key]['input'] = cluster_inputs[cluster_key]
+                    template_parameters[param_key]['input'] = cluster_input
             
             input_parameters.update(template_parameters)
             break
