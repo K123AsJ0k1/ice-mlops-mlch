@@ -82,15 +82,14 @@ def division_cluster_weights(
     # Normalize resource weights keys to uppercase for reliable matching
     normalized_resource_weights = {str(k).upper(): v for k, v in resource_weights.items()}
     resource_names = list(normalized_resource_weights.keys())
-
+    # We will assume the format is env-name
     for key, value in formatted_clusters.items():
         if 'clusters' in key:
             key_split = key.split('-')
             cluster_key = key_split[0] + '-' + key_split[2]
-            pure_cluster_name = key_split[2] 
             
             if not cluster_key in clusters:
-                clusters[cluster_key] = {'_pure_name': pure_cluster_name}
+                clusters[cluster_key] = {}
 
             if 'resources' in key:
                 # Read the trailing segment and convert to uppercase to match resource configurations safely
@@ -155,19 +154,18 @@ def division_cluster_weights(
     # 2. Extract and Normalize User Priority Percentages
     priority_weights = []
     for cluster_key in clusters.keys():
-        pure_name = clusters[cluster_key]['_pure_name']
-        weight = cluster_priority_percentages.get(pure_name, 0.0)
+        weight = cluster_priority_percentages.get(cluster_key, 0.0)
         priority_weights.append(weight)
-        
+    #print(priority_weights)
     priority_weights = np.array(priority_weights, dtype=float)
     if priority_weights.sum() > 0:
         priority_weights = priority_weights / priority_weights.sum()
     else:
         priority_weights = np.ones(len(clusters)) / len(clusters)
-
+    #print(priority_weights)
     # 3. Blend Scores
     final_scores = (hardware_influence * hardware_scores) + ((1.0 - hardware_influence) * priority_weights)
-    
+    #print(final_scores)
     total = final_scores.sum()
     if total == 0:
         final_weights = np.ones(len(clusters)) / len(clusters)
