@@ -32,7 +32,8 @@ def distribute_step_inputs(
             
             cluster_clients = ray_get_clients(
                 configured_clusters = cluster_yamls,
-                cluster_parameters = step_cluster_parameters
+                cluster_parameters = step_cluster_parameters,
+                cluster_filter = []
             )
             
             formatted_clusters = division_formatted_clusters(

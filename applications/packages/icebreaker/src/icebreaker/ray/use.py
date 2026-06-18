@@ -93,7 +93,7 @@ def ray_get_clients(
         env_clusters = env_config['clusters']
         for env_cluster, details in env_clusters.items():
             targeted_cluster = env + '-' + env_cluster
-            if targeted_cluster in cluster_parameters:
+            if targeted_cluster in cluster_parameters: 
                 if len(cluster_filter) == 0 or targeted_cluster in cluster_filter:
                     kubernetes_dash_address = details['network']['kubernetes']['dash'] 
                     cluster_ray_client = ray_setup_client(
