@@ -30,11 +30,11 @@ integration:
     cpu: 0.95 
     ram: 0.05
   cluster-priority:
-    cloud-vm1: 0.08
-    cloud-vm2: 0.2
+    cloud-vm1: 0.04
+    cloud-vm2: 0.29
     local-lt1: 0.02
-    local-lt2: 0.10
-    local-lt3: 0.6
+    local-lt2: 0.25
+    local-lt3: 0.40
   hardware-influence: 0.0
   min-initial-inputs: 1
   min-batch-size: 1
