@@ -126,9 +126,10 @@ def single_cluster_step(
     storage: dict,
     integration: dict,
     processing: dict,
-    track_data: list     
+    track_data: str     
 ):
     import time as t
+    import ast
     from icebreaker.swift.setup import swift_setup_client 
     from icebreaker.ray.setup import ray_download_job
     from icebreaker.ray.use import ray_get_clients, ray_store_logs
@@ -137,12 +138,23 @@ def single_cluster_step(
     start_time = t.time()
 
     #cluster_step = track_data['cluster_step']
-    cluster_name = track_data['cluster_name']
-    cluster_inputs = track_data['cluster_inputs']
+    #cluster_name = track_data['cluster_name']
+    #cluster_inputs = track_data['cluster_inputs']
 
+    track_data_list = ast.literal_eval(track_data)
+    
+    for step_data in track_data_list:
+        cluster_step = step_data['cluster_step']
+        cluster_name = step_data['cluster_name']
+        cluster_input = step_data['cluster_input']
+        print(f'{cluster_step} with {cluster_name}')
+        print(cluster_input)
+
+    #print(track_data)
+    
     #print(cluster_step, cluster_name)
-    print(cluster_name)
-    print(cluster_inputs)
+    #print(cluster_name)
+    #print(cluster_inputs)
     # Track metrics
     end_time = t.time()
     '''
@@ -161,22 +173,6 @@ def single_cluster_step(
     '''
     total_time = round(end_time-start_time,5)
     print('Spent seconds', total_time)
-
-@dsl.component(
-    base_image = "python:3.12.3"
-)
-def start_track(
-    group_name: str
-):
-    print(f"Starting track for {group_name}")
-    
-@dsl.component(
-    base_image = "python:3.12.3"
-)
-def end_track(
-    group_name: str
-):
-    print(f"Finishing all work for track: {group_name}")
 
 @dsl.pipeline(
     name = "data-analysis-parallel-pipeline",
