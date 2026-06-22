@@ -31,7 +31,7 @@ def data_collector(
     
     print('Setting up swift client')
     # If you expect the task to last over 8 hours, consider renewal
-    setup_swift_client = swift_setup_client(
+    work_swift_client = swift_setup_client(
         swift_parameters = swift_parameters
     )
     print('Swift client setup') 
@@ -55,7 +55,7 @@ def data_collector(
             list_stats[key_name] = {}
 
         stored_dataset = object_storage_interaction(
-            storage_client = setup_swift_client,
+            storage_client = work_swift_client,
             parameters = {
                 'mode': 'get',
                 'bucket-target': data_storage_parameters['bucket-target'],

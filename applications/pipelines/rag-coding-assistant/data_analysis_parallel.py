@@ -54,7 +54,7 @@ def cluster_setup_step(
 
     time_storage_parameters = storage['time-storage']
     time_object_name = time_storage_parameters['object-name']
-    time_name = 'cluster-setup-step-7' 
+    time_name = 'cluster-setup-step' 
     time_stored_1, time_index_1, time_name_1 = time_run_update(
         storage_client = setup_swift_client,
         storage_parameters = time_storage_parameters,
@@ -108,7 +108,6 @@ def global_distribution_step(
     for index, track_payload in enumerate(track_inputs):
         track_id = f"track_{index}"
         track_ids.append(track_id)
-        #print(track_payload)
         file_path = os.path.join(tracks_output_dir.path, f"{track_id}.json")
         with open(file_path, "w") as f:
             json.dump(track_payload, f)
@@ -149,7 +148,6 @@ def cluster_orhestractor_step(
     track_id: str    
 ):
     import time as t
-    import ast
     import os
     import json
     from icebreaker.swift.setup import swift_setup_client 
@@ -181,13 +179,12 @@ def cluster_orhestractor_step(
         for step_data in track_data_list:
             cluster_step = step_data['cluster_step']
             cluster_name = step_data['cluster_name']
-            #cluster_key_name = cluster_name.split('-')[-1]
+            step_input = step_data['cluster_input']
             cluster_inputs = {
-                cluster_name: step_data['cluster_input']
+                cluster_name: step_input 
             }
-            print(f'Checking track step {cluster_step} in cluster {cluster_name}')
-            print(cluster_inputs)
-            '''
+            print(f'Checking track step {cluster_step} in cluster {cluster_name} with input size {len(step_input)}')
+            
             if cluster_step in processing:
                 step_processing_parameters = processing[cluster_step]
                 print('Step exists')
@@ -214,6 +211,7 @@ def cluster_orhestractor_step(
                         cluster_job_ids = ray_parallel_submit(
                             cluster_clients = cluster_clients,
                             cluster_inputs = cluster_inputs,
+                            step_name = cluster_step,
                             step_parameters = step_processing_parameters
                         )
                         
@@ -234,8 +232,7 @@ def cluster_orhestractor_step(
                             job_logs = job_logs,
                             object_prefix = log_object_prefix
                         )
-            '''
-
+        
     # Track metrics
     end_time = t.time()
     time_storage_parameters = storage['time-storage']
@@ -262,17 +259,16 @@ def data_analysis_parallel_pipeline(
     integration: dict,
     processing: dict
 ):
-    #cluster_setup_task = cluster_setup_step(
-    #    storage = storage,
-    #    integration = integration
-    #)
+    cluster_setup_task = cluster_setup_step(
+        storage = storage,
+        integration = integration
+    )
 
     global_distribution_task = global_distribution_step(
         storage = storage,
         integration = integration,
         processing = processing
-    )
-    #.after(cluster_setup_task)
+    ).after(cluster_setup_task)
     
     with dsl.ParallelFor(global_distribution_task.outputs['track_keys']) as track_id:
         current_task = cluster_orhestractor_step(
