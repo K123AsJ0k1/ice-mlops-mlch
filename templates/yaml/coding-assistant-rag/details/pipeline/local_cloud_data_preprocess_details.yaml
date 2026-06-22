@@ -1,16 +1,9 @@
 storage:
-  mlflow: 
-    tracking-uri: 'http://mlflow.mlflow.svc.cluster.local:5000'
-    s3-endpoint-url: 'http://mlflow-minio-service.mlflow.svc.cluster.local:9000'
-    experiment-name: 'mlch-code-assistant-rag-pipeline'
-    run-name: 'ray-data-analysis-pipeline'
-    run-tags:
-      workflow-type: 'local-cloud'
-      pipeline-step: 'internal-data-analysis'
+  swift: {}
   data-storage: 
     bucket-target: 'experiment'
     bucket-prefix: 'mlch'
-    bucket-user: 'user@example.com'   
+    bucket-user: 'user@example.com' 
   code-storage: 
     bucket-target: 'pipeline'
     bucket-prefix: 'mlch'
@@ -27,15 +20,17 @@ storage:
 integration:
   cluster-name: 'local-cloud-cluster'
   resource-weights:
-    cpu: 0.95 
-    ram: 0.05
+    cpu: 0.30
+    gpu: 0.30
+    vram: 0.10 
+    ram: 0.30
   cluster-priority:
-    cloud-vm1: 0.04
-    cloud-vm2: 0.29
-    local-lt1: 0.02
+    cloud-vm1: 0.20
+    cloud-vm2: 0.10
+    local-lt1: 0.10
     local-lt2: 0.25
-    local-lt3: 0.40
-  hardware-influence: 0.0
+    local-lt3: 0.25
+  hardware-influence: 0.5
   min-initial-inputs: 1
   min-batch-size: 1
   workflow-steps: []
@@ -51,12 +46,17 @@ processing:
         bucket-target: 'experiment'
         bucket-prefix: 'mlch'
         bucket-user: 'user@example.com'   
-        object-prefix: 'opc-sft-stage1-realuser_instruct' # 34
+        object-prefix: '.parquet' 
       time-storage: 
         bucket-target: 'pipeline'
         bucket-prefix: 'mlch'
         bucket-user: 'user@example.com' 
         object-name: 'local-cloud-workflow'
+      result-storage:
+        bucket-target: 'pipeline'
+        bucket-prefix: 'mlch'
+        bucket-user: 'user@example.com' 
+        object-name: 'local-cloud-evalution-dataset'
       model:
         bucket-name: 'mlch-exp-user-example-com'
         object-path: 'MODELS/fasttext/lid.176.bin'
@@ -70,92 +70,55 @@ processing:
           format-column: 'answer'
           format-threshold: 0.20
           format-replacer: {}
+        filter-parameters:
+          allowed-languages: ['en']
+          allowed-formats: ['python', 'bash', 'yaml', 'markdown']
     cluster:
       cloud-vm1:
-        mlflow: 
-          tracking-uri: 'http://mlflow.mlflow.svc.cluster.local:5000'
-          s3-endpoint-url: 'http://mlflow-minio-service.mlflow.svc.cluster.local:9000'
-          experiment-name: 'mlch-code-assistant-rag-pipeline'
-          run-name: 'ray-data-analysis-pipeline-step-9-cloud-vm1'
-          run-tags:
-            workflow-type: 'local-cloud'
-            pipeline-step: 'internal-data-analysis'
         process:
           workers: 6
           actors: 2
         job:
           main-file: 'main.py'
           runtime:
-            working_dir: 'external_data_analysis'
-            pip: 'external_data_analysis/requirements.txt'
+            working_dir: 'evalution_dataset_creation'
+            pip: 'evalution_dataset_creation/requirements.txt'
       cloud-vm2:
-        mlflow: 
-          tracking-uri: 'http://chisel-client:5000'
-          s3-endpoint-url: 'http://chisel-client:9000'
-          experiment-name: 'mlch-code-assistant-rag-pipeline'
-          run-name: 'ray-data-analysis-pipeline-step-9-cloud-vm2'
-          run-tags:
-            workflow-type: 'local-cloud'
-            pipeline-step: 'internal-data-analysis'
         process:
           workers: 10
           actors: 2
         job:
           main-file: 'main.py'
           runtime:
-            working_dir: 'external_data_analysis'
-            pip: 'external_data_analysis/requirements.txt'
+            working_dir: 'evalution_dataset_creation'
+            pip: 'evalution_dataset_creation/requirements.txt'
       local-lt1:
-        mlflow: 
-          tracking-uri: 'http://chisel-client:5000'
-          s3-endpoint-url: 'http://chisel-client:9000'
-          experiment-name: 'mlch-code-assistant-rag-pipeline'
-          run-name: 'ray-data-analysis-pipeline-step-9-local-lt1'
-          run-tags:
-            workflow-type: 'local-cloud'
-            pipeline-step: 'internal-data-analysis'
         process:
           workers: 10
           actors: 2
         job:
           main-file: 'main.py'
           runtime:
-            working_dir: 'external_data_analysis'
-            pip: 'external_data_analysis/requirements.txt'
+            working_dir: 'evalution_dataset_creation'
+            pip: 'evalution_dataset_creation/requirements.txt'
       local-lt2:
-        mlflow: 
-          tracking-uri: 'http://chisel-client:5000'
-          s3-endpoint-url: 'http://chisel-client:9000'
-          experiment-name: 'mlch-code-assistant-rag-pipeline'
-          run-name: 'ray-data-analysis-pipeline-step-9-local-lt2'
-          run-tags:
-            workflow-type: 'local-cloud'
-            pipeline-step: 'internal-data-analysis'
         process:
           workers: 12
           actors: 2
         job:
           main-file: 'main.py'
           runtime:
-            working_dir: 'external_data_analysis'
-            pip: 'external_data_analysis/requirements.txt'
+            working_dir: 'evalution_dataset_creation'
+            pip: 'evalution_dataset_creation/requirements.txt'
       local-lt3:
-        mlflow: 
-          tracking-uri: 'http://chisel-client:5000'
-          s3-endpoint-url: 'http://chisel-client:9000'
-          experiment-name: 'mlch-code-assistant-rag-pipeline'
-          run-name: 'ray-data-analysis-pipeline-step-9-local-lt3'
-          run-tags:
-            workflow-type: 'local-cloud'
-            pipeline-step: 'internal-data-analysis'
         process:
           workers: 28
           actors: 2
         job:
           main-file: 'main.py'
           runtime:
-            working_dir: 'external_data_analysis'
-            pip: 'external_data_analysis/requirements.txt'
+            working_dir: 'evalution_dataset_creation'
+            pip: 'evalution_dataset_creation/requirements.txt'
   step-2:
     general:
       swift: {}
@@ -163,7 +126,7 @@ processing:
         bucket-target: 'experiment'
         bucket-prefix: 'mlch'
         bucket-user: 'user@example.com'   
-        object-prefix: 'opc-sft-stage1-filtered_infinity_instruct' # 52
+        object-prefix: 'ICEbreaker-tutorial'
       time-storage: 
         bucket-target: 'pipeline'
         bucket-prefix: 'mlch'
@@ -172,102 +135,34 @@ processing:
       model:
         bucket-name: 'mlch-exp-user-example-com'
         object-path: 'MODELS/fasttext/lid.176.bin'
-      config:
-        analysis-parameters:
-          language-default: 'en'
-          language-column: 'question'
-          language-threshold: 0.20
-          language-replacer: {}
-          format-default: 'txt'
-          format-column: 'answer'
-          format-threshold: 0.20
-          format-replacer: {}
     cluster:
       cloud-vm1:
-        mlflow: 
-          tracking-uri: 'http://mlflow.mlflow.svc.cluster.local:5000'
-          s3-endpoint-url: 'http://mlflow-minio-service.mlflow.svc.cluster.local:9000'
-          experiment-name: 'mlch-code-assistant-rag-pipeline'
-          run-name: 'ray-data-analysis-pipeline-step-10-cloud-vm1'
-          run-tags:
-            workflow-type: 'local-cloud'
-            pipeline-step: 'internal-data-analysis'
         process:
           workers: 6
           actors: 2
         job:
           main-file: 'main.py'
           runtime:
-            working_dir: 'external_data_analysis'
-            pip: 'external_data_analysis/requirements.txt'
-      cloud-vm2:
-        mlflow: 
-          tracking-uri: 'http://chisel-client:5000'
-          s3-endpoint-url: 'http://chisel-client:9000'
-          experiment-name: 'mlch-code-assistant-rag-pipeline'
-          run-name: 'ray-data-analysis-pipeline-step-10-cloud-vm2'
-          run-tags:
-            workflow-type: 'local-cloud'
-            pipeline-step: 'internal-data-analysis'
-        process:
-          workers: 10
-          actors: 2
-        job:
-          main-file: 'main.py'
-          runtime:
-            working_dir: 'external_data_analysis'
-            pip: 'external_data_analysis/requirements.txt'
-      local-lt1:
-        mlflow: 
-          tracking-uri: 'http://chisel-client:5000'
-          s3-endpoint-url: 'http://chisel-client:9000'
-          experiment-name: 'mlch-code-assistant-rag-pipeline'
-          run-name: 'ray-data-analysis-pipeline-step-10-local-lt1'
-          run-tags:
-            workflow-type: 'local-cloud'
-            pipeline-step: 'internal-data-analysis'
-        process:
-          workers: 10
-          actors: 2
-        job:
-          main-file: 'main.py'
-          runtime:
-            working_dir: 'external_data_analysis'
-            pip: 'external_data_analysis/requirements.txt'
+            working_dir: 'rag_database_setup'
+            pip: 'rag_database_setup/requirements.txt'
       local-lt2:
-        mlflow: 
-          tracking-uri: 'http://chisel-client:5000'
-          s3-endpoint-url: 'http://chisel-client:9000'
-          experiment-name: 'mlch-code-assistant-rag-pipeline'
-          run-name: 'ray-data-analysis-pipeline-step-10-local-lt2'
-          run-tags:
-            workflow-type: 'local-cloud'
-            pipeline-step: 'internal-data-analysis'
         process:
           workers: 12
-          actors: 2
+          actors: 1
         job:
           main-file: 'main.py'
           runtime:
-            working_dir: 'external_data_analysis'
-            pip: 'external_data_analysis/requirements.txt'
+            working_dir: 'rag_database_setup'
+            pip: 'rag_database_setup/requirements.txt'
       local-lt3:
-        mlflow: 
-          tracking-uri: 'http://chisel-client:5000'
-          s3-endpoint-url: 'http://chisel-client:9000'
-          experiment-name: 'mlch-code-assistant-rag-pipeline'
-          run-name: 'ray-data-analysis-pipeline-step-10-local-lt3'
-          run-tags:
-            workflow-type: 'local-cloud'
-            pipeline-step: 'internal-data-analysis'
         process:
           workers: 28
-          actors: 2
+          actors: 1
         job:
           main-file: 'main.py'
           runtime:
-            working_dir: 'external_data_analysis'
-            pip: 'external_data_analysis/requirements.txt'
+            working_dir: 'rag_database_setup'
+            pip: 'rag_database_setup/requirements.txt'
   step-3:
     general:
       swift: {}
@@ -275,7 +170,7 @@ processing:
         bucket-target: 'experiment'
         bucket-prefix: 'mlch'
         bucket-user: 'user@example.com'   
-        object-prefix: 'opc-sft-stage1-largescale_diverse_instruct' # 126
+        object-prefix: 'ICEbreaker-tutorial'
       time-storage: 
         bucket-target: 'pipeline'
         bucket-prefix: 'mlch'
@@ -284,99 +179,31 @@ processing:
       model:
         bucket-name: 'mlch-exp-user-example-com'
         object-path: 'MODELS/fasttext/lid.176.bin'
-      config:
-        analysis-parameters:
-          language-default: 'en'
-          language-column: 'question'
-          language-threshold: 0.20
-          language-replacer: {}
-          format-default: 'txt'
-          format-column: 'answer'
-          format-threshold: 0.20
-          format-replacer: {}
     cluster:
       cloud-vm1:
-        mlflow: 
-          tracking-uri: 'http://mlflow.mlflow.svc.cluster.local:5000'
-          s3-endpoint-url: 'http://mlflow-minio-service.mlflow.svc.cluster.local:9000'
-          experiment-name: 'mlch-code-assistant-rag-pipeline'
-          run-name: 'ray-data-analysis-pipeline-step-11-cloud-vm1'
-          run-tags:
-            workflow-type: 'local-cloud'
-            pipeline-step: 'internal-data-analysis'
         process:
           workers: 6
           actors: 2
         job:
           main-file: 'main.py'
           runtime:
-            working_dir: 'external_data_analysis'
-            pip: 'external_data_analysis/requirements.txt'
-      cloud-vm2:
-        mlflow: 
-          tracking-uri: 'http://chisel-client:5000'
-          s3-endpoint-url: 'http://chisel-client:9000'
-          experiment-name: 'mlch-code-assistant-rag-pipeline'
-          run-name: 'ray-data-analysis-pipeline-step-11-cloud-vm2'
-          run-tags:
-            workflow-type: 'local-cloud'
-            pipeline-step: 'internal-data-analysis'
-        process:
-          workers: 10
-          actors: 2
-        job:
-          main-file: 'main.py'
-          runtime:
-            working_dir: 'external_data_analysis'
-            pip: 'external_data_analysis/requirements.txt'
-      local-lt1:
-        mlflow: 
-          tracking-uri: 'http://chisel-client:5000'
-          s3-endpoint-url: 'http://chisel-client:9000'
-          experiment-name: 'mlch-code-assistant-rag-pipeline'
-          run-name: 'ray-data-analysis-pipeline-step-11-local-lt1'
-          run-tags:
-            workflow-type: 'local-cloud'
-            pipeline-step: 'internal-data-analysis'
-        process:
-          workers: 10
-          actors: 2
-        job:
-          main-file: 'main.py'
-          runtime:
-            working_dir: 'external_data_analysis'
-            pip: 'external_data_analysis/requirements.txt'
+            working_dir: 'validation_dataset_creation'
+            pip: 'validation_dataset_creation/requirements.txt'
       local-lt2:
-        mlflow: 
-          tracking-uri: 'http://chisel-client:5000'
-          s3-endpoint-url: 'http://chisel-client:9000'
-          experiment-name: 'mlch-code-assistant-rag-pipeline'
-          run-name: 'ray-data-analysis-pipeline-step-11-local-lt2'
-          run-tags:
-            workflow-type: 'local-cloud'
-            pipeline-step: 'internal-data-analysis'
         process:
           workers: 12
           actors: 2
         job:
           main-file: 'main.py'
           runtime:
-            working_dir: 'external_data_analysis'
-            pip: 'external_data_analysis/requirements.txt'
+            working_dir: 'validation_dataset_creation'
+            pip: 'validation_dataset_creation/requirements.txt'
       local-lt3:
-        mlflow: 
-          tracking-uri: 'http://chisel-client:5000'
-          s3-endpoint-url: 'http://chisel-client:9000'
-          experiment-name: 'mlch-code-assistant-rag-pipeline'
-          run-name: 'ray-data-analysis-pipeline-step-11-local-lt3'
-          run-tags:
-            workflow-type: 'local-cloud'
-            pipeline-step: 'internal-data-analysis'
         process:
           workers: 28
           actors: 2
         job:
           main-file: 'main.py'
           runtime:
-            working_dir: 'external_data_analysis'
-            pip: 'external_data_analysis/requirements.txt'
+            working_dir: 'validation_dataset_creation'
+            pip: 'validation_dataset_creation/requirements.txt'
