@@ -118,8 +118,9 @@ def ray_get_clients(
     return cluster_clients
 
 def ray_input_parameters(
-    cluster_name: any,
+    cluster_name: str,
     cluster_inputs: any,
+    step_name: str,
     step_parameters: any
 ) -> any:
     try:
@@ -137,12 +138,15 @@ def ray_input_parameters(
                     template_parameters[param_key]['input'] = cluster_input
             
             input_parameters.update(template_parameters)
+            input_parameters['cluster'] = cluster_name
+            input_parameters['step'] = step_name
             break
     return input_parameters
             
 def ray_parallel_submit(
     cluster_clients: any,
     cluster_inputs: any,
+    step_name: str,
     step_parameters: any
 ) -> list:
     parallel_job_ids = []
@@ -155,6 +159,7 @@ def ray_parallel_submit(
             used_parameters = ray_input_parameters(
                 cluster_name = targeted_cluster,
                 cluster_inputs = cluster_inputs,
+                step_name = step_name,
                 step_parameters = step_parameters
             )
 
