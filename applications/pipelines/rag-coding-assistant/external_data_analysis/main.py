@@ -140,7 +140,6 @@ if __name__ == "__main__":
         'fasttext',
         'magika',
         'numpy',
-        'mlflow'
     ]
     # Some cases require fasttext wheel
     for pkg_name in check_packages:

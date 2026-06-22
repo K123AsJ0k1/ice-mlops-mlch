@@ -182,8 +182,8 @@ def cluster_orhestractor_step(
             cluster_inputs = {
                 cluster_name: step_input 
             }
-            print(f'Checking track step {cluster_step} in cluster {cluster_name} with input size {len(step_input)}')
             
+            print(f'Checking track step {cluster_step} in cluster {cluster_name} with input size {len(step_input)}')
             if cluster_step in processing:
                 step_processing_parameters = processing[cluster_step]
                 print('Step exists')
@@ -237,6 +237,8 @@ def cluster_orhestractor_step(
     time_storage_parameters = storage['time-storage']
     time_object_name = time_storage_parameters['object-name']
     time_name = 'cluster-orhestractor-step-' + cluster_name 
+    # This has race condition 
+    # You can use redis caching 
     time_stored_1, time_index_1, time_name_1 = time_run_update(
         storage_client = work_swift_client,
         storage_parameters = time_storage_parameters,
@@ -250,25 +252,26 @@ def cluster_orhestractor_step(
     print('Spent seconds', total_time)
 
 @dsl.pipeline(
-    name = "data-analysis-parallel-pipeline",
-    description = "Internal and external data analysis"
+    name = "data-preprocess-parallel-pipeline",
+    description = "Evalution dataset creation, RAG setup and validation dataset creation"
 )
-def data_analysis_parallel_pipeline(
+def data_preprocess_parallel_pipeline(
     storage: dict,
     integration: dict,
     processing: dict
 ):
     # Works
-    cluster_setup_task = cluster_setup_step(
-        storage = storage,
-        integration = integration
-    )
-    # Works 
+    #cluster_setup_task = cluster_setup_step(
+    #    storage = storage,
+    #    integration = integration
+    #)
+    # Works  
     global_distribution_task = global_distribution_step(
         storage = storage,
         integration = integration,
         processing = processing
-    ).after(cluster_setup_task)
+    )
+    #.after(cluster_setup_task)
     # Works
     with dsl.ParallelFor(global_distribution_task.outputs['track_keys']) as track_id:
         current_task = cluster_orhestractor_step(

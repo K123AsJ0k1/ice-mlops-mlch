@@ -2,35 +2,47 @@ import sys
 import ray
 import json
 import time as t
-import pandas as pd
 
 from importlib.metadata import version
 
 from actors.detector import Detector
 from tasks.processor import data_processor
+#from tasks.collector import data_collector
 from collections import defaultdict
 
 from icebreaker.swift.setup import swift_setup_client
+#from icebreaker.mlflow.setup import mlflow_setup_client
+#from icebreaker.mlflow.use import mlflow_get_or_create_experiment, mlflow_start_run, mlflow_log_metrics, mlflow_change_run_status
 from icebreaker.pararellism.division import division_split_input
+#from icebreaker.misc.dict import flatten_nested_dict
 from icebreaker.misc.time import time_run_update
-
+import pandas as pd
 from icebreaker.objects.use import objects_store_data
+from icebreaker.storage.management import object_storage_interaction
 from icebreaker.data.use import data_list_objects
 
-def evalution_dataset_creation(
+def rag_database_setup(
     job_parameters: any
 ):
     try:  
         print('Parameters')
         swift_parameters = job_parameters['swift']
+        #mlflow_parameters = job_parameters['mlflow']
         data_storage_parameters = job_parameters['data-storage']
         result_storage_parameters = job_parameters['result-storage']
         config_parameters = job_parameters['config']
         model_parameters = job_parameters['model']
         process_parameters = job_parameters['process']
-        dataset_parameters = config_parameters['dataset-parameters']
-        target_rows = dataset_parameters['target-rows']
+        target_rows = process_parameters['target-rows']
          
+        # Idea is that each cluster gets roughly equal amount of 
+        # rows form the datasets they are given with each cluster expected
+        # to create a dataset with a target amount N/D = M
+        # M is then divided between K workers that provide M/K = H rows
+        # Rows H are then unified into a cluster specifici dataset that is
+        # then utilized by the pipeline by either compliling it or as is
+
+        # This should be divided into batches based on worker number
         print('Dividing work')
         input_data = config_parameters['input']
         input_amount = len(input_data)
@@ -49,7 +61,7 @@ def evalution_dataset_creation(
 
         print(f'Suggested amount of workers {worker_number}')
         suitable_worker_number = min(process_parameters['workers'], input_amount)
-        
+        # Here the processing considers going through the given object paths to get N row dataset
         print(f'Selected amount of workers {suitable_worker_number}')
         worker_batches = division_split_input(
             job_input = input_data, 
@@ -176,17 +188,16 @@ if __name__ == "__main__":
     check_packages = [
         'ray',
         'python-swiftclient',
+        'mlflow',
         'pandas',
         'pyarrow',
         'fasttext',
         'magika',
-        'numpy'
+        'numpy',
+        'mlflow'
     ]
     for pkg_name in check_packages:
-        try:
-            print(f'{pkg_name} version is {version(pkg_name)}')
-        except Exception as e:
-            print(f'package not found error {e}')
+        print(pkg_name,' version is ',version(pkg_name))
     
     print('Getting input')
     job_parameters = json.loads(sys.argv[1])
