@@ -164,7 +164,7 @@ if __name__ == "__main__":
 
     swift_parameters = job_parameters['swift']
 
-    setup_swift_client = swift_setup_client(
+    work_swift_client = swift_setup_client(
         swift_parameters = swift_parameters
     )
 
@@ -175,7 +175,7 @@ if __name__ == "__main__":
     time_name = f'ray-external-data-analysis-{cluster_name}-{step_name}'
     
     time_stored_1, time_index_1, time_name_1 = time_run_update(
-        storage_client = setup_swift_client,
+        storage_client = work_swift_client,
         storage_parameters = time_storage_parameters,
         object_name = time_object_name,
         time_name = time_name,

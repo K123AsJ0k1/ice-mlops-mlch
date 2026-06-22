@@ -44,8 +44,8 @@ class Detector:
         text_input: list,
         analysis_parameters: any
     ) -> any:
-        from icebreaker.fast_text.use import fasttext_get_language
-        detected_languages = fasttext_get_language(
+        from icebreaker.fast_text.use import fasttext_get_languages
+        detected_languages = fasttext_get_languages(
             model = self.ft_model,
             texts = text_input,
             default_value = analysis_parameters['language-default'],
@@ -58,7 +58,7 @@ class Detector:
             'actor': actor_index,
             'batch': batch_index,
             'key': used_key,
-            'detected': detected_languages
+            'languages': detected_languages
         }
         return result
     
@@ -85,6 +85,6 @@ class Detector:
             'actor': actor_index,
             'batch': batch_index,
             'key': used_key,
-            'detected': detected_formats
+            'formats': detected_formats
         }
         return result   
