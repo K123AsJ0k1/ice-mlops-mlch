@@ -1,5 +1,4 @@
 storage:
-  swift: {}
   data-storage: 
     bucket-target: 'experiment'
     bucket-prefix: 'mlch'
@@ -26,11 +25,11 @@ integration:
     ram: 0.30
   cluster-priority:
     cloud-vm1: 0.20
-    cloud-vm2: 0.10
-    local-lt1: 0.10
-    local-lt2: 0.25
-    local-lt3: 0.25
-  hardware-influence: 0.5
+    cloud-vm2: 0.05
+    local-lt1: 0.05
+    local-lt2: 0.30
+    local-lt3: 0.40
+  hardware-influence: 0.2
   min-initial-inputs: 1
   min-batch-size: 1
   workflow-steps: []
@@ -61,6 +60,8 @@ processing:
         bucket-name: 'mlch-exp-user-example-com'
         object-path: 'MODELS/fasttext/lid.176.bin'
       config:
+        dataset-parameters:
+          target-rows: 8000
         analysis-parameters:
           language-default: 'en'
           language-column: 'question'
@@ -71,8 +72,8 @@ processing:
           format-threshold: 0.20
           format-replacer: {}
         filter-parameters:
-          allowed-languages: ['en']
-          allowed-formats: ['python', 'bash', 'yaml', 'markdown']
+          allowed-languages: []
+          allowed-formats: []
     cluster:
       cloud-vm1:
         process:
