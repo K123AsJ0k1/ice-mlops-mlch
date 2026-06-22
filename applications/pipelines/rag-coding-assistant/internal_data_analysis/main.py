@@ -169,12 +169,15 @@ if __name__ == "__main__":
 
     time_storage_parameters = job_parameters['time-storage']
     time_object_name = time_storage_parameters['object-name']
+    cluster_name = job_parameters['cluster']
+    step_name = job_parameters['step']
+    time_name = f'ray-internal-data-analysis-{cluster_name}-{step_name}' 
 
     time_stored_1, time_index_1, time_name_1 = time_run_update(
         storage_client = setup_swift_client,
         storage_parameters = time_storage_parameters,
         object_name = time_object_name,
-        time_name = 'ray-internal-data-analysis',
+        time_name = time_name,
         start_time = start_time,
         end_time = end_time,
         time_index = -1

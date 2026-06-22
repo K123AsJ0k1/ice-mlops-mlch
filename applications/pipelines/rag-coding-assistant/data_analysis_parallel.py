@@ -5,7 +5,7 @@ from kfp.dsl import Output, Input, Dataset
 @dsl.component(
     base_image = "python:3.12.3",
     packages_to_install = [
-        "icebreaker[swift, data, ray, pararellism] @ git+https://github.com/K123AsJ0k1/ice-mlops-mlch.git@main#subdirectory=applications/packages/icebreaker"
+        "icebreaker[swift, data] @ git+https://github.com/K123AsJ0k1/ice-mlops-mlch.git@main#subdirectory=applications/packages/icebreaker"
     ]
 )
 def cluster_setup_step(
@@ -19,7 +19,6 @@ def cluster_setup_step(
     from icebreaker.objects.use import objects_store_data 
     from icebreaker.misc.time import time_run_update
 
-    print('Storage parameters')
     swift_parameters = storage['swift']
     print('Setting up swift client')
     setup_swift_client = swift_setup_client(
@@ -139,7 +138,7 @@ def global_distribution_step(
 @dsl.component(
     base_image = "python:3.12.3",
     packages_to_install = [
-        "icebreaker[swift, data, ray, pararellism] @ git+https://github.com/K123AsJ0k1/ice-mlops-mlch.git@main#subdirectory=applications/packages/icebreaker"
+        "icebreaker[swift, data, ray] @ git+https://github.com/K123AsJ0k1/ice-mlops-mlch.git@main#subdirectory=applications/packages/icebreaker"
     ]
 )
 def cluster_orhestractor_step(
@@ -263,11 +262,17 @@ def data_analysis_parallel_pipeline(
     integration: dict,
     processing: dict
 ):
+    #cluster_setup_task = cluster_setup_step(
+    #    storage = storage,
+    #    integration = integration
+    #)
+
     global_distribution_task = global_distribution_step(
         storage = storage,
         integration = integration,
         processing = processing
     )
+    #.after(cluster_setup_task)
     
     with dsl.ParallelFor(global_distribution_task.outputs['track_keys']) as track_id:
         current_task = cluster_orhestractor_step(
