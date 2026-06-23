@@ -128,3 +128,42 @@ def qdrant_remove_points(
     except Exception as e:
         print(f"Error removing document: {e}")
         return None
+    
+def qdrant_create_configuration(
+    embedding_size: int
+) -> any:
+    try:
+        from qdrant_client.models import VectorParams, Distance
+    except ImportError as e:
+        raise ImportError("qdrant/use failed to import", e)
+
+    try:
+        collection_configuration = VectorParams(
+            size = embedding_size, 
+            distance = Distance.COSINE
+        )
+        return collection_configuration
+    except Exception as e:
+        print(f"Error creating configuration: {e}")
+        return None
+
+def qdrant_create_point(
+    embedding_uuid: str,
+    embedding_vector: any,
+    embedding_payload: any
+) -> any:
+    try:
+        from qdrant_client.models import PointStruct
+    except ImportError as e:
+        raise ImportError("qdrant/use failed to import", e)
+
+    try:
+        point = PointStruct(
+            id = embedding_uuid, 
+            vector = embedding_vector,
+            payload = embedding_payload
+        )
+        return point
+    except Exception as e:
+        print(f"Error creating point: {e}")
+        return None
