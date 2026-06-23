@@ -1,19 +1,4 @@
 
-#import ray
-
-#import re
-#import hashlib
-
-#from qdrant_client.models import VectorParams, Distance, PointStruct
-
-#from langchain_text_splitters import Language
-
-#from functions.utility import generate_uuid, batch_list
-#from functions.documents import get_sorted_documents
-#from functions.mongo_db import mongo_setup_client
-#from functions.langchain import langchain_create_code_chunks, langchain_create_text_chunks
-#from functions.qdrant_vb import qdrant_setup_client, qdrant_list_collections, qdrant_create_collection, qdrant_upsert_points
-
 def embeddings_check_collection(
     vector_client: any,
     vector_collection: str,

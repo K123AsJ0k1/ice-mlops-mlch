@@ -6,7 +6,7 @@ def magika_get_stats(
     default_threshold: str,
     label_replacer: any,
     batch_mode: bool
-):
+): 
     try:
         import statistics
     except ImportError as e:
@@ -83,7 +83,7 @@ def magika_get_formats(
     default_value: str,
     default_threshold: str,
     label_replacer: any
-): 
+):  
     detected_formats = []
     format_default_amount = 0
     for content in texts:

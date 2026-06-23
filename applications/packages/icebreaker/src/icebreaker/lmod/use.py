@@ -1,3 +1,4 @@
+
 def lmod_module_command(
     modules: any
 ) -> str:

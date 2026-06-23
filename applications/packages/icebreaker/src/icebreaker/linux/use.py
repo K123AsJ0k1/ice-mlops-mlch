@@ -1,3 +1,4 @@
+
 def linux_open_directory(
     path: str
 ) -> str:
