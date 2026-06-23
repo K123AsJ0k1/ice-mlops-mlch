@@ -215,3 +215,25 @@ def mongo_remove_document(
         return result
     except Exception as e:
         return None
+    
+def mongo_get_sorted_documents(
+    document_client: any,
+    database: str,
+    collection: str
+) -> any:
+    try:
+        from pymongo import ASCENDING
+    except ImportError as e:
+        raise ImportError("mongo/use failed to import", e)
+    # Edit later
+    collection_documents = mongo_list_documents(
+        mongo_client = document_client,
+        database_name = database,
+        collection_name = collection,
+        filter_query = {},
+        sorting_query = [
+            ('index', ASCENDING),
+            ('sub-index', ASCENDING)
+        ]
+    )
+    return collection_documents
