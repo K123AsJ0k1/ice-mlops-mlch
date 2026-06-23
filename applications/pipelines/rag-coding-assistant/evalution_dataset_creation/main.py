@@ -62,6 +62,7 @@ def evalution_dataset_creation(
         for batch in worker_batches:
             profile = {}
             for item in batch:
+                path = item[0]
                 profile[path] = dataset_targets[path]
             worker_dataset_targets.append(profile)
 
@@ -119,7 +120,8 @@ def evalution_dataset_creation(
                 'question',
                 'answer',
                 'language',
-                'format'
+                'format',
+                'dataset'
             ]
         )
         print(f"Total collected rows: {len(final_dataset_df)}")
@@ -132,18 +134,16 @@ def evalution_dataset_creation(
             swift_parameters = swift_parameters
         )
     
-        dataset_prefix = result_storage_parameters['object-name']
+        dataset_object_name = f'{result_storage_parameters['object-name']}-{job_parameters['step']}-{job_parameters['cluster']}'
         object_list = data_list_objects(
             storage_client = work_swift_client,
             storage_parameters = result_storage_parameters,
-            object_prefix = dataset_prefix 
+            object_prefix = dataset_object_name 
         )
 
         next_index = len(object_list) + 1
-        cluster_name = job_parameters['cluster']
-        step_name = job_parameters['step']
-        dataset_object_name = f'{dataset_prefix}-{next_index}-{cluster_name}-{step_name}' 
-        
+        dataset_object_name = f'{dataset_object_name}-{next_index}'
+       
         stored_status = objects_store_data(
             swift_client = work_swift_client,
             storage_parameters = {

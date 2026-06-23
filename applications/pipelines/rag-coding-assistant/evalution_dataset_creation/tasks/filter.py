@@ -39,7 +39,7 @@ def data_filter(
     suitable_dataframe_rows = []
     for batch_data in task_batch:
         object_path = batch_data[0]
-
+        dataset_name = object_path.split('/')[-1].split('.')[0]
         wanted_rows = worker_targets.get(object_path, 0)
         if wanted_rows <= 0:
             continue
@@ -66,8 +66,9 @@ def data_filter(
         )  
         pandas_df = pyarrow_deserialize_dataframe(serialized_dataframe = stored_dataset[0])
         
-        chunk_size = min(1000, wanted_rows * 2)
         total_rows = len(pandas_df)
+        calclated_chunk = int(total_rows * 0.05)
+        chunk_size = max(1, calclated_chunk)
         path_collected_rows = []
         for i in range(0, total_rows, chunk_size):
             if wanted_rows <= len(path_collected_rows):
@@ -124,11 +125,11 @@ def data_filter(
                             row[0],
                             row[1],
                             row_language,
-                            row_format
+                            row_format,
+                            dataset_name
                         ]
                         path_collected_rows.append(wanted_row)
             
-        print(f"Collected {len(path_collected_rows)} paths from {object_path}")
         suitable_dataframe_rows.extend(path_collected_rows)
     
     end_time = t.time()
