@@ -39,7 +39,7 @@ def data_filter(
 
     suitable_dataframe_rows = []
     checked_rows = 0
-    max_checked_rows = total_rows * 2
+    max_checked_rows = target_rows * 2
     for batch_data in task_batch:
         if max_checked_rows <= checked_rows:
             break
@@ -122,13 +122,22 @@ def data_filter(
             for idx, row in enumerate(df_chunk.values.tolist()):
                 if wanted_rows <= len(path_collected_rows):
                     break
+
+                row_language = languages[idx]
+                row_format = formats[idx]
                 
-                if languages[idx] in allowed_languages:
-                    if formats[idx] in allowed_formats:
-                        path_collected_rows.append(row)
+                if row_language in allowed_languages:
+                    if row_format in allowed_formats:
+                        wanted_row = [
+                            row[0],
+                            row[1],
+                            row_language,
+                            row_format
+                        ]
+                        path_collected_rows.append(wanted_row)
             
-            checked_rows += len(df_chunk)
-         
+            checked_rows += len(lang_chunk)
+        print(path_collected_rows)
         suitable_dataframe_rows.extend(path_collected_rows)
     
     end_time = t.time()
