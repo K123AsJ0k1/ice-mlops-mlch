@@ -113,15 +113,16 @@ def evalution_dataset_creation(
             done_task_1_refs, task_1_refs = ray.wait(task_1_refs)
             for output_ref in done_task_1_refs:
                 all_unified_rows.extend(ray.get(output_ref))
-        print(all_unified_rows)
+    
         final_dataset_df = pd.DataFrame(
             all_unified_rows, 
             columns = [
-            'question',
-            'answer',
-            'language',
-            'format'
-        ])
+                'question',
+                'answer',
+                'language',
+                'format'
+            ]
+        )
         print(f"Total collected rows: {len(final_dataset_df)}")
 
         if target_rows < len(final_dataset_df):

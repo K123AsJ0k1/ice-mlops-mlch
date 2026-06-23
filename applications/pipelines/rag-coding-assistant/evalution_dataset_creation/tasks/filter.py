@@ -38,16 +38,11 @@ def data_filter(
     allowed_formats = filter_parameters['allowed-formats']
 
     suitable_dataframe_rows = []
-    checked_rows = 0
-    max_checked_rows = target_rows * 2
     for batch_data in task_batch:
-        if max_checked_rows <= checked_rows:
-            break
-
         object_path = batch_data[0]
 
         wanted_rows = worker_targets.get(object_path, 0)
-        if wanted_rows  <= 0:
+        if wanted_rows <= 0:
             continue
         
         stored_dataset = object_storage_interaction(
@@ -72,16 +67,13 @@ def data_filter(
         )  
         pandas_df = pyarrow_deserialize_dataframe(serialized_dataframe = stored_dataset[0])
         
-        chunk_size = wanted_rows * 2
+        chunk_size = min(1000, wanted_rows * 2)
         total_rows = len(pandas_df)
         path_collected_rows = []
         for i in range(0, total_rows, chunk_size):
             if wanted_rows <= len(path_collected_rows):
                 break
             
-            if max_checked_rows <= checked_rows:
-                break
-
             df_chunk = pandas_df.iloc[i : i + chunk_size]
             lang_chunk = df_chunk[language_column].tolist()
             format_chunk = df_chunk[format_column].tolist()
@@ -107,25 +99,26 @@ def data_filter(
             )
             
             provider_actor_refs = [lang_future, format_future]
-            results = {}
+            chunk_languages = []
+            chunk_formats = []
             while len(provider_actor_refs):
                 done_actor_refs, provider_actor_refs = ray.wait(provider_actor_refs)
                 for output_ref in done_actor_refs: 
                     res = ray.get(output_ref)
                     if 'languages' in res:
-                        results['languages'] = res['languages']
+                        chunk_languages = res['languages']
                     if 'formats' in res:
-                        results['formats'] = res['formats']
+                        chunk_formats = res['formats']
             
-            languages = results.get('languages', [])
-            formats = results.get('formats', [])
-            for idx, row in enumerate(df_chunk.values.tolist()):
+            for idx, row in enumerate(df_chunk.itertuples(index=False)):
                 if wanted_rows <= len(path_collected_rows):
                     break
 
-                row_language = languages[idx]
-                row_format = formats[idx]
-                
+                row_language_tuple = chunk_languages[idx]
+                row_language = str(row_language_tuple[0])
+                row_format_tuple = chunk_formats[idx]
+                row_format = str(row_format_tuple[0])
+                # This is tuple ('en', 0.8225014209747314) and (markdown, 0.721967339515686)
                 if row_language in allowed_languages:
                     if row_format in allowed_formats:
                         wanted_row = [
@@ -137,7 +130,7 @@ def data_filter(
                         path_collected_rows.append(wanted_row)
             
             checked_rows += len(lang_chunk)
-        print(path_collected_rows)
+        print(f"Collected {len(path_collected_rows)} paths from {object_path}")
         suitable_dataframe_rows.extend(path_collected_rows)
     
     end_time = t.time()

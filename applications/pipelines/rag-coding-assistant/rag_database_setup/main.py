@@ -5,21 +5,14 @@ import time as t
 
 from importlib.metadata import version
 
-from actors.detector import Detector
-from tasks.processor import data_processor
-#from tasks.collector import data_collector
+from actors.generator import Generator
+from tasks.setup import database_setup
 from collections import defaultdict
 
 from icebreaker.swift.setup import swift_setup_client
-#from icebreaker.mlflow.setup import mlflow_setup_client
-#from icebreaker.mlflow.use import mlflow_get_or_create_experiment, mlflow_start_run, mlflow_log_metrics, mlflow_change_run_status
 from icebreaker.pararellism.division import division_split_input
-#from icebreaker.misc.dict import flatten_nested_dict
 from icebreaker.misc.time import time_run_update
-import pandas as pd
-from icebreaker.objects.use import objects_store_data
-from icebreaker.storage.management import object_storage_interaction
-from icebreaker.data.use import data_list_objects
+
 
 def rag_database_setup(
     job_parameters: any
@@ -33,8 +26,7 @@ def rag_database_setup(
         config_parameters = job_parameters['config']
         model_parameters = job_parameters['model']
         process_parameters = job_parameters['process']
-        target_rows = process_parameters['target-rows']
-         
+    
         # Idea is that each cluster gets roughly equal amount of 
         # rows form the datasets they are given with each cluster expected
         # to create a dataset with a target amount N/D = M
@@ -47,18 +39,7 @@ def rag_database_setup(
         input_data = config_parameters['input']
         input_amount = len(input_data)
         worker_number = process_parameters['workers']
-        print(f"Total target N rows: {target_rows}")
-        print(f'Amount of inputs {input_amount}')
-
-        target_per_dataset = max(1, target_rows // input_amount)
-        remainder = target_rows - (target_per_dataset * input_amount)
         
-        dataset_targets = {}
-        for idx, item in enumerate(input_data):
-            path = item[0]
-            extra = 1 if idx < remainder else 0
-            dataset_targets[path] = target_per_dataset + extra
-
         print(f'Suggested amount of workers {worker_number}')
         suitable_worker_number = min(process_parameters['workers'], input_amount)
         # Here the processing considers going through the given object paths to get N row dataset
@@ -67,19 +48,6 @@ def rag_database_setup(
             job_input = input_data, 
             num_workers = suitable_worker_number
         )
-
-        path_worker_counts = defaultdict(int)
-        for batch in worker_batches:
-            for item in batch:
-                path_worker_counts[item[0]] += 1
-                
-        worker_target_profiles = []
-        for batch in worker_batches:
-            profile = {}
-            for item in batch:
-                path = item[0]
-                profile[path] = max(1, dataset_targets[path] // path_worker_counts[path])
-            worker_target_profiles.append(profile)
 
         print(f'Batches created for {len(worker_batches)} workers')
         print(worker_batches)
@@ -96,7 +64,7 @@ def rag_database_setup(
         print(f'Selected amount of actors {suitable_actor_number}')
         actor_refs = []
         for i in range(0, suitable_actor_number):
-            actor_refs.append(Detector.remote(
+            actor_refs.append(Generator.remote(
                 swift_parameters = swift_parameters,
                 model_parameters = model_parameters
             ))
@@ -107,17 +75,15 @@ def rag_database_setup(
         actor_index = 0
         for worker_batch_ref in worker_batch_refs:
             actor_ref = actor_refs[actor_index]
-            target_profile = worker_target_profiles[worker_index - 1]
-
-            task_1_refs.append(data_processor.remote( 
+        
+            task_1_refs.append(database_setup.remote( 
                 worker_index = worker_index,
                 actor_index = actor_index + 1,
                 actor_ref = actor_ref,
                 swift_parameters = swift_parameters,
                 data_storage_parameters = data_storage_parameters,
                 config_parameters = config_parameters,
-                task_batch = worker_batch_ref,
-                target_profile = target_profile
+                task_batch = worker_batch_ref
             ))
             worker_index += 1
             actor_index = (actor_index + 1) % actor_number
@@ -129,52 +95,6 @@ def rag_database_setup(
             for output_ref in done_task_1_refs:
                 all_unified_rows.extend(ray.get(output_ref))
         
-        final_dataset_df = pd.DataFrame(all_unified_rows)
-        print(f"Successfully compiled execution dataset. Total collected rows P: {len(final_dataset_df)}")
-
-        if len(final_dataset_df) > target_rows:
-            final_dataset_df = final_dataset_df.sample(n = target_rows, random_state = 42).reset_index(drop = True)
-            print(f"Normalized dataset down to accurate target row amount N: {len(final_dataset_df)}")
-
-        work_swift_client = swift_setup_client(
-            swift_parameters = swift_parameters
-        )
-    
-        dataset_prefix = result_storage_parameters['object-name']
-
-        object_list = data_list_objects(
-            storage_client = work_swift_client,
-            storage_parameters = result_storage_parameters,
-            object_prefix = dataset_prefix 
-        )
-
-        next_index = len(object_list) + 1
-        cluster_name = job_parameters['cluster']
-        step_name = job_parameters['step']
-
-        dataset_object_name = f'{dataset_prefix}-{next_index}-{cluster_name}-{step_name}' 
-        '''
-        stored_status = objects_store_data(
-            swift_client = work_swift_client,
-            storage_parameters = {
-                'bucket-target': result_storage_parameters['bucket-target'],
-                'bucket-prefix': result_storage_parameters['bucket-prefix'],
-                'bucket-user': result_storage_parameters['bucket-user'],
-                'object-name': 'data',
-                'object-serialization': 'parquet',
-                'path-replacers': {
-                    'name': dataset_object_name 
-                },
-                'path-names': [],
-                'debug-prints': True,
-                'lock-parameters': {},
-                'lock-location': None,
-                'overwrite': True
-            },
-            object_data = final_dataset_df,
-            object_metadata = {}
-        )
-        '''
         return True
     except Exception as e:
         print('external data analysis error', e)
