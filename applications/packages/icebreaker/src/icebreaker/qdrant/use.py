@@ -1,29 +1,3 @@
-from qdrant_client import QdrantClient as qc
-
-def qdrant_is_client(
-    storage_client: any
-) -> any:
-    try:
-        return isinstance(storage_client, qc.Connection)
-    except Exception as e:
-        return False
-
-def qdrant_setup_client(
-    api_key: str,
-    address: str, 
-    port: str
-) -> any:
-    try:
-        qdrant_client = qc(
-            host = address,
-            port = int(port),
-            api_key = api_key,
-            https = False
-        ) 
-        return qdrant_client
-    except Exception as e:
-        return None
-
 def qdrant_create_collection(
     qdrant_client: any, 
     collection_name: str,
@@ -90,7 +64,7 @@ def qdrant_remove_collection(
         return False
 
 def qdrant_upsert_points(
-    qdrant_client: qc, 
+    qdrant_client: any, 
     collection_name: str,
     points: any
 ) -> any:
@@ -105,7 +79,7 @@ def qdrant_upsert_points(
         return None
 
 def qdrant_search_data(
-    qdrant_client: qc,  
+    qdrant_client: any,  
     collection_name: str,
     scroll_filter: any,
     limit: int,
@@ -125,7 +99,7 @@ def qdrant_search_data(
         return []
 
 def qdrant_search_vectors(
-    qdrant_client: qc,  
+    qdrant_client: any,   
     collection_name: str,
     query_vector: any,
     limit: str
@@ -141,7 +115,7 @@ def qdrant_search_vectors(
         return []
 
 def qdrant_remove_points(
-    qdrant_client: qc,  
+    qdrant_client: any, 
     collection_name: str, 
     points_selector: any
 ) -> bool:

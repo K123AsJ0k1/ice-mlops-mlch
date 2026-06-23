@@ -1,41 +1,4 @@
 
-import io
-import pickle
-from minio import Minio
-
-def is_minio_client(
-    storage_client: any
-) -> bool:
-    return isinstance(storage_client, Minio)
-
-def minio_setup_client(
-    endpoint: str,
-    username: str,
-    password: str
-) -> any:
-    minio_client = Minio(
-        endpoint = endpoint, 
-        access_key = username, 
-        secret_key = password,
-        secure = False
-    )
-    return minio_client
-
-def minio_pickle_data(
-    data: any
-) -> any:
-    pickled_data = pickle.dumps(data)
-    length = len(pickled_data)
-    buffer = io.BytesIO()
-    buffer.write(pickled_data)
-    buffer.seek(0)
-    return buffer, length
-
-def minio_unpickle_data(
-    pickled: any
-) -> any:
-    return pickle.loads(pickled)
-
 def minio_create_bucket(
     minio_client: any,
     bucket_name: str
@@ -46,8 +9,7 @@ def minio_create_bucket(
         )
         return True
     except Exception as e:
-        print('MinIO bucket creation error')
-        print(e)
+        print('MinIO bucket creation error', e)
         return False
     
 def minio_check_bucket(
@@ -60,8 +22,7 @@ def minio_check_bucket(
         )
         return status
     except Exception as e:
-        print('MinIO bucket checking error')
-        print(e)
+        print('MinIO bucket checking error', e)
         return False 
        
 def minio_delete_bucket(
@@ -74,8 +35,7 @@ def minio_delete_bucket(
         )
         return True
     except Exception as e:
-        print('MinIO bucket deletion error')
-        print(e)
+        print('MinIO bucket deletion error', e)
         return False
 
 def minio_create_object(
@@ -87,6 +47,11 @@ def minio_create_object(
 ) -> bool: 
     # Be aware that MinIO objects have a size limit of 1GB, 
     # which might result to large header error    
+
+    try:
+        from ..minio.utility import minio_pickle_data
+    except ImportError as e:
+        raise ImportError("minio/use failed to import", e)
     
     try:
         buffer, length = minio_pickle_data(
@@ -102,8 +67,7 @@ def minio_create_object(
         )
         return True
     except Exception as e:
-        print('MinIO object creation error')
-        print(e)
+        print('MinIO object creation error', e)
         return False
 
 def minio_check_object(
@@ -132,8 +96,7 @@ def minio_delete_object(
         )
         return True
     except Exception as e:
-        print('MinIO object deletion error')
-        print(e)
+        print('MinIO object deletion error', e)
         return False
 
 def minio_update_object(
@@ -219,6 +182,11 @@ def minio_get_object_data_and_metadata(
     object_path: str
 ) -> any:
     try:
+        from ..minio.utility import minio_unpickle_data
+    except ImportError as e:
+        raise ImportError("minio/use failed to import", e)
+
+    try:
         given_object_data = minio_client.get_object(
             bucket_name = bucket_name, 
             object_name = object_path
@@ -237,6 +205,5 @@ def minio_get_object_data_and_metadata(
         
         return {'data': given_data, 'metadata': given_metadata}
     except Exception as e:
-        print('MinIO object fetching error')
-        print(e)
+        print('MinIO object fetching error', e)
         return None
