@@ -32,11 +32,6 @@ def database_setup(
     for batch_data in task_batch:
         object_path = batch_data[0]
 
-        max_target_for_this_path = target_profile.get(object_path, 0)
-
-        if max_target_for_this_path <= 0:
-            continue
-        
         stored_dataset = object_storage_interaction(
             storage_client = work_swift_client,
             parameters = {
@@ -57,7 +52,9 @@ def database_setup(
             object_data = None,
             object_metadata = None
         )  
-        pandas_df = pyarrow_deserialize_dataframe(serialized_dataframe = stored_dataset[0])
+        pandas_df = pickle.loads(stored_dataset[0])
+
+        
         
     end_time = t.time()
     total_time = round(end_time-start_time,5)

@@ -100,7 +100,6 @@ def evalution_dataset_creation(
                 swift_parameters = swift_parameters,
                 data_storage_parameters = data_storage_parameters,
                 config_parameters = config_parameters,
-                target_rows = target_rows,
                 task_batch = worker_batch_ref,
                 worker_targets = worker_targets
             ))

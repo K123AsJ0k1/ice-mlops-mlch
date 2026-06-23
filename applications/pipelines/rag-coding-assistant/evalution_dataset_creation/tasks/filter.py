@@ -15,7 +15,6 @@ def data_filter(
     swift_parameters: any,
     data_storage_parameters: any,
     config_parameters: any,
-    target_rows: int,
     task_batch: any,
     worker_targets: dict
 ) -> any:
@@ -129,7 +128,6 @@ def data_filter(
                         ]
                         path_collected_rows.append(wanted_row)
             
-            checked_rows += len(lang_chunk)
         print(f"Collected {len(path_collected_rows)} paths from {object_path}")
         suitable_dataframe_rows.extend(path_collected_rows)
     
