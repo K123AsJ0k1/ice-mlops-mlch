@@ -8,15 +8,16 @@ from icebreaker.pyarrow.use import pyarrow_deserialize_dataframe
     num_cpus = 1,
     memory = 0.2 * 1024 * 1024 * 1024
 ) 
-def data_processor(
+def data_filter(
     worker_index: int,
     actor_index: int,
     actor_ref: any,
     swift_parameters: any,
     data_storage_parameters: any,
     config_parameters: any,
+    target_rows: int,
     task_batch: any,
-    target_profile: dict
+    worker_targets: dict
 ) -> any:
     start_time = t.time()
     print(f'Task {worker_index}, Actor {actor_index}')
@@ -37,12 +38,16 @@ def data_processor(
     allowed_formats = filter_parameters['allowed-formats']
 
     suitable_dataframe_rows = []
+    checked_rows = 0
+    max_checked_rows = total_rows * 2
     for batch_data in task_batch:
+        if max_checked_rows <= checked_rows:
+            break
+
         object_path = batch_data[0]
 
-        max_target_for_this_path = target_profile.get(object_path, 0)
-
-        if max_target_for_this_path <= 0:
+        wanted_rows = worker_targets.get(object_path, 0)
+        if wanted_rows  <= 0:
             continue
         
         stored_dataset = object_storage_interaction(
@@ -67,18 +72,20 @@ def data_processor(
         )  
         pandas_df = pyarrow_deserialize_dataframe(serialized_dataframe = stored_dataset[0])
         
-        chunk_size = 1000
+        chunk_size = wanted_rows * 2
         total_rows = len(pandas_df)
         path_collected_rows = []
-        
         for i in range(0, total_rows, chunk_size):
-            if len(path_collected_rows) >= max_target_for_this_path:
+            if wanted_rows <= len(path_collected_rows):
                 break
-                
+            
+            if max_checked_rows <= checked_rows:
+                break
+
             df_chunk = pandas_df.iloc[i : i + chunk_size]
             lang_chunk = df_chunk[language_column].tolist()
             format_chunk = df_chunk[format_column].tolist()
-            
+
             text_input_ref_1 = ray.put(lang_chunk)
             lang_future = actor_ref.batch_fasttext_languages.remote(
                 worker_index = worker_index, 
@@ -102,30 +109,28 @@ def data_processor(
             provider_actor_refs = [lang_future, format_future]
             results = {}
             while len(provider_actor_refs):
-                done_refs, provider_actor_refs = ray.wait(provider_actor_refs)
-                for ref in done_refs:
-                    res = ray.get(ref)
-                    if isinstance(res, dict):
-                        if 'languages' in res:
-                            results['languages'] = res['languages']
-                        if 'formats' in res:
-                            results['formats'] = res['formats']
-                    
+                done_actor_refs, provider_actor_refs = ray.wait(provider_actor_refs)
+                for output_ref in done_actor_refs: 
+                    res = ray.get(output_ref)
+                    if 'languages' in res:
+                        results['languages'] = res['languages']
+                    if 'formats' in res:
+                        results['formats'] = res['formats']
+            
             languages = results.get('languages', [])
             formats = results.get('formats', [])
-            
-            for idx, row_tuple in enumerate(df_chunk.itertuples(index=False)):
-                if len(path_collected_rows) >= max_target_for_this_path:
+            for idx, row in enumerate(df_chunk.values.tolist()):
+                if wanted_rows <= len(path_collected_rows):
                     break
                 
-                is_english = (idx < len(languages) and languages[idx] in allowed_languages)
-                is_valid_format = (idx < len(formats) and formats[idx] in allowed_formats)
-                
-                if is_english and is_valid_format:
-                    path_collected_rows.append(row_tuple._asdict())
-                    
+                if languages[idx] in allowed_languages:
+                    if formats[idx] in allowed_formats:
+                        path_collected_rows.append(row)
+            
+            checked_rows += len(df_chunk)
+         
         suitable_dataframe_rows.extend(path_collected_rows)
-
+    
     end_time = t.time()
     total_time = round(end_time-start_time,5)
     print('Spent seconds', total_time)

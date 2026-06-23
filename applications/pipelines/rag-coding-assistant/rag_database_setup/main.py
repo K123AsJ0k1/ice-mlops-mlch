@@ -136,7 +136,6 @@ def rag_database_setup(
             final_dataset_df = final_dataset_df.sample(n = target_rows, random_state = 42).reset_index(drop = True)
             print(f"Normalized dataset down to accurate target row amount N: {len(final_dataset_df)}")
 
-        
         work_swift_client = swift_setup_client(
             swift_parameters = swift_parameters
         )
@@ -154,7 +153,7 @@ def rag_database_setup(
         step_name = job_parameters['step']
 
         dataset_object_name = f'{dataset_prefix}-{next_index}-{cluster_name}-{step_name}' 
-
+        '''
         stored_status = objects_store_data(
             swift_client = work_swift_client,
             storage_parameters = {
@@ -175,7 +174,7 @@ def rag_database_setup(
             object_data = final_dataset_df,
             object_metadata = {}
         )
-
+        '''
         return True
     except Exception as e:
         print('external data analysis error', e)

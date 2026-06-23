@@ -1,18 +1,14 @@
 import ray
-import statistics
 import time as t
 from icebreaker.swift.setup import swift_setup_client
 from icebreaker.storage.management import object_storage_interaction
-from icebreaker.pd_stats.use import (
-    stats_pandas_content
-)
 from icebreaker.pyarrow.use import pyarrow_deserialize_dataframe
 
 @ray.remote(
     num_cpus = 1,
     memory = 0.2 * 1024 * 1024 * 1024
 ) 
-def data_processor(
+def database_setup(
     worker_index: int,
     actor_index: int,
     actor_ref: any,

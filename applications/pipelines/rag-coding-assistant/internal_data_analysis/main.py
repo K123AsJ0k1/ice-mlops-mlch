@@ -109,6 +109,9 @@ def internal_data_analysis(
             parent_key = '',
             seperator = '-'
         )
+
+        # Maybe also store the metrics in allas for later use
+
         print('Logging metrics into MLflow')
         mlflow_log_metrics(
             mlflow_client = mlflow_client,
