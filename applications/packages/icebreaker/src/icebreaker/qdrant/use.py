@@ -25,7 +25,7 @@ def qdrant_get_collection(
     except Exception as e:
         return None
 
-def qdrant_collection_number(
+def qdrant_collection_number( 
     qdrant_client: any, 
     collection_name: str,
     count_filter: any

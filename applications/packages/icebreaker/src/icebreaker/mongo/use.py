@@ -221,7 +221,7 @@ def mongo_get_sorted_documents(
     database: str,
     collection: str
 ) -> any:
-    try:
+    try: 
         from pymongo import ASCENDING
     except ImportError as e:
         raise ImportError("mongo/use failed to import", e)
