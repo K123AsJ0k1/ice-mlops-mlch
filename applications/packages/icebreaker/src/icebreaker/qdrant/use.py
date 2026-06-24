@@ -177,28 +177,120 @@ def qdrant_create_point(
     try:
         point = None
         if not point_dense_vector is None and point_sparse_vector is None: 
-            print('dense')
+            #print('dense')
             point = PointStruct(
                 id = point_uuid, 
                 vector = point_dense_vector,
                 payload = point_payload
             )
         if not point_sparse_vector is None and point_dense_vector is None:
-            print('sparse')
+            #print('sparse')
             point = PointStruct(
                 id = point_uuid, 
-                sparse_vector = point_sparse_vector,
+                vector = point_sparse_vector,
                 payload = point_payload
             )
         if not point_dense_vector is None and not point_sparse_vector is None:
-            print('hybrid')
+            #print('hybrid')
+            combined_vectors = {
+                **point_dense_vector, 
+                **point_sparse_vector
+            }
             point = PointStruct(
                 id = point_uuid, 
-                vector = point_dense_vector,
-                sparse_vector = point_sparse_vector,
+                vector = combined_vectors,
                 payload = point_payload
             )
         return point
     except Exception as e:
         print(f"Error creating point: {e}")
         return None
+    
+def qdrant_upload_points(
+    qdrant_client: any, 
+    collection_name: str,
+    points: list
+) -> bool:
+    try:
+        result = qdrant_client.upload_points(
+            collection_name = collection_name, 
+            points = points
+        )
+        return result
+    except Exception as e:
+        print(f"Error uploading points: {e}")
+        return None
+    
+def qdrant_modifiable_query(
+    qdrant_client: any, 
+    query_type: str,
+    collection_name: str,
+    query_dense: any,
+    query_sparse: any,
+    query_limit: int,
+    fusion_limit: int
+) -> list:
+    try:
+        from qdrant_client.models import models
+    except ImportError as e:
+        raise ImportError("qdrant/use failed to import", e)
+
+    try:
+        if query_type == 'dense':
+            query_result = qdrant_client.query_points(
+                collection_name = collection_name,
+                query = query_dense,
+                using = "dense",
+                limit = query_limit
+            )
+
+        if query_type == 'sparse':
+            query_result = qdrant_client.query_points(
+                collection_name = collection_name,
+                query = query_sparse,
+                using = "sparse",
+                limit = query_limit
+            )
+        
+        if query_type == 'hybrid-rrf':
+            query_result = qdrant_client.query_points(
+                collection_name = collection_name,
+                prefetch = [
+                    models.Prefetch(
+                        query = query_dense,
+                        using = "dense",
+                        limit = fusion_limit
+                    ),
+                    models.Prefetch(
+                        query = query_sparse,
+                        using = "sparse",
+                        limit = fusion_limit
+                    )
+                ],
+                query = models.FusionQuery(fusion=models.Fusion.RRF),
+                limit = query_limit
+            )
+        if query_type == 'hybrid-dbsf':
+            query_result = qdrant_client.query_points(
+                collection_name = collection_name,
+                prefetch = [
+                    models.Prefetch(
+                        query = query_dense,
+                        using = "dense",
+                        limit = fusion_limit
+                    ),
+                    models.Prefetch(
+                        query = query_sparse,
+                        using = "sparse",
+                        limit = fusion_limit
+                    )
+                ],
+                query = models.FusionQuery(fusion=models.Fusion.DBSF),
+                limit = query_limit
+            )
+
+        return query_result.points
+    except Exception as e:
+        print(f"Error HSRRF query: {e}")
+        return None
+    

@@ -9,7 +9,7 @@ def sparse_create_tuple(
     word_counts = Counter(words)
     
     indices = []
-    values = []
+    values = [] 
     
     for word, count in word_counts.items():
         if word not in global_vocabulary:
