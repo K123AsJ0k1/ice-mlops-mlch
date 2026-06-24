@@ -24,11 +24,11 @@ integration:
     vram: 0.10 
     ram: 0.30
   cluster-priority:
-    cloud-vm1: 0.20
-    cloud-vm2: 0.05
-    local-lt1: 0.05
-    local-lt2: 0.30
-    local-lt3: 0.40
+    cloud-vm1: 0.04
+    cloud-vm2: 0.04
+    local-lt1: 0.02
+    local-lt2: 0.40
+    local-lt3: 0.50
   hardware-influence: 0.2
   min-initial-inputs: 1
   min-batch-size: 1
@@ -61,7 +61,7 @@ processing:
         object-path: 'MODELS/fasttext/lid.176.bin'
       config:
         dataset-parameters:
-          target-rows: 8000
+          target-rows: 1600
         analysis-parameters:
           language-default: 'en'
           language-column: 'question'
