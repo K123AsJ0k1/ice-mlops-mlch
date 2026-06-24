@@ -131,7 +131,7 @@ def search_monitored_query(
     query_type: str,
     collection_name: str,
     query_text: str, 
-    query_id: int,
+    relevant_ids: list,
     query_limit: int,
     fusion_limit: int,
     text_encoder: any,
@@ -177,7 +177,7 @@ def search_monitored_query(
     
     resulted_metrics = search_retrieval_metrics(
         retrieved_ids = retrieved_ids,
-        true_id = query_id
+        true_relevant_ids = relevant_ids
     )
     
     resulted_metrics['embedding-latency-ms'] = embed_latency_ms
@@ -189,8 +189,9 @@ def search_monitored_query(
 
 def search_data_metrics(
     target_df: any,
+    group_columns: list,
+    value_column: str,
     query_column: str,
-    id_column: str,
     qdrant_client: any,
     query_type: str,
     collection_name: str,
@@ -206,9 +207,14 @@ def search_data_metrics(
     except ImportError as e:
         raise ImportError("embeddings/use failed to import", e)
 
+    relevance_lookup = target_df.groupby(group_columns)[value_column].apply(list).to_dict()
     gathered_metrics = {}
     for j, row in target_df.iterrows():
-        query_id = row[id_column]
+        group_key = ()
+        for column in group_columns:
+            group_key = group_key + (row[column],)
+
+        true_relevant_ids = relevance_lookup[group_key]
         query_text = row[query_column]
         
         result, metrics = search_monitored_query(
@@ -216,7 +222,7 @@ def search_data_metrics(
             query_type = query_type,
             collection_name = collection_name,
             query_text = query_text, 
-            query_id = query_id,
+            relevant_ids = true_relevant_ids,
             query_limit = query_limit,
             fusion_limit = fusion_limit,
             text_encoder = text_encoder,
