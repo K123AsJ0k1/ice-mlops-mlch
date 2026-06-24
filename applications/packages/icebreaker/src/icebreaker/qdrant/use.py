@@ -4,10 +4,26 @@ def qdrant_create_collection(
     configuration: any
 ) -> any:
     try:
-        result = qdrant_client.create_collection(
-            collection_name = collection_name,
-            vectors_config = configuration
-        )
+        result = None
+        if 'vectors-config' in configuration and not 'sparse-vectors-config' in configuration:
+            print('dense')
+            result = qdrant_client.create_collection(
+                collection_name = collection_name,
+                vectors_config = configuration['vectors-config']
+            )
+        if 'sparse-vectors-config' in configuration and not 'vectors-config' in configuration:
+            print('sparse')
+            result = qdrant_client.create_collection(
+                collection_name = collection_name,
+                sparse_vectors_config = configuration['sparse-vectors-config']
+            )
+        if 'vectors-config' in configuration and 'sparse-vectors-config' in configuration:
+            print('hybrid')
+            result = qdrant_client.create_collection(
+                collection_name = collection_name,
+                vectors_config = configuration['vectors-config'],
+                sparse_vectors_config = configuration['sparse-vectors-config']
+            )
         return result
     except Exception as e:
         print(e)
@@ -148,9 +164,10 @@ def qdrant_create_configuration(
         return None
 
 def qdrant_create_point(
-    embedding_uuid: str,
-    embedding_vector: any,
-    embedding_payload: any
+    point_uuid: str,
+    point_dense_vector: any,
+    point_sparse_vector: any,
+    point_payload: any
 ) -> any:
     try:
         from qdrant_client.models import PointStruct
@@ -158,11 +175,29 @@ def qdrant_create_point(
         raise ImportError("qdrant/use failed to import", e)
 
     try:
-        point = PointStruct(
-            id = embedding_uuid, 
-            vector = embedding_vector,
-            payload = embedding_payload
-        )
+        point = None
+        if not point_dense_vector is None and point_sparse_vector is None: 
+            print('dense')
+            point = PointStruct(
+                id = point_uuid, 
+                vector = point_dense_vector,
+                payload = point_payload
+            )
+        if not point_sparse_vector is None and point_dense_vector is None:
+            print('sparse')
+            point = PointStruct(
+                id = point_uuid, 
+                sparse_vector = point_sparse_vector,
+                payload = point_payload
+            )
+        if not point_dense_vector is None and not point_sparse_vector is None:
+            print('hybrid')
+            point = PointStruct(
+                id = point_uuid, 
+                vector = point_dense_vector,
+                sparse_vector = point_sparse_vector,
+                payload = point_payload
+            )
         return point
     except Exception as e:
         print(f"Error creating point: {e}")

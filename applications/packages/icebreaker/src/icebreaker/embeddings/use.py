@@ -1,4 +1,47 @@
 
+def embeddings_create_hybrid_points(
+    dataset_name: str,
+    target_df: any,
+    text_column: str,
+    text_encoder: str
+) -> list:
+    try:
+        from qdrant_client import models
+        from sentence_transformers import SentenceTransformer
+        from ..sparse.use import sparse_create_tuple
+        from ..qdrant.use import qdrant_create_point
+        from ..embeddings.utility import embeddings_generate_uuid
+    except ImportError as e:
+        raise ImportError("embeddings/use failed to import", e)
+    global_vocabulary = {}
+    encoder = SentenceTransformer(text_encoder)
+
+    points = []
+    for i, row in enumerate(target_df.to_dict('records')):
+        text_data = row[text_column]
+
+        dense_vector = encoder.encode(text_data).tolist()
+        indices, values = sparse_create_tuple(
+            global_vocabulary,
+            vector_text = text_data
+        )
+        sparse_vector = models.SparseVector(indices=indices, values=values)
+        
+        point_uuid = embeddings_generate_uuid(
+            id = dataset_name,
+            index = i
+        )
+
+        created_point = qdrant_create_point(
+            point_uuid = point_uuid,
+            point_dense_vector = {"dense": dense_vector},
+            point_sparse_vector = {"sparse": sparse_vector},
+            point_payload = row
+        )
+
+        points.append(created_point)
+    return points
+    
 def embeddings_check_collection(
     vector_client: any,
     vector_collection: str,
