@@ -188,6 +188,7 @@ def search_monitored_query(
     return query_result, resulted_metrics
 
 def search_data_metrics(
+    dataset_name: str,
     target_df: any,
     group_columns: list,
     value_column: str,
@@ -230,6 +231,7 @@ def search_data_metrics(
         )
 
         if debug_prints:
+            print(f'Dataset|{dataset_name}')
             print(f'Case|{j+1}')
             print(f'Query|{query_text}')
             print(f'Relevant ids|{true_relevant_ids}')

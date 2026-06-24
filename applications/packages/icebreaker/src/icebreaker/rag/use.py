@@ -105,10 +105,11 @@ def rag_evalute_database(
             },
             dict_format = False
         )  
-
+        dataset_name = dataset_path.split('/')[-1].split('.')[0]
         target_df = data_object[0].rename_axis('idx').reset_index()
 
         dataframe_stats, collective_metrics = search_data_metrics(
+            dataset_name = dataset_name,
             target_df = target_df,
             group_columns = group_columns,
             value_column = value_column,
