@@ -16,7 +16,7 @@ spec:
     spec:
       containers:
         - name: qdrant-server
-          image: qdrant/qdrant:v1.15
+          image: qdrant/qdrant:v1.18.2
           imagePullPolicy: Always
           ports:
             - containerPort: 6333 
