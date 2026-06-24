@@ -121,7 +121,8 @@ def evalution_dataset_creation(
                 'answer',
                 'language',
                 'format',
-                'dataset'
+                'dataset',
+                'index'
             ]
         )
         print(f"Total collected rows: {len(final_dataset_df)}")

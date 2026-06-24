@@ -70,6 +70,7 @@ def data_filter(
         calclated_chunk = int(total_rows * 0.05)
         chunk_size = max(1, calclated_chunk)
         path_collected_rows = []
+        row_idx = 0
         for i in range(0, total_rows, chunk_size):
             if wanted_rows <= len(path_collected_rows):
                 break
@@ -126,10 +127,11 @@ def data_filter(
                             row[1],
                             row_language,
                             row_format,
-                            dataset_name
+                            dataset_name,
+                            row_idx
                         ]
                         path_collected_rows.append(wanted_row)
-            
+                row_idx += 1
         suitable_dataframe_rows.extend(path_collected_rows)
     
     end_time = t.time()
