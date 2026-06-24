@@ -56,3 +56,31 @@ def search_retrieval_metrics(
     }
     
     return resulted_metrics
+
+def search_get_statistics(
+    gathered_metrics: dict,
+    percentile_filter: list
+):
+    try:
+        import statistics
+        import numpy as np
+    except ImportError as e:
+        raise ImportError("embeddings/use failed to import", e)
+    
+    summary_statistics = {}
+    for key, value in gathered_metrics.items():
+        key_mean_column = f'{key}-mean'
+        key_median_column = f'{key}-median'
+        key_mean = statistics.mean(value)
+        key_median = statistics.median(value)
+        summary_statistics[key_mean_column] = float(key_mean)
+        summary_statistics[key_median_column] = float(key_median)
+
+        if not key in percentile_filter:
+            key_p95_column = f'{key}-p95'
+            key_p99_column = f'{key}-p99'
+            key_p95 = np.percentile(value, 95)
+            key_p99 = np.percentile(value, 99)
+            summary_statistics[key_p95_column] = float(key_p95)
+            summary_statistics[key_p99_column] = float(key_p99)
+    return summary_statistics

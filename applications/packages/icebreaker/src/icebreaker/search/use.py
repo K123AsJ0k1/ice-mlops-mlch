@@ -199,16 +199,16 @@ def search_data_metrics(
     fusion_limit: int,
     text_encoder: any,
     global_vocabulary: dict,
+    gathered_metrics: dict,
     debug_prints: bool
 ):
     try:
-        import statistics
-        import numpy as np
+        from ..search.utility import search_get_statistics
     except ImportError as e:
         raise ImportError("embeddings/use failed to import", e)
 
+    dataset_metrics = {}
     relevance_lookup = target_df.groupby(group_columns)[value_column].apply(list).to_dict()
-    gathered_metrics = {}
     for j, row in target_df.iterrows():
         group_key = ()
         for column in group_columns:
@@ -230,37 +230,37 @@ def search_data_metrics(
         )
 
         if debug_prints:
+            print(f'Case|{j+1}')
+            print(f'Query|{query_text}')
+            print(f'Relevant ids|{true_relevant_ids}')
             print(f'Precision@1|{metrics['p@1']}')
             print(f'Recall@3|{metrics['r@3']}')
             print(f'NDCG@3|{metrics['ndcg@3']}')
             print(f'NDCG@5|{metrics['ndcg@5']}')
-            print(f'Embedding latency|{metrics['embedding-latency-ms']}')
-            print(f'Search latency|{metrics['search-latency-ms']}')
-            print(f'Total latency|{metrics[ 'total-latency-ms']}')
+            print(f'Embedding latency (ms)|{metrics['embedding-latency-ms']}')
+            print(f'Search latency (ms)|{metrics['search-latency-ms']}')
+            print(f'Total latency (ms)|{metrics[ 'total-latency-ms']}')
             print(f'Total retrieved characters|{metrics['total-characters']}')
             for i, point in enumerate(result, 1):
-                print(f'{i}|{point.score}|{point.payload['topic']}')
+                print(f'{i}|{point.score}|{point.payload['idx']}|{point.payload['topic']}')
+            print('')
 
         for key, value in metrics.items():
             if not key in gathered_metrics:
                 gathered_metrics[key] = []
+            if not key in dataset_metrics:
+                dataset_metrics[key] = []
             gathered_metrics[key].append(value)
+            dataset_metrics[key].append(value)
 
-    resulting_statistics = {}
-    for key, value in gathered_metrics.items():
-        key_mean_column = f'{key}-mean'
-        key_median_column = f'{key}-median'
-        key_p95_column = f'{key}-p95'
-        key_p99_column = f'{key}-p99'
-
-        key_mean = statistics.mean(value)
-        key_median = statistics.median(value)
-        key_p95 = np.percentile(value, 95)
-        key_p99 = np.percentile(value, 99)
-
-        resulting_statistics[key_mean_column] = float(key_mean)
-        resulting_statistics[key_median_column] = float(key_median)
-        resulting_statistics[key_p95_column] = float(key_p95)
-        resulting_statistics[key_p99_column] = float(key_p99)
+    dataframe_statistics = search_get_statistics(
+        gathered_metrics = dataset_metrics,
+        percentile_filter = [
+            'p@1',
+            'r@3',
+            'ndcg@3',
+            'ndcg@5'
+        ]
+    )
     
-    return resulting_statistics
+    return dataframe_statistics, gathered_metrics
