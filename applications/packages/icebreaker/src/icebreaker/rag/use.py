@@ -18,7 +18,7 @@ def rag_setup_database(
     status = qdrant_create_collection(
         qdrant_client = qdrant_client, 
         collection_name = collection_name,
-        configuration = qdrant_hybrid_config()
+        configuration = qdrant_hybrid_config() 
     )
 
     global_vocabulary = {}
@@ -83,7 +83,7 @@ def rag_evalute_database(
     except ImportError as e:
         raise ImportError("embeddings/use failed to import", e)
 
-    dataset_stat_list = []
+    database_metrics = {}
     collective_metrics = {}
     for dataset_path in dataset_paths:
         data_object = objects_get_data(
@@ -124,10 +124,10 @@ def rag_evalute_database(
             debug_prints = debug_prints,
             gathered_metrics = collective_metrics
         )
+
+        database_metrics[dataset_name] = dataframe_stats
         
-        dataset_stat_list.append(dataframe_stats)
-    
-    complete_summary = search_get_statistics(
+    database_metrics['summary'] = search_get_statistics(
         gathered_metrics = collective_metrics,
         percentile_filter = [
             'p@1',
@@ -137,4 +137,4 @@ def rag_evalute_database(
         ]
     )
 
-    return complete_summary, dataset_stat_list
+    return database_metrics

@@ -270,7 +270,7 @@ def qdrant_modifiable_query(
                 query = models.FusionQuery(fusion=models.Fusion.RRF),
                 limit = query_limit
             )
-        if query_type == 'hybrid-dbsf':
+        if query_type == 'hybrid-dbsf': 
             query_result = qdrant_client.query_points(
                 collection_name = collection_name,
                 prefetch = [

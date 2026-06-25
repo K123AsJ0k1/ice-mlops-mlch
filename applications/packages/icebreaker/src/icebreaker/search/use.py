@@ -234,6 +234,7 @@ def search_data_metrics(
             print(f'Dataset|{dataset_name}')
             print(f'Case|{j+1}')
             print(f'Query|{query_text}')
+            print(f'Query type|{query_type}')
             print(f'Relevant ids|{true_relevant_ids}')
             print(f'Precision@1|{metrics['p@1']}')
             print(f'Recall@3|{metrics['r@3']}')
@@ -243,8 +244,9 @@ def search_data_metrics(
             print(f'Search latency (ms)|{metrics['search-latency-ms']}')
             print(f'Total latency (ms)|{metrics[ 'total-latency-ms']}')
             print(f'Total retrieved characters|{metrics['total-characters']}')
+            print('index|score|idx|part|document|chapter|index|topic')
             for i, point in enumerate(result, 1):
-                print(f'{i}|{point.score}|{point.payload['idx']}|{point.payload['topic']}')
+                print(f'{i}|{point.score}|{point.payload['idx']}|{point.payload['part']}|{point.payload['document']}|{point.payload['chapter']}|{point.payload['index']}|{point.payload['topic']}')
             print('')
 
         for key, value in metrics.items():
