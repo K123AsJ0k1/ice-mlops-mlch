@@ -59,22 +59,25 @@ def search_monitored_batch_query(
     start_embed = time.perf_counter_ns()
     batch_dense, batch_sparse = search_get_batch_vectors(
         query_type = query_type,
-        query_texts = text_queries,
+        text_queries = text_queries,
         dense_model = dense_model,
         sparse_model = sparse_model
     )
     embed_latency_ms = ((time.perf_counter_ns() - start_embed) / 1e6) / len(text_queries)
-    
     batch_results = []
 
     # 2. Query Qdrant
     for idx, query_text in enumerate(text_queries):
-        q_dense = batch_dense[idx] if batch_dense is not None else None
-        q_sparse = batch_sparse[idx] if batch_sparse is not None else None
-        relevant_ids = relevant_ids[idx]
+        q_dense = []
+        if 0 < len(batch_dense):
+            q_dense = batch_dense[idx] if batch_dense is not None else None
+        q_sparse = []
+        if 0 < len(batch_sparse):
+            q_sparse = batch_sparse[idx] if batch_sparse is not None else None
+        q_relevant_ids = relevant_ids[idx]
 
         start_search = time.perf_counter_ns()
-        query_result = qdrant_modifiable_query(
+        query_result = qdrant_modifiable_query( 
             qdrant_client = qdrant_client, 
             query_type = query_type,
             collection_name = collection_name,
@@ -88,9 +91,9 @@ def search_monitored_batch_query(
         total_characters = sum(point.payload.get('characters', 0) for point in query_result)
         retrieved_ids = [point.payload['idx'] for point in query_result]
         
-        resulted_metrics = search_retrieval_metrics(
+        resulted_metrics = search_retrieval_metrics( 
             retrieved_ids = retrieved_ids,
-            true_relevant_ids = relevant_ids
+            true_relevant_ids = q_relevant_ids
         )
         
         resulted_metrics['embedding-latency-ms'] = embed_latency_ms
@@ -126,26 +129,39 @@ def search_data_metrics(
         raise ImportError("embeddings/use failed to import", e)
 
     dataset_metrics = {}
+    
+    # 1. Pre-calculate lookups and map targets to ordered arrays
     relevance_lookup = target_df.groupby(group_columns)[value_column].apply(list).to_dict()
-    for j, row in target_df.iterrows():
-        group_key = ()
-        for column in group_columns:
-            group_key = group_key + (row[column],)
+    
+    text_queries = []
+    relevant_ids_batch = []
+    metadata_rows = []  # Keep track of rows for logging mapping
 
-        true_relevant_ids = relevance_lookup[group_key]
-        query_text = row[query_column]
+    for _, row in target_df.iterrows():
+        group_key = tuple(row[column] for column in group_columns)
         
-        result, metrics = search_monitored_query(
-            qdrant_client = qdrant_client,
-            query_type = query_type,
-            collection_name = collection_name,
-            query_text = query_text, 
-            relevant_ids = true_relevant_ids,
-            query_limit = query_limit,
-            fusion_limit = fusion_limit,
-            dense_model = dense_model,
-            sparse_model = sparse_model
-        )
+        text_queries.append(row[query_column])
+        relevant_ids_batch.append(relevance_lookup[group_key])
+        metadata_rows.append(row)
+    
+    # 2. EXECUTE AS A SINGLE BATCH (Massive optimization)
+    batch_outputs = search_monitored_batch_query(
+        qdrant_client = qdrant_client,
+        query_type = query_type,
+        collection_name = collection_name,
+        text_queries = text_queries, 
+        relevant_ids = relevant_ids_batch, 
+        query_limit = query_limit,
+        fusion_limit = fusion_limit,
+        dense_model = dense_model,
+        sparse_model = sparse_model
+    )
+    
+    # 3. Unpack batch results for debugging and metric aggregation
+    for j, (result, metrics) in enumerate(batch_outputs):
+        row = metadata_rows[j]
+        query_text = text_queries[j]
+        true_relevant_ids = relevant_ids_batch[j]
 
         if debug_prints:
             print(f'Dataset|{dataset_name}')
@@ -156,39 +172,36 @@ def search_data_metrics(
 
             if query_type == 'dense' or 'hybrid' in query_type:
                 print(f'Dense model: {dense_model_name}')
-            if query_type == 'sparse'  or 'hybrid' in query_type:
+            if query_type == 'sparse' or 'hybrid' in query_type:
                 print(f'Sparse model: {sparse_model_name}')
             
             print(f'Relevant ids|{true_relevant_ids}')
-            print(f'Precision@1|{metrics['p@1']}')
-            print(f'Recall@3|{metrics['r@3']}')
-            print(f'NDCG@3|{metrics['ndcg@3']}')
-            print(f'NDCG@5|{metrics['ndcg@5']}')
-            print(f'Embedding latency (ms)|{metrics['embedding-latency-ms']}')
-            print(f'Search latency (ms)|{metrics['search-latency-ms']}')
-            print(f'Total latency (ms)|{metrics[ 'total-latency-ms']}')
-            print(f'Total retrieved characters|{metrics['total-characters']}')
+            print(f"Precision@1|{metrics['p@1']}")
+            print(f"Recall@3|{metrics['r@3']}")
+            print(f"NDCG@3|{metrics['ndcg@3']}")
+            print(f"NDCG@5|{metrics['ndcg@5']}")
+            print(f"Embedding latency (ms)|{metrics['embedding-latency-ms']}")
+            print(f"Search latency (ms)|{metrics['search-latency-ms']}")
+            print(f"Total latency (ms)|{metrics['total-latency-ms']}")
+            print(f"Total retrieved characters|{metrics['total-characters']}")
             print('index|score|idx|part|document|chapter|index|topic')
             for i, point in enumerate(result, 1):
-                print(f'{i}|{point.score}|{point.payload['idx']}|{point.payload['part']}|{point.payload['document']}|{point.payload['chapter']}|{point.payload['index']}|{point.payload['topic']}')
+                p = point.payload
+                print(f"{i}|{point.score}|{p.get('idx')}|{p.get('part')}|{p.get('document')}|{p.get('chapter')}|{p.get('index')}|{p.get('topic')}")
             print('')
 
+        # Populate history dictionaries
         for key, value in metrics.items():
-            if not key in gathered_metrics:
+            if key not in gathered_metrics:
                 gathered_metrics[key] = []
-            if not key in dataset_metrics:
+            if key not in dataset_metrics:
                 dataset_metrics[key] = []
             gathered_metrics[key].append(value)
             dataset_metrics[key].append(value)
-
+    
     dataframe_statistics = search_get_statistics(
         gathered_metrics = dataset_metrics,
-        percentile_filter = [
-            'p@1',
-            'r@3',
-            'ndcg@3',
-            'ndcg@5'
-        ]
+        percentile_filter = ['p@1', 'r@3', 'ndcg@3', 'ndcg@5']
     )
     
     return dataframe_statistics, gathered_metrics
