@@ -1,4 +1,34 @@
 
+def embeddings_create_vectors(
+    text_data: str,
+    dense_model: any,
+    sparse_model: any,
+):
+    try: 
+        from qdrant_client import models
+        from ..sparse.use import sparse_create_spalde_tuple
+        from ..dense.use import dense_create_baai_vector
+    except ImportError as e:
+        raise ImportError("embeddings/use failed to import", e)
+    
+    dense_vector = None
+    if not dense_model is None:
+        dense_vector = dense_create_baai_vector(
+            dense_model = dense_model,
+            vector_text = text_data
+        )
+    sparse_vector = None
+    if not sparse_model is None:
+        indices, values = sparse_create_spalde_tuple(
+            sparse_model = sparse_model,
+            vector_text = text_data
+        )
+        sparse_vector = models.SparseVector(
+            indices = indices, 
+            values = values
+        )
+    return dense_vector, sparse_vector
+
 def embeddings_create_hybrid_points(
     dataset_name: str,
     target_df: any,
@@ -7,8 +37,6 @@ def embeddings_create_hybrid_points(
     sparse_model: any,
 ) -> list:
     try: 
-        from qdrant_client import models
-        from ..sparse.use import sparse_create_spalde_tuple
         from ..qdrant.use import qdrant_create_point
         from ..embeddings.utility import embeddings_generate_uuid
     except ImportError as e:
@@ -17,14 +45,10 @@ def embeddings_create_hybrid_points(
     for i, row in enumerate(target_df.to_dict('records')):
         text_data = row[text_column]
 
-        dense_vector = dense_model.encode(text_data).tolist()
-        indices, values = sparse_create_spalde_tuple(
+        dense_vector, sparse_vector = embeddings_create_vectors(
+            text_data = text_data,
+            dense_model = dense_model,
             sparse_model = sparse_model,
-            vector_text = text_data
-        )
-        sparse_vector = models.SparseVector(
-            indices = indices, 
-            values = values
         )
         
         point_uuid = embeddings_generate_uuid(

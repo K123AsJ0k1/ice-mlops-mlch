@@ -7,14 +7,18 @@ def search_get_vectors(
     try:
         from qdrant_client import models
         from ..sparse.use import sparse_create_spalde_tuple
+        from ..dense.use import dense_create_baai_vector
     except ImportError as e:
         raise ImportError("embeddings/use failed to import", e)
     query_dense = None
     if query_type == 'dense' or query_type == 'hybrid-rrf' or query_type == 'hybrid-dbsf':
-        query_dense = dense_model.encode(query_text).tolist()
+        query_dense = dense_create_baai_vector(
+            dense_model = dense_model,
+            vector_text = query_text
+        )
     query_sparse = None
     if query_type == 'sparse' or query_type == 'hybrid-rrf' or query_type == 'hybrid-dbsf':
-        indices, values =  sparse_create_spalde_tuple(
+        indices, values = sparse_create_spalde_tuple(
             sparse_model = sparse_model,
             vector_text = query_text
         )
@@ -129,6 +133,7 @@ def search_data_metrics(
 
         if debug_prints:
             print(f'Dataset|{dataset_name}')
+            print(f'Collection|{collection_name}')
             print(f'Case|{j+1}')
             print(f'Query|{query_text}')
             print(f'Query type|{query_type}')

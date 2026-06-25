@@ -26,7 +26,7 @@ def sparse_create_spalde_tuple(
 ) -> any:
     sparse_embeddings = list(sparse_model.embed([vector_text]))[0]
 
-    indices = sparse_embeddings.indices.tolist(),
+    indices = sparse_embeddings.indices.tolist()
     values = sparse_embeddings.values.tolist()
 
     return indices, values

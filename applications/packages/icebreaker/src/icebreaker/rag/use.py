@@ -10,16 +10,20 @@ def rag_setup_database(
     sparse_model: any
 ) -> any:
     try: 
+        import time as t
         from ..objects.use import objects_get_data
-        from ..qdrant.use import qdrant_create_collection, qdrant_upload_points, qdrant_default_hybrid_config
+        from ..qdrant.use import qdrant_create_collection, qdrant_upload_points, qdrant_baai_hybrid_config
         from ..embeddings.use import embeddings_create_hybrid_points
     except ImportError as e:
         raise ImportError("embeddings/use failed to import", e)
     
+    start_time = t.time()
+
+    print(f'Creating collection: {collection_name}')
     status = qdrant_create_collection(
         qdrant_client = qdrant_client, 
         collection_name = collection_name,
-        configuration = qdrant_default_hybrid_config() 
+        configuration = qdrant_baai_hybrid_config() 
     )
 
     for dataset_path in dataset_paths:
@@ -59,6 +63,12 @@ def rag_setup_database(
             collection_name = collection_name,
             points = hybrid_points
         ) 
+    
+    end_time = t.time()
+
+    total_time = round(end_time-start_time,5)
+    print('Spent seconds', total_time)
+
     return status
 
 def rag_evalute_database(
@@ -87,11 +97,12 @@ def rag_evalute_database(
         raise ImportError("embeddings/use failed to import", e)
 
     database_metrics = {}
+    database_metrics['query-type'] = query_type
     if query_type == 'dense' or 'hybrid' in query_type:
         database_metrics['dense-model'] = dense_model_name
     if query_type == 'sparse'  or 'hybrid' in query_type:
         database_metrics['sparse-model'] = sparse_model_name
-            
+    
     collective_metrics = {}
     for dataset_path in dataset_paths:
         data_object = objects_get_data(
