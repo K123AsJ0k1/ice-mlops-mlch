@@ -1,0 +1,15 @@
+apiVersion: networking.istio.io/v1beta1
+kind: Gateway
+metadata:
+  name: postgres-gateway
+spec:
+  selector:
+    app: istio-ingressgateway
+    istio: ingressgateway
+  servers:
+  - port:
+      name: tcp-postgres
+      number: 202
+      protocol: TCP
+    hosts:
+    - '*'

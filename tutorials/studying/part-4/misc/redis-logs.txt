@@ -1,0 +1,57 @@
+Starting Redis Server
+1:C 30 Mar 2026 11:39:21.980 * oO0OoO0OoO0Oo Redis is starting oO0OoO0OoO0Oo
+1:C 30 Mar 2026 11:39:21.980 * Redis version=8.2.1, bits=64, commit=00000000, modified=1, pid=1, just started
+1:C 30 Mar 2026 11:39:21.980 * Configuration loaded
+1:M 30 Mar 2026 11:39:21.981 * monotonic clock: POSIX clock_gettime
+1:M 30 Mar 2026 11:39:21.982 * Running mode=standalone, port=6379.
+1:M 30 Mar 2026 11:39:21.982 * <bf> RedisBloom version 8.2.0 (Git=unknown)
+1:M 30 Mar 2026 11:39:21.982 * <bf> Registering configuration options: [
+1:M 30 Mar 2026 11:39:21.982 * <bf> 	{ bf-error-rate       :      0.01 }
+1:M 30 Mar 2026 11:39:21.982 * <bf> 	{ bf-initial-size     :       100 }
+1:M 30 Mar 2026 11:39:21.982 * <bf> 	{ bf-expansion-factor :         2 }
+1:M 30 Mar 2026 11:39:21.982 * <bf> 	{ cf-bucket-size      :         2 }
+1:M 30 Mar 2026 11:39:21.982 * <bf> 	{ cf-initial-size     :      1024 }
+1:M 30 Mar 2026 11:39:21.982 * <bf> 	{ cf-max-iterations   :        20 }
+1:M 30 Mar 2026 11:39:21.982 * <bf> 	{ cf-expansion-factor :         1 }
+1:M 30 Mar 2026 11:39:21.982 * <bf> 	{ cf-max-expansions   :        32 }
+1:M 30 Mar 2026 11:39:21.982 * <bf> ]
+1:M 30 Mar 2026 11:39:21.983 * Module 'bf' loaded from /usr/local/lib/redis/modules//redisbloom.so
+1:M 30 Mar 2026 11:39:21.986 * <search> Redis version found by RedisSearch : 8.2.1 - oss
+1:M 30 Mar 2026 11:39:21.986 * <search> RediSearch version 8.2.1 (Git=dba8dd0)
+1:M 30 Mar 2026 11:39:21.986 * <search> Low level api version 1 initialized successfully
+1:M 30 Mar 2026 11:39:21.986 * <search> gc: ON, prefix min length: 2, min word length to stem: 4, prefix max expansions: 200, query timeout (ms): 500, timeout policy: return, cursor read size: 1000, cursor max idle (ms): 300000, max doctable size: 1000000, max number of search results:  1000000, 
+1:M 30 Mar 2026 11:39:21.986 * <search> Initialized thread pools!
+1:M 30 Mar 2026 11:39:21.986 * <search> Disabled workers threadpool of size 0
+1:M 30 Mar 2026 11:39:21.987 * <search> Subscribe to config changes
+1:M 30 Mar 2026 11:39:21.987 * <search> Enabled role change notification
+1:M 30 Mar 2026 11:39:21.987 * <search> Cluster configuration: AUTO partitions, type: 0, coordinator timeout: 0ms
+1:M 30 Mar 2026 11:39:21.987 * <search> Register write commands
+1:M 30 Mar 2026 11:39:21.987 * Module 'search' loaded from /usr/local/lib/redis/modules//redisearch.so
+1:M 30 Mar 2026 11:39:21.987 * <timeseries> RedisTimeSeries version 80200, git_sha=1439d4a439ca9c063e6ef124a510abff09a5d493
+1:M 30 Mar 2026 11:39:21.988 * <timeseries> Redis version found by RedisTimeSeries : 8.2.1 - oss
+1:M 30 Mar 2026 11:39:21.988 * <timeseries> Registering configuration options: [
+1:M 30 Mar 2026 11:39:21.988 * <timeseries> 	{ ts-compaction-policy   :              }
+1:M 30 Mar 2026 11:39:21.988 * <timeseries> 	{ ts-num-threads         :            3 }
+1:M 30 Mar 2026 11:39:21.988 * <timeseries> 	{ ts-retention-policy    :            0 }
+1:M 30 Mar 2026 11:39:21.988 * <timeseries> 	{ ts-duplicate-policy    :        block }
+1:M 30 Mar 2026 11:39:21.988 * <timeseries> 	{ ts-chunk-size-bytes    :         4096 }
+1:M 30 Mar 2026 11:39:21.988 * <timeseries> 	{ ts-encoding            :   compressed }
+1:M 30 Mar 2026 11:39:21.988 * <timeseries> 	{ ts-ignore-max-time-diff:            0 }
+1:M 30 Mar 2026 11:39:21.988 * <timeseries> 	{ ts-ignore-max-val-diff :     0.000000 }
+1:M 30 Mar 2026 11:39:21.988 * <timeseries> ]
+1:M 30 Mar 2026 11:39:21.988 * <timeseries> Detected redis oss
+1:M 30 Mar 2026 11:39:21.988 * <timeseries> Enabled diskless replication
+1:M 30 Mar 2026 11:39:21.988 * Module 'timeseries' loaded from /usr/local/lib/redis/modules//redistimeseries.so
+1:M 30 Mar 2026 11:39:21.989 * <ReJSON> Created new data type 'ReJSON-RL'
+1:M 30 Mar 2026 11:39:21.989 * <ReJSON> version: 80200 git sha: unknown branch: unknown
+1:M 30 Mar 2026 11:39:21.989 * <ReJSON> Exported RedisJSON_V1 API
+1:M 30 Mar 2026 11:39:21.989 * <ReJSON> Exported RedisJSON_V2 API
+1:M 30 Mar 2026 11:39:21.989 * <ReJSON> Exported RedisJSON_V3 API
+1:M 30 Mar 2026 11:39:21.989 * <ReJSON> Exported RedisJSON_V4 API
+1:M 30 Mar 2026 11:39:21.989 * <ReJSON> Exported RedisJSON_V5 API
+1:M 30 Mar 2026 11:39:21.989 * <ReJSON> Enabled diskless replication
+1:M 30 Mar 2026 11:39:21.989 * <ReJSON> Initialized shared string cache, thread safe: false.
+1:M 30 Mar 2026 11:39:21.989 * Module 'ReJSON' loaded from /usr/local/lib/redis/modules//rejson.so
+1:M 30 Mar 2026 11:39:21.989 * <search> Acquired RedisJSON_V5 API
+1:M 30 Mar 2026 11:39:21.989 * Server initialized
+1:M 30 Mar 2026 11:39:21.989 * Ready to accept connections tcp

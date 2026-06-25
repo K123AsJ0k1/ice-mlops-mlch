@@ -1,0 +1,15 @@
+apiVersion: networking.istio.io/v1beta1
+kind: VirtualService
+metadata:
+  name: forwarder-airflow-virtualservice
+spec:
+  hosts:
+  - "forwarder.airflow.oss"
+  gateways:
+  - dashboards-gateway-1
+  http:
+  - route:
+    - destination:
+        host: airflow-api-server.forwarder.svc.cluster.local
+        port:
+          number: 8080

@@ -1,0 +1,1 @@
+[2026-04-02T07:24:22.768Z] "GET / HTTP/1.1" 401 - via_upstream - "-" 0 12 4 3 "10.244.0.1" "curl/8.5.0" "fb6c7683-9975-4a1b-867e-62ac4929e26f" "mongo.oss" "10.244.0.109:8081" outbound|7200||express-service.storage.svc.cluster.local 10.244.0.36:55998 10.244.0.36:9501 10.244.0.1:43263 - -

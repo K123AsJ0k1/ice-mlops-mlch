@@ -1,0 +1,11 @@
+venv:
+  name: 'tutorial-venv'
+  path: '/projappl/[CSC_PROJECT]'
+  modules:
+    - 'load pytorch/2.9'
+  packages: 
+    - 'ray'
+    - 'python-swiftclient'
+    - 'torch'
+    - 'torchmetrics'
+    - 'qdrant-client'

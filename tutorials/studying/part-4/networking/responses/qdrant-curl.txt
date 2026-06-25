@@ -1,0 +1,20 @@
+* Host qdrant-service.storage.svc.cluster.local:7201 was resolved.
+* IPv6: (none)
+* IPv4: 10.96.244.55
+*   Trying 10.96.244.55:7201...
+* Established connection to qdrant-service.storage.svc.cluster.local (10.96.244.55 port 7201) from 10.244.0.133 port 37422 
+* using HTTP/1.x
+> GET / HTTP/1.1
+> Host: qdrant-service.storage.svc.cluster.local:7201
+> User-Agent: curl/8.18.0
+> Accept: */*
+> 
+* Request completely sent off
+< HTTP/1.1 200 OK
+< content-length: 112
+< content-type: application/json
+< vary: Origin, Access-Control-Request-Method, Access-Control-Request-Headers
+< date: Wed, 01 Apr 2026 09:23:07 GMT
+< 
+* Connection #0 to host qdrant-service.storage.svc.cluster.local:7201 left intact
+{"title":"qdrant - vector search engine","version":"1.15.5","commit":"48203e414e4e7f639a6d394fb6e4df695f808e51"}~ 

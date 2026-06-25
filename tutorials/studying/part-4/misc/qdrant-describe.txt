@@ -1,0 +1,60 @@
+Name:             qdrant-server-5d8b5fbd7-f9xx6
+Namespace:        storage
+Priority:         0
+Service Account:  default
+Node:             mlops-platform-control-plane/172.18.0.3
+Start Time:       Mon, 30 Mar 2026 11:39:38 +0000
+Labels:           app=qdrant-server
+                  pod-template-hash=5d8b5fbd7
+Annotations:      <none>
+Status:           Running
+IP:               10.244.0.118
+IPs:
+  IP:           10.244.0.118
+  IP:           fd00:10:244::76
+Controlled By:  ReplicaSet/qdrant-server-5d8b5fbd7
+Containers:
+  qdrant-server:
+    Container ID:   containerd://6a61882d4a3afd634ecd83791bee92b0787023f8c755bb1362cdc7d33716470e
+    Image:          qdrant/qdrant:v1.15
+    Image ID:       docker.io/qdrant/qdrant@sha256:0fb8897412abc81d1c0430a899b9a81eb8328aa634e7242d1bc804c1fe8fe863
+    Port:           6333/TCP
+    Host Port:      0/TCP
+    State:          Running
+      Started:      Mon, 30 Mar 2026 11:39:46 +0000
+    Ready:          True
+    Restart Count:  0
+    Environment:
+      QDRANT__SERVICE__API_KEY:  qdrant_key
+    Mounts:
+      /qdrant/storage from qdrant-storage (rw)
+      /var/run/secrets/kubernetes.io/serviceaccount from kube-api-access-8gbmq (ro)
+Conditions:
+  Type              Status
+  Initialized       True 
+  Ready             True 
+  ContainersReady   True 
+  PodScheduled      True 
+Volumes:
+  qdrant-storage:
+    Type:       PersistentVolumeClaim (a reference to a PersistentVolumeClaim in the same namespace)
+    ClaimName:  qdrant-pvc
+    ReadOnly:   false
+  kube-api-access-8gbmq:
+    Type:                    Projected (a volume that contains injected data from multiple sources)
+    TokenExpirationSeconds:  3607
+    ConfigMapName:           kube-root-ca.crt
+    ConfigMapOptional:       <nil>
+    DownwardAPI:             true
+QoS Class:                   BestEffort
+Node-Selectors:              <none>
+Tolerations:                 node.kubernetes.io/not-ready:NoExecute op=Exists for 300s
+                             node.kubernetes.io/unreachable:NoExecute op=Exists for 300s
+Events:
+  Type    Reason     Age   From               Message
+  ----    ------     ----  ----               -------
+  Normal  Scheduled  2m9s  default-scheduler  Successfully assigned storage/qdrant-server-5d8b5fbd7-f9xx6 to mlops-platform-control-plane
+  Normal  Pulling    2m5s  kubelet            Pulling image "qdrant/qdrant:v1.15"
+  Normal  Pulled     2m3s  kubelet            Successfully pulled image "qdrant/qdrant:v1.15" in 2.36076555s
+  Normal  Created    2m2s  kubelet            Created container qdrant-server
+  Normal  Started    2m2s  kubelet            Started container qdrant-server

@@ -1,0 +1,66 @@
+Name:             neo4j-server-6495c747f-x469k
+Namespace:        storage
+Priority:         0
+Service Account:  default
+Node:             mlops-platform-control-plane/172.18.0.3
+Start Time:       Mon, 30 Mar 2026 11:39:31 +0000
+Labels:           app=neo4j-server
+                  pod-template-hash=6495c747f
+Annotations:      <none>
+Status:           Running
+IP:               10.244.0.116
+IPs:
+  IP:           10.244.0.116
+  IP:           fd00:10:244::74
+Controlled By:  ReplicaSet/neo4j-server-6495c747f
+Containers:
+  neo4j-server:
+    Container ID:   containerd://4472e043e2dc517dbfc24099cadaacf2deee6aed1959a9364b9b74ae790cbd6d
+    Image:          neo4j:5.26.12-community
+    Image ID:       docker.io/library/neo4j@sha256:9f75e8df4325a24f00fdd7a8c0bcce650a58375049b1058e496e8b43d6c36b37
+    Ports:          7474/TCP, 7687/TCP
+    Host Ports:     0/TCP, 0/TCP
+    State:          Running
+      Started:      Mon, 30 Mar 2026 11:39:39 +0000
+    Ready:          True
+    Restart Count:  0
+    Environment:
+      NEO4J_AUTH:                                      neo4j/password
+      NEO4J_server_config_strict__validation_enabled:  false
+    Mounts:
+      /data from neo4j-data-storage (rw)
+      /logs from neo4j-log-storage (rw)
+      /var/run/secrets/kubernetes.io/serviceaccount from kube-api-access-dfnwm (ro)
+Conditions:
+  Type              Status
+  Initialized       True 
+  Ready             True 
+  ContainersReady   True 
+  PodScheduled      True 
+Volumes:
+  neo4j-data-storage:
+    Type:       PersistentVolumeClaim (a reference to a PersistentVolumeClaim in the same namespace)
+    ClaimName:  neo4j-data-pvc
+    ReadOnly:   false
+  neo4j-log-storage:
+    Type:       PersistentVolumeClaim (a reference to a PersistentVolumeClaim in the same namespace)
+    ClaimName:  neo4j-log-pvc
+    ReadOnly:   false
+  kube-api-access-dfnwm:
+    Type:                    Projected (a volume that contains injected data from multiple sources)
+    TokenExpirationSeconds:  3607
+    ConfigMapName:           kube-root-ca.crt
+    ConfigMapOptional:       <nil>
+    DownwardAPI:             true
+QoS Class:                   BestEffort
+Node-Selectors:              <none>
+Tolerations:                 node.kubernetes.io/not-ready:NoExecute op=Exists for 300s
+                             node.kubernetes.io/unreachable:NoExecute op=Exists for 300s
+Events:
+  Type    Reason     Age    From               Message
+  ----    ------     ----   ----               -------
+  Normal  Scheduled  6m28s  default-scheduler  Successfully assigned storage/neo4j-server-6495c747f-x469k to mlops-platform-control-plane
+  Normal  Pulling    6m23s  kubelet            Pulling image "neo4j:5.26.12-community"
+  Normal  Pulled     6m21s  kubelet            Successfully pulled image "neo4j:5.26.12-community" in 1.803179385s
+  Normal  Created    6m21s  kubelet            Created container neo4j-server
+  Normal  Started    6m20s  kubelet            Started container neo4j-server

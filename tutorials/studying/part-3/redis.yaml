@@ -1,0 +1,6 @@
+services:
+  tutorial-redis:
+    image: redis:8.2.1
+    restart: no
+    ports:
+      - '127.0.0.1:6379:6379'

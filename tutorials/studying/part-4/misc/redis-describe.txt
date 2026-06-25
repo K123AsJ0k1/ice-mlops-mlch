@@ -1,0 +1,54 @@
+Name:             redis-server-559776c84d-7l4cq
+Namespace:        storage
+Priority:         0
+Service Account:  default
+Node:             mlops-platform-control-plane/172.18.0.3
+Start Time:       Mon, 30 Mar 2026 11:39:14 +0000
+Labels:           app=redis-server
+                  pod-template-hash=559776c84d
+Annotations:      <none>
+Status:           Running
+IP:               10.244.0.108
+IPs:
+  IP:           10.244.0.108
+  IP:           fd00:10:244::6c
+Controlled By:  ReplicaSet/redis-server-559776c84d
+Containers:
+  redis-server:
+    Container ID:   containerd://bf44d81f31c6908310dbe8fe6ece0eb4c302f4e6cf06bacd3119df5378062736
+    Image:          redis:8.2.1
+    Image ID:       docker.io/library/redis@sha256:5fa2edb1e408fa8235e6db8fab01d1afaaae96c9403ba67b70feceb8661e8621
+    Port:           6379/TCP
+    Host Port:      0/TCP
+    State:          Running
+      Started:      Mon, 30 Mar 2026 11:39:21 +0000
+    Ready:          True
+    Restart Count:  0
+    Environment:    <none>
+    Mounts:
+      /var/run/secrets/kubernetes.io/serviceaccount from kube-api-access-k9xf9 (ro)
+Conditions:
+  Type              Status
+  Initialized       True 
+  Ready             True 
+  ContainersReady   True 
+  PodScheduled      True 
+Volumes:
+  kube-api-access-k9xf9:
+    Type:                    Projected (a volume that contains injected data from multiple sources)
+    TokenExpirationSeconds:  3607
+    ConfigMapName:           kube-root-ca.crt
+    ConfigMapOptional:       <nil>
+    DownwardAPI:             true
+QoS Class:                   BestEffort
+Node-Selectors:              <none>
+Tolerations:                 node.kubernetes.io/not-ready:NoExecute op=Exists for 300s
+                             node.kubernetes.io/unreachable:NoExecute op=Exists for 300s
+Events:
+  Type    Reason     Age   From               Message
+  ----    ------     ----  ----               -------
+  Normal  Scheduled  53s   default-scheduler  Successfully assigned storage/redis-server-559776c84d-7l4cq to mlops-platform-control-plane
+  Normal  Pulling    50s   kubelet            Pulling image "redis:8.2.1"
+  Normal  Pulled     48s   kubelet            Successfully pulled image "redis:8.2.1" in 2.744965796s
+  Normal  Created    47s   kubelet            Created container redis-server
+  Normal  Started    46s   kubelet            Started container redis-server

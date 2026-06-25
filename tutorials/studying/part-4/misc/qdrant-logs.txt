@@ -1,0 +1,20 @@
+           _                 _    
+  __ _  __| |_ __ __ _ _ __ | |_  
+ / _` |/ _` | '__/ _` | '_ \| __| 
+| (_| | (_| | | | (_| | | | | |_  
+ \__, |\__,_|_|  \__,_|_| |_|\__| 
+    |_|                           
+
+Version: 1.15.5, build: 48203e41
+Access web UI at http://localhost:6333/dashboard
+
+2026-03-30T11:39:46.202349Z  INFO storage::content_manager::consensus::persistent: Initializing new raft state at ./storage/raft_state.json
+2026-03-30T11:39:46.440479Z  INFO qdrant: Distributed mode disabled
+2026-03-30T11:39:46.440573Z  INFO qdrant: Telemetry reporting enabled, id: 7d8b8683-6bf0-4b95-9766-c67ef3a3ae35
+2026-03-30T11:39:46.456148Z  INFO qdrant::actix: TLS disabled for REST API
+2026-03-30T11:39:46.456235Z  INFO qdrant::actix: Qdrant HTTP listening on 6333
+2026-03-30T11:39:46.456266Z  INFO actix_server::builder: starting 13 workers
+2026-03-30T11:39:46.456324Z  INFO actix_server::server: Actix runtime found; starting in Actix runtime
+2026-03-30T11:39:46.456338Z  INFO actix_server::server: starting service: "actix-web-service-0.0.0.0:6333", workers: 13, listening on: 0.0.0.0:6333
+2026-03-30T11:39:46.460324Z  INFO qdrant::tonic: Qdrant gRPC listening on 6334
+2026-03-30T11:39:46.460349Z  INFO qdrant::tonic: TLS disabled for gRPC API

@@ -1,0 +1,15 @@
+apiVersion: networking.istio.io/v1beta1
+kind: VirtualService
+metadata:
+  name: ray-cloud-1-dash-virtualservice
+spec:
+  hosts:
+  - "ray.cloud.dash-1.oss"
+  gateways:
+  - dashboards-gateway-1
+  http:
+  - route:
+    - destination:
+        host: raycluster-kuberay-head-svc.default.svc.cluster.local
+        port:
+          number: 8265

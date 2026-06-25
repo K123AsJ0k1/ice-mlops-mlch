@@ -1,0 +1,20 @@
+* Host mongo-service.storage.svc.cluster.local:27017 was resolved.
+* IPv6: (none)
+* IPv4: 10.96.103.4
+*   Trying 10.96.103.4:27017...
+* Established connection to mongo-service.storage.svc.cluster.local (10.96.103.4 port 27017) from 10.244.0.133 port 36252 
+* using HTTP/1.x
+> GET / HTTP/1.1
+> Host: mongo-service.storage.svc.cluster.local:27017
+> User-Agent: curl/8.18.0
+> Accept: */*
+> 
+* Request completely sent off
+* HTTP 1.0, assume close after body
+< HTTP/1.0 200 OK
+< Connection: close
+< Content-Type: text/plain
+< Content-Length: 85
+< 
+It looks like you are trying to access MongoDB over HTTP on the native driver port.
+* shutting down connection #0

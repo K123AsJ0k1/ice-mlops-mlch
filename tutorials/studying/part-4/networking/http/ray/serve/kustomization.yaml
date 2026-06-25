@@ -1,0 +1,8 @@
+resources:
+- ray-cloud-1-virtualservice.yaml
+- ray-local-1-virtualservice.yaml
+- ray-local-2-virtualservice.yaml
+- ray-local-3-virtualservice.yaml
+- ray-hpc-1-virtualservice.yaml
+- ray-hpc-2-virtualservice.yaml
+- ray-hpc-3-virtualservice.yaml

@@ -1,0 +1,30 @@
+* Host localhost:7001 was resolved.
+* IPv6: ::1
+* IPv4: 127.0.0.1
+*   Trying [::1]:7001...
+* connect to ::1 port 7001 from ::1 port 56924 failed: Connection refused
+*   Trying 127.0.0.1:7001...
+* Connected to localhost (127.0.0.1) port 7001
+> GET / HTTP/1.1
+> Host: grafana.oss
+> User-Agent: curl/8.5.0
+> Accept: */*
+> 
+< HTTP/1.1 302 Found
+< cache-control: no-cache
+< content-type: text/html; charset=utf-8
+< expires: -1
+< location: /login
+< pragma: no-cache
+< set-cookie: redirect_to=%2F; Path=/; HttpOnly; SameSite=Lax
+< x-content-type-options: nosniff
+< x-frame-options: deny
+< x-xss-protection: 1; mode=block
+< date: Thu, 02 Apr 2026 06:56:55 GMT
+< content-length: 29
+< x-envoy-upstream-service-time: 0
+< server: istio-envoy
+< 
+<a href="/login">Found</a>.
+
+* Connection #0 to host localhost left intact

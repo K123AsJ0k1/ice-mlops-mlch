@@ -1,0 +1,25 @@
+[2026-03-25 11:00:03,477: INFO/MainProcess] Connected to redis://127.0.0.1:6379/0
+[2026-03-25 11:00:03,482: INFO/MainProcess] mingle: searching for neighbors
+[2026-03-25 11:00:04,497: INFO/MainProcess] mingle: all alone
+[2026-03-25 11:00:04,528: INFO/MainProcess] celery@ submitter_backend ready.
+[2026-03-25 11:00:13,441: INFO/MainProcess] Task tasks.submitter-requests[bd6195df-df9e-48b7-9445-c0170ab86f42] received
+[2026-03-25 11:00:13,444: WARNING/ForkPoolWorker-7] Testing connection: 127.0.0.1:6379:0
+[2026-03-25 11:00:13,448: WARNING/ForkPoolWorker-7] redis connected: True
+[2026-03-25 11:00:13,449: WARNING/ForkPoolWorker-7] Checking lock for lock:part-2:backend:interactive:submitter-requests
+[2026-03-25 11:00:13,449: WARNING/ForkPoolWorker-7] Lock active: False
+[2026-03-25 11:00:13,449: WARNING/ForkPoolWorker-7] Lock lock:part-2:backend:interactive:submitter-requests active: False
+[2026-03-25 11:00:13,453: WARNING/ForkPoolWorker-7] Lock created: True
+[2026-03-25 11:00:13,454: WARNING/ForkPoolWorker-7] Lock released: True
+[2026-03-25 11:00:13,457: INFO/ForkPoolWorker-7] Task tasks.submitter-requests[bd6195df-df9e-48b7-9445-c0170ab86f42] succeeded in 0.015423681999891414s: {'logs': ['[2026-03-25 11:00:03,477: INFO/MainProcess] Connected to redis://127.0.0.1:6379/0', '[2026-03-25 11:00:03,482: INFO/MainProcess] mingle: searching for neighbors', '[2026-03-25 11:00:04,497: INFO/MainProcess] mingle: all alone', '[2026-03-25 11:00:04,528: INFO/MainProcess] celery@ submitter_backend ready.', '[2026-03-25 11:00:13,441: INFO/MainProcess] Task tasks.submitter-requests[bd6195df-df9e-48b7-9445-c0170ab86f42] received', '[2026-03-25 11:00:13,444: WARNING/ForkPoolWorker-7] Testing connection: 127.0.0.1:6379:0', '[2026-03-25 11:00:13,448: WARNING/ForkPoolWorker-7] redis connected: True', '[2026-03-25 11:00:13,449: WARNING/ForkPoolWorker-7] Checking lock for lock:part-2:backend:interactive:submitter-requests', '[2026-03-25 11:00:13,449: WARNING/ForkPoolWorker-7] Lock active: False', '[2026-03-25 11:00:13,449: WARNING/ForkPoolWorker-7] Lock lock:part-2:backend:interactive:submitter-requests active: False', '[2026-03-25 11:00:13,453: WARNING/ForkPoolWorker-7] Lock created: True']}
+[2026-03-25 11:00:33,808: INFO/MainProcess] Task tasks.submitter-trigger[95c9b9ff-6ebd-4258-9596-0245aa48c0a7] received
+[2026-03-25 11:00:33,810: WARNING/ForkPoolWorker-7] Testing connection: 127.0.0.1:6379:0
+[2026-03-25 11:00:33,812: WARNING/ForkPoolWorker-7] Using key: cache:part-2:backend:dict
+[2026-03-25 11:00:33,813: WARNING/ForkPoolWorker-7] redis gave dict: {'celery-cache-location': 'local', 'celery-lock-location': 'local', 'cache': {'local': {'system': 'redis', 'user': 'part-2', 'target': 'backend', 'redis-endpoint': '127.0.0.1', 'redis-port': '6379', 'redis-db': '0'}}, 'lock': {'local': {'system': 'redis', 'user': 'part-2', 'target': 'backend', 'redis-endpoint': '127.0.0.1', 'redis-port': '6379', 'redis-db': '0'}}}
+[2026-03-25 11:00:33,814: WARNING/ForkPoolWorker-7] Testing connection: 127.0.0.1:6379:0
+[2026-03-25 11:00:33,816: WARNING/ForkPoolWorker-7] redis connected: True
+[2026-03-25 11:00:33,816: WARNING/ForkPoolWorker-7] Checking lock for lock:part-2:backend:interactive:submitter-requests
+[2026-03-25 11:00:33,817: WARNING/ForkPoolWorker-7] Lock active: False
+[2026-03-25 11:00:33,817: WARNING/ForkPoolWorker-7] Lock lock:part-2:backend:interactive:submitter-requests active: False
+[2026-03-25 11:00:33,818: WARNING/ForkPoolWorker-7] Lock created: True
+[2026-03-25 11:00:33,819: WARNING/ForkPoolWorker-7] Lock released: True
+[2026-03-25 11:00:33,820: INFO/ForkPoolWorker-7] Task tasks.submitter-trigger[95c9b9ff-6ebd-4258-9596-0245aa48c0a7] succeeded in 0.01142044900007022s: {'key': 'value'}

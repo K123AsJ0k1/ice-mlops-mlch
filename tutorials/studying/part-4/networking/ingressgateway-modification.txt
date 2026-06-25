@@ -1,0 +1,42 @@
+spec:
+  ports:
+  - name: http-dashboards
+    nodePort: 31001
+    port: 100
+    protocol: TCP
+    targetPort: 9501
+  - name: tcp-redis
+    nodePort: 31002
+    port: 200
+    protocol: TCP
+    targetPort: 9502
+  - name: tcp-minio
+    nodePort: 31003
+    port: 201
+    protocol: TCP
+    targetPort: 9503
+  - name: tcp-postgres
+    nodePort: 31004
+    port: 202
+    protocol: TCP
+    targetPort: 9504
+  - name: tcp-mongo
+    nodePort: 31005
+    port: 203
+    protocol: TCP
+    targetPort: 9505
+  - name: tcp-qdrant
+    nodePort: 31006
+    port: 204
+    protocol: TCP
+    targetPort: 9006
+  - name: tcp-neo4j
+    nodePort: 31007
+    port: 205
+    protocol: TCP
+    targetPort: 9007
+  selector:
+    app: istio-ingressgateway
+    istio: ingressgateway
+  sessionAffinity: None
+  type: NodePort

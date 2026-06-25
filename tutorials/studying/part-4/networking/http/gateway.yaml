@@ -1,0 +1,44 @@
+apiVersion: networking.istio.io/v1beta1
+kind: Gateway
+metadata:
+  name: dashboards-gateway-1
+spec:
+  selector:
+    app: istio-ingressgateway
+    istio: ingressgateway
+  servers:
+  - port:
+      name: http-dashboards
+      number: 100
+      protocol: HTTP
+    hosts:
+    - "kubeflow.oss"
+    - "kubeflow.minio.oss"
+    - "mlflow.oss"
+    - "mlflow.minio.oss"
+    - "prometheus.oss"
+    - "grafana.oss"
+    - "forwarder.frontend.oss"
+    - "forwarder.monitor.oss"
+    - "forwarder.airflow.oss"
+    - "kiali.oss"
+    - "minio.oss"
+    - "mongo.oss"
+    - "qdrant.oss"
+    - "neo4j.oss"
+    - "ollama.oss"
+    - "webui.oss"
+    - "ray.cloud.dash-1.oss"
+    - "ray.cloud.serve-1.oss"
+    - "ray.local.dash-1.oss"
+    - "ray.local.serve-1.oss"
+    - "ray.local.dash-2.oss"
+    - "ray.local.serve-2.oss"
+    - "ray.local.dash-3.oss"
+    - "ray.local.serve-3.oss"
+    - "ray.hpc.dash-1.oss"
+    - "ray.hpc.serve-1.oss"
+    - "ray.hpc.dash-2.oss"
+    - "ray.hpc.serve-2.oss"
+    - "ray.hpc.dash-3.oss"
+    - "ray.hpc.serve-3.oss"

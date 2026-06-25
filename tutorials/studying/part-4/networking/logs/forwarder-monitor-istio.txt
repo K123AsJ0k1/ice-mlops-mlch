@@ -1,0 +1,1 @@
+[2026-04-02T07:03:32.121Z] "GET / HTTP/1.1" 401 - via_upstream - "-" 0 13 3 2 "10.244.0.1" "curl/8.5.0" "39d26a35-e81d-4712-8c51-dd33816bbb46" "forwarder.monitor.oss" "10.244.0.55:7601" outbound|7601||flower-service.forwarder.svc.cluster.local 10.244.0.36:56448 10.244.0.36:9501 10.244.0.1:27561 - -

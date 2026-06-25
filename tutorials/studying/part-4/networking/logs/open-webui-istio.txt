@@ -1,0 +1,1 @@
+[2026-04-02T07:29:10.089Z] "GET / HTTP/1.1" 200 - via_upstream - "-" 0 7480 9 8 "10.244.0.1" "curl/8.5.0" "c59e8965-8f13-4022-8d0f-36e873cf9e3f" "webui.oss" "10.244.0.122:8080" outbound|7101||webui-service.language.svc.cluster.local 10.244.0.36:41414 10.244.0.36:9501 10.244.0.1:35434 - -

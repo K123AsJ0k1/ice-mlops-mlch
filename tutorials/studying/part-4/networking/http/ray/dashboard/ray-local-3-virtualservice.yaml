@@ -1,0 +1,15 @@
+apiVersion: networking.istio.io/v1beta1
+kind: VirtualService
+metadata:
+  name: ray-local-3-dash-virtualservice
+spec:
+  hosts:
+  - "ray.local.dash-3.oss"
+  gateways:
+  - dashboards-gateway-1
+  http:
+  - route:
+    - destination:
+        host: ray-local-3-dash.integration.svc.cluster.local
+        port:
+          number: 8102

@@ -1,0 +1,36 @@
+* Host localhost:7001 was resolved.
+* IPv6: ::1
+* IPv4: 127.0.0.1
+*   Trying [::1]:7001...
+* connect to ::1 port 7001 from ::1 port 49366 failed: Connection refused
+*   Trying 127.0.0.1:7001...
+* Connected to localhost (127.0.0.1) port 7001
+> GET / HTTP/1.1
+> Host: forwarder.airflow.oss
+> User-Agent: curl/8.5.0
+> Accept: */*
+> 
+< HTTP/1.1 200 OK
+< date: Thu, 02 Apr 2026 07:05:04 GMT
+< server: istio-envoy
+< content-length: 483
+< content-type: text/html; charset=utf-8
+< vary: Accept-Encoding
+< x-envoy-upstream-service-time: 2
+< 
+<!doctype html>
+<html lang="en" style="height: 100%">
+  <head>
+    <meta charset="UTF-8" />
+    <base href="/" />
+    <link rel="icon" type="image/png" href="./static/pin_32.png" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Airflow</title>
+    <script type="module" crossorigin src="./static/assets/index-CHslVY9k.js"></script>
+    
+  </head>
+  <body style="height: 100%">
+    <div id="root" style="height: 100%"></div>
+  </body>
+* Connection #0 to host localhost left intact
+</html>

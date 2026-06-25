@@ -1,0 +1,67 @@
+Name:             minio-server-795f8ffd79-bskxc
+Namespace:        storage
+Priority:         0
+Service Account:  default
+Node:             mlops-platform-control-plane/172.18.0.3
+Start Time:       Mon, 30 Mar 2026 11:39:23 +0000
+Labels:           app=minio-server
+                  pod-template-hash=795f8ffd79
+Annotations:      <none>
+Status:           Running
+IP:               10.244.0.111
+IPs:
+  IP:           10.244.0.111
+  IP:           fd00:10:244::6f
+Controlled By:  ReplicaSet/minio-server-795f8ffd79
+Containers:
+  minio-server:
+    Container ID:  containerd://7a07551b6437a0a334bd91cc5661f63933e499da22fc26f65d76005da07b4556
+    Image:         minio/minio:RELEASE.2025-09-07T16-13-09Z
+    Image ID:      docker.io/minio/minio@sha256:14cea493d9a34af32f524e538b8346cf79f3321eff8e708c1e2960462bd8936e
+    Ports:         9000/TCP, 9001/TCP
+    Host Ports:    0/TCP, 0/TCP
+    Command:
+      /bin/bash
+    Args:
+      -c
+      mkdir -p /data && minio server --address :9000 --console-address :9001 /data
+    State:          Running
+      Started:      Mon, 30 Mar 2026 11:39:29 +0000
+    Ready:          True
+    Restart Count:  0
+    Environment:
+      MINIO_PROMETHEUS_AUTH_TYPE:  public
+      MINIO_ROOT_USER:             <set to the key 'MINIO_ROOT_USER' of config map 'storage-configmap-dbkd2k7c42'>  Optional: false
+      MINIO_ROOT_PASSWORD:         <set to the key 'MINIO_ROOT_PASSWORD' in secret 'storage-secrets-cm78678bd4'>    Optional: false
+    Mounts:
+      /data from minio-pvc (rw)
+      /var/run/secrets/kubernetes.io/serviceaccount from kube-api-access-qjkxp (ro)
+Conditions:
+  Type              Status
+  Initialized       True 
+  Ready             True 
+  ContainersReady   True 
+  PodScheduled      True 
+Volumes:
+  minio-pvc:
+    Type:       PersistentVolumeClaim (a reference to a PersistentVolumeClaim in the same namespace)
+    ClaimName:  minio-pvc
+    ReadOnly:   false
+  kube-api-access-qjkxp:
+    Type:                    Projected (a volume that contains injected data from multiple sources)
+    TokenExpirationSeconds:  3607
+    ConfigMapName:           kube-root-ca.crt
+    ConfigMapOptional:       <nil>
+    DownwardAPI:             true
+QoS Class:                   BestEffort
+Node-Selectors:              kubernetes.io/os=linux
+Tolerations:                 node.kubernetes.io/not-ready:NoExecute op=Exists for 300s
+                             node.kubernetes.io/unreachable:NoExecute op=Exists for 300s
+Events:
+  Type    Reason     Age   From               Message
+  ----    ------     ----  ----               -------
+  Normal  Scheduled  11m   default-scheduler  Successfully assigned storage/minio-server-795f8ffd79-bskxc to mlops-platform-control-plane
+  Normal  Pulling    11m   kubelet            Pulling image "minio/minio:RELEASE.2025-09-07T16-13-09Z"
+  Normal  Pulled     10m   kubelet            Successfully pulled image "minio/minio:RELEASE.2025-09-07T16-13-09Z" in 2.531517016s
+  Normal  Created    10m   kubelet            Created container minio-server
+  Normal  Started    10m   kubelet            Started container minio-server

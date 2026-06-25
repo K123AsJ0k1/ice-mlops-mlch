@@ -1,0 +1,15 @@
+apiVersion: networking.istio.io/v1beta1
+kind: VirtualService
+metadata:
+  name: ollama-virtualservice
+spec:
+  hosts:
+  - "ollama.oss"
+  gateways:
+  - dashboards-gateway-1
+  http:
+  - route:
+    - destination:
+        host: ollama-service.language.svc.cluster.local
+        port:
+          number: 7100

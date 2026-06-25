@@ -1,0 +1,25 @@
+* Host localhost:7001 was resolved.
+* IPv6: ::1
+* IPv4: 127.0.0.1
+*   Trying [::1]:7001...
+* connect to ::1 port 7001 from ::1 port 56054 failed: Connection refused
+*   Trying 127.0.0.1:7001...
+* Connected to localhost (127.0.0.1) port 7001
+> GET / HTTP/1.1
+> Host: mlflow.oss
+> User-Agent: curl/8.5.0
+> Accept: */*
+> 
+< HTTP/1.1 200 OK
+< server: istio-envoy
+< date: Wed, 01 Apr 2026 13:38:29 GMT
+< content-disposition: inline; filename=index.html
+< content-type: text/html; charset=utf-8
+< content-length: 615
+< last-modified: Tue, 11 Mar 2025 21:54:22 GMT
+< cache-control: no-cache
+< etag: "1741730062.0-615-3334150879"
+< x-envoy-upstream-service-time: 2
+< 
+* Connection #0 to host localhost left intact
+<!doctype html><html lang="en"><head><meta charset="utf-8"/><meta name="viewport" content="width=device-width,initial-scale=1,shrink-to-fit=no"/><link rel="shortcut icon" href="./static-files/favicon.ico"/><meta name="theme-color" content="#000000"/><link rel="manifest" href="./static-files/manifest.json"/><title>MLflow</title><script defer="defer" src="static-files/static/js/main.8f2ec15f.js"></script><link href="static-files/static/css/main.2a740fb6.css" rel="stylesheet"></head><body><noscript>You need to enable JavaScript to run this app.</noscript><div id="root"></div><div id="modal"></div></body></html>

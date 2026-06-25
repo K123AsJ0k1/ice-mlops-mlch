@@ -1,0 +1,40 @@
+Defaulted container "api-server" out of: api-server, wait-for-airflow-migrations (init)
+
+  ____________       _____________
+ ____    |__( )_________  __/__  /________      __
+____  /| |_  /__  ___/_  /_ __  /_  __ \_ | /| / /
+___  ___ |  / _  /   _  __/ _  / / /_/ /_ |/ |/ /
+ _/_/  |_/_/  /_/    /_/    /_/  \____/____/|__/
+[2026-03-30T06:16:27.800+0000] {api_server_command.py:119} INFO - Running the uvicorn with:
+Apps: all
+Workers: 4
+Host: 0.0.0.0:8080
+Timeout: 120
+Logfiles: -
+=================================================================
+INFO:     Uvicorn running on http://0.0.0.0:8080 (Press CTRL+C to quit)
+INFO:     Started parent process [13]
+/home/airflow/.local/lib/python3.12/site-packages/flask_limiter/extension.py:324 UserWarning: Using the in-memory storage for tracking rate limits as no storage was explicitly specified. This is not recommended for production use. See: https://flask-limiter.readthedocs.io#configuring-a-storage-backend for documentation about configuring the storage backend.
+/home/airflow/.local/lib/python3.12/site-packages/flask_limiter/extension.py:324 UserWarning: Using the in-memory storage for tracking rate limits as no storage was explicitly specified. This is not recommended for production use. See: https://flask-limiter.readthedocs.io#configuring-a-storage-backend for documentation about configuring the storage backend.
+/home/airflow/.local/lib/python3.12/site-packages/flask_limiter/extension.py:324 UserWarning: Using the in-memory storage for tracking rate limits as no storage was explicitly specified. This is not recommended for production use. See: https://flask-limiter.readthedocs.io#configuring-a-storage-backend for documentation about configuring the storage backend.
+/home/airflow/.local/lib/python3.12/site-packages/flask_limiter/extension.py:324 UserWarning: Using the in-memory storage for tracking rate limits as no storage was explicitly specified. This is not recommended for production use. See: https://flask-limiter.readthedocs.io#configuring-a-storage-backend for documentation about configuring the storage backend.
+INFO:     Started server process [23]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+INFO:     Started server process [24]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+INFO:     Started server process [22]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+INFO:     Started server process [25]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+INFO:     10.244.0.1:37656 - "GET /api/v2/monitor/health HTTP/1.1" 200 OK
+INFO:     10.244.0.1:37670 - "GET /api/v2/monitor/health HTTP/1.1" 200 OK
+INFO:     10.244.0.1:50840 - "GET /api/v2/monitor/health HTTP/1.1" 200 OK
+INFO:     10.244.0.1:50834 - "GET /api/v2/monitor/health HTTP/1.1" 200 OK
+INFO:     10.244.0.1:44352 - "GET /api/v2/monitor/health HTTP/1.1" 200 OK
+INFO:     10.244.0.1:44350 - "GET /api/v2/monitor/health HTTP/1.1" 200 OK
+INFO:     10.244.0.1:38548 - "GET /api/v2/monitor/health HTTP/1.1" 200 OK
+INFO:     10.244.0.1:38550 - "GET /api/v2/monitor/health HTTP/1.1" 200 OK

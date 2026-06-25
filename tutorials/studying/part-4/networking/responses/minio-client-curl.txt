@@ -1,0 +1,31 @@
+* Host minio-service.storage.svc.cluster.local:9100 was resolved.
+* IPv6: (none)
+* IPv4: 10.96.90.243
+*   Trying 10.96.90.243:9100...
+* Established connection to minio-service.storage.svc.cluster.local (10.96.90.243 port 9100) from 10.244.0.133 port 40084 
+* using HTTP/1.x
+> GET / HTTP/1.1
+> Host: minio-service.storage.svc.cluster.local:9100
+> User-Agent: curl/8.18.0
+> Accept: */*
+> 
+* Request completely sent off
+< HTTP/1.1 403 Forbidden
+< Accept-Ranges: bytes
+< Content-Length: 254
+< Content-Type: application/xml
+< Server: MinIO
+< Strict-Transport-Security: max-age=31536000; includeSubDomains
+< Vary: Origin
+< Vary: Accept-Encoding
+< X-Amz-Id-2: dd9025bab4ad464b049177c95eb6ebf374d3b3fd1af9251148b658df7ac2e3e8
+< X-Amz-Request-Id: 18A23114F525998D
+< X-Content-Type-Options: nosniff
+< X-Ratelimit-Limit: 30498
+< X-Ratelimit-Remaining: 30498
+< X-Xss-Protection: 1; mode=block
+< Date: Wed, 01 Apr 2026 09:19:29 GMT
+< 
+<?xml version="1.0" encoding="UTF-8"?>
+* Connection #0 to host minio-service.storage.svc.cluster.local:9100 left intact
+<Error><Code>AccessDenied</Code><Message>Access Denied.</Message><Resource>/</Resource><RequestId>18A23114F525998D</RequestId><HostId>dd9025bab4ad464b049177c95eb6ebf374d3b3fd1af9251148b658df7ac2e3e8</HostId></Error>~ 

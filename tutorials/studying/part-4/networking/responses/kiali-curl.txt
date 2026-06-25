@@ -1,0 +1,24 @@
+* Host localhost:7001 was resolved.alhost:7001 
+* IPv6: ::1
+* IPv4: 127.0.0.1
+*   Trying [::1]:7001...
+* connect to ::1 port 7001 from ::1 port 38784 failed: Connection refused
+*   Trying 127.0.0.1:7001...
+* Connected to localhost (127.0.0.1) port 7001
+> GET / HTTP/1.1
+> Host: kiali.oss
+> User-Agent: curl/8.5.0
+> Accept: */*
+> 
+< HTTP/1.1 302 Found
+< content-type: text/html; charset=utf-8
+< location: /kiali/
+< vary: Accept-Encoding
+< date: Thu, 02 Apr 2026 07:16:44 GMT
+< content-length: 30
+< x-envoy-upstream-service-time: 0
+< server: istio-envoy
+< 
+<a href="/kiali/">Found</a>.
+
+* Connection #0 to host localhost left intact

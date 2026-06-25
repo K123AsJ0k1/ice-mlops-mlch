@@ -1,0 +1,62 @@
+Name:             express-server-6f9db76688-frxsx
+Namespace:        storage
+Priority:         0
+Service Account:  default
+Node:             mlops-platform-control-plane/172.18.0.3
+Start Time:       Mon, 30 Mar 2026 11:39:14 +0000
+Labels:           app=express-server
+                  pod-template-hash=6f9db76688
+Annotations:      <none>
+Status:           Running
+IP:               10.244.0.109
+IPs:
+  IP:           10.244.0.109
+  IP:           fd00:10:244::6d
+Controlled By:  ReplicaSet/express-server-6f9db76688
+Containers:
+  express-server:
+    Container ID:   containerd://216c693b2ba7ced4c359d5c691c69f73e8bdfcdc5e1f7178045b773f3e3dc77f
+    Image:          mongo-express:1.0.2
+    Image ID:       docker.io/library/mongo-express@sha256:1b23d7976f0210dbec74045c209e52fbb26d29b2e873d6c6fa3d3f0ae32c2a64
+    Port:           8081/TCP
+    Host Port:      0/TCP
+    State:          Running
+      Started:      Mon, 30 Mar 2026 11:39:22 +0000
+    Ready:          True
+    Restart Count:  0
+    Environment:
+      ME_CONFIG_MONGODB_AUTH_USERNAME:  mongo123
+      ME_CONFIG_MONGODB_AUTH_PASSWORD:  mongo456
+      ME_CONFIG_MONGODB_ADMINUSERNAME:  mongo123
+      ME_CONFIG_MONGODB_ADMINPASSWORD:  mongo456
+      ME_CONFIG_BASICAUTH_USERNAME:     express123
+      ME_CONFIG_BASICAUTH_PASSWORD:     express456
+      ME_CONFIG_MONGODB_PORT:           27017
+      ME_CONFIG_MONGODB_SERVER:         mongo-service
+    Mounts:
+      /var/run/secrets/kubernetes.io/serviceaccount from kube-api-access-2tx69 (ro)
+Conditions:
+  Type              Status
+  Initialized       True 
+  Ready             True 
+  ContainersReady   True 
+  PodScheduled      True 
+Volumes:
+  kube-api-access-2tx69:
+    Type:                    Projected (a volume that contains injected data from multiple sources)
+    TokenExpirationSeconds:  3607
+    ConfigMapName:           kube-root-ca.crt
+    ConfigMapOptional:       <nil>
+    DownwardAPI:             true
+QoS Class:                   BestEffort
+Node-Selectors:              <none>
+Tolerations:                 node.kubernetes.io/not-ready:NoExecute op=Exists for 300s
+                             node.kubernetes.io/unreachable:NoExecute op=Exists for 300s
+Events:
+  Type    Reason     Age   From               Message
+  ----    ------     ----  ----               -------
+  Normal  Scheduled  13m   default-scheduler  Successfully assigned storage/express-server-6f9db76688-frxsx to mlops-platform-control-plane
+  Normal  Pulling    13m   kubelet            Pulling image "mongo-express:1.0.2"
+  Normal  Pulled     13m   kubelet            Successfully pulled image "mongo-express:1.0.2" in 3.476384971s
+  Normal  Created    13m   kubelet            Created container express-server
+  Normal  Started    13m   kubelet            Started container express-server

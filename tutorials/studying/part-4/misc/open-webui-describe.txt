@@ -1,0 +1,61 @@
+Name:             webui-server-76b6cbd76f-hvqcz
+Namespace:        language
+Priority:         0
+Service Account:  default
+Node:             mlops-platform-control-plane/172.18.0.3
+Start Time:       Tue, 31 Mar 2026 07:17:54 +0000
+Labels:           app=webui-server
+                  pod-template-hash=76b6cbd76f
+Annotations:      <none>
+Status:           Running
+IP:               10.244.0.122
+IPs:
+  IP:           10.244.0.122
+  IP:           fd00:10:244::7a
+Controlled By:  ReplicaSet/webui-server-76b6cbd76f
+Containers:
+  webui-server:
+    Container ID:   containerd://fb787a609f1f1ec24b45e2b439f6e1c7a76e04eac89b3b81590723094b23b697
+    Image:          ghcr.io/open-webui/open-webui:main
+    Image ID:       ghcr.io/open-webui/open-webui@sha256:b8095f79a6a8ffad8f830bdacc9b5b0aef805689b31bca0b065cc2424d3cfaeb
+    Port:           8080/TCP
+    Host Port:      0/TCP
+    State:          Running
+      Started:      Tue, 31 Mar 2026 07:18:55 +0000
+    Ready:          True
+    Restart Count:  0
+    Environment:
+      WEBUI_AUTH:       False
+      OLLAMA_BASE_URL:  http://ollama-service.language.svc.cluster.local:7100
+    Mounts:
+      /app/backend/data from webui-volume (rw)
+      /var/run/secrets/kubernetes.io/serviceaccount from kube-api-access-x4zmv (ro)
+Conditions:
+  Type              Status
+  Initialized       True 
+  Ready             True 
+  ContainersReady   True 
+  PodScheduled      True 
+Volumes:
+  webui-volume:
+    Type:       PersistentVolumeClaim (a reference to a PersistentVolumeClaim in the same namespace)
+    ClaimName:  webui-pvc
+    ReadOnly:   false
+  kube-api-access-x4zmv:
+    Type:                    Projected (a volume that contains injected data from multiple sources)
+    TokenExpirationSeconds:  3607
+    ConfigMapName:           kube-root-ca.crt
+    ConfigMapOptional:       <nil>
+    DownwardAPI:             true
+QoS Class:                   BestEffort
+Node-Selectors:              <none>
+Tolerations:                 node.kubernetes.io/not-ready:NoExecute op=Exists for 300s
+                             node.kubernetes.io/unreachable:NoExecute op=Exists for 300s
+Events:
+  Type    Reason     Age   From               Message
+  ----    ------     ----  ----               -------
+  Normal  Scheduled  26m   default-scheduler  Successfully assigned language/webui-server-76b6cbd76f-hvqcz to mlops-platform-control-plane
+  Normal  Pulling    26m   kubelet            Pulling image "ghcr.io/open-webui/open-webui:main"
+  Normal  Pulled     25m   kubelet            Successfully pulled image "ghcr.io/open-webui/open-webui:main" in 54.303513616s
+  Normal  Created    25m   kubelet            Created container webui-server
+  Normal  Started    25m   kubelet            Started container webui-server

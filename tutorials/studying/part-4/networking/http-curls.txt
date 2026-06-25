@@ -1,0 +1,47 @@
+# Kubeflow UI
+curl -v -H "Host: kubeflow.oss" http://localhost:7001
+
+# Kubeflow MinIO
+curl -v -H "Host: kubeflow.minio.oss" http://localhost:7001
+
+# MLflow UI
+curl -v -H "Host: mlflow.oss" http://localhost:7001
+
+# MLflow MinIO
+curl -v -H "Host: mlflow.minio.oss" http://localhost:7001
+
+# Prometheus
+curl -v -H "Host: prometheus.oss" http://localhost:7001
+
+# Grafana
+curl -v -H "Host: grafana.oss" http://localhost:7001
+
+# Forwarder Frontend
+curl -v -H "Host: forwarder.frontend.oss" http://localhost:7001/docs
+
+# Forwarder Monitor
+curl -v -H "Host: forwarder.monitor.oss" http://localhost:7001
+
+# Forwarder Airflow
+curl -v -H "Host: forwarder.airflow.oss" http://localhost:7001
+
+# Kiali 
+curl -v -H "Host: kiali.oss" http://localhost:7001
+
+# MinIO UI
+curl -v -H "Host: minio.oss" http://localhost:7001
+
+# Mongo Express
+curl -v -H "Host: mongo.oss" http://localhost:7001
+
+# Qdrant
+curl -v -H "Host: qdrant.oss" http://localhost:7001
+
+# Neo4j
+curl -v -H "Host: neo4j.oss" http://localhost:7001
+
+# Open WebUI
+curl -v -H "Host: webui.oss" http://localhost:7001
+
+# Cloud Ray
+curl -v -H "Host: ray.cloud.dash-1.oss" http://localhost:7001

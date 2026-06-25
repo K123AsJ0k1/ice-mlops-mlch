@@ -1,0 +1,1 @@
+[2026-04-02T06:56:55.156Z] "GET / HTTP/1.1" 302 - via_upstream - "-" 0 29 1 0 "10.244.0.1" "curl/8.5.0" "5a68a216-4d55-4d78-b8e0-d01d2e2cde42" "grafana.oss" "10.244.0.23:3000" outbound|3000||grafana.monitoring.svc.cluster.local 10.244.0.36:38372 10.244.0.36:9501 10.244.0.1:53256 - -

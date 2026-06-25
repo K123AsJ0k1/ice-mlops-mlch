@@ -1,0 +1,11 @@
+Host lf-cpouta
+Hostname [VM_FLOATING_IP]
+User [VM_USER]
+IdentityFile ~/.ssh/local-cpouta.pem
+LocalForward 127.0.0.1:7001 [VM_FLOATING_IP]:7001
+LocalForward 127.0.0.1:7002 [VM_FLOATING_IP]:7002
+LocalForward 127.0.0.1:7003 [VM_FLOATING_IP]:7003
+LocalForward 127.0.0.1:7004 [VM_FLOATING_IP]:7004
+LocalForward 127.0.0.1:7005 [VM_FLOATING_IP]:7005
+LocalForward 127.0.0.1:7006 [VM_FLOATING_IP]:7006
+LocalForward 127.0.0.1:7007 [VM_FLOATING_IP]:7007

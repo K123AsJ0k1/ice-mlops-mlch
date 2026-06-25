@@ -1,0 +1,1 @@
+[2026-04-02T06:59:28.966Z] "GET /docs HTTP/1.1" 200 - via_upstream - "-" 0 931 2 1 "10.244.0.1" "curl/8.5.0" "0a98f86d-2700-4d2f-95c3-da8dc3070ee7" "forwarder.frontend.oss" "10.244.0.43:7600" outbound|7600||fastapi-service.forwarder.svc.cluster.local 10.244.0.36:41896 10.244.0.36:9501 10.244.0.1:15819 - -

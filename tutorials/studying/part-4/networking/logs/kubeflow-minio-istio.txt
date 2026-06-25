@@ -1,0 +1,1 @@
+[2026-04-01T13:36:37.805Z] "GET / HTTP/1.1" 403 - via_upstream - "-" 0 226 1 1 "10.244.0.1" "curl/8.5.0" "d0efc674-c111-47c9-b4b5-db6385d45bdf" "kubeflow.minio.oss" "10.244.0.54:9000" outbound|9000||minio-service.kubeflow.svc.cluster.local 10.244.0.36:58798 10.244.0.36:9501 10.244.0.1:48255 - -

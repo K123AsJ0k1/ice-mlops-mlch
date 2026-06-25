@@ -1,0 +1,1 @@
+[2026-04-02T07:16:44.942Z] "GET / HTTP/1.1" 302 - via_upstream - "-" 0 30 1 0 "10.244.0.1" "curl/8.5.0" "25c18043-b482-4afa-ae14-30e4e2e854c0" "kiali.oss" "10.244.0.6:20001" outbound|20001||kiali.istio-system.svc.cluster.local 10.244.0.36:43090 10.244.0.36:9501 10.244.0.1:56319 - -

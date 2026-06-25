@@ -1,0 +1,7 @@
+resources:
+- redis/
+- minio/
+- postgres/
+- mongo/
+- qdrant/
+- neo4j/

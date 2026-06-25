@@ -1,0 +1,1 @@
+[2026-04-02T07:28:13.663Z] "GET / HTTP/1.1" 200 - via_upstream - "-" 0 112 1 1 "10.244.0.1" "curl/8.5.0" "b767e677-3cfd-4507-a981-1a3527bab6b3" "qdrant.oss" "10.244.0.118:6333" outbound|7201||qdrant-service.storage.svc.cluster.local 10.244.0.36:60058 10.244.0.36:9501 10.244.0.1:35874 - -

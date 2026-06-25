@@ -1,0 +1,19 @@
+{"level":"info","time":"2026-03-18T08:41:59Z","message":"Adding a RegistryRefreshHandler"}
+2026-03-18T08:41:59Z INF Kiali: Version: v1.76.1, Commit: 0f96891475ab41b10821ae8e1850572fbcd1505f, Go: 1.20.10
+2026-03-18T08:42:03Z INF Using authentication strategy [anonymous]
+2026-03-18T08:42:03Z WRN Kiali auth strategy is configured for anonymous access - users will not be authenticated.
+2026-03-18T08:42:03Z INF Some validation errors will be ignored [KIA1301]. If these errors do occur, they will still be logged. If you think the validation errors you see are incorrect, please report them to the Kiali team if you have not done so already and provide the details of your scenario. This will keep Kiali validations strong for the whole community.
+2026-03-18T08:42:03Z INF Initializing Kiali Cache
+2026-03-18T08:42:03Z INF Adding a RegistryRefreshHandler
+2026-03-18T08:42:03Z INF [Kiali Cache] Waiting for cluster-scoped cache to sync
+2026-03-18T08:42:03Z INF [Kiali Cache] Started
+2026-03-18T08:42:03Z INF [Kiali Cache] Kube cache is active for cluster: [Kubernetes]
+2026-03-18T08:42:03Z INF Server endpoint will start at [:20001/kiali]
+2026-03-18T08:42:03Z INF Server endpoint will serve static content from [/opt/kiali/console]
+2026-03-18T08:42:03Z INF Starting Metrics Server on [:9090]
+2026-03-18T09:27:03Z INF [Kiali Cache] Updating cache with new token
+2026-03-18T09:27:03Z INF [Kiali Cache] Waiting for cluster-scoped cache to sync
+2026-03-18T09:27:03Z INF [Kiali Cache] Started
+2026-03-18T10:17:03Z INF [Kiali Cache] Updating cache with new token
+2026-03-18T10:17:03Z INF [Kiali Cache] Waiting for cluster-scoped cache to sync
+2026-03-18T10:17:03Z INF [Kiali Cache] Started

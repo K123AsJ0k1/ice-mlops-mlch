@@ -1,0 +1,1 @@
+[2026-04-02T07:26:11.882Z] "GET / HTTP/1.1" 200 - via_upstream - "-" 0 1309 1 0 "10.244.0.1" "curl/8.5.0" "5dacc478-6358-4d68-9a5a-44e7b21e1b06" "minio.oss" "10.244.0.111:9001" outbound|9101||minio-service.storage.svc.cluster.local 10.244.0.36:53772 10.244.0.36:9501 10.244.0.1:1776 - -

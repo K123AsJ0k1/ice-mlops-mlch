@@ -1,0 +1,4 @@
+resources:
+- forwarder-frontend-virtualservice.yaml
+- forwarder-monitor-virtualservice.yaml
+- forwarder-airflow-virtualservice.yaml

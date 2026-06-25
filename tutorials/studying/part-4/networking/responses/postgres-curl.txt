@@ -1,0 +1,15 @@
+* Host postgres-service.storage.svc.cluster.local:5532 was resolved.
+* IPv6: (none)
+* IPv4: 10.96.163.121
+*   Trying 10.96.163.121:5532...
+* Established connection to postgres-service.storage.svc.cluster.local (10.96.163.121 port 5532) from 10.244.0.133 port 37298 
+* using HTTP/1.x
+> GET / HTTP/1.1
+> Host: postgres-service.storage.svc.cluster.local:5532
+> User-Agent: curl/8.18.0
+> Accept: */*
+> 
+* Request completely sent off
+* Empty reply from server
+* shutting down connection #0
+curl: (52) Empty reply from server

@@ -1,0 +1,66 @@
+Name:             mongo-server-578664b74-w2tfp
+Namespace:        storage
+Priority:         0
+Service Account:  default
+Node:             mlops-platform-control-plane/172.18.0.3
+Start Time:       Mon, 30 Mar 2026 11:39:26 +0000
+Labels:           app=mongo-server
+                  pod-template-hash=578664b74
+Annotations:      <none>
+Status:           Running
+IP:               10.244.0.114
+IPs:
+  IP:           10.244.0.114
+  IP:           fd00:10:244::72
+Controlled By:  ReplicaSet/mongo-server-578664b74
+Containers:
+  mongo-server:
+    Container ID:   containerd://c29a3e61a3381955fd864969f63357c0e3dd7833752db243d251ac486d842a98
+    Image:          mongo:8.0.14
+    Image ID:       docker.io/library/mongo@sha256:6eaaf8b194dc2c78a61deae63f1c163c2e55769c2157d6406f517d902694c792
+    Port:           27017/TCP
+    Host Port:      0/TCP
+    State:          Running
+      Started:      Mon, 30 Mar 2026 11:39:33 +0000
+    Ready:          True
+    Restart Count:  0
+    Environment:
+      MONGO_INITDB_ROOT_USERNAME:  mongo123
+      MONGO_INITDB_ROOT_PASSWORD:  mongo456
+    Mounts:
+      /data/db/ from mongo-data (rw)
+      /var/log/mongodb/ from mongo-log (rw)
+      /var/run/secrets/kubernetes.io/serviceaccount from kube-api-access-qtbhb (ro)
+Conditions:
+  Type              Status
+  Initialized       True 
+  Ready             True 
+  ContainersReady   True 
+  PodScheduled      True 
+Volumes:
+  mongo-data:
+    Type:       PersistentVolumeClaim (a reference to a PersistentVolumeClaim in the same namespace)
+    ClaimName:  mongo-data-pvc
+    ReadOnly:   false
+  mongo-log:
+    Type:       PersistentVolumeClaim (a reference to a PersistentVolumeClaim in the same namespace)
+    ClaimName:  mongo-log-pvc
+    ReadOnly:   false
+  kube-api-access-qtbhb:
+    Type:                    Projected (a volume that contains injected data from multiple sources)
+    TokenExpirationSeconds:  3607
+    ConfigMapName:           kube-root-ca.crt
+    ConfigMapOptional:       <nil>
+    DownwardAPI:             true
+QoS Class:                   BestEffort
+Node-Selectors:              <none>
+Tolerations:                 node.kubernetes.io/not-ready:NoExecute op=Exists for 300s
+                             node.kubernetes.io/unreachable:NoExecute op=Exists for 300s
+Events:
+  Type    Reason     Age    From               Message
+  ----    ------     ----   ----               -------
+  Normal  Scheduled  8m54s  default-scheduler  Successfully assigned storage/mongo-server-578664b74-w2tfp to mlops-platform-control-plane
+  Normal  Pulling    8m49s  kubelet            Pulling image "mongo:8.0.14"
+  Normal  Pulled     8m48s  kubelet            Successfully pulled image "mongo:8.0.14" in 1.336513637s
+  Normal  Created    8m47s  kubelet            Created container mongo-server
+  Normal  Started    8m47s  kubelet            Started container mongo-server

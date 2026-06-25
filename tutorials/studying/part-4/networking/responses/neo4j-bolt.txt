@@ -1,0 +1,20 @@
+* Host neo4j-service.storage.svc.cluster.local:7687 was resolved.
+* IPv6: (none)
+* IPv4: 10.96.124.106
+*   Trying 10.96.124.106:7687...
+* Established connection to neo4j-service.storage.svc.cluster.local (10.96.124.106 port 7687) from 10.244.0.133 port 42264 
+* using HTTP/1.x
+> GET / HTTP/1.1
+> Host: neo4j-service.storage.svc.cluster.local:7687
+> User-Agent: curl/8.18.0
+> Accept: */*
+> 
+* Request completely sent off
+< HTTP/1.1 200 OK
+< content-type: application/json
+< access-control-allow-origin: *
+< vary: Accept
+< date: Wed, 01 Apr 2026 09:25:32 GMT
+< content-length: 0
+< 
+* Connection #0 to host neo4j-service.storage.svc.cluster.local:7687 left intact

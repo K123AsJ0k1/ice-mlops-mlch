@@ -1,0 +1,64 @@
+Name:             ollama-server-5f4bb7cf4c-zpmmc
+Namespace:        language
+Priority:         0
+Service Account:  default
+Node:             mlops-platform-control-plane/172.18.0.3
+Start Time:       Tue, 31 Mar 2026 07:37:55 +0000
+Labels:           app=ollama-server
+                  pod-template-hash=5f4bb7cf4c
+Annotations:      <none>
+Status:           Running
+IP:               10.244.0.123
+IPs:
+  IP:           10.244.0.123
+  IP:           fd00:10:244::7b
+Controlled By:  ReplicaSet/ollama-server-5f4bb7cf4c
+Containers:
+  ollama-server:
+    Container ID:   containerd://045017eb14500f53cbd3e80cbee2a6a8c3545f26e07ef26cbcba06dc4874136d
+    Image:          ollama/ollama:0.19.0
+    Image ID:       docker.io/ollama/ollama@sha256:bf240c2847a8bc7b2c630b85dab5d1dedcba257b551d5fc9b290ce544d59272a
+    Port:           11434/TCP
+    Host Port:      0/TCP
+    State:          Running
+      Started:      Tue, 31 Mar 2026 07:39:17 +0000
+    Ready:          True
+    Restart Count:  0
+    Limits:
+      nvshare.com/gpu:  1
+    Requests:
+      nvshare.com/gpu:  1
+    Environment:
+      WEBUI_AUTH:  False
+    Mounts:
+      /root/.ollama from ollama-volume (rw)
+      /var/run/secrets/kubernetes.io/serviceaccount from kube-api-access-jcmhw (ro)
+Conditions:
+  Type              Status
+  Initialized       True 
+  Ready             True 
+  ContainersReady   True 
+  PodScheduled      True 
+Volumes:
+  ollama-volume:
+    Type:       PersistentVolumeClaim (a reference to a PersistentVolumeClaim in the same namespace)
+    ClaimName:  ollama-pvc
+    ReadOnly:   false
+  kube-api-access-jcmhw:
+    Type:                    Projected (a volume that contains injected data from multiple sources)
+    TokenExpirationSeconds:  3607
+    ConfigMapName:           kube-root-ca.crt
+    ConfigMapOptional:       <nil>
+    DownwardAPI:             true
+QoS Class:                   BestEffort
+Node-Selectors:              <none>
+Tolerations:                 node.kubernetes.io/not-ready:NoExecute op=Exists for 300s
+                             node.kubernetes.io/unreachable:NoExecute op=Exists for 300s
+Events:
+  Type    Reason     Age    From               Message
+  ----    ------     ----   ----               -------
+  Normal  Scheduled  4m55s  default-scheduler  Successfully assigned language/ollama-server-5f4bb7cf4c-zpmmc to mlops-platform-control-plane
+  Normal  Pulling    4m53s  kubelet            Pulling image "ollama/ollama:0.19.0"
+  Normal  Pulled     3m38s  kubelet            Successfully pulled image "ollama/ollama:0.19.0" in 1m14.390823018s
+  Normal  Created    3m37s  kubelet            Created container ollama-server
+  Normal  Started    3m34s  kubelet            Started container ollama-server

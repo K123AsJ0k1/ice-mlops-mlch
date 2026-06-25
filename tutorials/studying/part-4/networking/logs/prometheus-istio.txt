@@ -1,0 +1,1 @@
+[2026-04-02T06:54:09.626Z] "GET / HTTP/1.1" 302 - via_upstream - "-" 0 29 1 0 "10.244.0.1" "curl/8.5.0" "b2105d96-14b0-44de-97ac-d1dc224406eb" "prometheus.oss" "10.244.0.11:9090" outbound|8080||prometheus-service.monitoring.svc.cluster.local 10.244.0.36:40644 10.244.0.36:9501 10.244.0.1:59822 - -

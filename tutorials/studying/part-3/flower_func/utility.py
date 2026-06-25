@@ -1,0 +1,41 @@
+def flower_format_tasks(
+    tasks: any
+) -> any:
+    relevant_keys = [
+        'worker',
+        'children',
+        'state',
+        'received',
+        'started',
+        'succeeded',
+        'failed',
+        'result',
+        'timestamp',
+        'runtime',
+    ]
+    
+    formatted_flower_tasks = {}
+    sorted_tasks = sorted(
+        tasks.values(), 
+        key=lambda x: float(x['received']) if not x['received'] is None else float('-inf')
+    )
+    for task_info in sorted_tasks:
+        if not task_info['name'] is None:
+            task_id = task_info['uuid']
+            task_name = task_info['name'].split('.')[-1].replace('_','-')
+            used_key = ''
+            if not task_name in formatted_flower_tasks:
+                used_key = '1/' + task_id
+                formatted_flower_tasks[task_name] = {
+                    used_key: {}
+                }
+            else:
+                new_key = len(formatted_flower_tasks[task_name]) + 1
+                new_key = str(new_key)
+                used_key = new_key + '/' + task_id
+                formatted_flower_tasks[task_name][used_key] = {}
+            
+            for task_key, task_value in task_info.items():
+                if task_key in relevant_keys:
+                    formatted_flower_tasks[task_name][used_key][task_key] = task_value  
+    return formatted_flower_tasks   

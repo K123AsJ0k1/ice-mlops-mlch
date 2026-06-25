@@ -1,0 +1,14 @@
+2026-03-24 12:36:40,262 - INFO - submitter-frontend - Creating FastAPI instance
+2026-03-24 12:36:40,262 - INFO - submitter-frontend - FastAPI created
+2026-03-24 12:36:40,262 - INFO - submitter-frontend - Connecting to Redis
+2026-03-24 12:36:40,286 - INFO - submitter-frontend - Redis connected
+2026-03-24 12:36:40,286 - INFO - submitter-frontend - Importing routes
+2026-03-24 12:36:40,298 - INFO - submitter-frontend - Including routers
+2026-03-24 12:36:40,299 - INFO - submitter-frontend - Routes implemented
+2026-03-24 12:36:40,299 - INFO - submitter-frontend - Frontend ready
+2026-03-24 12:36:58,172 - INFO - submitter-frontend - Post configuration
+2026-03-24 12:36:58,172 - INFO - submitter-frontend - cache:part-2:frontend:dict
+2026-03-24 12:36:58,173 - INFO - submitter-frontend - Testing connection: 127.0.0.1:6379:0
+2026-03-24 12:36:58,177 - INFO - submitter-frontend - Using key: cache:part-2:frontend:dict
+2026-03-24 12:36:58,178 - INFO - submitter-frontend - redis responded with: True
+2026-03-24 12:37:15,261 - INFO - submitter-frontend - Get logs

@@ -1,0 +1,50 @@
+* Host localhost:7001 was resolved.
+* IPv6: ::1
+* IPv4: 127.0.0.1
+*   Trying [::1]:7001...
+* connect to ::1 port 7001 from ::1 port 52322 failed: Connection refused
+*   Trying 127.0.0.1:7001...
+* Connected to localhost (127.0.0.1) port 7001
+> GET /docs HTTP/1.1
+> Host: forwarder.frontend.oss
+> User-Agent: curl/8.5.0
+> Accept: */*
+> 
+< HTTP/1.1 200 OK
+< date: Thu, 02 Apr 2026 06:59:28 GMT
+< server: istio-envoy
+< content-length: 931
+< content-type: text/html; charset=utf-8
+< x-envoy-upstream-service-time: 1
+< 
+
+    <!DOCTYPE html>
+    <html>
+    <head>
+    <link type="text/css" rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swagger-ui-dist@5/swagger-ui.css">
+    <link rel="shortcut icon" href="https://fastapi.tiangolo.com/img/favicon.png">
+    <title>FastAPI - Swagger UI</title>
+    </head>
+    <body>
+    <div id="swagger-ui">
+    </div>
+    <script src="https://cdn.jsdelivr.net/npm/swagger-ui-dist@5/swagger-ui-bundle.js"></script>
+    <!-- `SwaggerUIBundle` is now available on the page -->
+    <script>
+    const ui = SwaggerUIBundle({
+        url: '/openapi.json',
+    "dom_id": "#swagger-ui",
+"layout": "BaseLayout",
+"deepLinking": true,
+"showExtensions": true,
+"showCommonExtensions": true,
+oauth2RedirectUrl: window.location.origin + '/docs/oauth2-redirect',
+    presets: [
+        SwaggerUIBundle.presets.apis,
+        SwaggerUIBundle.SwaggerUIStandalonePreset
+        ],
+    })
+    </script>
+    </body>
+    </html>
+* Connection #0 to host localhost left intact

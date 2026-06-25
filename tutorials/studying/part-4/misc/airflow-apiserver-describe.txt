@@ -1,0 +1,114 @@
+Name:             airflow-api-server-9fd955f7c-4gqf4
+Namespace:        forwarder
+Priority:         0
+Service Account:  airflow-api-server
+Node:             mlops-platform-control-plane/172.18.0.3
+Start Time:       Mon, 30 Mar 2026 06:15:48 +0000
+Labels:           component=api-server
+                  pod-template-hash=9fd955f7c
+                  release=airflow
+                  tier=airflow
+Annotations:      checksum/airflow-config: 8b52af2b99efff67e80570e619328e651aecccfb62a511dac02a5601183c93a4
+                  checksum/extra-configmaps: e862ea47e13e634cf17d476323784fa27dac20015550c230953b526182f5cac8
+                  checksum/extra-secrets: e9582fdd622296c976cbc10a5ba7d6702c28a24fe80795ea5b84ba443a56c827
+                  checksum/jwt-secret: 38ce814d81732370d6a75fdccfb42f1d7a3d1448d14d7bf4c2e6a59cb76a6c8f
+                  checksum/metadata-secret: b2fe937560e9635aeb01fce9100c2f836c5880f81c802565ce95fbcc8a56da4c
+                  checksum/pgbouncer-config-secret: 1dae2adc757473469686d37449d076b0c82404f61413b58ae68b3c5e99527688
+Status:           Running
+IP:               10.244.0.79
+IPs:
+  IP:           10.244.0.79
+  IP:           fd00:10:244::4f
+Controlled By:  ReplicaSet/airflow-api-server-9fd955f7c
+Init Containers:
+  wait-for-airflow-migrations:
+    Container ID:  containerd://e47623b4a61c828bf0db43094cbd4ba0fb8ba667875b614d886a9f0e7bf6dfba
+    Image:         t9k4b5ndjok1/multi-local-cloud-hpc-integration:study_forwarder_airflow_v3.0.6
+    Image ID:      docker.io/t9k4b5ndjok1/multi-local-cloud-hpc-integration@sha256:fa025fd97ff73ee92969e2fe5b522fc5a54b5ee478bb8bc0483442b6c3f80244
+    Port:          <none>
+    Host Port:     <none>
+    Args:
+      airflow
+      db
+      check-migrations
+      --migration-wait-timeout=60
+    State:          Terminated
+      Reason:       Completed
+      Exit Code:    0
+      Started:      Mon, 30 Mar 2026 06:15:54 +0000
+      Finished:     Mon, 30 Mar 2026 06:16:08 +0000
+    Ready:          True
+    Restart Count:  0
+    Environment:
+      AIRFLOW__CORE__FERNET_KEY:            <set to the key 'fernet-key' in secret 'airflow-fernet-key'>  Optional: false
+      AIRFLOW_HOME:                         /opt/airflow
+      AIRFLOW__DATABASE__SQL_ALCHEMY_CONN:  <set to the key 'connection' in secret 'airflow-postgres-secret'>     Optional: false
+      AIRFLOW_CONN_AIRFLOW_DB:              <set to the key 'connection' in secret 'airflow-postgres-secret'>     Optional: false
+      AIRFLOW__API__SECRET_KEY:             <set to the key 'api-secret-key' in secret 'airflow-api-secret-key'>  Optional: false
+      AIRFLOW__CELERY__BROKER_URL:          <set to the key 'connection' in secret 'airflow-broker-url'>          Optional: false
+    Mounts:
+      /opt/airflow/airflow.cfg from config (ro,path="airflow.cfg")
+      /opt/airflow/config/airflow_local_settings.py from config (ro,path="airflow_local_settings.py")
+      /var/run/secrets/kubernetes.io/serviceaccount from kube-api-access-jr8rk (ro)
+Containers:
+  api-server:
+    Container ID:  containerd://9531f71251288ac0798d21892c65fdf277defa6fe182c4b9cd9a5747baa83c55
+    Image:         t9k4b5ndjok1/multi-local-cloud-hpc-integration:study_forwarder_airflow_v3.0.6
+    Image ID:      docker.io/t9k4b5ndjok1/multi-local-cloud-hpc-integration@sha256:fa025fd97ff73ee92969e2fe5b522fc5a54b5ee478bb8bc0483442b6c3f80244
+    Port:          8080/TCP
+    Host Port:     0/TCP
+    Args:
+      bash
+      -c
+      exec airflow api-server
+    State:          Running
+      Started:      Mon, 30 Mar 2026 06:16:13 +0000
+    Ready:          True
+    Restart Count:  0
+    Liveness:       http-get http://:8080/api/v2/monitor/health delay=15s timeout=5s period=10s #success=1 #failure=5
+    Readiness:      http-get http://:8080/api/v2/monitor/health delay=15s timeout=5s period=10s #success=1 #failure=5
+    Startup:        http-get http://:8080/api/v2/monitor/health delay=0s timeout=20s period=10s #success=1 #failure=6
+    Environment:
+      AIRFLOW__CORE__FERNET_KEY:            <set to the key 'fernet-key' in secret 'airflow-fernet-key'>  Optional: false
+      AIRFLOW_HOME:                         /opt/airflow
+      AIRFLOW__DATABASE__SQL_ALCHEMY_CONN:  <set to the key 'connection' in secret 'airflow-postgres-secret'>     Optional: false
+      AIRFLOW_CONN_AIRFLOW_DB:              <set to the key 'connection' in secret 'airflow-postgres-secret'>     Optional: false
+      AIRFLOW__API__SECRET_KEY:             <set to the key 'api-secret-key' in secret 'airflow-api-secret-key'>  Optional: false
+      AIRFLOW__API_AUTH__JWT_SECRET:        <set to the key 'jwt-secret' in secret 'airflow-jwt-secret'>          Optional: false
+      AIRFLOW__CELERY__BROKER_URL:          <set to the key 'connection' in secret 'airflow-broker-url'>          Optional: false
+    Mounts:
+      /opt/airflow/airflow.cfg from config (ro,path="airflow.cfg")
+      /opt/airflow/config/airflow_local_settings.py from config (ro,path="airflow_local_settings.py")
+      /var/run/secrets/kubernetes.io/serviceaccount from kube-api-access-jr8rk (ro)
+Conditions:
+  Type              Status
+  Initialized       True 
+  Ready             True 
+  ContainersReady   True 
+  PodScheduled      True 
+Volumes:
+  config:
+    Type:      ConfigMap (a volume populated by a ConfigMap)
+    Name:      airflow-config
+    Optional:  false
+  kube-api-access-jr8rk:
+    Type:                    Projected (a volume that contains injected data from multiple sources)
+    TokenExpirationSeconds:  3607
+    ConfigMapName:           kube-root-ca.crt
+    ConfigMapOptional:       <nil>
+    DownwardAPI:             true
+QoS Class:                   BestEffort
+Node-Selectors:              <none>
+Tolerations:                 node.kubernetes.io/not-ready:NoExecute op=Exists for 300s
+                             node.kubernetes.io/unreachable:NoExecute op=Exists for 300s
+Events:
+  Type     Reason     Age                From               Message
+  ----     ------     ----               ----               -------
+  Normal   Scheduled  49m                default-scheduler  Successfully assigned forwarder/airflow-api-server-9fd955f7c-4gqf4 to mlops-platform-control-plane
+  Normal   Pulled     49m                kubelet            Container image "t9k4b5ndjok1/multi-local-cloud-hpc-integration:study_forwarder_airflow_v3.0.6" already present on machine
+  Normal   Created    48m                kubelet            Created container wait-for-airflow-migrations
+  Normal   Started    48m                kubelet            Started container wait-for-airflow-migrations
+  Normal   Pulled     48m                kubelet            Container image "t9k4b5ndjok1/multi-local-cloud-hpc-integration:study_forwarder_airflow_v3.0.6" already present on machine
+  Normal   Created    48m                kubelet            Created container api-server
+  Normal   Started    48m                kubelet            Started container api-server
+  Warning  Unhealthy  48m (x2 over 48m)  kubelet            Startup probe failed: Get "http://10.244.0.79:8080/api/v2/monitor/health": dial tcp 10.244.0.79:8080: connect: connection refused

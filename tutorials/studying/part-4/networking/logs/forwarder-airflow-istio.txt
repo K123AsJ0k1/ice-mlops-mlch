@@ -1,0 +1,1 @@
+[2026-04-02T07:05:04.965Z] "GET / HTTP/1.1" 200 - via_upstream - "-" 0 483 3 2 "10.244.0.1" "curl/8.5.0" "68cd3fc7-d3a5-4ac3-8d12-518dfdd6cc1b" "forwarder.airflow.oss" "10.244.0.79:8080" outbound|8080||airflow-api-server.forwarder.svc.cluster.local 10.244.0.36:35804 10.244.0.36:9501 10.244.0.1:30205 - -

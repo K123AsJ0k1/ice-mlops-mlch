@@ -1,0 +1,46 @@
+Release "airflow" has been upgraded. Happy Helming!
+NAME: airflow
+LAST DEPLOYED: Mon Mar 30 06:15:44 2026
+NAMESPACE: forwarder
+STATUS: deployed
+REVISION: 2
+TEST SUITE: None
+NOTES:
+Thank you for installing Apache Airflow 3.0.6!
+
+Your release is named airflow.
+You can now access your dashboard(s) by executing the following command(s) and visiting the corresponding port at localhost in your browser:
+Airflow API Server:     kubectl port-forward svc/airflow-api-server 8080:8080 --namespace forwarder
+Default user (Airflow UI) Login credentials:
+    username: admin
+    password: admin
+
+You can get Fernet Key value by running the following:
+
+    echo Fernet Key: $(kubectl get secret --namespace forwarder airflow-fernet-key -o jsonpath="{.data.fernet-key}" | base64 --decode)
+
+ DEPRECATION WARNING:
+    `workers.args` has been renamed to `workers.celery.args`.
+    Please change your values as support for the old name will be dropped in a future release.
+
+ DEPRECATION WARNING:
+    `workers.keda.query` has been renamed to `workers.celery.keda.query`.
+    Please change your values as support for the old name will be dropped in a future release.
+
+ DEPRECATION WARNING:
+    `webserver.defaultUser` has been renamed to `createUserJob.defaultUser`.
+    Please change your values as support for the old name will be dropped in a future release.
+
+ DEPRECATION WARNING:
+    Dags Git-Sync bevaiour with `dags.gitSync.recommendedProbeSetting` equal `false` is deprecated and will be removed in future.
+    Please change your values as support for the old name will be dropped in a future release.
+
+#####################################################
+#  WARNING: You should set a static API secret key  #
+#####################################################
+
+You are using a dynamically generated API secret key, which can lead to
+unnecessary restarts of your Airflow components.
+
+Information on how to set a static API secret key can be found here:
+https://airflow.apache.org/docs/helm-chart/stable/production-guide.html#api-secret-key

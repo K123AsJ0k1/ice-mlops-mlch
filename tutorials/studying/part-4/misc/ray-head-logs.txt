@@ -1,0 +1,25 @@
+2026-03-29 23:57:25,021	INFO usage_lib.py:467 -- Usage stats collection is enabled by default without user confirmation because this terminal is detected to be non-interactive. To disable this, add `--disable-usage-stats` to the command that starts the cluster, or run the following command: `ray disable-usage-stats` before starting the cluster. See https://docs.ray.io/en/master/cluster/usage-stats.html for more details.
+2026-03-29 23:57:25,021	INFO scripts.py:778 -- Local node IP: 10.244.0.96
+2026-03-29 23:57:26,526	SUCC scripts.py:815 -- --------------------
+2026-03-29 23:57:26,526	SUCC scripts.py:816 -- Ray runtime started.
+2026-03-29 23:57:26,526	SUCC scripts.py:817 -- --------------------
+2026-03-29 23:57:26,526	INFO scripts.py:819 -- Next steps
+2026-03-29 23:57:26,526	INFO scripts.py:822 -- To add another node to this Ray cluster, run
+2026-03-29 23:57:26,526	INFO scripts.py:825 --   ray start --address='10.244.0.96:6379'
+2026-03-29 23:57:26,526	INFO scripts.py:834 -- To connect to this Ray cluster:
+2026-03-29 23:57:26,526	INFO scripts.py:836 -- import ray
+2026-03-29 23:57:26,526	INFO scripts.py:837 -- ray.init()
+2026-03-29 23:57:26,526	INFO scripts.py:849 -- To submit a Ray job using the Ray Jobs CLI:
+2026-03-29 23:57:26,526	INFO scripts.py:850 --   RAY_ADDRESS='http://10.244.0.96:8265' ray job submit --working-dir . -- python my_script.py
+2026-03-29 23:57:26,526	INFO scripts.py:859 -- See https://docs.ray.io/en/latest/cluster/running-applications/job-submission/index.html 
+2026-03-29 23:57:26,526	INFO scripts.py:863 -- for more information on submitting Ray jobs to the Ray cluster.
+2026-03-29 23:57:26,526	INFO scripts.py:868 -- To terminate the Ray runtime, run
+2026-03-29 23:57:26,526	INFO scripts.py:869 --   ray stop
+2026-03-29 23:57:26,526	INFO scripts.py:872 -- To view the status of the cluster, use
+2026-03-29 23:57:26,527	INFO scripts.py:873 --   ray status
+2026-03-29 23:57:26,527	INFO scripts.py:877 -- To monitor and debug Ray, view the dashboard at 
+2026-03-29 23:57:26,527	INFO scripts.py:878 --   10.244.0.96:8265
+2026-03-29 23:57:26,527	INFO scripts.py:885 -- If connection to the dashboard fails, check your firewall settings and network configuration.
+2026-03-29 23:57:26,527	INFO scripts.py:986 -- --block
+2026-03-29 23:57:26,527	INFO scripts.py:987 -- This command will now block forever until terminated by a signal.
+2026-03-29 23:57:26,527	INFO scripts.py:990 -- Running subprocesses are monitored and a message will be printed if any of them terminate unexpectedly. Subprocesses exit with SIGTERM will be treated as graceful, thus NOT reported.

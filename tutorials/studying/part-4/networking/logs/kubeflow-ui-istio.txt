@@ -1,0 +1,1 @@
+[2026-04-01T13:34:57.682Z] "GET / HTTP/1.1" 200 - via_upstream - "-" 0 670 1 1 "10.244.0.1" "curl/8.5.0" "de345b52-ba4d-4867-bd91-292b03092c7a" "kubeflow.oss" "10.244.0.2:3000" outbound|80||ml-pipeline-ui.kubeflow.svc.cluster.local 10.244.0.36:49818 10.244.0.36:9501 10.244.0.1:48216 - -

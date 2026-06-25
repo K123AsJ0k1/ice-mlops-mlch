@@ -1,0 +1,99 @@
+Name:             kiali-6d5f569c67-tprkk
+Namespace:        istio-system
+Priority:         0
+Service Account:  kiali
+Node:             mlops-platform-control-plane/172.18.0.3
+Start Time:       Tue, 18 Nov 2025 11:54:37 +0000
+Labels:           app=kiali
+                  app.kubernetes.io/instance=kiali
+                  app.kubernetes.io/managed-by=Helm
+                  app.kubernetes.io/name=kiali
+                  app.kubernetes.io/part-of=kiali
+                  app.kubernetes.io/version=v1.76.0
+                  helm.sh/chart=kiali-server-1.76.0
+                  pod-template-hash=6d5f569c67
+                  sidecar.istio.io/inject=false
+                  version=v1.76.0
+Annotations:      checksum/config: aebd819b94172ef9b148702b7bb438ac35bd1eb284bbb9b13769d8576374fbda
+                  kiali.io/dashboards: go,kiali
+                  prometheus.io/port: 9090
+                  prometheus.io/scrape: true
+Status:           Running
+IP:               10.244.0.6
+IPs:
+  IP:           10.244.0.6
+  IP:           fd00:10:244::6
+Controlled By:  ReplicaSet/kiali-6d5f569c67
+Containers:
+  kiali:
+    Container ID:  containerd://22bd36ce0ae1eb547d319572d96e7833fc1fdfa38ac997fb77691736faf89680
+    Image:         quay.io/kiali/kiali:v1.76
+    Image ID:      quay.io/kiali/kiali@sha256:a60413e4dbcbafde07c71fba39e71de954035f98edbd7fb6c7dfca67287b97fc
+    Ports:         20001/TCP, 9090/TCP
+    Host Ports:    0/TCP, 0/TCP
+    Command:
+      /opt/kiali/kiali
+      -config
+      /kiali-configuration/config.yaml
+    State:          Running
+      Started:      Wed, 18 Mar 2026 08:41:56 +0000
+    Last State:     Terminated
+      Reason:       Unknown
+      Exit Code:    255
+      Started:      Tue, 17 Mar 2026 11:40:35 +0000
+      Finished:     Wed, 18 Mar 2026 08:36:32 +0000
+    Ready:          True
+    Restart Count:  17
+    Limits:
+      memory:  1Gi
+    Requests:
+      cpu:      10m
+      memory:   64Mi
+    Liveness:   http-get http://:api-port/kiali/healthz delay=5s timeout=1s period=30s #success=1 #failure=3
+    Readiness:  http-get http://:api-port/kiali/healthz delay=5s timeout=1s period=30s #success=1 #failure=3
+    Environment:
+      ACTIVE_NAMESPACE:       istio-system (v1:metadata.namespace)
+      LOG_LEVEL:              info
+      LOG_FORMAT:             text
+      LOG_TIME_FIELD_FORMAT:  2006-01-02T15:04:05Z07:00
+      LOG_SAMPLER_RATE:       1
+    Mounts:
+      /kiali-cabundle from kiali-cabundle (rw)
+      /kiali-cert from kiali-cert (rw)
+      /kiali-configuration from kiali-configuration (rw)
+      /kiali-secret from kiali-secret (rw)
+      /var/run/secrets/kubernetes.io/serviceaccount from kube-api-access-dstvp (ro)
+Conditions:
+  Type              Status
+  Initialized       True 
+  Ready             True 
+  ContainersReady   True 
+  PodScheduled      True 
+Volumes:
+  kiali-configuration:
+    Type:      ConfigMap (a volume populated by a ConfigMap)
+    Name:      kiali
+    Optional:  false
+  kiali-cert:
+    Type:        Secret (a volume populated by a Secret)
+    SecretName:  istio.kiali-service-account
+    Optional:    true
+  kiali-secret:
+    Type:        Secret (a volume populated by a Secret)
+    SecretName:  kiali
+    Optional:    true
+  kiali-cabundle:
+    Type:      ConfigMap (a volume populated by a ConfigMap)
+    Name:      kiali-cabundle
+    Optional:  true
+  kube-api-access-dstvp:
+    Type:                    Projected (a volume that contains injected data from multiple sources)
+    TokenExpirationSeconds:  3607
+    ConfigMapName:           kube-root-ca.crt
+    ConfigMapOptional:       <nil>
+    DownwardAPI:             true
+QoS Class:                   Burstable
+Node-Selectors:              <none>
+Tolerations:                 node.kubernetes.io/not-ready:NoExecute op=Exists for 300s
+                             node.kubernetes.io/unreachable:NoExecute op=Exists for 300s
+Events:                      <none>

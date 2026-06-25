@@ -1,0 +1,64 @@
+Name:             postgres-server-858b84c69d-bpb68
+Namespace:        storage
+Priority:         0
+Service Account:  default
+Node:             mlops-platform-control-plane/172.18.0.3
+Start Time:       Mon, 30 Mar 2026 11:39:37 +0000
+Labels:           app=postgres-server
+                  pod-template-hash=858b84c69d
+Annotations:      <none>
+Status:           Running
+IP:               10.244.0.117
+IPs:
+  IP:           10.244.0.117
+  IP:           fd00:10:244::75
+Controlled By:  ReplicaSet/postgres-server-858b84c69d
+Containers:
+  postgres-server:
+    Container ID:   containerd://193f6575be949b2ed44f52960fff4c78b003e94b0f7d94e63369a1935a72dc30
+    Image:          postgres:17.2
+    Image ID:       docker.io/library/postgres@sha256:3267c505060a0052e5aa6e5175a7b41ab6b04da2f8c4540fc6e98a37210aa2d3
+    Port:           5432/TCP
+    Host Port:      0/TCP
+    State:          Running
+      Started:      Mon, 30 Mar 2026 11:39:42 +0000
+    Ready:          True
+    Restart Count:  0
+    Liveness:       exec [bash -c psql -U$POSTGRES_USER -d$POSTGRES_DB -c 'SELECT 1'] delay=15s timeout=2s period=10s #success=1 #failure=3
+    Readiness:      exec [bash -c psql -U$POSTGRES_USER -d$POSTGRES_DB -c 'SELECT 1'] delay=15s timeout=2s period=10s #success=1 #failure=3
+    Environment Variables from:
+      postgres-config  ConfigMap  Optional: false
+    Environment:
+      POSTGRES_PASSWORD:  <set to the key 'DB_PASSWORD' in secret 'storage-secrets-cm78678bd4'>  Optional: false
+      PGDATA:             /var/lib/postgresql/data/pgdata
+    Mounts:
+      /var/lib/postgresql/data from postgres-data (rw)
+      /var/run/secrets/kubernetes.io/serviceaccount from kube-api-access-n7tbz (ro)
+Conditions:
+  Type              Status
+  Initialized       True 
+  Ready             True 
+  ContainersReady   True 
+  PodScheduled      True 
+Volumes:
+  postgres-data:
+    Type:       PersistentVolumeClaim (a reference to a PersistentVolumeClaim in the same namespace)
+    ClaimName:  postgres-pvc
+    ReadOnly:   false
+  kube-api-access-n7tbz:
+    Type:                    Projected (a volume that contains injected data from multiple sources)
+    TokenExpirationSeconds:  3607
+    ConfigMapName:           kube-root-ca.crt
+    ConfigMapOptional:       <nil>
+    DownwardAPI:             true
+QoS Class:                   BestEffort
+Node-Selectors:              <none>
+Tolerations:                 node.kubernetes.io/not-ready:NoExecute op=Exists for 300s
+                             node.kubernetes.io/unreachable:NoExecute op=Exists for 300s
+Events:
+  Type    Reason     Age    From               Message
+  ----    ------     ----   ----               -------
+  Normal  Scheduled  4m20s  default-scheduler  Successfully assigned storage/postgres-server-858b84c69d-bpb68 to mlops-platform-control-plane
+  Normal  Pulled     4m16s  kubelet            Container image "postgres:17.2" already present on machine
+  Normal  Created    4m16s  kubelet            Created container postgres-server
+  Normal  Started    4m15s  kubelet            Started container postgres-server

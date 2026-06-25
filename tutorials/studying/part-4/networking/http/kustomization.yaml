@@ -1,0 +1,10 @@
+resources:
+- gateway.yaml
+- kubeflow/
+- mlflow/
+- monitoring/
+- forwarder/
+- istio/
+- storage/
+- language/
+- ray/

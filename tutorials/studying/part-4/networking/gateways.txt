@@ -1,0 +1,12 @@
+NAMESPACE         NAME                    AGE
+default           dashboards-gateway-1    134d
+default           minio-gateway           134d
+default           mongo-gateway           134d
+default           neo4j-gateway           134d
+default           postgres-gateway        134d
+default           qdrant-gateway          134d
+default           redis-gateway           134d
+istio-system      cluster-local-gateway   139d
+istio-system      istio-ingressgateway    139d
+knative-serving   knative-local-gateway   139d
+kubeflow          kubeflow-gateway        139d

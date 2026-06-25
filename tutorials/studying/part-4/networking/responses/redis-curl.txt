@@ -1,0 +1,15 @@
+* Host redis-service.storage.svc.cluster.local:6379 was resolved.
+* IPv6: (none)
+* IPv4: 10.96.182.100
+*   Trying 10.96.182.100:6379...
+* Established connection to redis-service.storage.svc.cluster.local (10.96.182.100 port 6379) from 10.244.0.133 port 40838 
+* using HTTP/1.x
+> GET / HTTP/1.1
+> Host: redis-service.storage.svc.cluster.local:6379
+> User-Agent: curl/8.18.0
+> Accept: */*
+> 
+* Request completely sent off
+* Empty reply from server
+* shutting down connection #0
+curl: (52) Empty reply from server
