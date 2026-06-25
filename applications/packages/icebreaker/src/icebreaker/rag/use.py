@@ -6,11 +6,12 @@ def rag_setup_database(
     collection_name: str,
     dataset_paths: list,
     text_column: str,
-    text_encoder: any
+    dense_model: any,
+    sparse_model: any
 ) -> any:
-    try:
+    try: 
         from ..objects.use import objects_get_data
-        from ..qdrant.use import qdrant_create_collection, qdrant_hybrid_config, qdrant_upload_points
+        from ..qdrant.use import qdrant_create_collection, qdrant_upload_points, qdrant_default_hybrid_config
         from ..embeddings.use import embeddings_create_hybrid_points
     except ImportError as e:
         raise ImportError("embeddings/use failed to import", e)
@@ -18,10 +19,9 @@ def rag_setup_database(
     status = qdrant_create_collection(
         qdrant_client = qdrant_client, 
         collection_name = collection_name,
-        configuration = qdrant_hybrid_config() 
+        configuration = qdrant_default_hybrid_config() 
     )
 
-    global_vocabulary = {}
     for dataset_path in dataset_paths:
         data_object = objects_get_data(
             swift_client = swift_client,
@@ -46,12 +46,12 @@ def rag_setup_database(
         dataset_name = dataset_path.split('/')[-1].split('.')[0]
         target_df = data_object[0].rename_axis('idx').reset_index()
 
-        hybrid_points, global_vocabulary = embeddings_create_hybrid_points(
+        hybrid_points = embeddings_create_hybrid_points(
             dataset_name = dataset_name,
             target_df = target_df,
             text_column = text_column,
-            text_encoder = text_encoder,
-            global_vocabulary = global_vocabulary
+            dense_model = dense_model,
+            sparse_model = sparse_model
         )
         # Maybe check if the points already exist
         status = qdrant_upload_points(
@@ -73,7 +73,10 @@ def rag_evalute_database(
     query_column: str,
     fusion_limit: int,
     dataset_paths: list,
-    text_encoder: any,
+    dense_model: any,
+    dense_model_name: str,
+    sparse_model: any,
+    sparse_model_name: str,
     debug_prints: bool
 ):
     try:
@@ -84,6 +87,11 @@ def rag_evalute_database(
         raise ImportError("embeddings/use failed to import", e)
 
     database_metrics = {}
+    if query_type == 'dense' or 'hybrid' in query_type:
+        database_metrics['dense-model'] = dense_model_name
+    if query_type == 'sparse'  or 'hybrid' in query_type:
+        database_metrics['sparse-model'] = sparse_model_name
+            
     collective_metrics = {}
     for dataset_path in dataset_paths:
         data_object = objects_get_data(
@@ -119,14 +127,16 @@ def rag_evalute_database(
             collection_name = collection_name,
             query_limit = query_limit,
             fusion_limit = fusion_limit,
-            text_encoder = text_encoder,
-            global_vocabulary = {},
+            dense_model_name = dense_model_name,
+            dense_model = dense_model,
+            sparse_model_name = sparse_model_name,
+            sparse_model = sparse_model,
+            gathered_metrics = collective_metrics,
             debug_prints = debug_prints,
-            gathered_metrics = collective_metrics
         )
 
         database_metrics[dataset_name] = dataframe_stats
-        
+    
     database_metrics['summary'] = search_get_statistics(
         gathered_metrics = collective_metrics,
         percentile_filter = [
