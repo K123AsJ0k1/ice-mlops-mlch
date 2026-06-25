@@ -1,6 +1,6 @@
 def search_get_batch_vectors(
     query_type: str,
-    text_queries: list,
+    text_query_batch: list,
     dense_model: any,
     sparse_model: any
 ):
@@ -18,14 +18,14 @@ def search_get_batch_vectors(
     if is_dense_needed and dense_model is not None:
         queries_dense = dense_create_baai_vectors(
             dense_model = dense_model,
-            text_inputs = text_queries
+            text_inputs = text_query_batch
         )
 
     queries_sparse = []
     if is_sparse_needed and sparse_model is not None:
         sparse_embeddings_iter = sparse_create_spalde_embeddings(
             sparse_model = sparse_model,
-            text_inputs = text_queries
+            text_inputs = text_query_batch
         )
         
         queries_sparse = [
@@ -42,8 +42,8 @@ def search_monitored_batch_query(
     qdrant_client: any,
     query_type: str,
     collection_name: str,
-    text_queries: list, 
-    relevant_ids: list,
+    text_query_batch: list, 
+    relevant_ids_batch: list,
     query_limit: int,
     fusion_limit: int,
     dense_model: any,
@@ -59,22 +59,24 @@ def search_monitored_batch_query(
     start_embed = time.perf_counter_ns()
     batch_dense, batch_sparse = search_get_batch_vectors(
         query_type = query_type,
-        text_queries = text_queries,
+        text_query_batch = text_query_batch,
         dense_model = dense_model,
         sparse_model = sparse_model
     )
-    embed_latency_ms = ((time.perf_counter_ns() - start_embed) / 1e6) / len(text_queries)
+    embed_latency_ms = ((time.perf_counter_ns() - start_embed) / 1e6) / len(text_query_batch)
     batch_results = []
 
     # 2. Query Qdrant
-    for idx, query_text in enumerate(text_queries):
+    for idx, query_text in enumerate(text_query_batch):
         q_dense = []
         if 0 < len(batch_dense):
             q_dense = batch_dense[idx] if batch_dense is not None else None
         q_sparse = []
         if 0 < len(batch_sparse):
             q_sparse = batch_sparse[idx] if batch_sparse is not None else None
-        q_relevant_ids = relevant_ids[idx]
+        q_relevant_ids = []
+        if 0 < len(relevant_ids_batch):
+            q_relevant_ids = relevant_ids_batch[idx]
 
         start_search = time.perf_counter_ns()
         query_result = qdrant_modifiable_query( 
@@ -91,10 +93,12 @@ def search_monitored_batch_query(
         total_characters = sum(point.payload.get('characters', 0) for point in query_result)
         retrieved_ids = [point.payload['idx'] for point in query_result]
         
-        resulted_metrics = search_retrieval_metrics( 
-            retrieved_ids = retrieved_ids,
-            true_relevant_ids = q_relevant_ids
-        )
+        resulted_metrics = {}
+        if 0 < len(q_relevant_ids):
+            resulted_metrics = search_retrieval_metrics( 
+                retrieved_ids = retrieved_ids,
+                true_relevant_ids = q_relevant_ids
+            )
         
         resulted_metrics['embedding-latency-ms'] = embed_latency_ms
         resulted_metrics['search-latency-ms'] = search_latency_ms
@@ -120,7 +124,6 @@ def search_data_metrics(
     dense_model: any,
     sparse_model_name: str,
     sparse_model: any,
-    gathered_metrics: dict,
     debug_prints: bool
 ):
     try:
@@ -128,29 +131,24 @@ def search_data_metrics(
     except ImportError as e:
         raise ImportError("embeddings/use failed to import", e)
 
-    dataset_metrics = {}
-    
-    # 1. Pre-calculate lookups and map targets to ordered arrays
     relevance_lookup = target_df.groupby(group_columns)[value_column].apply(list).to_dict()
     
     text_queries = []
     relevant_ids_batch = []
-    metadata_rows = []  # Keep track of rows for logging mapping
+    metadata_rows = [] 
 
     for _, row in target_df.iterrows():
         group_key = tuple(row[column] for column in group_columns)
-        
         text_queries.append(row[query_column])
         relevant_ids_batch.append(relevance_lookup[group_key])
         metadata_rows.append(row)
     
-    # 2. EXECUTE AS A SINGLE BATCH (Massive optimization)
     batch_outputs = search_monitored_batch_query(
         qdrant_client = qdrant_client,
         query_type = query_type,
         collection_name = collection_name,
-        text_queries = text_queries, 
-        relevant_ids = relevant_ids_batch, 
+        text_query_batch = text_queries, 
+        relevant_ids_batch = relevant_ids_batch, 
         query_limit = query_limit,
         fusion_limit = fusion_limit,
         dense_model = dense_model,
@@ -158,6 +156,7 @@ def search_data_metrics(
     )
     
     # 3. Unpack batch results for debugging and metric aggregation
+    gathered_metrics = {}
     for j, (result, metrics) in enumerate(batch_outputs):
         row = metadata_rows[j]
         query_text = text_queries[j]
@@ -190,17 +189,14 @@ def search_data_metrics(
                 print(f"{i}|{point.score}|{p.get('idx')}|{p.get('part')}|{p.get('document')}|{p.get('chapter')}|{p.get('index')}|{p.get('topic')}")
             print('')
 
-        # Populate history dictionaries
         for key, value in metrics.items():
             if key not in gathered_metrics:
                 gathered_metrics[key] = []
-            if key not in dataset_metrics:
-                dataset_metrics[key] = []
             gathered_metrics[key].append(value)
-            dataset_metrics[key].append(value)
-    
+    # Potential source
+    print(gathered_metrics)
     dataframe_statistics = search_get_statistics(
-        gathered_metrics = dataset_metrics,
+        gathered_metrics = gathered_metrics,
         percentile_filter = ['p@1', 'r@3', 'ndcg@3', 'ndcg@5']
     )
     

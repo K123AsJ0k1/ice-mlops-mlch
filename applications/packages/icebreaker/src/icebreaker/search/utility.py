@@ -3,7 +3,7 @@ def search_retrieval_metrics(
     retrieved_ids: list, 
     true_relevant_ids: list
 ):
-    try:
+    try: 
         import numpy as np
     except ImportError as e:
         raise ImportError("qdrant/utility failed to import", e)

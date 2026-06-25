@@ -103,7 +103,7 @@ def rag_evalute_database(
     if query_type == 'sparse'  or 'hybrid' in query_type:
         database_metrics['sparse-model'] = sparse_model_name
     
-    collective_metrics = {}
+    global_collective_metrics = {}
     for dataset_path in dataset_paths:
         data_object = objects_get_data(
             swift_client = swift_client,
@@ -126,8 +126,8 @@ def rag_evalute_database(
         )  
         dataset_name = dataset_path.split('/')[-1].split('.')[0]
         target_df = data_object[0].rename_axis('idx').reset_index()
-
-        dataframe_stats, collective_metrics = search_data_metrics(
+        
+        dataframe_stats, current_dataset_gather = search_data_metrics(
             dataset_name = dataset_name,
             target_df = target_df,
             group_columns = group_columns,
@@ -142,14 +142,18 @@ def rag_evalute_database(
             dense_model = dense_model,
             sparse_model_name = sparse_model_name,
             sparse_model = sparse_model,
-            gathered_metrics = collective_metrics,
             debug_prints = debug_prints,
         )
 
         database_metrics[dataset_name] = dataframe_stats
-    
+        # Potential source
+        for key, values in current_dataset_gather.items():
+            if key not in global_collective_metrics:
+                global_collective_metrics[key] = []
+            global_collective_metrics[key].extend(values)
+    # Potential source
     database_metrics['summary'] = search_get_statistics(
-        gathered_metrics = collective_metrics,
+        gathered_metrics = global_collective_metrics,
         percentile_filter = [
             'p@1',
             'r@3',
