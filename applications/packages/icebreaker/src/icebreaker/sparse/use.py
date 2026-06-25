@@ -20,13 +20,10 @@ def sparse_create_simple_tuple(
 
     return indices, values
 
-def sparse_create_spalde_tuple(
+def sparse_create_spalde_embeddings(
     sparse_model: any,
-    vector_text: str
+    text_inputs: list
 ) -> any:
-    sparse_embeddings = list(sparse_model.embed([vector_text]))[0]
-
-    indices = sparse_embeddings.indices.tolist()
-    values = sparse_embeddings.values.tolist()
-
-    return indices, values
+    sparse_embeddings = sparse_model.embed(text_inputs)
+    
+    return sparse_embeddings

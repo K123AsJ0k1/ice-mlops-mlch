@@ -1,10 +1,10 @@
 
-def dense_create_baai_vector(
+def dense_create_baai_vectors(
     dense_model: any,
-    vector_text: str
+    text_inputs: list
 ) -> any:
-    dense_vector = dense_model.encode(
-        vector_text, 
+    dense_vectors = dense_model.encode(
+        text_inputs, 
         normalize_embeddings = True
     ).tolist()
-    return dense_vector
+    return dense_vectors

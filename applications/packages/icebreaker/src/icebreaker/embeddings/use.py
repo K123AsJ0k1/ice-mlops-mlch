@@ -1,33 +1,38 @@
 
-def embeddings_create_vectors(
-    text_data: str,
+def embeddings_batch_create_vectors(
+    text_inputs: list,
     dense_model: any,
     sparse_model: any,
 ):
     try: 
         from qdrant_client import models
-        from ..sparse.use import sparse_create_spalde_tuple
-        from ..dense.use import dense_create_baai_vector
+        from ..dense.use import dense_create_baai_vectors
+        from ..sparse.use import sparse_create_spalde_embeddings
     except ImportError as e:
         raise ImportError("embeddings/use failed to import", e)
     
-    dense_vector = None
+    dense_vectors = []
     if not dense_model is None:
-        dense_vector = dense_create_baai_vector(
+        dense_vectors = dense_create_baai_vectors(
             dense_model = dense_model,
-            vector_text = text_data
+            text_inputs = text_inputs
         )
-    sparse_vector = None
+    sparse_vectors = []
     if not sparse_model is None:
-        indices, values = sparse_create_spalde_tuple(
+        sparse_embeddings_iter = sparse_create_spalde_embeddings(
             sparse_model = sparse_model,
-            vector_text = text_data
+            text_inputs = text_inputs
         )
-        sparse_vector = models.SparseVector(
-            indices = indices, 
-            values = values
-        )
-    return dense_vector, sparse_vector
+        
+        sparse_vectors = [
+            models.SparseVector(
+                indices=emb.indices.tolist(),
+                values=emb.values.tolist()
+            )
+            for emb in sparse_embeddings_iter
+        ]
+
+    return dense_vectors, sparse_vectors
 
 def embeddings_create_hybrid_points(
     dataset_name: str,
@@ -41,16 +46,21 @@ def embeddings_create_hybrid_points(
         from ..embeddings.utility import embeddings_generate_uuid
     except ImportError as e:
         raise ImportError("embeddings/use failed to import", e)
-    points = []
-    for i, row in enumerate(target_df.to_dict('records')):
-        text_data = row[text_column]
+    
+    records = target_df.to_dict('records')
+    text_data_list = [row[text_column] for row in records]
 
-        dense_vector, sparse_vector = embeddings_create_vectors(
-            text_data = text_data,
-            dense_model = dense_model,
-            sparse_model = sparse_model,
-        )
-        
+    dense_vectors, sparse_vectors = embeddings_batch_create_vectors(
+        text_inputs = text_data_list,
+        dense_model = dense_model,
+        sparse_model = sparse_model
+    )
+
+    points = []
+    for i, row in enumerate(records):
+        d_vec = dense_vectors[i] if dense_vectors is not None else None
+        s_vec = sparse_vectors[i] if sparse_vectors is not None else None
+
         point_uuid = embeddings_generate_uuid(
             id = dataset_name,
             index = i
@@ -58,12 +68,12 @@ def embeddings_create_hybrid_points(
 
         created_point = qdrant_create_point(
             point_uuid = point_uuid,
-            point_dense_vector = {"dense": dense_vector},
-            point_sparse_vector = {"sparse": sparse_vector},
+            point_dense_vector = {"dense": d_vec} if d_vec else None,
+            point_sparse_vector = {"sparse": s_vec} if s_vec else None,
             point_payload = row
         )
-
         points.append(created_point)
+
     return points
     
 def embeddings_check_collection(
