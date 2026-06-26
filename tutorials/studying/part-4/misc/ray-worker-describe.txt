@@ -1,0 +1,146 @@
+Name:             raycluster-kuberay-worker-worker-rfv86
+Namespace:        default
+Priority:         0
+Service Account:  default
+Node:             mlops-platform-control-plane/172.18.0.3
+Start Time:       Mon, 30 Mar 2026 06:57:19 +0000
+Labels:           app.kubernetes.io/created-by=kuberay-operator
+                  app.kubernetes.io/instance=raycluster
+                  app.kubernetes.io/managed-by=Helm
+                  app.kubernetes.io/name=kuberay
+                  helm.sh/chart=ray-cluster-1.0.0
+                  ray.io/cluster=raycluster-kuberay
+                  ray.io/group=worker
+                  ray.io/identifier=raycluster-kuberay-worker
+                  ray.io/is-ray-node=yes
+                  ray.io/node-type=worker
+Annotations:      ray.io/ft-enabled: false
+Status:           Running
+IP:               10.244.0.97
+IPs:
+  IP:           10.244.0.97
+  IP:           fd00:10:244::61
+Controlled By:  RayCluster/raycluster-kuberay
+Init Containers:
+  wait-gcs-ready:
+    Container ID:  containerd://bac61ceb5b1303ee33ebebf4d556ed3d433a5074dcd022fcf718364288b94145
+    Image:         rayproject/ray:2.38.0-py312-gpu
+    Image ID:      docker.io/rayproject/ray@sha256:c7a7a79141cd70b6c91f19b8bb340e999981ed8604ed5040851488baae4a9cbd
+    Port:          <none>
+    Host Port:     <none>
+    Command:
+      /bin/bash
+      -lc
+      --
+    Args:
+      
+                            SECONDS=0
+                            while true; do
+                              if (( SECONDS <= 120 )); then
+                                if ray health-check --address raycluster-kuberay-head-svc.default.svc.cluster.local:6379 > /dev/null 2>&1; then
+                                  echo "GCS is ready."
+                                  break
+                                fi
+                                echo "$SECONDS seconds elapsed: Waiting for GCS to be ready."
+                              else
+                                if ray health-check --address raycluster-kuberay-head-svc.default.svc.cluster.local:6379; then
+                                  echo "GCS is ready. Any error messages above can be safely ignored."
+                                  break
+                                fi
+                                echo "$SECONDS seconds elapsed: Still waiting for GCS to be ready. For troubleshooting, refer to the FAQ at https://github.com/ray-project/kuberay/blob/master/docs/guidance/FAQ.md."
+                              fi
+                              sleep 5    
+                            done
+                          
+    State:          Terminated
+      Reason:       Completed
+      Exit Code:    0
+      Started:      Mon, 30 Mar 2026 06:57:23 +0000
+      Finished:     Mon, 30 Mar 2026 06:57:35 +0000
+    Ready:          True
+    Restart Count:  0
+    Limits:
+      cpu:     200m
+      memory:  256Mi
+    Requests:
+      cpu:     200m
+      memory:  256Mi
+    Environment:
+      FQ_RAY_IP:  raycluster-kuberay-head-svc.default.svc.cluster.local
+      RAY_IP:     raycluster-kuberay-head-svc
+    Mounts:
+      /tmp/ray from log-volume (rw)
+      /var/run/secrets/kubernetes.io/serviceaccount from kube-api-access-w4ccd (ro)
+Containers:
+  ray-worker:
+    Container ID:  containerd://32a32a97cb9515a364eb65c9d2adab7566514545bca166bbeb6fdaaf3e0067de
+    Image:         rayproject/ray:2.38.0-py312-gpu
+    Image ID:      docker.io/rayproject/ray@sha256:c7a7a79141cd70b6c91f19b8bb340e999981ed8604ed5040851488baae4a9cbd
+    Port:          8080/TCP
+    Host Port:     0/TCP
+    Command:
+      /bin/bash
+      -lc
+      --
+    Args:
+      ulimit -n 65536; ray start  --address=raycluster-kuberay-head-svc.default.svc.cluster.local:6379  --metrics-export-port=8080  --block  --num-cpus=3  --memory=30000000000  --num-gpus=1 
+    State:          Running
+      Started:      Mon, 30 Mar 2026 06:57:36 +0000
+    Ready:          True
+    Restart Count:  0
+    Limits:
+      cpu:              3
+      memory:           30G
+      nvshare.com/gpu:  1
+    Requests:
+      cpu:              3
+      memory:           30G
+      nvshare.com/gpu:  1
+    Environment:
+      FQ_RAY_IP:                            raycluster-kuberay-head-svc.default.svc.cluster.local
+      RAY_IP:                               raycluster-kuberay-head-svc
+      RAY_CLUSTER_NAME:                      (v1:metadata.labels['ray.io/cluster'])
+      RAY_PORT:                             6379
+      RAY_ADDRESS:                          raycluster-kuberay-head-svc.default.svc.cluster.local:6379
+      RAY_USAGE_STATS_KUBERAY_IN_USE:       1
+      REDIS_PASSWORD:                       
+      RAY_DASHBOARD_ENABLE_K8S_DISK_USAGE:  1
+    Mounts:
+      /dev/shm from shared-mem (rw)
+      /tmp/ray from log-volume (rw)
+      /var/run/secrets/kubernetes.io/serviceaccount from kube-api-access-w4ccd (ro)
+Conditions:
+  Type              Status
+  Initialized       True 
+  Ready             True 
+  ContainersReady   True 
+  PodScheduled      True 
+Volumes:
+  log-volume:
+    Type:       EmptyDir (a temporary directory that shares a pod's lifetime)
+    Medium:     
+    SizeLimit:  <unset>
+  shared-mem:
+    Type:       EmptyDir (a temporary directory that shares a pod's lifetime)
+    Medium:     Memory
+    SizeLimit:  30G
+  kube-api-access-w4ccd:
+    Type:                    Projected (a volume that contains injected data from multiple sources)
+    TokenExpirationSeconds:  3607
+    ConfigMapName:           kube-root-ca.crt
+    ConfigMapOptional:       <nil>
+    DownwardAPI:             true
+QoS Class:                   Guaranteed
+Node-Selectors:              <none>
+Tolerations:                 node.kubernetes.io/not-ready:NoExecute op=Exists for 300s
+                             node.kubernetes.io/unreachable:NoExecute op=Exists for 300s
+Events:
+  Type    Reason     Age   From               Message
+  ----    ------     ----  ----               -------
+  Normal  Scheduled  14m   default-scheduler  Successfully assigned default/raycluster-kuberay-worker-worker-rfv86 to mlops-platform-control-plane
+  Normal  Pulled     14m   kubelet            Container image "rayproject/ray:2.38.0-py312-gpu" already present on machine
+  Normal  Created    14m   kubelet            Created container wait-gcs-ready
+  Normal  Started    14m   kubelet            Started container wait-gcs-ready
+  Normal  Pulled     14m   kubelet            Container image "rayproject/ray:2.38.0-py312-gpu" already present on machine
+  Normal  Created    14m   kubelet            Created container ray-worker
+  Normal  Started    14m   kubelet            Started container ray-worker

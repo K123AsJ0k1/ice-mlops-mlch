@@ -1,0 +1,169 @@
+2026-03-30T06:56:50.421Z	INFO	setup	the operator	{"version:": ""}
+2026-03-30T06:56:50.421Z	INFO	setup	Flag watchNamespace is not set. Watch custom resources in all namespaces.
+2026-03-30T06:56:50.421Z	INFO	setup	Setup manager
+I0330 06:56:51.622919       1 request.go:665] Waited for 1.006305506s due to client-side throttling, not priority and fairness, request: GET:https://10.96.0.1:443/apis/extensions.istio.io/v1alpha1?timeout=32s
+2026-03-30T06:56:52.078Z	INFO	controller-runtime.metrics	Metrics server is starting to listen	{"addr": ":8080"}
+2026-03-30T06:56:52.079Z	INFO	controllers.RayCluster	Starting Reconciler
+2026-03-30T06:56:52.117Z	INFO	setup	starting manager
+2026-03-30T06:56:52.118Z	INFO	Starting server	{"kind": "health probe", "addr": "[::]:8082"}
+2026-03-30T06:56:52.118Z	INFO	Starting server	{"path": "/metrics", "kind": "metrics", "addr": "[::]:8080"}
+I0330 06:56:52.418700       1 leaderelection.go:248] attempting to acquire leader lease default/ray-operator-leader...
+I0330 06:57:10.558073       1 leaderelection.go:258] successfully acquired lease default/ray-operator-leader
+2026-03-30T06:57:10.558Z	DEBUG	events	Normal	{"object": {"kind":"ConfigMap","namespace":"default","name":"ray-operator-leader","uid":"1e030656-121d-4bff-afe2-5414039008af","apiVersion":"v1","resourceVersion":"36735032"}, "reason": "LeaderElection", "message": "kuberay-operator-9986f78b7-97xc8_11d6b174-5411-40f1-9fc7-9e196b80de8c became leader"}
+2026-03-30T06:57:10.558Z	INFO	controller.raycluster-controller	Starting EventSource	{"reconciler group": "ray.io", "reconciler kind": "RayCluster", "source": "kind source: *v1.RayCluster"}
+2026-03-30T06:57:10.558Z	DEBUG	events	Normal	{"object": {"kind":"Lease","namespace":"default","name":"ray-operator-leader","uid":"d8ec68c2-b25e-41c8-a901-42d211356757","apiVersion":"coordination.k8s.io/v1","resourceVersion":"36735033"}, "reason": "LeaderElection", "message": "kuberay-operator-9986f78b7-97xc8_11d6b174-5411-40f1-9fc7-9e196b80de8c became leader"}
+2026-03-30T06:57:10.558Z	INFO	controller.raycluster-controller	Starting EventSource	{"reconciler group": "ray.io", "reconciler kind": "RayCluster", "source": "kind source: *v1.Pod"}
+2026-03-30T06:57:10.558Z	INFO	controller.rayjob	Starting EventSource	{"reconciler group": "ray.io", "reconciler kind": "RayJob", "source": "kind source: *v1.RayJob"}
+2026-03-30T06:57:10.558Z	INFO	controller.rayjob	Starting EventSource	{"reconciler group": "ray.io", "reconciler kind": "RayJob", "source": "kind source: *v1.RayCluster"}
+2026-03-30T06:57:10.558Z	INFO	controller.rayjob	Starting EventSource	{"reconciler group": "ray.io", "reconciler kind": "RayJob", "source": "kind source: *v1.Service"}
+2026-03-30T06:57:10.558Z	INFO	controller.raycluster-controller	Starting EventSource	{"reconciler group": "ray.io", "reconciler kind": "RayCluster", "source": "kind source: *v1.Service"}
+2026-03-30T06:57:10.558Z	INFO	controller.rayjob	Starting EventSource	{"reconciler group": "ray.io", "reconciler kind": "RayJob", "source": "kind source: *v1.Job"}
+2026-03-30T06:57:10.558Z	INFO	controller.rayjob	Starting Controller	{"reconciler group": "ray.io", "reconciler kind": "RayJob"}
+2026-03-30T06:57:10.558Z	INFO	controller.raycluster-controller	Starting Controller	{"reconciler group": "ray.io", "reconciler kind": "RayCluster"}
+2026-03-30T06:57:10.558Z	INFO	controller.rayservice	Starting EventSource	{"reconciler group": "ray.io", "reconciler kind": "RayService", "source": "kind source: *v1.RayService"}
+2026-03-30T06:57:10.558Z	INFO	controller.rayservice	Starting EventSource	{"reconciler group": "ray.io", "reconciler kind": "RayService", "source": "kind source: *v1.RayCluster"}
+2026-03-30T06:57:10.558Z	INFO	controller.rayservice	Starting EventSource	{"reconciler group": "ray.io", "reconciler kind": "RayService", "source": "kind source: *v1.Service"}
+2026-03-30T06:57:10.558Z	INFO	controller.rayservice	Starting EventSource	{"reconciler group": "ray.io", "reconciler kind": "RayService", "source": "kind source: *v1.Ingress"}
+2026-03-30T06:57:10.558Z	INFO	controller.rayservice	Starting Controller	{"reconciler group": "ray.io", "reconciler kind": "RayService"}
+2026-03-30T06:57:10.916Z	INFO	controller.rayservice	Starting workers	{"reconciler group": "ray.io", "reconciler kind": "RayService", "worker count": 1}
+2026-03-30T06:57:10.916Z	INFO	controller.rayjob	Starting workers	{"reconciler group": "ray.io", "reconciler kind": "RayJob", "worker count": 1}
+2026-03-30T06:57:10.916Z	INFO	controller.raycluster-controller	Starting workers	{"reconciler group": "ray.io", "reconciler kind": "RayCluster", "worker count": 1}
+2026-03-30T06:57:19.882Z	INFO	controllers.RayCluster	reconciling RayCluster	{"cluster name": "raycluster-kuberay"}
+2026-03-30T06:57:19.882Z	INFO	controllers.RayCluster	Reconciling Ingress
+2026-03-30T06:57:19.902Z	INFO	controllers.RayCluster	Pod Service created successfully	{"service name": "raycluster-kuberay-head-svc"}
+2026-03-30T06:57:19.902Z	INFO	controllers.RayCluster	reconcilePods	{"Found 0 head Pods; creating a head Pod for the RayCluster.": "raycluster-kuberay"}
+2026-03-30T06:57:19.902Z	DEBUG	events	Normal	{"object": {"kind":"RayCluster","namespace":"default","name":"raycluster-kuberay","uid":"57d3cded-a7cc-44bf-bb10-b8fae41e96d3","apiVersion":"ray.io/v1","resourceVersion":"36735112"}, "reason": "Created", "message": "Created service raycluster-kuberay-head-svc"}
+2026-03-30T06:57:19.902Z	INFO	RayCluster-Controller	Setting pod namespaces	{"namespace": "default"}
+2026-03-30T06:57:19.902Z	INFO	controllers.RayCluster	head pod labels	{"labels": {"app.kubernetes.io/created-by":"kuberay-operator","app.kubernetes.io/instance":"raycluster","app.kubernetes.io/managed-by":"Helm","app.kubernetes.io/name":"kuberay","helm.sh/chart":"ray-cluster-1.0.0","ray.io/cluster":"raycluster-kuberay","ray.io/group":"headgroup","ray.io/identifier":"raycluster-kuberay-head","ray.io/is-ray-node":"yes","ray.io/node-type":"head"}}
+2026-03-30T06:57:19.902Z	INFO	controllers.RayCluster	createHeadPod	{"head pod with name": "raycluster-kuberay-head-"}
+2026-03-30T06:57:19.909Z	INFO	controllers.RayCluster	reconcilePods	{"desired workerReplicas (always adhering to minReplicas/maxReplica)": 1, "worker group": "worker", "maxReplicas": 2, "minReplicas": 1, "replicas": 1}
+2026-03-30T06:57:19.909Z	INFO	controllers.RayCluster	reconcilePods	{"removing the pods in the scaleStrategy of": "worker"}
+2026-03-30T06:57:19.909Z	INFO	controllers.RayCluster	reconcilePods	{"workerReplicas": 1, "runningPods": 0, "diff": 1}
+2026-03-30T06:57:19.909Z	INFO	controllers.RayCluster	reconcilePods	{"Number workers to add": 1, "Worker group": "worker"}
+2026-03-30T06:57:19.909Z	DEBUG	events	Normal	{"object": {"kind":"RayCluster","namespace":"default","name":"raycluster-kuberay","uid":"57d3cded-a7cc-44bf-bb10-b8fae41e96d3","apiVersion":"ray.io/v1","resourceVersion":"36735112"}, "reason": "Created", "message": "Created head pod raycluster-kuberay-head-k2g42"}
+2026-03-30T06:57:19.909Z	INFO	controllers.RayCluster	reconcilePods	{"creating worker for group": "worker", "index 0": "in total 1"}
+2026-03-30T06:57:19.909Z	INFO	RayCluster-Controller	Setting pod namespaces	{"namespace": "default"}
+2026-03-30T06:57:19.917Z	INFO	controllers.RayCluster	Created pod	{"Pod ": "raycluster-kuberay-worker-worker-"}
+2026-03-30T06:57:19.918Z	DEBUG	events	Normal	{"object": {"kind":"RayCluster","namespace":"default","name":"raycluster-kuberay","uid":"57d3cded-a7cc-44bf-bb10-b8fae41e96d3","apiVersion":"ray.io/v1","resourceVersion":"36735112"}, "reason": "Created", "message": "Created worker pod "}
+2026-03-30T06:57:19.918Z	INFO	controllers.RayCluster	inconsistentRayClusterStatus	{"detect inconsistency": "old AvailableWorkerReplicas: 0, new AvailableWorkerReplicas: 0, old DesiredWorkerReplicas: 0, new DesiredWorkerReplicas: 1, old MinWorkerReplicas: 0, new MinWorkerReplicas: 1, old MaxWorkerReplicas: 0, new MaxWorkerReplicas: 2"}
+2026-03-30T06:57:19.918Z	INFO	controllers.RayCluster	rayClusterReconcile	{"Update CR status": "raycluster-kuberay", "status": {"desiredWorkerReplicas":1,"minWorkerReplicas":1,"maxWorkerReplicas":2,"lastUpdateTime":"2026-03-30T06:57:19Z","endpoints":{"client":"10001","dashboard":"8265","metrics":"8080","redis":"6379","serve":"8000"},"head":{"serviceIP":"10.96.176.69"},"observedGeneration":1}}
+2026-03-30T06:57:19.959Z	INFO	controllers.RayCluster	Environment variable RAYCLUSTER_DEFAULT_REQUEUE_SECONDS_ENV is not set, using default value of 300 seconds	{"cluster name": "raycluster-kuberay"}
+2026-03-30T06:57:19.959Z	INFO	controllers.RayCluster	Unconditional requeue after	{"cluster name": "raycluster-kuberay", "seconds": 300}
+2026-03-30T06:57:19.959Z	INFO	controllers.RayCluster	reconciling RayCluster	{"cluster name": "raycluster-kuberay"}
+2026-03-30T06:57:19.959Z	INFO	controllers.RayCluster	Reconciling Ingress
+2026-03-30T06:57:19.959Z	INFO	controllers.RayCluster	reconcileHeadService	{"1 head service found": "raycluster-kuberay-head-svc"}
+2026-03-30T06:57:19.959Z	INFO	controllers.RayCluster	reconcilePods	{"Found 1 head Pod": "raycluster-kuberay-head-k2g42", "Pod status": "Pending", "Pod restart policy": "Always", "Ray container terminated status": "nil"}
+2026-03-30T06:57:19.959Z	INFO	controllers.RayCluster	reconcilePods	{"head Pod": "raycluster-kuberay-head-k2g42", "shouldDelete": false, "reason": "KubeRay does not need to delete the head Pod raycluster-kuberay-head-k2g42. The Pod status is Pending, and the Ray container terminated status is nil."}
+2026-03-30T06:57:19.959Z	INFO	controllers.RayCluster	reconcilePods	{"desired workerReplicas (always adhering to minReplicas/maxReplica)": 1, "worker group": "worker", "maxReplicas": 2, "minReplicas": 1, "replicas": 1}
+2026-03-30T06:57:19.959Z	INFO	controllers.RayCluster	reconcilePods	{"worker Pod": "raycluster-kuberay-worker-worker-rfv86", "shouldDelete": false, "reason": "KubeRay does not need to delete the worker Pod raycluster-kuberay-worker-worker-rfv86. The Pod status is Pending, and the Ray container terminated status is nil."}
+2026-03-30T06:57:19.959Z	INFO	controllers.RayCluster	reconcilePods	{"removing the pods in the scaleStrategy of": "worker"}
+2026-03-30T06:57:19.959Z	INFO	controllers.RayCluster	reconcilePods	{"workerReplicas": 1, "runningPods": 1, "diff": 0}
+2026-03-30T06:57:19.959Z	INFO	controllers.RayCluster	reconcilePods	{"all workers already exist for group": "worker"}
+2026-03-30T06:57:19.959Z	INFO	controllers.RayCluster	inconsistentRayClusterStatus	{"detect inconsistency": "old AvailableWorkerReplicas: 0, new AvailableWorkerReplicas: 0, old DesiredWorkerReplicas: 0, new DesiredWorkerReplicas: 1, old MinWorkerReplicas: 0, new MinWorkerReplicas: 1, old MaxWorkerReplicas: 0, new MaxWorkerReplicas: 2"}
+2026-03-30T06:57:19.959Z	INFO	controllers.RayCluster	rayClusterReconcile	{"Update CR status": "raycluster-kuberay", "status": {"desiredWorkerReplicas":1,"minWorkerReplicas":1,"maxWorkerReplicas":2,"lastUpdateTime":"2026-03-30T06:57:19Z","endpoints":{"client":"10001","dashboard":"8265","metrics":"8080","redis":"6379","serve":"8000"},"head":{"serviceIP":"10.96.176.69"},"observedGeneration":1}}
+2026-03-30T06:57:19.967Z	INFO	controllers.RayCluster	Got error when updating status	{"cluster name": "raycluster-kuberay", "error": "Operation cannot be fulfilled on rayclusters.ray.io \"raycluster-kuberay\": the object has been modified; please apply your changes to the latest version and try again", "RayCluster": {"kind":"RayCluster","apiVersion":"ray.io/v1","metadata":{"name":"raycluster-kuberay","namespace":"default","uid":"57d3cded-a7cc-44bf-bb10-b8fae41e96d3","resourceVersion":"36735112","generation":1,"creationTimestamp":"2026-03-30T06:57:19Z","labels":{"app.kubernetes.io/instance":"raycluster","app.kubernetes.io/managed-by":"Helm","app.kubernetes.io/name":"kuberay","helm.sh/chart":"ray-cluster-1.0.0"},"annotations":{"meta.helm.sh/release-name":"raycluster","meta.helm.sh/release-namespace":"default"},"managedFields":[{"manager":"helm","operation":"Update","apiVersion":"ray.io/v1","time":"2026-03-30T06:57:19Z","fieldsType":"FieldsV1","fieldsV1":{"f:metadata":{"f:annotations":{".":{},"f:meta.helm.sh/release-name":{},"f:meta.helm.sh/release-namespace":{}},"f:labels":{".":{},"f:app.kubernetes.io/instance":{},"f:app.kubernetes.io/managed-by":{},"f:app.kubernetes.io/name":{},"f:helm.sh/chart":{}}},"f:spec":{".":{},"f:headGroupSpec":{".":{},"f:rayStartParams":{".":{},"f:dashboard-host":{}},"f:serviceType":{},"f:template":{".":{},"f:metadata":{".":{},"f:annotations":{},"f:labels":{".":{},"f:app.kubernetes.io/instance":{},"f:app.kubernetes.io/managed-by":{},"f:app.kubernetes.io/name":{},"f:helm.sh/chart":{}}},"f:spec":{".":{},"f:affinity":{},"f:containers":{},"f:imagePullSecrets":{},"f:nodeSelector":{},"f:tolerations":{},"f:volumes":{}}}},"f:workerGroupSpecs":{}}}}]},"spec":{"headGroupSpec":{"serviceType":"ClusterIP","rayStartParams":{"dashboard-host":"0.0.0.0"},"template":{"metadata":{"creationTimestamp":null,"labels":{"app.kubernetes.io/instance":"raycluster","app.kubernetes.io/managed-by":"Helm","app.kubernetes.io/name":"kuberay","helm.sh/chart":"ray-cluster-1.0.0"}},"spec":{"volumes":[{"name":"log-volume","emptyDir":{}}],"containers":[{"name":"ray-head","image":"rayproject/ray:2.38.0-py312-gpu","resources":{"limits":{"cpu":"3","memory":"30G","nvshare.com/gpu":"1"},"requests":{"cpu":"3","memory":"30G"}},"volumeMounts":[{"name":"log-volume","mountPath":"/tmp/ray"}],"imagePullPolicy":"IfNotPresent","securityContext":{}}],"affinity":{}}}},"workerGroupSpecs":[{"groupName":"worker","replicas":1,"minReplicas":1,"maxReplicas":2,"rayStartParams":{},"template":{"metadata":{"creationTimestamp":null,"labels":{"app.kubernetes.io/instance":"raycluster","app.kubernetes.io/managed-by":"Helm","app.kubernetes.io/name":"kuberay","helm.sh/chart":"ray-cluster-1.0.0"}},"spec":{"volumes":[{"name":"log-volume","emptyDir":{}}],"containers":[{"name":"ray-worker","image":"rayproject/ray:2.38.0-py312-gpu","resources":{"limits":{"cpu":"3","memory":"30G","nvshare.com/gpu":"1"},"requests":{"cpu":"3","memory":"30G"}},"volumeMounts":[{"name":"log-volume","mountPath":"/tmp/ray"}],"imagePullPolicy":"IfNotPresent","securityContext":{}}],"affinity":{}}},"scaleStrategy":{}}]},"status":{"desiredWorkerReplicas":1,"minWorkerReplicas":1,"maxWorkerReplicas":2,"lastUpdateTime":"2026-03-30T06:57:19Z","endpoints":{"client":"10001","dashboard":"8265","metrics":"8080","redis":"6379","serve":"8000"},"head":{"serviceIP":"10.96.176.69"},"observedGeneration":1}}}
+2026-03-30T06:57:19.967Z	ERROR	controller.raycluster-controller	Reconciler error	{"reconciler group": "ray.io", "reconciler kind": "RayCluster", "name": "raycluster-kuberay", "namespace": "default", "error": "Operation cannot be fulfilled on rayclusters.ray.io \"raycluster-kuberay\": the object has been modified; please apply your changes to the latest version and try again"}
+sigs.k8s.io/controller-runtime/pkg/internal/controller.(*Controller).processNextWorkItem
+	/opt/app-root/src/go/pkg/mod/sigs.k8s.io/controller-runtime@v0.11.1/pkg/internal/controller/controller.go:266
+sigs.k8s.io/controller-runtime/pkg/internal/controller.(*Controller).Start.func2.2
+	/opt/app-root/src/go/pkg/mod/sigs.k8s.io/controller-runtime@v0.11.1/pkg/internal/controller/controller.go:227
+2026-03-30T06:57:19.972Z	INFO	controllers.RayCluster	reconciling RayCluster	{"cluster name": "raycluster-kuberay"}
+2026-03-30T06:57:19.972Z	INFO	controllers.RayCluster	Reconciling Ingress
+2026-03-30T06:57:19.972Z	INFO	controllers.RayCluster	reconcileHeadService	{"1 head service found": "raycluster-kuberay-head-svc"}
+2026-03-30T06:57:19.972Z	INFO	controllers.RayCluster	reconcilePods	{"Found 1 head Pod": "raycluster-kuberay-head-k2g42", "Pod status": "Pending", "Pod restart policy": "Always", "Ray container terminated status": "nil"}
+2026-03-30T06:57:19.972Z	INFO	controllers.RayCluster	reconcilePods	{"head Pod": "raycluster-kuberay-head-k2g42", "shouldDelete": false, "reason": "KubeRay does not need to delete the head Pod raycluster-kuberay-head-k2g42. The Pod status is Pending, and the Ray container terminated status is nil."}
+2026-03-30T06:57:19.972Z	INFO	controllers.RayCluster	reconcilePods	{"desired workerReplicas (always adhering to minReplicas/maxReplica)": 1, "worker group": "worker", "maxReplicas": 2, "minReplicas": 1, "replicas": 1}
+2026-03-30T06:57:19.972Z	INFO	controllers.RayCluster	reconcilePods	{"worker Pod": "raycluster-kuberay-worker-worker-rfv86", "shouldDelete": false, "reason": "KubeRay does not need to delete the worker Pod raycluster-kuberay-worker-worker-rfv86. The Pod status is Pending, and the Ray container terminated status is nil."}
+2026-03-30T06:57:19.973Z	INFO	controllers.RayCluster	reconcilePods	{"removing the pods in the scaleStrategy of": "worker"}
+2026-03-30T06:57:19.973Z	INFO	controllers.RayCluster	reconcilePods	{"workerReplicas": 1, "runningPods": 1, "diff": 0}
+2026-03-30T06:57:19.973Z	INFO	controllers.RayCluster	reconcilePods	{"all workers already exist for group": "worker"}
+2026-03-30T06:57:19.973Z	INFO	controllers.RayCluster	Environment variable RAYCLUSTER_DEFAULT_REQUEUE_SECONDS_ENV is not set, using default value of 300 seconds	{"cluster name": "raycluster-kuberay"}
+2026-03-30T06:57:19.973Z	INFO	controllers.RayCluster	Unconditional requeue after	{"cluster name": "raycluster-kuberay", "seconds": 300}
+2026-03-30T06:57:19.973Z	INFO	controllers.RayCluster	reconciling RayCluster	{"cluster name": "raycluster-kuberay"}
+2026-03-30T06:57:19.973Z	INFO	controllers.RayCluster	Reconciling Ingress
+2026-03-30T06:57:19.973Z	INFO	controllers.RayCluster	reconcileHeadService	{"1 head service found": "raycluster-kuberay-head-svc"}
+2026-03-30T06:57:19.973Z	INFO	controllers.RayCluster	reconcilePods	{"Found 1 head Pod": "raycluster-kuberay-head-k2g42", "Pod status": "Pending", "Pod restart policy": "Always", "Ray container terminated status": "nil"}
+2026-03-30T06:57:19.973Z	INFO	controllers.RayCluster	reconcilePods	{"head Pod": "raycluster-kuberay-head-k2g42", "shouldDelete": false, "reason": "KubeRay does not need to delete the head Pod raycluster-kuberay-head-k2g42. The Pod status is Pending, and the Ray container terminated status is nil."}
+2026-03-30T06:57:19.973Z	INFO	controllers.RayCluster	reconcilePods	{"desired workerReplicas (always adhering to minReplicas/maxReplica)": 1, "worker group": "worker", "maxReplicas": 2, "minReplicas": 1, "replicas": 1}
+2026-03-30T06:57:19.973Z	INFO	controllers.RayCluster	reconcilePods	{"worker Pod": "raycluster-kuberay-worker-worker-rfv86", "shouldDelete": false, "reason": "KubeRay does not need to delete the worker Pod raycluster-kuberay-worker-worker-rfv86. The Pod status is Pending, and the Ray container terminated status is nil."}
+2026-03-30T06:57:19.973Z	INFO	controllers.RayCluster	reconcilePods	{"removing the pods in the scaleStrategy of": "worker"}
+2026-03-30T06:57:19.973Z	INFO	controllers.RayCluster	reconcilePods	{"workerReplicas": 1, "runningPods": 1, "diff": 0}
+2026-03-30T06:57:19.973Z	INFO	controllers.RayCluster	reconcilePods	{"all workers already exist for group": "worker"}
+2026-03-30T06:57:19.973Z	INFO	controllers.RayCluster	Environment variable RAYCLUSTER_DEFAULT_REQUEUE_SECONDS_ENV is not set, using default value of 300 seconds	{"cluster name": "raycluster-kuberay"}
+2026-03-30T06:57:19.973Z	INFO	controllers.RayCluster	Unconditional requeue after	{"cluster name": "raycluster-kuberay", "seconds": 300}
+2026-03-30T06:57:19.990Z	INFO	controllers.RayCluster	reconciling RayCluster	{"cluster name": "raycluster-kuberay"}
+2026-03-30T06:57:19.990Z	INFO	controllers.RayCluster	Reconciling Ingress
+2026-03-30T06:57:19.990Z	INFO	controllers.RayCluster	reconcileHeadService	{"1 head service found": "raycluster-kuberay-head-svc"}
+2026-03-30T06:57:19.990Z	INFO	controllers.RayCluster	reconcilePods	{"Found 1 head Pod": "raycluster-kuberay-head-k2g42", "Pod status": "Pending", "Pod restart policy": "Always", "Ray container terminated status": "nil"}
+2026-03-30T06:57:19.990Z	INFO	controllers.RayCluster	reconcilePods	{"head Pod": "raycluster-kuberay-head-k2g42", "shouldDelete": false, "reason": "KubeRay does not need to delete the head Pod raycluster-kuberay-head-k2g42. The Pod status is Pending, and the Ray container terminated status is nil."}
+2026-03-30T06:57:19.990Z	INFO	controllers.RayCluster	reconcilePods	{"desired workerReplicas (always adhering to minReplicas/maxReplica)": 1, "worker group": "worker", "maxReplicas": 2, "minReplicas": 1, "replicas": 1}
+2026-03-30T06:57:19.990Z	INFO	controllers.RayCluster	reconcilePods	{"worker Pod": "raycluster-kuberay-worker-worker-rfv86", "shouldDelete": false, "reason": "KubeRay does not need to delete the worker Pod raycluster-kuberay-worker-worker-rfv86. The Pod status is Pending, and the Ray container terminated status is nil."}
+2026-03-30T06:57:19.990Z	INFO	controllers.RayCluster	reconcilePods	{"removing the pods in the scaleStrategy of": "worker"}
+2026-03-30T06:57:19.990Z	INFO	controllers.RayCluster	reconcilePods	{"workerReplicas": 1, "runningPods": 1, "diff": 0}
+2026-03-30T06:57:19.990Z	INFO	controllers.RayCluster	reconcilePods	{"all workers already exist for group": "worker"}
+2026-03-30T06:57:19.991Z	INFO	controllers.RayCluster	Environment variable RAYCLUSTER_DEFAULT_REQUEUE_SECONDS_ENV is not set, using default value of 300 seconds	{"cluster name": "raycluster-kuberay"}
+2026-03-30T06:57:19.991Z	INFO	controllers.RayCluster	Unconditional requeue after	{"cluster name": "raycluster-kuberay", "seconds": 300}
+2026-03-30T06:57:23.644Z	INFO	controllers.RayCluster	reconciling RayCluster	{"cluster name": "raycluster-kuberay"}
+2026-03-30T06:57:23.644Z	INFO	controllers.RayCluster	Reconciling Ingress
+2026-03-30T06:57:23.644Z	INFO	controllers.RayCluster	reconcileHeadService	{"1 head service found": "raycluster-kuberay-head-svc"}
+2026-03-30T06:57:23.644Z	INFO	controllers.RayCluster	reconcilePods	{"Found 1 head Pod": "raycluster-kuberay-head-k2g42", "Pod status": "Pending", "Pod restart policy": "Always", "Ray container terminated status": "nil"}
+2026-03-30T06:57:23.644Z	INFO	controllers.RayCluster	reconcilePods	{"head Pod": "raycluster-kuberay-head-k2g42", "shouldDelete": false, "reason": "KubeRay does not need to delete the head Pod raycluster-kuberay-head-k2g42. The Pod status is Pending, and the Ray container terminated status is nil."}
+2026-03-30T06:57:23.644Z	INFO	controllers.RayCluster	reconcilePods	{"desired workerReplicas (always adhering to minReplicas/maxReplica)": 1, "worker group": "worker", "maxReplicas": 2, "minReplicas": 1, "replicas": 1}
+2026-03-30T06:57:23.644Z	INFO	controllers.RayCluster	reconcilePods	{"worker Pod": "raycluster-kuberay-worker-worker-rfv86", "shouldDelete": false, "reason": "KubeRay does not need to delete the worker Pod raycluster-kuberay-worker-worker-rfv86. The Pod status is Pending, and the Ray container terminated status is nil."}
+2026-03-30T06:57:23.644Z	INFO	controllers.RayCluster	reconcilePods	{"removing the pods in the scaleStrategy of": "worker"}
+2026-03-30T06:57:23.644Z	INFO	controllers.RayCluster	reconcilePods	{"workerReplicas": 1, "runningPods": 1, "diff": 0}
+2026-03-30T06:57:23.644Z	INFO	controllers.RayCluster	reconcilePods	{"all workers already exist for group": "worker"}
+2026-03-30T06:57:23.644Z	INFO	controllers.RayCluster	Environment variable RAYCLUSTER_DEFAULT_REQUEUE_SECONDS_ENV is not set, using default value of 300 seconds	{"cluster name": "raycluster-kuberay"}
+2026-03-30T06:57:23.644Z	INFO	controllers.RayCluster	Unconditional requeue after	{"cluster name": "raycluster-kuberay", "seconds": 300}
+2026-03-30T06:57:23.685Z	INFO	controllers.RayCluster	reconciling RayCluster	{"cluster name": "raycluster-kuberay"}
+2026-03-30T06:57:23.685Z	INFO	controllers.RayCluster	Reconciling Ingress
+2026-03-30T06:57:23.685Z	INFO	controllers.RayCluster	reconcileHeadService	{"1 head service found": "raycluster-kuberay-head-svc"}
+2026-03-30T06:57:23.685Z	INFO	controllers.RayCluster	reconcilePods	{"Found 1 head Pod": "raycluster-kuberay-head-k2g42", "Pod status": "Running", "Pod restart policy": "Always", "Ray container terminated status": "nil"}
+2026-03-30T06:57:23.685Z	INFO	controllers.RayCluster	reconcilePods	{"head Pod": "raycluster-kuberay-head-k2g42", "shouldDelete": false, "reason": "KubeRay does not need to delete the head Pod raycluster-kuberay-head-k2g42. The Pod status is Running, and the Ray container terminated status is nil."}
+2026-03-30T06:57:23.685Z	INFO	controllers.RayCluster	reconcilePods	{"desired workerReplicas (always adhering to minReplicas/maxReplica)": 1, "worker group": "worker", "maxReplicas": 2, "minReplicas": 1, "replicas": 1}
+2026-03-30T06:57:23.685Z	INFO	controllers.RayCluster	reconcilePods	{"worker Pod": "raycluster-kuberay-worker-worker-rfv86", "shouldDelete": false, "reason": "KubeRay does not need to delete the worker Pod raycluster-kuberay-worker-worker-rfv86. The Pod status is Pending, and the Ray container terminated status is nil."}
+2026-03-30T06:57:23.685Z	INFO	controllers.RayCluster	reconcilePods	{"removing the pods in the scaleStrategy of": "worker"}
+2026-03-30T06:57:23.685Z	INFO	controllers.RayCluster	reconcilePods	{"workerReplicas": 1, "runningPods": 1, "diff": 0}
+2026-03-30T06:57:23.685Z	INFO	controllers.RayCluster	reconcilePods	{"all workers already exist for group": "worker"}
+2026-03-30T06:57:23.686Z	INFO	controllers.RayCluster	inconsistentRayClusterStatus	{"detect inconsistency": "old Endpoints: map[client:10001 dashboard:8265 metrics:8080 redis:6379 serve:8000], new Endpoints: map[client:10001 dashboard:8265 metrics:8080 redis:6379 serve:8000], old Head: { 10.96.176.69}, new Head: {10.244.0.96 10.96.176.69}"}
+2026-03-30T06:57:23.686Z	INFO	controllers.RayCluster	rayClusterReconcile	{"Update CR status": "raycluster-kuberay", "status": {"desiredWorkerReplicas":1,"minWorkerReplicas":1,"maxWorkerReplicas":2,"lastUpdateTime":"2026-03-30T06:57:23Z","endpoints":{"client":"10001","dashboard":"8265","metrics":"8080","redis":"6379","serve":"8000"},"head":{"podIP":"10.244.0.96","serviceIP":"10.96.176.69"},"observedGeneration":1}}
+2026-03-30T06:57:23.699Z	INFO	controllers.RayCluster	Environment variable RAYCLUSTER_DEFAULT_REQUEUE_SECONDS_ENV is not set, using default value of 300 seconds	{"cluster name": "raycluster-kuberay"}
+2026-03-30T06:57:23.699Z	INFO	controllers.RayCluster	Unconditional requeue after	{"cluster name": "raycluster-kuberay", "seconds": 300}
+2026-03-30T06:57:35.817Z	INFO	controllers.RayCluster	reconciling RayCluster	{"cluster name": "raycluster-kuberay"}
+2026-03-30T06:57:35.817Z	INFO	controllers.RayCluster	Reconciling Ingress
+2026-03-30T06:57:35.817Z	INFO	controllers.RayCluster	reconcileHeadService	{"1 head service found": "raycluster-kuberay-head-svc"}
+2026-03-30T06:57:35.817Z	INFO	controllers.RayCluster	reconcilePods	{"Found 1 head Pod": "raycluster-kuberay-head-k2g42", "Pod status": "Running", "Pod restart policy": "Always", "Ray container terminated status": "nil"}
+2026-03-30T06:57:35.817Z	INFO	controllers.RayCluster	reconcilePods	{"head Pod": "raycluster-kuberay-head-k2g42", "shouldDelete": false, "reason": "KubeRay does not need to delete the head Pod raycluster-kuberay-head-k2g42. The Pod status is Running, and the Ray container terminated status is nil."}
+2026-03-30T06:57:35.817Z	INFO	controllers.RayCluster	reconcilePods	{"desired workerReplicas (always adhering to minReplicas/maxReplica)": 1, "worker group": "worker", "maxReplicas": 2, "minReplicas": 1, "replicas": 1}
+2026-03-30T06:57:35.817Z	INFO	controllers.RayCluster	reconcilePods	{"worker Pod": "raycluster-kuberay-worker-worker-rfv86", "shouldDelete": false, "reason": "KubeRay does not need to delete the worker Pod raycluster-kuberay-worker-worker-rfv86. The Pod status is Pending, and the Ray container terminated status is nil."}
+2026-03-30T06:57:35.817Z	INFO	controllers.RayCluster	reconcilePods	{"removing the pods in the scaleStrategy of": "worker"}
+2026-03-30T06:57:35.817Z	INFO	controllers.RayCluster	reconcilePods	{"workerReplicas": 1, "runningPods": 1, "diff": 0}
+2026-03-30T06:57:35.817Z	INFO	controllers.RayCluster	reconcilePods	{"all workers already exist for group": "worker"}
+2026-03-30T06:57:35.817Z	INFO	controllers.RayCluster	Environment variable RAYCLUSTER_DEFAULT_REQUEUE_SECONDS_ENV is not set, using default value of 300 seconds	{"cluster name": "raycluster-kuberay"}
+2026-03-30T06:57:35.817Z	INFO	controllers.RayCluster	Unconditional requeue after	{"cluster name": "raycluster-kuberay", "seconds": 300}
+2026-03-30T06:57:36.754Z	INFO	controllers.RayCluster	reconciling RayCluster	{"cluster name": "raycluster-kuberay"}
+2026-03-30T06:57:36.754Z	INFO	controllers.RayCluster	Reconciling Ingress
+2026-03-30T06:57:36.754Z	INFO	controllers.RayCluster	reconcileHeadService	{"1 head service found": "raycluster-kuberay-head-svc"}
+2026-03-30T06:57:36.755Z	INFO	controllers.RayCluster	reconcilePods	{"Found 1 head Pod": "raycluster-kuberay-head-k2g42", "Pod status": "Running", "Pod restart policy": "Always", "Ray container terminated status": "nil"}
+2026-03-30T06:57:36.755Z	INFO	controllers.RayCluster	reconcilePods	{"head Pod": "raycluster-kuberay-head-k2g42", "shouldDelete": false, "reason": "KubeRay does not need to delete the head Pod raycluster-kuberay-head-k2g42. The Pod status is Running, and the Ray container terminated status is nil."}
+2026-03-30T06:57:36.755Z	INFO	controllers.RayCluster	reconcilePods	{"desired workerReplicas (always adhering to minReplicas/maxReplica)": 1, "worker group": "worker", "maxReplicas": 2, "minReplicas": 1, "replicas": 1}
+2026-03-30T06:57:36.755Z	INFO	controllers.RayCluster	reconcilePods	{"worker Pod": "raycluster-kuberay-worker-worker-rfv86", "shouldDelete": false, "reason": "KubeRay does not need to delete the worker Pod raycluster-kuberay-worker-worker-rfv86. The Pod status is Running, and the Ray container terminated status is nil."}
+2026-03-30T06:57:36.755Z	INFO	controllers.RayCluster	reconcilePods	{"removing the pods in the scaleStrategy of": "worker"}
+2026-03-30T06:57:36.755Z	INFO	controllers.RayCluster	reconcilePods	{"workerReplicas": 1, "runningPods": 1, "diff": 0}
+2026-03-30T06:57:36.755Z	INFO	controllers.RayCluster	reconcilePods	{"all workers already exist for group": "worker"}
+2026-03-30T06:57:36.755Z	INFO	controllers.RayCluster	inconsistentRayClusterStatus	{"detect inconsistency": "old State: , new State: ready, old Reason: , new Reason: "}
+2026-03-30T06:57:36.755Z	INFO	controllers.RayCluster	rayClusterReconcile	{"Update CR status": "raycluster-kuberay", "status": {"state":"ready","availableWorkerReplicas":1,"desiredWorkerReplicas":1,"minWorkerReplicas":1,"maxWorkerReplicas":2,"lastUpdateTime":"2026-03-30T06:57:36Z","endpoints":{"client":"10001","dashboard":"8265","metrics":"8080","redis":"6379","serve":"8000"},"head":{"podIP":"10.244.0.96","serviceIP":"10.96.176.69"},"observedGeneration":1}}
+2026-03-30T06:57:36.770Z	INFO	controllers.RayCluster	Environment variable RAYCLUSTER_DEFAULT_REQUEUE_SECONDS_ENV is not set, using default value of 300 seconds	{"cluster name": "raycluster-kuberay"}
+2026-03-30T06:57:36.770Z	INFO	controllers.RayCluster	Unconditional requeue after	{"cluster name": "raycluster-kuberay", "seconds": 300}
+2026-03-30T07:02:19.974Z	INFO	controllers.RayCluster	reconciling RayCluster	{"cluster name": "raycluster-kuberay"}
+2026-03-30T07:02:19.974Z	INFO	controllers.RayCluster	Reconciling Ingress
+2026-03-30T07:02:19.974Z	INFO	controllers.RayCluster	reconcileHeadService	{"1 head service found": "raycluster-kuberay-head-svc"}
+2026-03-30T07:02:19.974Z	INFO	controllers.RayCluster	reconcilePods	{"Found 1 head Pod": "raycluster-kuberay-head-k2g42", "Pod status": "Running", "Pod restart policy": "Always", "Ray container terminated status": "nil"}
+2026-03-30T07:02:19.974Z	INFO	controllers.RayCluster	reconcilePods	{"head Pod": "raycluster-kuberay-head-k2g42", "shouldDelete": false, "reason": "KubeRay does not need to delete the head Pod raycluster-kuberay-head-k2g42. The Pod status is Running, and the Ray container terminated status is nil."}
+2026-03-30T07:02:19.974Z	INFO	controllers.RayCluster	reconcilePods	{"desired workerReplicas (always adhering to minReplicas/maxReplica)": 1, "worker group": "worker", "maxReplicas": 2, "minReplicas": 1, "replicas": 1}
+2026-03-30T07:02:19.975Z	INFO	controllers.RayCluster	reconcilePods	{"worker Pod": "raycluster-kuberay-worker-worker-rfv86", "shouldDelete": false, "reason": "KubeRay does not need to delete the worker Pod raycluster-kuberay-worker-worker-rfv86. The Pod status is Running, and the Ray container terminated status is nil."}
+2026-03-30T07:02:19.975Z	INFO	controllers.RayCluster	reconcilePods	{"removing the pods in the scaleStrategy of": "worker"}
+2026-03-30T07:02:19.975Z	INFO	controllers.RayCluster	reconcilePods	{"workerReplicas": 1, "runningPods": 1, "diff": 0}
+2026-03-30T07:02:19.975Z	INFO	controllers.RayCluster	reconcilePods	{"all workers already exist for group": "worker"}
+2026-03-30T07:02:19.975Z	INFO	controllers.RayCluster	Environment variable RAYCLUSTER_DEFAULT_REQUEUE_SECONDS_ENV is not set, using default value of 300 seconds	{"cluster name": "raycluster-kuberay"}
+2026-03-30T07:02:19.975Z	INFO	controllers.RayCluster	Unconditional requeue after	{"cluster name": "raycluster-kuberay", "seconds": 300}

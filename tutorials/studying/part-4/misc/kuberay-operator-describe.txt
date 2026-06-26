@@ -1,0 +1,65 @@
+Name:             kuberay-operator-9986f78b7-97xc8
+Namespace:        default
+Priority:         0
+Service Account:  kuberay-operator
+Node:             mlops-platform-control-plane/172.18.0.3
+Start Time:       Mon, 30 Mar 2026 06:56:46 +0000
+Labels:           app.kubernetes.io/component=kuberay-operator
+                  app.kubernetes.io/instance=kuberay-operator
+                  app.kubernetes.io/name=kuberay-operator
+                  pod-template-hash=9986f78b7
+Annotations:      <none>
+Status:           Running
+IP:               10.244.0.95
+IPs:
+  IP:           10.244.0.95
+  IP:           fd00:10:244::5f
+Controlled By:  ReplicaSet/kuberay-operator-9986f78b7
+Containers:
+  kuberay-operator:
+    Container ID:  containerd://caa47c0fcc478ea7712a5401d93434666db4f33082dee44ecb45a121ae0dee39
+    Image:         kuberay/operator:v1.0.0
+    Image ID:      docker.io/kuberay/operator@sha256:4e6ac8a3a2c482d6c841cca72e88bad0e2ae8da6b1dfbe7ebabf8082be70d8e7
+    Port:          8080/TCP
+    Host Port:     0/TCP
+    Command:
+      /manager
+    State:          Running
+      Started:      Mon, 30 Mar 2026 06:56:50 +0000
+    Ready:          True
+    Restart Count:  0
+    Limits:
+      cpu:     100m
+      memory:  512Mi
+    Requests:
+      cpu:        100m
+      memory:     512Mi
+    Liveness:     http-get http://:http/metrics delay=10s timeout=1s period=5s #success=1 #failure=5
+    Readiness:    http-get http://:http/metrics delay=10s timeout=1s period=5s #success=1 #failure=5
+    Environment:  <none>
+    Mounts:
+      /var/run/secrets/kubernetes.io/serviceaccount from kube-api-access-92s7d (ro)
+Conditions:
+  Type              Status
+  Initialized       True 
+  Ready             True 
+  ContainersReady   True 
+  PodScheduled      True 
+Volumes:
+  kube-api-access-92s7d:
+    Type:                    Projected (a volume that contains injected data from multiple sources)
+    TokenExpirationSeconds:  3607
+    ConfigMapName:           kube-root-ca.crt
+    ConfigMapOptional:       <nil>
+    DownwardAPI:             true
+QoS Class:                   Guaranteed
+Node-Selectors:              <none>
+Tolerations:                 node.kubernetes.io/not-ready:NoExecute op=Exists for 300s
+                             node.kubernetes.io/unreachable:NoExecute op=Exists for 300s
+Events:
+  Type    Reason     Age    From               Message
+  ----    ------     ----   ----               -------
+  Normal  Scheduled  9m31s  default-scheduler  Successfully assigned default/kuberay-operator-9986f78b7-97xc8 to mlops-platform-control-plane
+  Normal  Pulled     9m28s  kubelet            Container image "kuberay/operator:v1.0.0" already present on machine
+  Normal  Created    9m28s  kubelet            Created container kuberay-operator
+  Normal  Started    9m27s  kubelet            Started container kuberay-operator

@@ -1,0 +1,60 @@
+Name:             airflow-postgres-server-6c5547d769-rpng7
+Namespace:        forwarder
+Priority:         0
+Service Account:  default
+Node:             mlops-platform-control-plane/172.18.0.3
+Start Time:       Mon, 17 Nov 2025 12:32:46 +0000
+Labels:           app=airflow-postgres-server
+                  pod-template-hash=6c5547d769
+Annotations:      <none>
+Status:           Running
+IP:               10.244.0.45
+IPs:
+  IP:           10.244.0.45
+  IP:           fd00:10:244::2d
+Controlled By:  ReplicaSet/airflow-postgres-server-6c5547d769
+Containers:
+  airflow-postgres-server:
+    Container ID:   containerd://bb3826e435b87d942b737c851271372869a2460475f95e12b8a25cb72bbb2156
+    Image:          postgres:13
+    Image ID:       docker.io/library/postgres@sha256:1732a9c549b6ed8cf7185c7f39fd0487c3aa768bf6648f89e1d9b0b9b0e6f43d
+    Port:           5432/TCP
+    Host Port:      0/TCP
+    State:          Running
+      Started:      Wed, 18 Mar 2026 08:39:55 +0000
+    Last State:     Terminated
+      Reason:       Unknown
+      Exit Code:    255
+      Started:      Tue, 17 Mar 2026 11:38:35 +0000
+      Finished:     Wed, 18 Mar 2026 08:36:33 +0000
+    Ready:          True
+    Restart Count:  17
+    Environment:
+      POSTGRES_USER:      airflow
+      POSTGRES_PASSWORD:  airflow
+      POSTGRES_DB:        airflow
+    Mounts:
+      /var/lib/postgresql/data from airflow-postgres-data (rw)
+      /var/run/secrets/kubernetes.io/serviceaccount from kube-api-access-6kmd5 (ro)
+Conditions:
+  Type              Status
+  Initialized       True 
+  Ready             True 
+  ContainersReady   True 
+  PodScheduled      True 
+Volumes:
+  airflow-postgres-data:
+    Type:       PersistentVolumeClaim (a reference to a PersistentVolumeClaim in the same namespace)
+    ClaimName:  airflow-postgres-pvc
+    ReadOnly:   false
+  kube-api-access-6kmd5:
+    Type:                    Projected (a volume that contains injected data from multiple sources)
+    TokenExpirationSeconds:  3607
+    ConfigMapName:           kube-root-ca.crt
+    ConfigMapOptional:       <nil>
+    DownwardAPI:             true
+QoS Class:                   BestEffort
+Node-Selectors:              <none>
+Tolerations:                 node.kubernetes.io/not-ready:NoExecute op=Exists for 300s
+                             node.kubernetes.io/unreachable:NoExecute op=Exists for 300s
+Events:                      <none>

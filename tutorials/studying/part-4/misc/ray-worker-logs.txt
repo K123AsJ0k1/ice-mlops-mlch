@@ -1,0 +1,11 @@
+Defaulted container "ray-worker" out of: ray-worker, wait-gcs-ready (init)
+[2026-03-29 23:57:38,286 W 1 1] global_state_accessor.cc:463: Retrying to get node with node ID b50124c697b567694fe3b6bbda857da6b94648cac3e2f710a2b6ca12
+2026-03-29 23:57:38,187	INFO scripts.py:960 -- Local node IP: 10.244.0.97
+2026-03-29 23:57:39,290	SUCC scripts.py:973 -- --------------------
+2026-03-29 23:57:39,290	SUCC scripts.py:974 -- Ray runtime started.
+2026-03-29 23:57:39,290	SUCC scripts.py:975 -- --------------------
+2026-03-29 23:57:39,291	INFO scripts.py:977 -- To terminate the Ray runtime, run
+2026-03-29 23:57:39,291	INFO scripts.py:978 --   ray stop
+2026-03-29 23:57:39,291	INFO scripts.py:986 -- --block
+2026-03-29 23:57:39,291	INFO scripts.py:987 -- This command will now block forever until terminated by a signal.
+2026-03-29 23:57:39,291	INFO scripts.py:990 -- Running subprocesses are monitored and a message will be printed if any of them terminate unexpectedly. Subprocesses exit with SIGTERM will be treated as graceful, thus NOT reported.
