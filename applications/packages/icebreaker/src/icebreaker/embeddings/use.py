@@ -36,7 +36,7 @@ def embeddings_batch_create_vectors(
 
 def embeddings_create_hybrid_points(
     dataset_name: str,
-    dataset_records: dict,
+    dataset_records: list,
     text_column: str,
     dense_model: any,
     sparse_model: any,

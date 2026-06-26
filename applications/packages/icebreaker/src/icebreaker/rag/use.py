@@ -6,11 +6,6 @@ def rag_grade_row(
     material_grades: dict,
     blacklist_prefixes: list
 ):
-    try: 
-        from ..objects.use import objects_get_data
-    except ImportError as e:
-        raise ImportError("rag/use failed to import", e)
-    
     row_absolute_path = data_row[path_column]
     file_type = row_absolute_path.split('.')[-1]
 
@@ -29,21 +24,23 @@ def rag_grade_row(
                     break  
     return row_grade
 
-def rag_preprocess_data(
+def rag_preprocess_datasets(
     swift_client: any,
     storage_parameters: any,
     dataset_paths: list,
     ref_column: str,
     path_column: str,
     material_grades: dict,
-    blacklist_prefixes: dict
+    blacklist_prefixes: dict,
+    insert_prefix: str
 ):
     try: 
-        from ..objects.use import objects_get_data
+        import pandas as pd
+        from ..objects.use import objects_get_data, objects_store_data
     except ImportError as e:
         raise ImportError("rag/use failed to import", e)
 
-    preprocessed_dataset = [] 
+    checked_datasets = [] 
     idx = 0
     global_ref_paths = {}
     for dataset_path in dataset_paths:
@@ -67,29 +64,60 @@ def rag_preprocess_data(
             dict_format = False
         ) 
 
-        dataset_name = dataset_path.split('/')[-1].split('.')[0]
         df_records = data_object[0].to_dict('records')
-
+        dataset_rows_1 = []
         for row in df_records:
             preprocessed_row = row.copy()
             preprocessed_row['idx'] = idx
-            preprocessed_row['dataset'] = dataset_name
+            preprocessed_row['dataset-object'] = dataset_path
             global_ref_paths.update(preprocessed_row[ref_column])
-            preprocessed_dataset.append(preprocessed_row)
+            dataset_rows_1.append(preprocessed_row)
             idx += 1
-    finalized_dataset = []
-    for target_row in preprocessed_dataset:
-        finalized_row = target_row.copy()
-        finalized_row['relevance'] = rag_grade_row(
-            data_row = target_row,
-            path_column = path_column,
-            global_reference_paths = global_ref_paths,
-            material_grades = material_grades,
-            blacklist_prefixes = blacklist_prefixes
-        )
-        finalized_dataset.append(finalized_row)
+        checked_datasets.append(dataset_rows_1)
 
-    return finalized_dataset
+    preprocessed_datasets = []
+    dataset_idx = 0
+    for dataset_path in dataset_paths:
+        dataset_rows_2 = []
+        
+        for row in checked_datasets[dataset_idx]:
+            preprocessed_row = row.copy()
+            preprocessed_row['relevance'] = rag_grade_row(
+                data_row = row,
+                path_column = path_column,
+                global_reference_paths = global_ref_paths,
+                material_grades = material_grades,
+                blacklist_prefixes = blacklist_prefixes
+            )
+            dataset_rows_2.append(preprocessed_row)
+        
+        preprocessed_datasets.append(dataset_rows_2)
+        before, match, after = dataset_path.partition(insert_prefix)
+        modified_dataset_path = before + match + '-pre' + after
+        dataset_df = pd.DataFrame(dataset_rows_2)
+        status = objects_store_data(
+            swift_client = swift_client,
+            storage_parameters = {
+                'bucket-target': storage_parameters['bucket-target'],
+                'bucket-prefix': storage_parameters['bucket-prefix'],
+                'bucket-user': storage_parameters['bucket-user'],
+                'object-name': 'root',
+                'object-serialization': storage_parameters['object-serialization'],
+                'path-replacers': {
+                    'name': modified_dataset_path
+                },
+                'path-names': [],
+                'debug-prints': True,
+                'lock-parameters': {},
+                'lock-location': None,
+                'overwrite': True
+            },
+            object_data = dataset_df,
+            object_metadata = {}
+        )
+        dataset_idx += 1
+
+    return preprocessed_datasets
 
 def rag_setup_database(
     swift_client: any,
@@ -140,8 +168,7 @@ def rag_setup_database(
         ) 
 
         dataset_name = dataset_path.split('/')[-1].split('.')[0]
-        target_df = data_object[0].rename_axis('idx').reset_index()
-        df_records = target_df.to_dict('records')
+        df_records = data_object[0].to_dict('records')
 
         hybrid_points = embeddings_create_hybrid_points(
             dataset_name = dataset_name,
@@ -173,6 +200,7 @@ def rag_evalute_database(
     query_limit: int,
     group_columns: list,
     value_column: str,
+    relevance_column: str,
     query_column: str,
     fusion_limit: int,
     dataset_paths: list,
@@ -216,15 +244,16 @@ def rag_evalute_database(
                 'overwrite': True
             },
             dict_format = False
-        )  
+        )    
         dataset_name = dataset_path.split('/')[-1].split('.')[0]
-        target_df = data_object[0].rename_axis('idx').reset_index()
+        target_df = data_object[0]
         
         dataframe_stats, current_dataset_gather = search_data_metrics(
-            dataset_name = dataset_name,
+            dataset_name = dataset_name, 
             target_df = target_df,
             group_columns = group_columns,
             value_column = value_column,
+            relevance_column = relevance_column,
             query_column = query_column,
             qdrant_client = qdrant_client,
             query_type = query_type,
@@ -236,7 +265,7 @@ def rag_evalute_database(
             sparse_model_name = sparse_model_name,
             sparse_model = sparse_model,
             debug_prints = debug_prints,
-        )
+        ) 
 
         database_metrics[dataset_name] = dataframe_stats
         for key, values in current_dataset_gather.items():
@@ -247,10 +276,10 @@ def rag_evalute_database(
     database_metrics['summary'] = search_get_statistics(
         gathered_metrics = global_collective_metrics,
         percentile_filter = [
-            'p@1',
-            'r@3',
-            'ndcg@3',
-            'ndcg@5'
+            'p@1-proxy',
+            'r@3-proxy',
+            'ndcg@3-graded',
+            'ndcg@5-graded'
         ]
     )
 

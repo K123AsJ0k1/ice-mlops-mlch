@@ -43,7 +43,7 @@ def search_monitored_batch_query(
     query_type: str,
     collection_name: str,
     text_query_batch: list, 
-    relevant_ids_batch: list,
+    relevant_weights_batch: list,
     query_limit: int,
     fusion_limit: int,
     dense_model: any,
@@ -52,7 +52,7 @@ def search_monitored_batch_query(
     try:
         import time
         from ..qdrant.use import qdrant_modifiable_query
-        from ..search.utility import search_retrieval_metrics
+        from ..search.utility import search_weighted_retrieval_metrics
     except ImportError as e:
         raise ImportError("embeddings/use failed to import", e)
     
@@ -75,8 +75,8 @@ def search_monitored_batch_query(
         if 0 < len(batch_sparse):
             q_sparse = batch_sparse[idx] if batch_sparse is not None else None
         q_relevant_ids = []
-        if 0 < len(relevant_ids_batch):
-            q_relevant_ids = relevant_ids_batch[idx]
+        if 0 < len(relevant_weights_batch):
+            q_relevant_weights = relevant_weights_batch[idx]
 
         start_search = time.perf_counter_ns()
         query_result = qdrant_modifiable_query( 
@@ -92,13 +92,13 @@ def search_monitored_batch_query(
         
         total_characters = sum(point.payload.get('characters', 0) for point in query_result)
         retrieved_ids = [point.payload['idx'] for point in query_result]
-        
+         
         resulted_metrics = {}
-        if 0 < len(q_relevant_ids):
-            resulted_metrics = search_retrieval_metrics( 
+        if 0 < len(q_relevant_weights):
+            resulted_metrics = search_weighted_retrieval_metrics( 
                 retrieved_ids = retrieved_ids,
-                true_relevant_ids = q_relevant_ids
-            )
+                true_relevant_weights = q_relevant_weights
+            ) 
         
         resulted_metrics['embedding-latency-ms'] = embed_latency_ms
         resulted_metrics['search-latency-ms'] = search_latency_ms
@@ -114,6 +114,7 @@ def search_data_metrics(
     target_df: any,
     group_columns: list,
     value_column: str,
+    relevance_column: str,
     query_column: str,
     qdrant_client: any,
     query_type: str,
@@ -125,7 +126,7 @@ def search_data_metrics(
     sparse_model_name: str,
     sparse_model: any,
     debug_prints: bool
-):
+): 
     try:
         from ..search.utility import search_get_statistics
     except ImportError as e:
@@ -134,21 +135,27 @@ def search_data_metrics(
     relevance_lookup = target_df.groupby(group_columns)[value_column].apply(list).to_dict()
     
     text_queries = []
-    relevant_ids_batch = []
+    relevant_weights_batch = []
     metadata_rows = [] 
 
     for _, row in target_df.iterrows():
         group_key = tuple(row[column] for column in group_columns)
         text_queries.append(row[query_column])
-        relevant_ids_batch.append(relevance_lookup[group_key])
+        relevant_id_batch = relevance_lookup[group_key]
+        relevant_weighed_ids = {}
+        for relevant_id in relevant_id_batch:
+            id_relevance = target_df.loc[target_df[value_column] == relevant_id, relevance_column].values[0]
+            relevant_weighed_ids[relevant_id] = int(id_relevance)
+        
+        relevant_weights_batch.append(relevant_weighed_ids)
         metadata_rows.append(row)
-    
+   
     batch_outputs = search_monitored_batch_query(
         qdrant_client = qdrant_client,
         query_type = query_type,
         collection_name = collection_name,
         text_query_batch = text_queries, 
-        relevant_ids_batch = relevant_ids_batch, 
+        relevant_weights_batch = relevant_weights_batch,
         query_limit = query_limit,
         fusion_limit = fusion_limit,
         dense_model = dense_model,
@@ -160,8 +167,8 @@ def search_data_metrics(
     for j, (result, metrics) in enumerate(batch_outputs):
         row = metadata_rows[j]
         query_text = text_queries[j]
-        true_relevant_ids = relevant_ids_batch[j]
-
+        true_relevant_weight = relevant_weights_batch[j]
+        
         if debug_prints:
             print(f'Dataset|{dataset_name}')
             print(f'Collection|{collection_name}')
@@ -174,29 +181,34 @@ def search_data_metrics(
             if query_type == 'sparse' or 'hybrid' in query_type:
                 print(f'Sparse model: {sparse_model_name}')
             
-            print(f'Relevant ids|{true_relevant_ids}')
-            print(f"Precision@1|{metrics['p@1']}")
-            print(f"Recall@3|{metrics['r@3']}")
-            print(f"NDCG@3|{metrics['ndcg@3']}")
-            print(f"NDCG@5|{metrics['ndcg@5']}")
+            print(f'Relevant ids|{true_relevant_weight}')
+            print(f"Precision@1|{metrics['p@1-proxy']}")
+            print(f"Recall@3|{metrics['r@3-proxy']}")
+            print(f"NDCG@3|{metrics['ndcg@3-graded']}")
+            print(f"NDCG@5|{metrics['ndcg@5-graded']}")
             print(f"Embedding latency (ms)|{metrics['embedding-latency-ms']}")
             print(f"Search latency (ms)|{metrics['search-latency-ms']}")
             print(f"Total latency (ms)|{metrics['total-latency-ms']}")
             print(f"Total retrieved characters|{metrics['total-characters']}")
-            print('index|score|idx|part|document|chapter|index|topic')
+            print('index|score|idx|relevance|part|document|chapter|index|topic')
             for i, point in enumerate(result, 1):
                 p = point.payload
-                print(f"{i}|{point.score}|{p.get('idx')}|{p.get('part')}|{p.get('document')}|{p.get('chapter')}|{p.get('index')}|{p.get('topic')}")
-            print('')
+                print(f"{i}|{point.score}|{p.get('idx')}|{p.get('relevance')}|{p.get('part')}|{p.get('document')}|{p.get('chapter')}|{p.get('index')}|{p.get('topic')}")
+            print('') 
 
         for key, value in metrics.items():
             if key not in gathered_metrics:
                 gathered_metrics[key] = []
             gathered_metrics[key].append(value)
-    # Potential source
+    
     dataframe_statistics = search_get_statistics(
         gathered_metrics = gathered_metrics,
-        percentile_filter = ['p@1', 'r@3', 'ndcg@3', 'ndcg@5']
+        percentile_filter = [
+            'p@1-proxy', 
+            'r@3-proxy', 
+            'ndcg@3-graded', 
+            'ndcg@5-graded'
+        ]
     )
     
     return dataframe_statistics, gathered_metrics
