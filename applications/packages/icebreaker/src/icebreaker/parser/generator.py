@@ -15,7 +15,7 @@ def generator_repository_path(
         if folder == repository_name:
             break
         index += 1
-    joined_path = '/'.join(path_split[index:-1])
+    joined_path = '/'.join(path_split[index:])
     return joined_path
 
 def generator_chapter_number(
@@ -206,5 +206,4 @@ def generator_divide_material(
             name = storage_name
         )
     
-    sorted_material = None
     return sorted_material

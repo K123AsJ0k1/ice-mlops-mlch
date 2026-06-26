@@ -114,7 +114,7 @@ def python_parse_file(
         # This should only handle classes and functions
         if isinstance(node, (ast.FunctionDef, ast.ClassDef, ast.AsyncFunctionDef)) or is_main:
             fastapi_case = False
-            header = f'Python {used_directory} {used_file}'
+            header = f'Python {used_directory} {used_file} '
             if isinstance(node, (ast.FunctionDef)):
                 name = node.name
                 header += f'function {name}'
