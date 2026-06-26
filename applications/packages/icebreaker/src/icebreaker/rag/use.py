@@ -1,4 +1,96 @@
 
+def rag_grade_row(
+    data_row: any,
+    path_column: str,
+    global_reference_paths: dict,
+    material_grades: dict,
+    blacklist_prefixes: list
+):
+    try: 
+        from ..objects.use import objects_get_data
+    except ImportError as e:
+        raise ImportError("rag/use failed to import", e)
+    
+    row_absolute_path = data_row[path_column]
+    file_type = row_absolute_path.split('.')[-1]
+
+    row_grade = None
+    if file_type in material_grades:
+        m_type, row_grade = material_grades[file_type]
+        if m_type == 'secondary':
+            for blacklist_prefix in blacklist_prefixes:
+                if blacklist_prefix in row_absolute_path:
+                    row_grade = 0
+                    break
+
+            for _, absolute_path in global_reference_paths.items():
+                if absolute_path == row_absolute_path:
+                    row_grade += 1
+                    break  
+    return row_grade
+
+def rag_preprocess_data(
+    swift_client: any,
+    storage_parameters: any,
+    dataset_paths: list,
+    ref_column: str,
+    path_column: str,
+    material_grades: dict,
+    blacklist_prefixes: dict
+):
+    try: 
+        from ..objects.use import objects_get_data
+    except ImportError as e:
+        raise ImportError("rag/use failed to import", e)
+
+    preprocessed_dataset = [] 
+    idx = 0
+    global_ref_paths = {}
+    for dataset_path in dataset_paths:
+        data_object = objects_get_data(
+            swift_client = swift_client,
+            storage_parameters = {
+                'bucket-target': storage_parameters['bucket-target'],
+                'bucket-prefix': storage_parameters['bucket-prefix'],
+                'bucket-user': storage_parameters['bucket-user'],
+                'object-name': 'root',
+                'object-serialization': storage_parameters['object-serialization'],
+                'path-replacers': {
+                    'name': dataset_path
+                },
+                'path-names': [],
+                'debug-prints': True,
+                'lock-parameters': {},
+                'lock-location': None,
+                'overwrite': True
+            },
+            dict_format = False
+        ) 
+
+        dataset_name = dataset_path.split('/')[-1].split('.')[0]
+        df_records = data_object[0].to_dict('records')
+
+        for row in df_records:
+            preprocessed_row = row.copy()
+            preprocessed_row['idx'] = idx
+            preprocessed_row['dataset'] = dataset_name
+            global_ref_paths.update(preprocessed_row[ref_column])
+            preprocessed_dataset.append(preprocessed_row)
+            idx += 1
+    finalized_dataset = []
+    for target_row in preprocessed_dataset:
+        finalized_row = target_row.copy()
+        finalized_row['relevance'] = rag_grade_row(
+            data_row = target_row,
+            path_column = path_column,
+            global_reference_paths = global_ref_paths,
+            material_grades = material_grades,
+            blacklist_prefixes = blacklist_prefixes
+        )
+        finalized_dataset.append(finalized_row)
+
+    return finalized_dataset
+
 def rag_setup_database(
     swift_client: any,
     qdrant_client: any,
@@ -15,7 +107,7 @@ def rag_setup_database(
         from ..qdrant.use import qdrant_create_collection, qdrant_upload_points, qdrant_baai_hybrid_config
         from ..embeddings.use import embeddings_create_hybrid_points
     except ImportError as e:
-        raise ImportError("embeddings/use failed to import", e)
+        raise ImportError("rag/use failed to import", e)
     
     start_time = t.time()
 
@@ -45,14 +137,15 @@ def rag_setup_database(
                 'overwrite': True
             },
             dict_format = False
-        )
+        ) 
 
         dataset_name = dataset_path.split('/')[-1].split('.')[0]
         target_df = data_object[0].rename_axis('idx').reset_index()
+        df_records = target_df.to_dict('records')
 
         hybrid_points = embeddings_create_hybrid_points(
             dataset_name = dataset_name,
-            target_df = target_df,
+            dataset_records = df_records,
             text_column = text_column,
             dense_model = dense_model,
             sparse_model = sparse_model
@@ -69,7 +162,7 @@ def rag_setup_database(
     total_time = round(end_time-start_time,5)
     print('Spent seconds', total_time)
 
-    return status
+    return total_time
 
 def rag_evalute_database(
     swift_client: any,
@@ -146,12 +239,11 @@ def rag_evalute_database(
         )
 
         database_metrics[dataset_name] = dataframe_stats
-        # Potential source
         for key, values in current_dataset_gather.items():
             if key not in global_collective_metrics:
                 global_collective_metrics[key] = []
             global_collective_metrics[key].extend(values)
-    # Potential source
+    
     database_metrics['summary'] = search_get_statistics(
         gathered_metrics = global_collective_metrics,
         percentile_filter = [

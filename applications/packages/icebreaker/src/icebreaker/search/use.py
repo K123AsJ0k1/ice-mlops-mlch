@@ -194,7 +194,6 @@ def search_data_metrics(
                 gathered_metrics[key] = []
             gathered_metrics[key].append(value)
     # Potential source
-    print(gathered_metrics)
     dataframe_statistics = search_get_statistics(
         gathered_metrics = gathered_metrics,
         percentile_filter = ['p@1', 'r@3', 'ndcg@3', 'ndcg@5']

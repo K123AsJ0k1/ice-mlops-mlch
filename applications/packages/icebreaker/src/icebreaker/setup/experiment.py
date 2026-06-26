@@ -6,6 +6,7 @@ def experiment_format_material(
         import copy 
         import pickle
         import pandas as pd
+        from ..misc.dict import flatten_nested_dict
     except ImportError as e:
         raise ImportError("Failed to import", e)
 
@@ -57,7 +58,7 @@ def experiment_store_data(
         import os
         import json
         import time as t
-        from ..storage.management import object_storage_interaction, set_object_path, set_bucket_name
+        from ..storage.management import object_storage_interaction
     except ImportError as e:
         raise ImportError("Failed to import", e)
 
@@ -95,6 +96,9 @@ def experiment_store_data(
                             'path-names': [
                                 object_name
                             ],
+                            'debug-prints': True,
+                            'lock-parameters': {},
+                            'lock-location': None,
                             'overwrite': True
                         },
                         object_data = stored_data,
@@ -123,6 +127,9 @@ def experiment_store_data(
                                 'path-names': [
                                     object_name
                                 ],
+                                'debug-prints': True,
+                                'lock-parameters': {},
+                                'lock-location': None,
                                 'overwrite': True
                             },
                             object_data = stored_data,

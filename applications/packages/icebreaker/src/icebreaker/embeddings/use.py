@@ -1,6 +1,6 @@
 
 def embeddings_batch_create_vectors(
-    text_inputs: list,
+    text_input_batch: list,
     dense_model: any,
     sparse_model: any,
 ):
@@ -15,13 +15,13 @@ def embeddings_batch_create_vectors(
     if not dense_model is None:
         dense_vectors = dense_create_baai_vectors(
             dense_model = dense_model,
-            text_inputs = text_inputs
+            text_inputs = text_input_batch
         )
     sparse_vectors = []
     if not sparse_model is None:
         sparse_embeddings_iter = sparse_create_spalde_embeddings(
             sparse_model = sparse_model,
-            text_inputs = text_inputs
+            text_inputs = text_input_batch
         )
         
         sparse_vectors = [
@@ -36,7 +36,7 @@ def embeddings_batch_create_vectors(
 
 def embeddings_create_hybrid_points(
     dataset_name: str,
-    target_df: any,
+    dataset_records: dict,
     text_column: str,
     dense_model: any,
     sparse_model: any,
@@ -47,17 +47,16 @@ def embeddings_create_hybrid_points(
     except ImportError as e:
         raise ImportError("embeddings/use failed to import", e)
     
-    records = target_df.to_dict('records')
-    text_data_list = [row[text_column] for row in records]
+    text_data_list = [row[text_column] for row in dataset_records]
 
     dense_vectors, sparse_vectors = embeddings_batch_create_vectors(
-        text_inputs = text_data_list,
+        text_input_batch = text_data_list,
         dense_model = dense_model,
         sparse_model = sparse_model
-    )
+    ) 
 
     points = []
-    for i, row in enumerate(records):
+    for i, row in enumerate(dataset_records):
         d_vec = dense_vectors[i] if dense_vectors is not None else None
         s_vec = sparse_vectors[i] if sparse_vectors is not None else None
 

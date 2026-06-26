@@ -5,7 +5,7 @@ def notebook_parse_file(
 ):
     try:
         import nbformat
-        from .markdown_parse import markdown_parse_content
+        from ..parser.markdown_parse import markdown_parse_content
     except ImportError as e:
         raise ImportError("parser/notebook_parse failed to import", e)
 

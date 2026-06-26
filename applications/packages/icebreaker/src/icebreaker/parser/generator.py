@@ -59,18 +59,19 @@ def generator_divide_material(
     exclude_folders: list,
     save_material: bool,
     storage_folder: str,
-    storage_name: str
+    storage_name: str,
+    debug_prints: bool
 ) -> int:
     try:
         import os
-        from .markdown_parse import markdown_parse_content
-        from .notebook_parse import notebook_parse_file
-        from .python_parse import python_parse_file
-        from .yaml_parse import yaml_parse_file
-        from .text_parse import text_parse_file
-        from .bash_parse import bash_parse_file
-        from .env_parse import env_parse_file
-        from .organizer import organizer_sort_material
+        from ..parser.markdown_parse import markdown_parse_content
+        from ..parser.notebook_parse import notebook_parse_file
+        from ..parser.python_parse import python_parse_file
+        from ..parser.yaml_parse import yaml_parse_file
+        from ..parser.text_parse import text_parse_file
+        from ..parser.bash_parse import bash_parse_file
+        from ..parser.env_parse import env_parse_file
+        from ..parser.organizer import organizer_sort_material
     except ImportError as e:
         raise ImportError("parser/generator failed to import", e)
     
@@ -97,8 +98,9 @@ def generator_divide_material(
             absolute_path = f'{repository_path}{after}'
             file_type = file_name.split('.')[-1]
             if file_type in file_types:
+                if debug_prints:
+                    print('Parsing ', str(file_path))
                 if file_type == 'md':
-                    print('Parsing ' + str(file_path))
                     content = None
                     with open(file_path, 'r') as f:
                         content = f.read()
@@ -115,7 +117,6 @@ def generator_divide_material(
                     parsing_strategy = 'Header division'
                     header_type = 'Assigned topic'
                 if file_type == 'ipynb':
-                    print('Parsing ' + str(file_path))
                     pieces = notebook_parse_file(
                         repository_path = repository_path,
                         file_path = file_path
@@ -127,7 +128,6 @@ def generator_divide_material(
                     parsing_strategy = 'Header division'
                     header_type = 'Assigned topic'
                 if file_type == 'py':
-                    print('Parsing ' + str(file_path))
                     pieces = python_parse_file(
                         file_path = file_path,
                         absolute_path = absolute_path
@@ -135,7 +135,6 @@ def generator_divide_material(
                     parsing_strategy = 'AST formatting'
                     header_type = 'Functions and classes'
                 if file_type == 'yaml':
-                    print('Parsing ' + str(file_path))
                     pieces = yaml_parse_file(
                         file_path = file_path,
                         absolute_path = absolute_path
@@ -143,7 +142,6 @@ def generator_divide_material(
                     parsing_strategy = 'YAML loading'
                     header_type = 'Relevant key'
                 if file_type == 'txt':
-                    print('Parsing ' + str(file_path))
                     pieces = text_parse_file(
                         file_path = file_path,
                         absolute_path = absolute_path
@@ -151,7 +149,6 @@ def generator_divide_material(
                     parsing_strategy = 'Text loading'
                     header_type = 'Type and directory'
                 if file_type == 'sh':
-                    print('Parsing ' + str(file_path))
                     pieces = bash_parse_file(
                         file_path = file_path,
                         absolute_path = absolute_path
@@ -159,7 +156,6 @@ def generator_divide_material(
                     parsing_strategy = 'Bash loading'
                     header_type = 'Type and directory'
                 if file_type == 'env':
-                    print('Parsing ' + str(file_path))
                     pieces = env_parse_file(
                         file_path = file_path,
                         absolute_path = absolute_path
