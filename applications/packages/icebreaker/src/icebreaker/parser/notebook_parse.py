@@ -7,7 +7,7 @@ def notebook_parse_file(
         import nbformat
         from .markdown_parse import markdown_parse_content
     except ImportError as e:
-        raise ImportError("Failed to import", e)
+        raise ImportError("parser/notebook_parse failed to import", e)
 
     with open(file_path, 'r', encoding='utf-8') as f:
         nb = nbformat.read(f, as_version=4)

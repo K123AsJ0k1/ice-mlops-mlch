@@ -6,7 +6,7 @@ def generator_repository_path(
     try:
         from pathlib import Path 
     except ImportError as e:
-        raise ImportError("Failed to import", e)
+        raise ImportError("parser/generator failed to import", e)
 
     target_directory = Path.cwd() / directory
     path_split = str(target_directory).split('/')
@@ -24,7 +24,7 @@ def generator_chapter_number(
     try:
         import re 
     except ImportError as e:
-        raise ImportError("Failed to import", e)
+        raise ImportError("parser/generator failed to import", e)
 
     match = re.search(r'^(\d+)', file_name)
     chapter_number = None
@@ -41,7 +41,7 @@ def generator_save_material(
         from pathlib import Path 
         import json
     except ImportError as e:
-        raise ImportError("Failed to import", e)
+        raise ImportError("parser/generator failed to import", e)
 
     if not folder[0] == '/':
         # Be aware that starting with /folder makes it absolute
@@ -72,8 +72,8 @@ def generator_divide_material(
         from .env_parse import env_parse_file
         from .organizer import organizer_sort_material
     except ImportError as e:
-        raise ImportError("Failed to import", e)
-
+        raise ImportError("parser/generator failed to import", e)
+    
     repository_path = generator_repository_path(
         repository_name = repository_name,
         directory = directory
@@ -93,7 +93,8 @@ def generator_divide_material(
             parsing_strategy = ''
             header_type = ''
             chapter_number = 0
-            absolute_path = repository_path + '/' + str(file_path)
+            before, match, after = str(file_path).partition(repository_path)
+            absolute_path = f'{repository_path}{after}'
             file_type = file_name.split('.')[-1]
             if file_type in file_types:
                 if file_type == 'md':
@@ -204,5 +205,6 @@ def generator_divide_material(
             folder = storage_folder,
             name = storage_name
         )
-
+    
+    sorted_material = None
     return sorted_material

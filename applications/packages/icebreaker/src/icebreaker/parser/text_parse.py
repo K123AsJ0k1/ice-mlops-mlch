@@ -7,12 +7,14 @@ def text_parse_file(
         content = f.read()
 
     parsed_material = []
+    file_path_split = absolute_path.split('/')
+    used_directory = file_path_split[-2]
+    used_file = file_path_split[-1].split('.')[0]
     if 'packages' in file_path.lower():
-        directory = str(file_path).split('/')[0]
-        header = f"Directory {directory} venv dependencies"
+        header = f"Directory {used_directory} {used_file} venv dependencies"
         formatted_content = f"## {header}\n\n"
         formatted_content += f"This is from:{absolute_path}\n```text\n{content}\n```"
-        #print(formatted_content)
+        
         parsed_material.append({
             'metadata': {},
             'topic': header,
@@ -26,8 +28,7 @@ def text_parse_file(
         for i in range(0, len(lines), max_rows):
             chunk_lines = lines[i:i + max_rows]
             part_num = (i // max_rows) + 1
-            file_name = str(absolute_path).split('/')[-1].split('.')[0]
-            header = f"Log {file_name}"
+            header = f"Log {used_directory} {used_file}"
 
             formatted_content = f"## {header}\n\n"
             formatted_content += f"This is from:{absolute_path} (Part {part_num}, Index {i})\n"
@@ -40,7 +41,4 @@ def text_parse_file(
                 'content': formatted_content,
                 'paths': {}
             })
-    #else:
-        # metrics
-        #pass
     return parsed_material

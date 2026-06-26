@@ -19,8 +19,11 @@ def env_parse_file(
     content = "\n".join(redacted_lines)
 
     parsed_material = []
-    file_name = str(absolute_path).split('/')[-1].split('.')[0]
-    header = f"Env {file_name}"
+    file_path_split = absolute_path.split('/')
+    used_directory = file_path_split[-2]
+    used_file = file_path_split[-1].split('.')[0]
+
+    header = f"Env {used_directory} {used_file}"
     formatted_content = f"## {header}\n\n"
     formatted_content += f"This is from:{absolute_path}\n"
     formatted_content += f"```env\n{content}\n```"

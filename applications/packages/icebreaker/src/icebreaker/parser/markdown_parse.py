@@ -5,7 +5,7 @@ def markdown_extract_materials(
     try:
         import re
     except ImportError as e:
-        raise ImportError("Failed to import", e)
+        raise ImportError("parser/markdown_parse failed to import", e)
 
     # Should 1. be used instead of used-material-1
     ref_pattern = r'<span id="([^"]+)"></span>\s*\[(.*?)\]\((.*?)\)'
@@ -20,7 +20,7 @@ def markdown_extract_paths(
     try:
         import re
     except ImportError as e:
-        raise ImportError("Failed to import", e)
+        raise ImportError("parser/markdown_parse failed to import", e)
 
     ref_paths = {}
     links = re.findall(r'\[.*?\]\((.*?)\)', content)
@@ -43,7 +43,7 @@ def markdown_extract_paths(
         
         if 0 < len(source_relative_path):
             source_directory = str(file_path).split('/')[0]
-            absolute_path = repository_path + '/' + source_directory + '/' + source_relative_path
+            absolute_path = f'{repository_path}{source_directory}/{source_relative_path}'
             ref_paths[link] = absolute_path
     return ref_paths
 
@@ -56,7 +56,7 @@ def markdown_parse_content(
         import re
         import frontmatter
     except ImportError as e:
-        raise ImportError("Failed to import", e)
+        raise ImportError("parser/markdown_parse failed to import", e)
 
     content = frontmatter.loads(content)
     parsed_material = []

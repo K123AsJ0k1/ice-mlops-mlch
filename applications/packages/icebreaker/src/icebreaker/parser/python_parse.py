@@ -5,7 +5,7 @@ def python_check_main(
     try:
         import ast
     except ImportError as e:
-        raise ImportError("Failed to import", e)
+        raise ImportError("parser/python_parse failed to import", e)
 
     if not isinstance(node, ast.If):
         return False
@@ -26,7 +26,7 @@ def python_relevant_imports(
     try:
         import ast
     except ImportError as e:
-        raise ImportError("Failed to import", e)
+        raise ImportError("parser/python_parse failed to import", e)
 
     used_names = set()
     for walk_node in ast.walk(node):
@@ -60,7 +60,7 @@ def python_get_router(
     try:
         import ast
     except ImportError as e:
-        raise ImportError("Failed to import", e)
+        raise ImportError("parser/python_parse failed to import", e)
 
     router_line = ''
     for node in tree.body:
@@ -76,7 +76,7 @@ def python_get_celery(
     try:
         import ast
     except ImportError as e:
-        raise ImportError("Failed to import", e)
+        raise ImportError("parser/python_parse failed to import", e)
 
     celery_line = ''
     for node in tree.body:
@@ -94,7 +94,7 @@ def python_parse_file(
     try:
         import ast
     except ImportError as e:
-        raise ImportError("Failed to import", e)
+        raise ImportError("parser/python_parse failed to import", e)
 
     content = None
     with open(file_path, 'r') as f:
@@ -103,6 +103,9 @@ def python_parse_file(
     tree = ast.parse(content)
     imports = [node for node in tree.body if isinstance(node, (ast.Import, ast.ImportFrom))]
     
+    file_path_split = absolute_path.split('/')
+    used_directory = file_path_split[-2]
+    used_file = file_path_split[-1].split('.')[0]
     parsed_material = []
     for node in tree.body:
         is_main = python_check_main(
@@ -111,7 +114,7 @@ def python_parse_file(
         # This should only handle classes and functions
         if isinstance(node, (ast.FunctionDef, ast.ClassDef, ast.AsyncFunctionDef)) or is_main:
             fastapi_case = False
-            header = 'Python '
+            header = f'Python {used_directory} {used_file}'
             if isinstance(node, (ast.FunctionDef)):
                 name = node.name
                 header += f'function {name}'
@@ -124,7 +127,7 @@ def python_parse_file(
                 fastapi_case = True
             
             if is_main:
-                file_name = absolute_path.split('/')[-1].split('.')[0]
+                file_name = file_path_split[-1].split('.')[0]
                 header += f'main {file_name}'
             
             relevant_imports = python_relevant_imports(

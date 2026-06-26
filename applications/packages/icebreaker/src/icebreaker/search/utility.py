@@ -7,7 +7,7 @@ def search_retrieval_metrics(
         import numpy as np
     except ImportError as e:
         raise ImportError("qdrant/utility failed to import", e)
-
+    # This is binary relevance metrics
     # Convert to set for O(1) membership lookups
     true_set = set(true_relevant_ids)
     total_relevant_count = len(true_set)

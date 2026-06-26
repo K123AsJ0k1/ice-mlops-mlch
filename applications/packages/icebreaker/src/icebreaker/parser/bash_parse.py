@@ -8,8 +8,11 @@ def bash_parse_file(
 
     parsed_material = []
     formatted_code = content.strip()
-    file_name = str(absolute_path).split('/')[-1].split('.')[0]
-    header = f"Bash {file_name}"
+    file_path_split = absolute_path.split('/')
+    used_directory = file_path_split[-2]
+    used_file = file_path_split[-1].split('.')[0]
+
+    header = f"Bash {used_directory} {used_file}"
     formatted_content = f"## {header}\n\n"
     formatted_content += f"This is from:{absolute_path}\n"
     formatted_content += f"```bash\n{formatted_code}\n```"

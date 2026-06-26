@@ -5,7 +5,7 @@ def organize_chapter_check(
     try:
         import re 
     except ImportError as e:
-        raise ImportError("Failed to import", e)
+        raise ImportError("parser/organizer failed to import", e)
 
     file_name = absolute_path.split('/')[-1]
     return re.match(r'^\d+', file_name)
@@ -16,7 +16,7 @@ def organizer_sort_material(
     try:
         import re 
     except ImportError as e:
-        raise ImportError("Failed to import", e)
+        raise ImportError("parser/organizer failed to import", e)
 
     ordered_list = []
     seen_list = set()

@@ -6,13 +6,16 @@ def yaml_parse_file(
     try:
         import yaml
     except ImportError as e:
-        raise ImportError("Failed to import", e)
+        raise ImportError("parser/yaml_parse failed to import", e)
 
     content = None
     # This makes --- into their own chunks
     with open(file_path, 'r') as f:
         content = [doc for doc in yaml.safe_load_all(f) if not doc is None]
-        
+    
+    file_path_split = absolute_path.split('/')
+    used_directory = file_path_split[-2]
+    used_file = file_path_split[-1].split('.')[0]
     parsed_material = []
     for i, document in enumerate(content):
         if not document:
@@ -20,7 +23,7 @@ def yaml_parse_file(
 
         if 'kind' in document: 
             resource_name = document['kind']
-            resource_header = f"YAML Kubernetes {resource_name}"
+            resource_header = f"YAML {used_directory} {used_file} Kubernetes {resource_name}"
             formatted_resource_content = f"## {resource_header}\n\n"
             formatted_resource_content += f"This is from:{absolute_path}\n"
             formatted_resource_content += f"```yaml\n{yaml.dump(document, sort_keys=False)}```"
@@ -40,7 +43,7 @@ def yaml_parse_file(
             services = document.get('services', {})
 
             for service_name, config in services.items():
-                service_header = f"YAML Docker Compose {service_name}"
+                service_header = f"YAML {used_directory} {used_file} Docker Compose {service_name}"
                 formatted_service_content = f"## {service_header}\n\n"
                 formatted_service_content += f"This is from:{absolute_path}\n"
 
@@ -71,8 +74,7 @@ def yaml_parse_file(
                 })
 
             if global_keys:
-                file_name = str(absolute_path).split('/')[-1].split('.')[0]
-                infra_header = f"YAML Docker Compose {file_name} configuration"
+                infra_header = f"YAML {used_directory} {used_file} Docker Compose configuration"
                 formatted_infra_content = f"## {infra_header}\n\n"
                 formatted_infra_content += f"This is from:{absolute_path}\n"
                 formatted_infra_content += f"```yaml\n{yaml.dump(global_keys, sort_keys=False)}\n```"
@@ -88,12 +90,11 @@ def yaml_parse_file(
             continue
 
         first_key = next(iter(document))
-        header = f"YAML {first_key}"
+        header = f"YAML {used_directory} {used_file} {first_key}"
         formatted_content = f"## {header}\n\n"
         if 'resources' in document:
-            file_name = absolute_path.split('/')[-1]
-            if 'kustomization' in file_name:
-                header = f"YAML Kubernetes Kustomize"
+            if 'kustomization' in used_file:
+                header = f"YAML {used_directory} {used_file} Kubernetes Kustomize"
                 formatted_content = f"## {header}\n\n"
             
         formatted_content += f"This is from:{absolute_path}\n"
