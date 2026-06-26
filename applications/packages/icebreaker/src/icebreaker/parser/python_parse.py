@@ -127,8 +127,7 @@ def python_parse_file(
                 fastapi_case = True
             
             if is_main:
-                file_name = file_path_split[-1].split('.')[0]
-                header += f'main {file_name}'
+                header += f'main'
             
             relevant_imports = python_relevant_imports(
                 node = node, 
