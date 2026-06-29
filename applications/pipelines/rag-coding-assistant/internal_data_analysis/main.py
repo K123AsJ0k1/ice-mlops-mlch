@@ -94,7 +94,7 @@ def internal_data_analysis(
                 task_batch = worker_batch_ref
             ))
             worker_index += 1
-            actor_index = (actor_index + 1) % actor_number
+            actor_index = (actor_index + 1) % suitable_actor_number
         
         print('Waiting data collector tasks')
         collected_statistics = {} 

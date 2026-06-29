@@ -105,7 +105,7 @@ def evalution_dataset_creation(
                 worker_targets = worker_targets
             ))
             worker_index += 1
-            actor_index = (actor_index + 1) % actor_number
+            actor_index = (actor_index + 1) % suitable_actor_number
          
         print('Waiting data collector tasks')
         all_unified_rows = []

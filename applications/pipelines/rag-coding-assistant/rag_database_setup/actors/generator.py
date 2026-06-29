@@ -28,7 +28,8 @@ class Generator:
         data_index: int,
         batch_index: int,
         object_path: str,
-        text_inputs: list
+        text_inputs: list,
+        row_indices: list
     ) -> any:
         from icebreaker.embeddings.use import embeddings_batch_create_vectors
         dense_vectors, sparse_vectors = embeddings_batch_create_vectors(
@@ -44,7 +45,8 @@ class Generator:
             'batch_idx': batch_index,
             'object_path': object_path,
             'dense': dense_vectors,
-            'sparse': sparse_vectors
+            'sparse': sparse_vectors,
+            'row_indices': row_indices 
         }
 
         return result
