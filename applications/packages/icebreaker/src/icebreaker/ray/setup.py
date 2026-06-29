@@ -116,13 +116,10 @@ def ray_download_job(
     ) 
 
     working_directory_path = ray_runtime['working_dir']
-    runtime_requirements = None
-    if not isinstance(ray_runtime['pip'], list):
-        runtime_requirements = ray_runtime['pip'].split('/')[-1]
     directory_name = working_directory_path.split('/')[-1]
-    download_path = './downloads/ray'
-    final_requirements = None
-    runtime_directory = str(Path(download_path + '/' + directory_name))
+    download_path_absolute = Path('./downloads/ray').resolve()
+    
+    absolute_working_directory_path = str(download_path_absolute / directory_name)
     if not object_stored is None:
         for object_path, values in object_stored.items():
             if 'CODE' in object_path:
@@ -130,12 +127,12 @@ def ray_download_job(
                     file_path_split = object_path.split('/')[2:]
                     file_directory_path = '/'.join(file_path_split)
                     
-                    local_file_path = Path(download_path + '/' + file_directory_path)
-                    local_file_path.parent.mkdir(parents=True, exist_ok=True)   
-                    if runtime_requirements in str(local_file_path):
-                        final_requirements = str(local_file_path)
-
-                    if not local_file_path.exists():
+                    #local_file_path = Path(download_path + '/' + file_directory_path)
+                    absolute_local_file_path = download_path_absolute / file_directory_path
+                    print(str(absolute_local_file_path))
+                    absolute_local_file_path.parent.mkdir(parents=True, exist_ok=True)   
+                    
+                    if not absolute_local_file_path.exists():
                         file_object = object_storage_interaction(
                             storage_client = storage_client,
                             parameters = {
@@ -157,10 +154,27 @@ def ray_download_job(
                             object_metadata = None
                         )
                         file_data = file_object[0]
-                        with open(local_file_path, 'wb') as local_file:
+                        with open(absolute_local_file_path, 'wb') as local_file:
                             local_file.write(file_data)
-                    
+    
+    pip_target = ray_runtime.get('pip')
+    requirements_filename = 'requirements.txt'
+    
+    if pip_target and not isinstance(pip_target, list):
+        requirements_filename = pip_target
+    
+    absoulute_requirements_path = None
+    if requirements_filename:
+        potential_requirements_path = Path(absolute_working_directory_path) / requirements_filename
+        if potential_requirements_path.exists():
+            absoulute_requirements_path = str(potential_requirements_path)
+        else:
+            for root, dirs, files in os.walk(absolute_working_directory_path):
+                if requirements_filename in files:
+                    absoulute_requirements_path = str(Path(root) / requirements_filename)
+                    break
+    
     end_time = t.time()
     total_time = round(end_time-start_time,5)
     print('Spent seconds', total_time)
-    return runtime_directory, final_requirements
+    return absolute_working_directory_path, absoulute_requirements_path
