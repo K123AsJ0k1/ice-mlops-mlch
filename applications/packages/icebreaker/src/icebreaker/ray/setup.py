@@ -82,7 +82,8 @@ def ray_store_job(
 def ray_download_job(
     storage_client: any,
     storage_parameters: any,
-    ray_runtime: any
+    ray_runtime: any,
+    overwrite: bool
 ):
     try:
         import os
@@ -130,7 +131,7 @@ def ray_download_job(
                     absolute_local_file_path = download_path_absolute / file_directory_path
                     absolute_local_file_path.parent.mkdir(parents=True, exist_ok=True)   
                     
-                    if not absolute_local_file_path.exists():
+                    if not absolute_local_file_path.exists() or overwrite:
                         file_object = object_storage_interaction(
                             storage_client = storage_client,
                             parameters = {

@@ -3,6 +3,7 @@ def embeddings_batch_create_vectors(
     text_input_batch: list,
     dense_model: any,
     sparse_model: any,
+    batch_size: int
 ):
     try: 
         from qdrant_client import models
@@ -15,13 +16,15 @@ def embeddings_batch_create_vectors(
     if not dense_model is None:
         dense_vectors = dense_create_baai_vectors(
             dense_model = dense_model, 
-            text_inputs = text_input_batch
+            text_inputs = text_input_batch,
+            batch_size = batch_size
         )
     sparse_vectors = []
     if not sparse_model is None:
         sparse_embeddings_iter = sparse_create_spalde_embeddings(
             sparse_model = sparse_model,
-            text_inputs = text_input_batch
+            text_inputs = text_input_batch,
+            batch_size = batch_size
         )
         
         sparse_vectors = [

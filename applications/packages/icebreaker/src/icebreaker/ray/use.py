@@ -142,7 +142,44 @@ def ray_input_parameters(
             input_parameters['step'] = step_name
             break
     return input_parameters
-            
+
+def ray_cluster_dry_submit(
+    cluster_client: any,
+    step_name: str,
+    step_input: any,
+    cluster_name: str,
+    step_parameters: any,
+    runtime_directory_path: str,
+    runtime_requirements_path: str,
+):
+    cluster_inputs = {
+        cluster_name: step_input 
+    }
+    
+    used_parameters = ray_input_parameters(
+        cluster_name = cluster_name,
+        cluster_inputs = cluster_inputs,
+        step_name = step_name,
+        step_parameters = step_parameters
+    )
+   
+    cluster_job_id = None
+    if 0 < len(used_parameters):
+        used_job_file = used_parameters['job']['main-file']
+        used_runtime = used_parameters['job']['runtime']
+
+        used_runtime['working_dir'] = runtime_directory_path
+        used_runtime['pip'] = runtime_requirements_path
+        
+        cluster_job_id = ray_submit_job(
+            ray_client = cluster_client,
+            ray_parameters = used_parameters,    
+            ray_job_file = used_job_file,
+            ray_runtime = used_runtime
+
+        )
+    return cluster_job_id
+
 def ray_parallel_submit(
     cluster_clients: any,
     cluster_inputs: any,
