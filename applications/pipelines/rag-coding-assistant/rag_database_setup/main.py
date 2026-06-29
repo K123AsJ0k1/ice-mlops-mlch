@@ -136,7 +136,7 @@ if __name__ == "__main__":
     job_parameters = json.loads(sys.argv[1])
     
     print('Running external data analysis')
-    task_status = evalution_dataset_creation(
+    task_status = rag_database_setup(
         job_parameters = job_parameters
     )
 
@@ -156,7 +156,7 @@ if __name__ == "__main__":
 
     cluster_name = job_parameters['cluster']
     step_name = job_parameters['step']
-    time_name = f'ray-evalution-dataset-creation-{cluster_name}-{step_name}'
+    time_name = f'ray-rag-database-setup-{cluster_name}-{step_name}'
     
     time_stored_1, time_index_1, time_name_1 = time_run_update(
         storage_client = work_swift_client,
