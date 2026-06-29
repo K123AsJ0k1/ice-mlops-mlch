@@ -27,7 +27,7 @@ def rag_database_setup(
         sparse_model_name = model_parameters['sparse-model-name']
         process_parameters = job_parameters['process']
         qdrant_parameters = job_parameters['qdrant']
-        qdrant_collection = job_parameters['collection-name']
+        qdrant_collection_name = job_parameters['collection-name']
 
         work_qdrant_client = qdrant_setup_client(
             qdrant_parameters = qdrant_parameters
@@ -42,10 +42,10 @@ def rag_database_setup(
             print("No input data provided.")
             return True
 
-        print(f'Creating collection: {qdrant_collection}')
+        print(f'Creating collection: {qdrant_collection_name}')
         status = qdrant_create_collection(
             qdrant_client = work_qdrant_client, 
-            collection_name = qdrant_collection,
+            collection_name = qdrant_collection_name,
             configuration = qdrant_baai_hybrid_config() 
         )
 
@@ -92,6 +92,7 @@ def rag_database_setup(
                 actor_ref = actor_ref,
                 swift_parameters = swift_parameters,
                 qdrant_parameters = qdrant_parameters,
+                collection_name = qdrant_collection_name,
                 data_storage_parameters = data_storage_parameters,
                 config_parameters = config_parameters,
                 task_batch = worker_batch_ref
@@ -104,7 +105,7 @@ def rag_database_setup(
         while len(task_1_refs):
             done_task_1_refs, task_1_refs = ray.wait(task_1_refs)
             for output_ref in done_task_1_refs:
-                all_setup_status.extend(ray.get(output_ref))
+                all_setup_status.append(ray.get(output_ref))
         print(all_setup_status)
         return True
     except Exception as e:

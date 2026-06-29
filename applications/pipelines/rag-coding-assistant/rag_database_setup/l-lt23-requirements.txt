@@ -1,4 +1,4 @@
-# cache-bust: lt2-3-v2
+# cache-bust: l-lt23-v4
 icebreaker[swift, data, pararellism, qdrant] @ git+https://github.com/K123AsJ0k1/ice-mlops-mlch.git@main#subdirectory=applications/packages/icebreaker
 torch --index-url https://download.pytorch.org/whl/cu130
 sentence-transformers==5.6.0

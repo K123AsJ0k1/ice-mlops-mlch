@@ -35,6 +35,7 @@ def database_setup(
     )
 
     text_column = config_parameters['text-column']
+    process_batch_size = config_parameters['batch-size']
     generator_actor_refs = []
     dataset_records_map = {}
     for data_index, batch_data in enumerate(task_batch):
@@ -80,7 +81,8 @@ def database_setup(
                 data_index = data_index,
                 batch_index = i,
                 object_path = object_path, 
-                text_input = text_input_ref,
+                text_input_batch = text_input_ref,
+                batch_size = process_batch_size,
                 row_indices = chunk_row_indices
             ))
     
