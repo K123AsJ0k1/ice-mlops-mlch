@@ -6,13 +6,13 @@ import time as t
 from importlib.metadata import version
 
 from actors.generator import Generator
-from tasks.setup import database_setup
-from collections import defaultdict
+from tasks.setup import database_points
 
 from icebreaker.swift.setup import swift_setup_client
 from icebreaker.pararellism.division import division_split_input
 from icebreaker.misc.time import time_run_update
-
+from icebreaker.qdrant.setup import qdrant_setup_client
+from icebreaker.qdrant.use import qdrant_upload_points, qdrant_create_collection, qdrant_baai_hybrid_config
 
 def rag_database_setup(
     job_parameters: any
@@ -20,80 +20,94 @@ def rag_database_setup(
     try:  
         print('Parameters')
         swift_parameters = job_parameters['swift']
-        #mlflow_parameters = job_parameters['mlflow']
         data_storage_parameters = job_parameters['data-storage']
-        result_storage_parameters = job_parameters['result-storage']
         config_parameters = job_parameters['config']
         model_parameters = job_parameters['model']
         process_parameters = job_parameters['process']
-    
-        # Idea is that each cluster gets roughly equal amount of 
-        # rows form the datasets they are given with each cluster expected
-        # to create a dataset with a target amount N/D = M
-        # M is then divided between K workers that provide M/K = H rows
-        # Rows H are then unified into a cluster specifici dataset that is
-        # then utilized by the pipeline by either compliling it or as is
+
+        qdrant_parameters = job_parameters['qdrant-parameters']
+        qdrant_collection = job_parameters['collection-name']
+
+        work_qdrant_client = qdrant_setup_client(
+            qdrant_parameters = qdrant_parameters
+        )
+        print('Qdrant client setup') 
 
         # This should be divided into batches based on worker number
-        print('Dividing work')
         input_data = config_parameters['input']
         input_amount = len(input_data)
-        worker_number = process_parameters['workers']
-        
-        print(f'Suggested amount of workers {worker_number}')
-        suitable_worker_number = min(process_parameters['workers'], input_amount)
-        # Here the processing considers going through the given object paths to get N row dataset
-        print(f'Selected amount of workers {suitable_worker_number}')
-        worker_batches = division_split_input(
-            job_input = input_data, 
-            num_workers = suitable_worker_number
-        )
+        if 0 < input_amount:
+            print(f'Creating collection: {qdrant_collection}')
+            status = qdrant_create_collection(
+                qdrant_client = work_qdrant_client, 
+                collection_name = qdrant_collection,
+                configuration = qdrant_baai_hybrid_config() 
+            )
 
-        print(f'Batches created for {len(worker_batches)} workers')
-        print(worker_batches)
-        print('Putting data into refs')
-        worker_batch_refs = []
-        for worker_batch in worker_batches:
-            worker_batch_refs.append(ray.put(worker_batch))
+            print('Dividing work')
+            worker_number = process_parameters['workers']
+            
+            print(f'Suggested amount of workers {worker_number}')
+            suitable_worker_number = min(process_parameters['workers'], input_amount)
+            # Here the processing considers going through the given object paths to get N row dataset
+            print(f'Selected amount of workers {suitable_worker_number}')
+            worker_batches = division_split_input(
+                job_input = input_data, 
+                num_workers = suitable_worker_number
+            )
 
-        amount_of_batches = len(worker_batches)
-        actor_number = process_parameters['actors']
-        print(f'Amount of batches {amount_of_batches}')
-        print(f'Suggested amount of actors {actor_number}')
-        suitable_actor_number = min(actor_number,amount_of_batches)
-        print(f'Selected amount of actors {suitable_actor_number}')
-        actor_refs = []
-        for i in range(0, suitable_actor_number):
-            actor_refs.append(Generator.remote(
-                swift_parameters = swift_parameters,
-                model_parameters = model_parameters
-            ))
+            print(f'Batches created for {len(worker_batches)} workers')
+            print(worker_batches)
+            print('Putting data into refs')
+            worker_batch_refs = []
+            for worker_batch in worker_batches:
+                worker_batch_refs.append(ray.put(worker_batch))
 
-        print('Starting data collector tasks')
-        task_1_refs = [] 
-        worker_index = 1
-        actor_index = 0
-        for worker_batch_ref in worker_batch_refs:
-            actor_ref = actor_refs[actor_index]
-        
-            task_1_refs.append(database_setup.remote( 
-                worker_index = worker_index,
-                actor_index = actor_index + 1,
-                actor_ref = actor_ref,
-                swift_parameters = swift_parameters,
-                data_storage_parameters = data_storage_parameters,
-                config_parameters = config_parameters,
-                task_batch = worker_batch_ref
-            ))
-            worker_index += 1
-            actor_index = (actor_index + 1) % actor_number
-         
-        print('Waiting data collector tasks')
-        all_unified_rows = []
-        while len(task_1_refs):
-            done_task_1_refs, task_1_refs = ray.wait(task_1_refs)
-            for output_ref in done_task_1_refs:
-                all_unified_rows.extend(ray.get(output_ref))
+            amount_of_batches = len(worker_batches)
+            actor_number = process_parameters['actors']
+            print(f'Amount of batches {amount_of_batches}')
+            print(f'Suggested amount of actors {actor_number}')
+            suitable_actor_number = min(actor_number,amount_of_batches)
+            print(f'Selected amount of actors {suitable_actor_number}')
+            actor_refs = []
+            for i in range(0, suitable_actor_number):
+                actor_refs.append(Generator.remote(
+                    swift_parameters = swift_parameters,
+                    model_parameters = model_parameters
+                ))
+
+            print('Starting data collector tasks')
+            task_1_refs = [] 
+            worker_index = 1
+            actor_index = 0
+            for worker_batch_ref in worker_batch_refs:
+                actor_ref = actor_refs[actor_index]
+            
+                task_1_refs.append(database_points.remote( 
+                    worker_index = worker_index,
+                    actor_index = actor_index + 1,
+                    actor_ref = actor_ref,
+                    swift_parameters = swift_parameters,
+                    data_storage_parameters = data_storage_parameters,
+                    config_parameters = config_parameters,
+                    task_batch = worker_batch_ref
+                ))
+                worker_index += 1
+                actor_index = (actor_index + 1) % actor_number
+            
+            print('Waiting data collector tasks')
+            all_hybrid_points = []
+            while len(task_1_refs):
+                done_task_1_refs, task_1_refs = ray.wait(task_1_refs)
+                for output_ref in done_task_1_refs:
+                    all_hybrid_points.extend(ray.get(output_ref))
+
+            print('Uploading points')
+            status = qdrant_upload_points(
+                qdrant_client = work_qdrant_client, 
+                collection_name = qdrant_collection,
+                points = all_hybrid_points
+            ) 
         
         return True
     except Exception as e:
