@@ -199,11 +199,14 @@ def cluster_orhestractor_step(
                     if 0 < len(cluster_clients):
                         print('Cluster exists')
                         cluster_job_runtime = cluster_parameters[cluster_name]['job']['runtime']
-                        job_directory, job_requirements = ray_download_job(
+                        print(cluster_job_runtime)
+                        job_directory_path, job_requirements_path = ray_download_job(
                             storage_client = work_swift_client,
                             storage_parameters = code_storage,
                             ray_runtime = cluster_job_runtime
                         )
+                        print(job_directory_path, job_requirements_path)
+                        '''
                         step_processing_parameters['cluster'][cluster_name]['job']['runtime']['working_dir'] = job_directory
                         step_processing_parameters['cluster'][cluster_name]['job']['runtime']['pip'] = job_requirements
                         print('Submitting job')
@@ -231,6 +234,7 @@ def cluster_orhestractor_step(
                             job_logs = job_logs,
                             object_prefix = log_object_prefix
                         )
+                        '''
         
     # Track metrics
     end_time = t.time()

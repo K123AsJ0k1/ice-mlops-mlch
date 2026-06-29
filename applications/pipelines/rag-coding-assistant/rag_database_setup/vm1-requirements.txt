@@ -1,6 +1,0 @@
-# cache-bust: v1
-icebreaker[swift, data, pararellism, qdrant] @ git+https://github.com/K123AsJ0k1/ice-mlops-mlch.git@main#subdirectory=applications/packages/icebreaker
-pip install torch --index-url https://download.pytorch.org/whl/cu121
-pip install sentence-transformers
-pip install fastembed-gpu
-pip install "onnxruntime-gpu>=1.18.0,<1.19.0"

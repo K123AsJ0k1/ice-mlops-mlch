@@ -7,7 +7,6 @@ from icebreaker.qdrant.setup import qdrant_setup_client
 from icebreaker.qdrant.use import qdrant_create_point, qdrant_upload_points
 from icebreaker.embeddings.utility import embeddings_generate_uuid
 
-
 @ray.remote(
     num_cpus = 1,
     memory = 0.2 * 1024 * 1024 * 1024

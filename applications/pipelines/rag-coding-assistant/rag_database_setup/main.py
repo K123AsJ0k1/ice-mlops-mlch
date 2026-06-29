@@ -6,13 +6,13 @@ import time as t
 from importlib.metadata import version
 
 from actors.generator import Generator
-from tasks.setup import database_points
+from tasks.setup import database_setup
 
 from icebreaker.swift.setup import swift_setup_client
 from icebreaker.pararellism.division import division_split_input
 from icebreaker.misc.time import time_run_update
 from icebreaker.qdrant.setup import qdrant_setup_client
-from icebreaker.qdrant.use import qdrant_upload_points, qdrant_create_collection, qdrant_baai_hybrid_config
+from icebreaker.qdrant.use import qdrant_create_collection, qdrant_baai_hybrid_config
 
 def rag_database_setup(
     job_parameters: any
@@ -86,7 +86,7 @@ def rag_database_setup(
         for worker_batch_ref in worker_batch_refs:
             actor_ref = actor_refs[actor_index]
         
-            task_1_refs.append(database_points.remote( 
+            task_1_refs.append(database_setup.remote( 
                 worker_index = worker_index,
                 actor_index = actor_index + 1,
                 actor_ref = actor_ref,
@@ -118,13 +118,11 @@ if __name__ == "__main__":
     check_packages = [
         'ray',
         'python-swiftclient',
-        'mlflow',
         'pandas',
         'pyarrow',
-        'fasttext',
-        'magika',
         'numpy',
-        'mlflow'
+        'sentence-transformers',
+        'fastembed-gpu'
     ]
     for pkg_name in check_packages:
         print(pkg_name,' version is ',version(pkg_name))
