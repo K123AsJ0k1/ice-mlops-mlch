@@ -123,21 +123,28 @@ processing:
   step-2:
     general:
       swift: {}
+      collection-name: 'local_cloud_rag'
       data-storage: 
         bucket-target: 'experiment'
         bucket-prefix: 'mlch'
         bucket-user: 'user@example.com'   
-        object-prefix: 'ICEbreaker-tutorial'
+        object-prefix: 'ICEbreaker-tutorial-v07-pre'
       time-storage: 
         bucket-target: 'pipeline'
         bucket-prefix: 'mlch'
         bucket-user: 'user@example.com' 
         object-name: 'local-cloud-workflow'
       model:
-        bucket-name: 'mlch-exp-user-example-com'
-        object-path: 'MODELS/fasttext/lid.176.bin'
+        dense-model-name: 'BAAI/bge-m3'
+        sparse-model-name: 'prithivida/Splade_PP_en_v1'
+      config:
+        text-column: 'content'
     cluster:
       cloud-vm1:
+        qdrant: 
+          api-key: 'qdrant_key'
+          address: 'qdrant-service.storage.svc.cluster.local'
+          port: '7201'
         process:
           workers: 6
           actors: 2
@@ -145,8 +152,12 @@ processing:
           main-file: 'main.py'
           runtime:
             working_dir: 'rag_database_setup'
-            pip: 'rag_database_setup/requirements.txt'
+            pip: 'rag_database_setup/vm1-requirements.txt'
       local-lt2:
+        qdrant: 
+          api-key: 'qdrant_key'
+          address: 'chisel-client'
+          port: '7201'
         process:
           workers: 12
           actors: 1
@@ -154,8 +165,12 @@ processing:
           main-file: 'main.py'
           runtime:
             working_dir: 'rag_database_setup'
-            pip: 'rag_database_setup/requirements.txt'
+            pip: 'rag_database_setup/lt2-3requirements.txt'
       local-lt3:
+        qdrant: 
+          api-key: 'qdrant_key'
+          address: 'chisel-client'
+          port: '7201'
         process:
           workers: 28
           actors: 1
@@ -163,7 +178,7 @@ processing:
           main-file: 'main.py'
           runtime:
             working_dir: 'rag_database_setup'
-            pip: 'rag_database_setup/requirements.txt'
+            pip: 'rag_database_setup/lt2-3requirements.txt'
   step-3:
     general:
       swift: {}
