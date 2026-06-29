@@ -22,11 +22,12 @@ def qdrant_setup_client(
 
     try:
         qdrant_client = qc( 
-            host = qdrant_parameters['host'],
+            host = qdrant_parameters['address'],
             port = int(qdrant_parameters['port']),
             api_key = qdrant_parameters['api-key'],
             https = False
         ) 
         return qdrant_client
     except Exception as e:
+        print(f'Qdrant client setup failed: {e}')
         return None
