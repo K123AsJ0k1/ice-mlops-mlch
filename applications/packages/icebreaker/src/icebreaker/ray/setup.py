@@ -172,7 +172,7 @@ def ray_download_job(
                 if requirements_filename in files:
                     absoulute_requirements_path = str(Path(root) / requirements_filename)
                     break
-    
+    # This might require handling of list pip
     end_time = t.time()
     total_time = round(end_time-start_time,5)
     print('Spent seconds', total_time)

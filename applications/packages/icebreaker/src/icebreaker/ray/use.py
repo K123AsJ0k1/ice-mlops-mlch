@@ -173,7 +173,7 @@ def ray_parallel_submit(
                     ray_job_file = used_job_file,
                     ray_runtime = used_runtime
                 )
-                print(f'Submitted job {cluster_job_id} with starting file {used_job_file} and runtime {used_runtime} into cluster {targeted_cluster}')
+                print(f'Submitted job {cluster_job_id} with starting file {used_job_file} into cluster {targeted_cluster}')
                 parallel_job_ids.append((cluster_client, cluster_job_id))
     return parallel_job_ids
 
