@@ -89,7 +89,7 @@ processing:
           main-file: 'main.py'
           runtime:
             working_dir: 'internal_data_analysis'
-            pip: 'internal_data_analysis/requirements.txt'
+            pip: 'requirements.txt'
   step-2:
     general:
       swift: {}
@@ -133,7 +133,7 @@ processing:
           main-file: 'main.py'
           runtime:
             working_dir: 'external_data_analysis'
-            pip: 'external_data_analysis/requirements.txt'
+            pip: 'requirements.txt'
   step-3:
     general:
       swift: {}
@@ -177,7 +177,7 @@ processing:
           main-file: 'main.py'
           runtime:
             working_dir: 'external_data_analysis'
-            pip: 'external_data_analysis/requirements.txt'
+            pip: 'requirements.txt'
   step-4:
     general:
       swift: {}
@@ -227,7 +227,7 @@ processing:
           main-file: 'main.py'
           runtime:
             working_dir: 'external_data_analysis'
-            pip: 'external_data_analysis/requirements.txt'
+            pip: 'requirements.txt'
   step-5:
     general:
       swift: {}
@@ -271,7 +271,7 @@ processing:
           main-file: 'main.py'
           runtime:
             working_dir: 'external_data_analysis'
-            pip: 'external_data_analysis/requirements.txt'
+            pip: 'requirements.txt'
       cloud-vm2:
         mlflow: 
           tracking-uri: 'http://chisel-client:5000'
@@ -288,7 +288,7 @@ processing:
           main-file: 'main.py'
           runtime:
             working_dir: 'external_data_analysis'
-            pip: 'external_data_analysis/requirements.txt'
+            pip: 'requirements.txt'
   step-6:
     general:
       swift: {}
@@ -332,7 +332,7 @@ processing:
           main-file: 'main.py'
           runtime:
             working_dir: 'external_data_analysis'
-            pip: 'external_data_analysis/requirements.txt'
+            pip: 'requirements.txt'
       cloud-vm2:
         mlflow: 
           tracking-uri: 'http://chisel-client:5000'
@@ -349,7 +349,7 @@ processing:
           main-file: 'main.py'
           runtime:
             working_dir: 'external_data_analysis'
-            pip: 'external_data_analysis/requirements.txt'
+            pip: 'requirements.txt'
       local-lt1:
         mlflow: 
           tracking-uri: 'http://chisel-client:5000'
@@ -366,7 +366,7 @@ processing:
           main-file: 'main.py'
           runtime:
             working_dir: 'external_data_analysis'
-            pip: 'external_data_analysis/requirements.txt'
+            pip: 'requirements.txt'
       local-lt2:
         mlflow: 
           tracking-uri: 'http://chisel-client:5000'
@@ -383,7 +383,7 @@ processing:
           main-file: 'main.py'
           runtime:
             working_dir: 'external_data_analysis'
-            pip: 'external_data_analysis/requirements.txt'
+            pip: 'requirements.txt'
       local-lt3:
         mlflow: 
           tracking-uri: 'http://chisel-client:5000'
@@ -400,7 +400,7 @@ processing:
           main-file: 'main.py'
           runtime:
             working_dir: 'external_data_analysis'
-            pip: 'external_data_analysis/requirements.txt'
+            pip: 'requirements.txt'
   step-7:
     general:
       swift: {}
@@ -444,7 +444,7 @@ processing:
           main-file: 'main.py'
           runtime:
             working_dir: 'external_data_analysis'
-            pip: 'external_data_analysis/requirements.txt'
+            pip: 'requirements.txt'
       cloud-vm2:
         mlflow: 
           tracking-uri: 'http://chisel-client:5000'
@@ -461,7 +461,7 @@ processing:
           main-file: 'main.py'
           runtime:
             working_dir: 'external_data_analysis'
-            pip: 'external_data_analysis/requirements.txt'
+            pip: 'requirements.txt'
       local-lt1:
         mlflow: 
           tracking-uri: 'http://chisel-client:5000'
@@ -478,7 +478,7 @@ processing:
           main-file: 'main.py'
           runtime:
             working_dir: 'external_data_analysis'
-            pip: 'external_data_analysis/requirements.txt'
+            pip: 'requirements.txt'
       local-lt2:
         mlflow: 
           tracking-uri: 'http://chisel-client:5000'
@@ -495,7 +495,7 @@ processing:
           main-file: 'main.py'
           runtime:
             working_dir: 'external_data_analysis'
-            pip: 'external_data_analysis/requirements.txt'
+            pip: 'requirements.txt'
       local-lt3:
         mlflow: 
           tracking-uri: 'http://chisel-client:5000'
@@ -512,7 +512,7 @@ processing:
           main-file: 'main.py'
           runtime:
             working_dir: 'external_data_analysis'
-            pip: 'external_data_analysis/requirements.txt'
+            pip: 'requirements.txt'
   step-8:
     general:
       swift: {}
@@ -556,7 +556,7 @@ processing:
           main-file: 'main.py'
           runtime:
             working_dir: 'external_data_analysis'
-            pip: 'external_data_analysis/requirements.txt'
+            pip: 'requirements.txt'
       cloud-vm2:
         mlflow: 
           tracking-uri: 'http://chisel-client:5000'
@@ -573,7 +573,7 @@ processing:
           main-file: 'main.py'
           runtime:
             working_dir: 'external_data_analysis'
-            pip: 'external_data_analysis/requirements.txt'
+            pip: 'requirements.txt'
       local-lt1:
         mlflow: 
           tracking-uri: 'http://chisel-client:5000'
@@ -590,7 +590,7 @@ processing:
           main-file: 'main.py'
           runtime:
             working_dir: 'external_data_analysis'
-            pip: 'external_data_analysis/requirements.txt'
+            pip: 'requirements.txt'
       local-lt2:
         mlflow: 
           tracking-uri: 'http://chisel-client:5000'
@@ -607,7 +607,7 @@ processing:
           main-file: 'main.py'
           runtime:
             working_dir: 'external_data_analysis'
-            pip: 'external_data_analysis/requirements.txt'
+            pip: 'requirements.txt'
       local-lt3:
         mlflow: 
           tracking-uri: 'http://chisel-client:5000'
@@ -624,7 +624,7 @@ processing:
           main-file: 'main.py'
           runtime:
             working_dir: 'external_data_analysis'
-            pip: 'external_data_analysis/requirements.txt'
+            pip: 'requirements.txt'
   step-9:
     general:
       swift: {}
@@ -668,7 +668,7 @@ processing:
           main-file: 'main.py'
           runtime:
             working_dir: 'external_data_analysis'
-            pip: 'external_data_analysis/requirements.txt'
+            pip: 'requirements.txt'
       cloud-vm2:
         mlflow: 
           tracking-uri: 'http://chisel-client:5000'
@@ -685,7 +685,7 @@ processing:
           main-file: 'main.py'
           runtime:
             working_dir: 'external_data_analysis'
-            pip: 'external_data_analysis/requirements.txt'
+            pip: 'requirements.txt'
       local-lt1:
         mlflow: 
           tracking-uri: 'http://chisel-client:5000'
@@ -702,7 +702,7 @@ processing:
           main-file: 'main.py'
           runtime:
             working_dir: 'external_data_analysis'
-            pip: 'external_data_analysis/requirements.txt'
+            pip: 'requirements.txt'
       local-lt2:
         mlflow: 
           tracking-uri: 'http://chisel-client:5000'
@@ -719,7 +719,7 @@ processing:
           main-file: 'main.py'
           runtime:
             working_dir: 'external_data_analysis'
-            pip: 'external_data_analysis/requirements.txt'
+            pip: 'requirements.txt'
       local-lt3:
         mlflow: 
           tracking-uri: 'http://chisel-client:5000'
@@ -736,7 +736,7 @@ processing:
           main-file: 'main.py'
           runtime:
             working_dir: 'external_data_analysis'
-            pip: 'external_data_analysis/requirements.txt'
+            pip: 'requirements.txt'
   step-10:
     general:
       swift: {}
@@ -780,7 +780,7 @@ processing:
           main-file: 'main.py'
           runtime:
             working_dir: 'external_data_analysis'
-            pip: 'external_data_analysis/requirements.txt'
+            pip: 'requirements.txt'
       cloud-vm2:
         mlflow: 
           tracking-uri: 'http://chisel-client:5000'
@@ -797,7 +797,7 @@ processing:
           main-file: 'main.py'
           runtime:
             working_dir: 'external_data_analysis'
-            pip: 'external_data_analysis/requirements.txt'
+            pip: 'requirements.txt'
       local-lt1:
         mlflow: 
           tracking-uri: 'http://chisel-client:5000'
@@ -814,7 +814,7 @@ processing:
           main-file: 'main.py'
           runtime:
             working_dir: 'external_data_analysis'
-            pip: 'external_data_analysis/requirements.txt'
+            pip: 'requirements.txt'
       local-lt2:
         mlflow: 
           tracking-uri: 'http://chisel-client:5000'
@@ -831,7 +831,7 @@ processing:
           main-file: 'main.py'
           runtime:
             working_dir: 'external_data_analysis'
-            pip: 'external_data_analysis/requirements.txt'
+            pip: 'requirements.txt'
       local-lt3:
         mlflow: 
           tracking-uri: 'http://chisel-client:5000'
@@ -848,7 +848,7 @@ processing:
           main-file: 'main.py'
           runtime:
             working_dir: 'external_data_analysis'
-            pip: 'external_data_analysis/requirements.txt'
+            pip: 'requirements.txt'
   step-11:
     general:
       swift: {}
@@ -892,7 +892,7 @@ processing:
           main-file: 'main.py'
           runtime:
             working_dir: 'external_data_analysis'
-            pip: 'external_data_analysis/requirements.txt'
+            pip: 'requirements.txt'
       cloud-vm2:
         mlflow: 
           tracking-uri: 'http://chisel-client:5000'
@@ -909,7 +909,7 @@ processing:
           main-file: 'main.py'
           runtime:
             working_dir: 'external_data_analysis'
-            pip: 'external_data_analysis/requirements.txt'
+            pip: 'requirements.txt'
       local-lt1:
         mlflow: 
           tracking-uri: 'http://chisel-client:5000'
@@ -926,7 +926,7 @@ processing:
           main-file: 'main.py'
           runtime:
             working_dir: 'external_data_analysis'
-            pip: 'external_data_analysis/requirements.txt'
+            pip: 'requirements.txt'
       local-lt2:
         mlflow: 
           tracking-uri: 'http://chisel-client:5000'
@@ -943,7 +943,7 @@ processing:
           main-file: 'main.py'
           runtime:
             working_dir: 'external_data_analysis'
-            pip: 'external_data_analysis/requirements.txt'
+            pip: 'requirements.txt'
       local-lt3:
         mlflow: 
           tracking-uri: 'http://chisel-client:5000'
@@ -960,4 +960,4 @@ processing:
           main-file: 'main.py'
           runtime:
             working_dir: 'external_data_analysis'
-            pip: 'external_data_analysis/requirements.txt'
+            pip: 'requirements.txt'

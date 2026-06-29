@@ -83,7 +83,7 @@ processing:
           main-file: 'main.py'
           runtime:
             working_dir: 'evalution_dataset_creation'
-            pip: 'evalution_dataset_creation/requirements.txt'
+            pip: 'requirements.txt'
       cloud-vm2:
         process:
           workers: 10
@@ -92,7 +92,7 @@ processing:
           main-file: 'main.py'
           runtime:
             working_dir: 'evalution_dataset_creation'
-            pip: 'evalution_dataset_creation/requirements.txt'
+            pip: 'requirements.txt'
       local-lt1:
         process:
           workers: 10
@@ -101,7 +101,7 @@ processing:
           main-file: 'main.py'
           runtime:
             working_dir: 'evalution_dataset_creation'
-            pip: 'evalution_dataset_creation/requirements.txt'
+            pip: 'requirements.txt'
       local-lt2:
         process:
           workers: 12
@@ -110,7 +110,7 @@ processing:
           main-file: 'main.py'
           runtime:
             working_dir: 'evalution_dataset_creation'
-            pip: 'evalution_dataset_creation/requirements.txt'
+            pip: 'requirements.txt'
       local-lt3:
         process:
           workers: 28
@@ -119,16 +119,16 @@ processing:
           main-file: 'main.py'
           runtime:
             working_dir: 'evalution_dataset_creation'
-            pip: 'evalution_dataset_creation/requirements.txt'
+            pip: 'requirements.txt'
   step-2:
     general:
       swift: {}
-      collection-name: 'local_cloud_rag'
+      collection-name: 'fill'
       data-storage: 
         bucket-target: 'experiment'
         bucket-prefix: 'mlch'
         bucket-user: 'user@example.com'   
-        object-prefix: 'ICEbreaker-tutorial-v07-pre'
+        object-prefix: 'fill'
       time-storage: 
         bucket-target: 'pipeline'
         bucket-prefix: 'mlch'
@@ -142,9 +142,9 @@ processing:
     cluster:
       cloud-vm1:
         qdrant: 
-          api-key: 'qdrant_key'
           address: 'qdrant-service.storage.svc.cluster.local'
           port: '7201'
+          api-key: 'qdrant_key'
         process:
           workers: 6
           actors: 2
@@ -152,12 +152,12 @@ processing:
           main-file: 'main.py'
           runtime:
             working_dir: 'rag_database_setup'
-            pip: 'rag_database_setup/vm1-requirements.txt'
+            pip: 'c-vm1-requirements.txt'
       local-lt2:
         qdrant: 
-          api-key: 'qdrant_key'
           address: 'chisel-client'
           port: '7201'
+          api-key: 'qdrant_key'
         process:
           workers: 12
           actors: 1
@@ -165,12 +165,12 @@ processing:
           main-file: 'main.py'
           runtime:
             working_dir: 'rag_database_setup'
-            pip: 'rag_database_setup/lt2-3requirements.txt'
+            pip: 'l-lt23-requirements.txt'
       local-lt3:
         qdrant: 
-          api-key: 'qdrant_key'
           address: 'chisel-client'
           port: '7201'
+          api-key: 'qdrant_key'
         process:
           workers: 28
           actors: 1
@@ -178,7 +178,7 @@ processing:
           main-file: 'main.py'
           runtime:
             working_dir: 'rag_database_setup'
-            pip: 'rag_database_setup/lt2-3requirements.txt'
+            pip: 'l-lt23-requirements.txt'
   step-3:
     general:
       swift: {}
