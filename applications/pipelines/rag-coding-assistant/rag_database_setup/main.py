@@ -26,7 +26,7 @@ def rag_database_setup(
         dense_model_name = model_parameters['dense-model-name']
         sparse_model_name = model_parameters['sparse-model-name']
         process_parameters = job_parameters['process']
-        qdrant_parameters = job_parameters['qdrant-parameters']
+        qdrant_parameters = job_parameters['qdrant']
         qdrant_collection = job_parameters['collection-name']
 
         work_qdrant_client = qdrant_setup_client(
@@ -152,7 +152,8 @@ if __name__ == "__main__":
     cluster_name = job_parameters['cluster']
     step_name = job_parameters['step']
     time_name = f'ray-rag-database-setup-{cluster_name}-{step_name}'
-    
+    # This has race condition 
+    # You can use redis caching 
     time_stored_1, time_index_1, time_name_1 = time_run_update(
         storage_client = work_swift_client,
         storage_parameters = time_storage_parameters,

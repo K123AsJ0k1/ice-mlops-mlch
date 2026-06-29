@@ -84,13 +84,6 @@ def database_setup(
                 row_indices = chunk_row_indices
             ))
     
-    results = []
-    while len(provider_actor_refs):
-        done_actor_refs, provider_actor_refs = ray.wait(provider_actor_refs)
-        for output_ref in done_actor_refs: 
-            res = ray.get(output_ref)
-            results.extend(res)
-    
     hybrid_points = []
     while len(generator_actor_refs) > 0:
         done_refs, generator_actor_refs = ray.wait(generator_actor_refs)
