@@ -13,9 +13,7 @@ def qdrant_is_client(
         return False
 
 def qdrant_setup_client(
-    api_key: str,
-    address: str, 
-    port: str
+    qdrant_parameters: any
 ) -> any:
     try:
         from qdrant_client import QdrantClient as qc
@@ -23,10 +21,10 @@ def qdrant_setup_client(
         raise ImportError("qdrant/setup failed to import", e)
 
     try:
-        qdrant_client = qc(
-            host = address,
-            port = int(port),
-            api_key = api_key,
+        qdrant_client = qc( 
+            host = qdrant_parameters['host'],
+            port = int(qdrant_parameters['port']),
+            api_key = qdrant_parameters['api-key'],
             https = False
         ) 
         return qdrant_client

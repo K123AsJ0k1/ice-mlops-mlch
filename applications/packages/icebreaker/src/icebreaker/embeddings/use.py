@@ -11,10 +11,10 @@ def embeddings_batch_create_vectors(
     except ImportError as e:
         raise ImportError("embeddings/use failed to import", e)
     
-    dense_vectors = []
+    dense_vectors = [] 
     if not dense_model is None:
         dense_vectors = dense_create_baai_vectors(
-            dense_model = dense_model,
+            dense_model = dense_model, 
             text_inputs = text_input_batch
         )
     sparse_vectors = []
@@ -26,8 +26,8 @@ def embeddings_batch_create_vectors(
         
         sparse_vectors = [
             models.SparseVector(
-                indices=emb.indices.tolist(),
-                values=emb.values.tolist()
+                indices = emb.indices.tolist(),
+                values = emb.values.tolist()
             )
             for emb in sparse_embeddings_iter
         ]
@@ -41,7 +41,7 @@ def embeddings_create_hybrid_points(
     dense_model: any,
     sparse_model: any,
 ) -> list:
-    try: 
+    try:  
         from ..qdrant.use import qdrant_create_point
         from ..embeddings.utility import embeddings_generate_uuid
     except ImportError as e:

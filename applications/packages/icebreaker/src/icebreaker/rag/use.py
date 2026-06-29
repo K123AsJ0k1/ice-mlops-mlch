@@ -15,7 +15,7 @@ def rag_grade_row(
         if m_type == 'secondary':
             for blacklist_prefix in blacklist_prefixes:
                 if blacklist_prefix in row_absolute_path:
-                    #row_grade = 0
+                    # Grade penaly of 0 can be added here
                     break
 
             for _, absolute_path in global_reference_paths.items():
@@ -128,7 +128,7 @@ def rag_setup_database(
     text_column: str,
     dense_model: any,
     sparse_model: any
-) -> any:
+) -> any:  
     try: 
         import time as t
         from ..objects.use import objects_get_data

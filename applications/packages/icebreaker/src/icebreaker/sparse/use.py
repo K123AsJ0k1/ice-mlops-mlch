@@ -22,8 +22,11 @@ def sparse_create_simple_tuple(
 
 def sparse_create_spalde_embeddings(
     sparse_model: any,
-    text_inputs: list
+    text_inputs: list,
+    batch_size: int 
 ) -> any:
-    sparse_embeddings = sparse_model.embed(text_inputs)
-    
+    sparse_embeddings = sparse_model.embed(
+        text_inputs,
+        batch_size = batch_size
+    )
     return sparse_embeddings
