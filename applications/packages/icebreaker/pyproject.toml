@@ -79,7 +79,6 @@ sparse = [
     "fastembed==0.8.0"
 ]
 
-
 all = [
     "icebreaker[notebook, env, yaml, parser, swift, data, lang_detect, code_detect, redis, flower, ray, pararellism, logging, qdrant, dense, sparse]"
 ]

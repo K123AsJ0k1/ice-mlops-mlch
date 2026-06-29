@@ -127,9 +127,7 @@ def ray_download_job(
                     file_path_split = object_path.split('/')[2:]
                     file_directory_path = '/'.join(file_path_split)
                     
-                    #local_file_path = Path(download_path + '/' + file_directory_path)
                     absolute_local_file_path = download_path_absolute / file_directory_path
-                    print(str(absolute_local_file_path))
                     absolute_local_file_path.parent.mkdir(parents=True, exist_ok=True)   
                     
                     if not absolute_local_file_path.exists():
@@ -154,6 +152,7 @@ def ray_download_job(
                             object_metadata = None
                         )
                         file_data = file_object[0]
+                        print(f'Writing to path: {str(absolute_local_file_path)}')
                         with open(absolute_local_file_path, 'wb') as local_file:
                             local_file.write(file_data)
     
