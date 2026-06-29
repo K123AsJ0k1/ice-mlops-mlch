@@ -1,10 +1,12 @@
  
 def yaml_parse_file(
     file_path: str,
-    absolute_path: str
+    absolute_path: str,
+    header_start: str
 ): 
     try:
         import yaml
+        from ..parser.utility import utility_header_name
     except ImportError as e:
         raise ImportError("parser/yaml_parse failed to import", e)
 
@@ -13,9 +15,11 @@ def yaml_parse_file(
     with open(file_path, 'r') as f:
         content = [doc for doc in yaml.safe_load_all(f) if not doc is None]
     
-    file_path_split = absolute_path.split('/')
-    used_directory = file_path_split[-2]
-    used_file = file_path_split[-1].split('.')[0]
+    search_header = utility_header_name(
+        absolute_path = absolute_path,
+        start_prefix = header_start
+    )
+
     parsed_material = []
     for i, document in enumerate(content):
         if not document:
@@ -23,7 +27,7 @@ def yaml_parse_file(
 
         if 'kind' in document: 
             resource_name = document['kind']
-            resource_header = f"YAML {used_directory} {used_file} Kubernetes {resource_name}"
+            resource_header = f"YAML {search_header} Kubernetes {resource_name}"
             formatted_resource_content = f"## {resource_header}\n\n"
             formatted_resource_content += f"This is from:{absolute_path}\n"
             formatted_resource_content += f"```yaml\n{yaml.dump(document, sort_keys=False)}```"
@@ -43,7 +47,7 @@ def yaml_parse_file(
             services = document.get('services', {})
 
             for service_name, config in services.items():
-                service_header = f"YAML {used_directory} {used_file} Docker Compose {service_name}"
+                service_header = f"YAML {search_header} Docker Compose {service_name}"
                 formatted_service_content = f"## {service_header}\n\n"
                 formatted_service_content += f"This is from:{absolute_path}\n"
 
@@ -74,7 +78,7 @@ def yaml_parse_file(
                 })
 
             if global_keys:
-                infra_header = f"YAML {used_directory} {used_file} Docker Compose configuration"
+                infra_header = f"YAML {search_header} Docker Compose configuration"
                 formatted_infra_content = f"## {infra_header}\n\n"
                 formatted_infra_content += f"This is from:{absolute_path}\n"
                 formatted_infra_content += f"```yaml\n{yaml.dump(global_keys, sort_keys=False)}\n```"
@@ -90,11 +94,13 @@ def yaml_parse_file(
             continue
 
         first_key = next(iter(document))
-        header = f"YAML {used_directory} {used_file} {first_key}"
+        header = f"YAML {search_header} {first_key}"
         formatted_content = f"## {header}\n\n"
         if 'resources' in document:
+            file_path_split = absolute_path.split('/')
+            used_file = file_path_split[-1].split('.')[0]
             if 'kustomization' in used_file:
-                header = f"YAML {used_directory} {used_file} Kubernetes Kustomize"
+                header = f"YAML {search_header} Kubernetes Kustomize"
                 formatted_content = f"## {header}\n\n"
             
         formatted_content += f"This is from:{absolute_path}\n"

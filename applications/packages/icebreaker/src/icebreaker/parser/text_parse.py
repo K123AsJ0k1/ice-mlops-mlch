@@ -1,17 +1,24 @@
 def text_parse_file(
     file_path: str,
-    absolute_path: str
+    absolute_path: str,
+    header_start: str
 ):  
+    try:
+        from ..parser.utility import utility_header_name
+    except ImportError as e:
+        raise ImportError("parser/text_parse failed to import", e)
+
     content = None
     with open(file_path, 'r') as f:
         content = f.read()
 
+    search_header = utility_header_name(
+        absolute_path = absolute_path,
+        start_prefix = header_start
+    )
     parsed_material = []
-    file_path_split = absolute_path.split('/')
-    used_directory = file_path_split[-2]
-    used_file = file_path_split[-1].split('.')[0]
     if 'packages' in file_path.lower():
-        header = f"Python venv {used_directory} {used_file} dependencies"
+        header = f"Python Venv {search_header} dependencies"
         formatted_content = f"## {header}\n\n"
         formatted_content += f"This is from:{absolute_path}\n```text\n{content}\n```"
         
@@ -28,7 +35,7 @@ def text_parse_file(
         for i in range(0, len(lines), max_rows):
             chunk_lines = lines[i:i + max_rows]
             part_num = (i // max_rows) + 1
-            header = f"Text {used_directory} {used_file}"
+            header = f"Text {search_header}"
 
             formatted_content = f"## {header}\n\n"
             formatted_content += f"This is from:{absolute_path} (Part {part_num}, Index {i})\n"

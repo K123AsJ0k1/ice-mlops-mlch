@@ -15,7 +15,7 @@ def rag_grade_row(
         if m_type == 'secondary':
             for blacklist_prefix in blacklist_prefixes:
                 if blacklist_prefix in row_absolute_path:
-                    row_grade = 0
+                    #row_grade = 0
                     break
 
             for _, absolute_path in global_reference_paths.items():

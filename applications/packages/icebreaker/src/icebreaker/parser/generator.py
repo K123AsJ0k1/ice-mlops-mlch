@@ -60,8 +60,9 @@ def generator_divide_material(
     save_material: bool,
     storage_folder: str,
     storage_name: str,
+    header_start: str,
     debug_prints: bool
-) -> int:
+) -> int: 
     try:
         import os
         from ..parser.markdown_parse import markdown_parse_content
@@ -130,35 +131,40 @@ def generator_divide_material(
                 if file_type == 'py':
                     pieces = python_parse_file(
                         file_path = file_path,
-                        absolute_path = absolute_path
+                        absolute_path = absolute_path,
+                        header_start = header_start
                     )
                     parsing_strategy = 'AST formatting'
                     header_type = 'Functions and classes'
                 if file_type == 'yaml':
                     pieces = yaml_parse_file(
                         file_path = file_path,
-                        absolute_path = absolute_path
+                        absolute_path = absolute_path,
+                        header_start = header_start
                     )
                     parsing_strategy = 'YAML loading'
                     header_type = 'Relevant key'
                 if file_type == 'txt':
                     pieces = text_parse_file(
                         file_path = file_path,
-                        absolute_path = absolute_path
+                        absolute_path = absolute_path,
+                        header_start = header_start
                     )
                     parsing_strategy = 'Text loading'
                     header_type = 'Type and directory'
                 if file_type == 'sh':
                     pieces = bash_parse_file(
                         file_path = file_path,
-                        absolute_path = absolute_path
+                        absolute_path = absolute_path,
+                        header_start = header_start
                     )
                     parsing_strategy = 'Bash loading'
                     header_type = 'Type and directory'
                 if file_type == 'env':
                     pieces = env_parse_file(
                         file_path = file_path,
-                        absolute_path = absolute_path
+                        absolute_path = absolute_path,
+                        header_start = header_start
                     )
                     parsing_strategy = 'Env loading'
                     header_type = 'Type and directory'

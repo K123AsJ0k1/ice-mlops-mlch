@@ -89,10 +89,12 @@ def python_get_celery(
 
 def python_parse_file(
     file_path: str,
-    absolute_path: str
+    absolute_path: str,
+    header_start: str
 ):
     try:
         import ast
+        from ..parser.utility import utility_header_name
     except ImportError as e:
         raise ImportError("parser/python_parse failed to import", e)
 
@@ -103,9 +105,10 @@ def python_parse_file(
     tree = ast.parse(content)
     imports = [node for node in tree.body if isinstance(node, (ast.Import, ast.ImportFrom))]
     
-    file_path_split = absolute_path.split('/')
-    used_directory = file_path_split[-2]
-    used_file = file_path_split[-1].split('.')[0]
+    search_header = utility_header_name(
+        absolute_path = absolute_path,
+        start_prefix = header_start
+    )
     parsed_material = []
     for node in tree.body:
         is_main = python_check_main(
@@ -114,16 +117,16 @@ def python_parse_file(
         # This should only handle classes and functions
         if isinstance(node, (ast.FunctionDef, ast.ClassDef, ast.AsyncFunctionDef)) or is_main:
             fastapi_case = False
-            header = f'Python {used_directory} {used_file} '
+            header = f'Python {search_header} '
             if isinstance(node, (ast.FunctionDef)):
                 name = node.name
-                header += f'function {name}'
+                header += f'Function {name}'
             if isinstance(node, (ast.ClassDef)):
                 name = node.name
-                header += f'class {name}'
+                header += f'Class {name}'
             if isinstance(node, (ast.AsyncFunctionDef)):
                 name = node.name
-                header += f'FastAPI route {name}'
+                header += f'FastAPI Route {name}'
                 fastapi_case = True
             
             if is_main:
