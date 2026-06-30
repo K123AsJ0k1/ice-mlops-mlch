@@ -123,6 +123,7 @@ if __name__ == "__main__":
         'pyarrow',
         'numpy',
         'torch',
+        'transformers',
         'sentence-transformers',
         'fastembed-gpu'
     ]

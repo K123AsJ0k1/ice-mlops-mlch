@@ -5,8 +5,10 @@ icebreaker[swift, data, pararellism, qdrant] @ git+https://github.com/K123AsJ0k1
 torch==2.3.1+cu121
 torchvision==0.18.1+cu121
 
-sentence-transformers>=3.0.0
-
 --extra-index-url https://aiinfra.pkgs.visualstudio.com/PublicPackages/_packaging/onnxruntime-cuda-12/pypi/simple/
 onnxruntime-gpu==1.18.0
+
+transformers==4.44.2
+sentence-transformers==3.0.1
+
 fastembed-gpu>=0.3.0
