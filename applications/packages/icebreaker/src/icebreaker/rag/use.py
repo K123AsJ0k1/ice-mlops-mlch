@@ -208,6 +208,7 @@ def rag_evalute_database(
     dense_model_name: str,
     sparse_model: any,
     sparse_model_name: str,
+    batch_size: int, 
     debug_prints: bool
 ):
     try:
@@ -247,7 +248,7 @@ def rag_evalute_database(
         )    
         dataset_name = dataset_path.split('/')[-1].split('.')[0]
         target_df = data_object[0]
-        
+         
         dataframe_stats, current_dataset_gather = search_data_metrics(
             dataset_name = dataset_name, 
             target_df = target_df,
@@ -264,7 +265,8 @@ def rag_evalute_database(
             dense_model = dense_model,
             sparse_model_name = sparse_model_name,
             sparse_model = sparse_model,
-            debug_prints = debug_prints,
+            batch_size = batch_size,
+            debug_prints = debug_prints
         ) 
 
         database_metrics[dataset_name] = dataframe_stats

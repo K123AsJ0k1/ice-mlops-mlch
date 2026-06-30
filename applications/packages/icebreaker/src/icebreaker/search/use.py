@@ -2,7 +2,8 @@ def search_get_batch_vectors(
     query_type: str,
     text_query_batch: list,
     dense_model: any,
-    sparse_model: any
+    sparse_model: any,
+    batch_size: int
 ):
     try:
         from qdrant_client import models
@@ -10,7 +11,7 @@ def search_get_batch_vectors(
         from ..dense.use import dense_create_baai_vectors
     except ImportError as e:
         raise ImportError("embeddings/use failed to import", e)
-    
+     
     queries_dense = []
     is_dense_needed = query_type in ('dense', 'hybrid-rrf', 'hybrid-dbsf')
     is_sparse_needed = query_type in ('sparse', 'hybrid-rrf', 'hybrid-dbsf')
@@ -18,14 +19,16 @@ def search_get_batch_vectors(
     if is_dense_needed and dense_model is not None:
         queries_dense = dense_create_baai_vectors(
             dense_model = dense_model,
-            text_inputs = text_query_batch
+            text_inputs = text_query_batch,
+            batch_size = batch_size
         )
 
     queries_sparse = []
     if is_sparse_needed and sparse_model is not None:
         sparse_embeddings_iter = sparse_create_spalde_embeddings(
             sparse_model = sparse_model,
-            text_inputs = text_query_batch
+            text_inputs = text_query_batch,
+            batch_size = batch_size
         )
         
         queries_sparse = [
@@ -47,7 +50,8 @@ def search_monitored_batch_query(
     query_limit: int,
     fusion_limit: int,
     dense_model: any,
-    sparse_model: any
+    sparse_model: any,
+    batch_size: int
 ) -> any:
     try:
         import time
@@ -61,7 +65,8 @@ def search_monitored_batch_query(
         query_type = query_type,
         text_query_batch = text_query_batch,
         dense_model = dense_model,
-        sparse_model = sparse_model
+        sparse_model = sparse_model,
+        batch_size = batch_size
     )
     embed_latency_ms = ((time.perf_counter_ns() - start_embed) / 1e6) / len(text_query_batch)
     batch_results = []
@@ -125,6 +130,7 @@ def search_data_metrics(
     dense_model: any,
     sparse_model_name: str,
     sparse_model: any,
+    batch_size: int,
     debug_prints: bool
 ): 
     try:
@@ -159,7 +165,8 @@ def search_data_metrics(
         query_limit = query_limit,
         fusion_limit = fusion_limit,
         dense_model = dense_model,
-        sparse_model = sparse_model
+        sparse_model = sparse_model,
+        batch_size = batch_size
     )
     
     # 3. Unpack batch results for debugging and metric aggregation
