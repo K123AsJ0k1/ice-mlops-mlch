@@ -42,6 +42,9 @@ def rag_database_setup(
             print("No input data provided.")
             return True
 
+        print(f'Used dense model {dense_model_name}')
+        print(f'Used sparse model {sparse_model_name}')
+
         print(f'Creating collection: {qdrant_collection_name}')
         status = qdrant_create_collection(
             qdrant_client = work_qdrant_client, 
@@ -95,6 +98,7 @@ def rag_database_setup(
                 collection_name = qdrant_collection_name,
                 data_storage_parameters = data_storage_parameters,
                 config_parameters = config_parameters,
+                process_parameters = process_parameters,
                 task_batch = worker_batch_ref
             ))
             worker_index += 1

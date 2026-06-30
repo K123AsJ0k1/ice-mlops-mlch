@@ -203,7 +203,8 @@ def cluster_orhestractor_step(
                         job_directory_path, job_requirements = ray_download_job(
                             storage_client = work_swift_client,
                             storage_parameters = code_storage,
-                            ray_runtime = cluster_job_runtime
+                            ray_runtime = cluster_job_runtime,
+                            overwrite = False
                         )
 
                         print(f'Job directory: {job_directory_path}')

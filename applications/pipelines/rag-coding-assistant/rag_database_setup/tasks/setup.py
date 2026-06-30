@@ -20,6 +20,7 @@ def database_setup(
     collection_name: str,
     data_storage_parameters: any,
     config_parameters: any,
+    process_parameters: any,
     task_batch: any
 ) -> any: 
     start_time = t.time()
@@ -35,7 +36,7 @@ def database_setup(
     )
 
     text_column = config_parameters['text-column']
-    process_batch_size = config_parameters['batch-size']
+    process_batch_size = process_parameters['vector-batch-size']
     generator_actor_refs = []
     dataset_records_map = {}
     for data_index, batch_data in enumerate(task_batch):
