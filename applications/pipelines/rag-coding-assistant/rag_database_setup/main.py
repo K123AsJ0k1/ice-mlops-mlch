@@ -122,6 +122,7 @@ if __name__ == "__main__":
         'pandas',
         'pyarrow',
         'numpy',
+        'torch',
         'sentence-transformers',
         'fastembed-gpu'
     ]
