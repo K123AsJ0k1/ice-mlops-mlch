@@ -129,6 +129,7 @@ processing:
         bucket-prefix: 'mlch'
         bucket-user: 'user@example.com'   
         object-prefix: 'fill'
+        object-serialization: 'pickle'
       time-storage: 
         bucket-target: 'pipeline'
         bucket-prefix: 'mlch'
@@ -146,6 +147,7 @@ processing:
           port: '7201'
           api-key: 'qdrant_key'
         process:
+          vector-batch-size: 32
           workers: 6
           actors: 2
         job:
@@ -153,12 +155,15 @@ processing:
           runtime:
             working_dir: 'rag_database_setup'
             pip: 'c-vm1-requirements.txt'
+            env_vars:
+              HF_TOKEN: 'fill'
       local-lt2:
         qdrant: 
           address: 'chisel-client'
           port: '7201'
           api-key: 'qdrant_key'
         process:
+          vector-batch-size: 8
           workers: 12
           actors: 1
         job:
@@ -166,12 +171,15 @@ processing:
           runtime:
             working_dir: 'rag_database_setup'
             pip: 'l-lt23-requirements.txt'
+            env_vars:
+              HF_TOKEN: 'fill'
       local-lt3:
         qdrant: 
           address: 'chisel-client'
           port: '7201'
           api-key: 'qdrant_key'
         process:
+          vector-batch-size: 32
           workers: 28
           actors: 1
         job:
@@ -179,6 +187,8 @@ processing:
           runtime:
             working_dir: 'rag_database_setup'
             pip: 'l-lt23-requirements.txt'
+            env_vars:
+              HF_TOKEN: 'fill'
   step-3:
     general:
       swift: {}
