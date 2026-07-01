@@ -21,7 +21,7 @@ app = FastAPI()
 @serve.ingress(app)
 class LLAMA_Deployment:
     def __init__(self):
-        print("Fetching and initializing Qwen 3.5 2B directly from Hugging Face Hub...")
+        print("Fetching and initializing model directly from Hugging Face Hub...")
         
         # Llama.from_pretrained downloads the model automatically.
         # Any additional standard parameters (like n_gpu_layers, n_ctx) are passed as kwargs.
@@ -35,6 +35,7 @@ class LLAMA_Deployment:
             verbose = False
         )
         '''
+        '''
         # works
         self.llm = Llama.from_pretrained(
             repo_id = "unsloth/DeepSeek-R1-Distill-Llama-8B-GGUF", 
@@ -43,6 +44,17 @@ class LLAMA_Deployment:
             n_ctx = 4096,       # 4096 context context fits comfortably in 16GB VRAM
             verbose = False
         )
+        '''
+        '''
+        # works
+        self.llm = Llama.from_pretrained(
+            repo_id = "mistralai/Ministral-3-3B-Instruct-2512-GGUF", 
+            filename = "*Q4_K_M.gguf",                    
+            n_gpu_layers = -1,  # Safely offloads all layers completely to your P100 GPU
+            n_ctx = 4096,       # Constrained context window for optimized VRAM mapping
+            verbose = False
+        )
+        '''
         print("Model downloaded and successfully loaded into memory!")
 
     @app.post("/generate")
@@ -60,6 +72,7 @@ class LLAMA_Deployment:
                 ],
             )
             '''
+            '''
             response = self.llm.create_chat_completion(
                 messages=[
                     {"role": "system", "content": system_message},
@@ -67,6 +80,15 @@ class LLAMA_Deployment:
                 ],
                 temperature = 0.6, # DeepSeek recommends 0.5 - 0.7 to avoid infinite reasoning loops
                 max_tokens = 1024  # Give it extra room to emit its <think> chain
+            )
+            '''
+            response = self.llm.create_chat_completion(
+                messages=[
+                    {"role": "system", "content": system_message},
+                    {"role": "user", "content": prompt}
+                ],
+                temperature = 0.1, # Mistral recommends < 0.1 for strict task instruction following
+                max_tokens = 1024
             )
             return {"status": "success", "text": response["choices"][0]["message"]["content"].strip()}
         except Exception as e:
