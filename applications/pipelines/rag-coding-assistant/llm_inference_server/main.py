@@ -25,11 +25,22 @@ class LLAMA_Deployment:
         
         # Llama.from_pretrained downloads the model automatically.
         # Any additional standard parameters (like n_gpu_layers, n_ctx) are passed as kwargs.
+        '''
+        # works
         self.llm = Llama.from_pretrained(
             repo_id = "unsloth/Qwen3.5-2B-GGUF", # Replace with actual Qwen3.5 GGUF repo path when released
             filename = "*Q4_K_M.gguf",                    # Uses wildcards or exact filenames
             n_gpu_layers = -1,                            # Offload to the Ray-allocated GPU slice
             n_ctx = 4096,                                 # Constrain context window
+            verbose = False
+        )
+        '''
+        # works
+        self.llm = Llama.from_pretrained(
+            repo_id = "unsloth/DeepSeek-R1-Distill-Llama-8B-GGUF", 
+            filename = "*Q4_K_M.gguf",                    
+            n_gpu_layers = -1,  # -1 offloads all 32 layers completely to the P100 VRAM
+            n_ctx = 4096,       # 4096 context context fits comfortably in 16GB VRAM
             verbose = False
         )
         print("Model downloaded and successfully loaded into memory!")
@@ -41,11 +52,21 @@ class LLAMA_Deployment:
         system_message: str = Body("You are a helpful assistant.", embed=True)
     ):
         try:
+            '''
             response = self.llm.create_chat_completion(
                 messages=[
                     {"role": "system", "content": system_message},
                     {"role": "user", "content": prompt}
-                ]
+                ],
+            )
+            '''
+            response = self.llm.create_chat_completion(
+                messages=[
+                    {"role": "system", "content": system_message},
+                    {"role": "user", "content": prompt}
+                ],
+                temperature = 0.6, # DeepSeek recommends 0.5 - 0.7 to avoid infinite reasoning loops
+                max_tokens = 1024  # Give it extra room to emit its <think> chain
             )
             return {"status": "success", "text": response["choices"][0]["message"]["content"].strip()}
         except Exception as e:
