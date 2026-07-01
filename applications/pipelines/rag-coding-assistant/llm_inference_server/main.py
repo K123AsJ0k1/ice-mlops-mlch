@@ -5,19 +5,51 @@ import re
 import time
 import json
 from importlib.metadata import version
-from fastapi import FastAPI
 from ray import serve
+from fastapi import FastAPI, Body
+from llama_cpp import Llama
 
 app = FastAPI()
 
-@serve.deployment
+@serve.deployment(
+    num_replicas = 1,
+    ray_actor_options = {
+        "num_cpus": 1, 
+        "num_gpus": 1
+    } 
+)
 @serve.ingress(app)
-class Test_Server:
-    @app.get("/output")
-    async def output_route(
-        self
+class LLAMA_Deployment:
+    def __init__(self):
+        print("Fetching and initializing Qwen 3.5 2B directly from Hugging Face Hub...")
+        
+        # Llama.from_pretrained downloads the model automatically.
+        # Any additional standard parameters (like n_gpu_layers, n_ctx) are passed as kwargs.
+        self.llm = Llama.from_pretrained(
+            repo_id = "unsloth/Qwen3.5-2B-GGUF", # Replace with actual Qwen3.5 GGUF repo path when released
+            filename = "*Q4_K_M.gguf",                    # Uses wildcards or exact filenames
+            n_gpu_layers = -1,                            # Offload to the Ray-allocated GPU slice
+            n_ctx = 4096,                                 # Constrain context window
+            verbose = False
+        )
+        print("Model downloaded and successfully loaded into memory!")
+
+    @app.post("/generate")
+    async def generate(
+        self, 
+        prompt: str,
+        system_message: str
     ):
-        return {"status": "success", "message": "FastApi-RayServe Hello World"}
+        try:
+            response = self.llm.create_chat_completion(
+                messages=[
+                    {"role": "system", "content": system_message},
+                    {"role": "user", "content": prompt}
+                ]
+            )
+            return {"status": "success", "text": response["choices"][0]["message"]["content"].strip()}
+        except Exception as e:
+            return {"status": "error", "message": str(e)}
 
 def llama_test(
     job_parameters: dict
@@ -35,10 +67,13 @@ def llama_test(
         )
 
         serve.run(
-            Test_Server.bind(), 
-            name = 'test_server', 
+            LLAMA_Deployment.bind(), 
+            name = 'llama_server', 
             route_prefix='/'
         )   
+        
+        time.sleep(120)    
+        serve.shutdown()  
         return True
     except Exception as e:
         print(f'llama error {e}')
