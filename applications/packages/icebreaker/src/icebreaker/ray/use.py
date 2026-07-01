@@ -57,8 +57,9 @@ def ray_serve_route(
     except ImportError as e:
         raise ImportError("Failed to import", e)
 
-    full_url = 'http://' + route_address + route_path
-    print(full_url)
+    full_url = f'http://{route_address}{route_path}'
+    print(f'Using route {full_url}')
+    route_response = None
     if route_type == 'POST':
         route_response = requests.post(
             url = full_url,
@@ -69,13 +70,13 @@ def ray_serve_route(
             url = full_url
         )
 
-    route_status_code = None
-    route_returned_text = {}
+    route_status = None
+    route_output = {}
     if not route_response is None:
-        route_status_code = route_response.status_code
-        if route_status_code == 200:
-            route_returned_text = json.loads(route_response.text)
-    return route_status_code, route_returned_text
+        route_status = route_response.status_code
+        if route_status == 200:
+            route_output = json.loads(route_response.text)
+    return route_status, route_output 
 
 def ray_get_clients(
     configured_clusters: any,
@@ -179,6 +180,62 @@ def ray_cluster_dry_submit(
 
         )
     return cluster_job_id
+
+def ray_dry_submit_pipeline(
+    dashboard_address: str,
+    swift_client: any,
+    storage_parameters: any,
+    local_working_directory: str,
+    directory_name: str,
+    directory_pip: str,
+    pipeline_arguments: any,
+    argument_area: str, 
+    step_name: str,
+    step_input: str,
+    cluster_name: str
+):
+    try:
+        from ..ray.setup import ray_setup_client, ray_store_job, ray_download_job
+    except ImportError as e:
+        raise ImportError("ray/use failed to import", e)
+
+    used_ray_client = ray_setup_client(
+        dashboard_address = dashboard_address,
+        loop_timeout = 5,
+        test_timeout = 5,
+        wait_timeout = 5
+    )
+
+    storage_time = ray_store_job(
+        storage_client = swift_client,
+        storage_parameters = storage_parameters,
+        ray_runtime = {
+            'working_dir': local_working_directory
+        }
+    )
+
+    runtime_directory_path, runtime_requirements_path = ray_download_job(
+        storage_client = swift_client,
+        storage_parameters = storage_parameters,
+        ray_runtime = {
+            'working_dir': directory_name,
+            'pip': directory_pip
+        },
+        overwrite = True
+    )
+
+    step_parameters = pipeline_arguments[argument_area][step_name]
+    job_id = ray_cluster_dry_submit(
+        cluster_client = used_ray_client,
+        step_name = step_name,
+        step_input = step_input,
+        cluster_name = cluster_name,
+        step_parameters = step_parameters,
+        runtime_directory_path = runtime_directory_path,
+        runtime_requirements_path = runtime_requirements_path
+    )
+
+    return job_id
 
 def ray_parallel_submit(
     cluster_clients: any,
