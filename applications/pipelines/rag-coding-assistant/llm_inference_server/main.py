@@ -37,8 +37,8 @@ class LLAMA_Deployment:
     @app.post("/generate")
     async def generate(
         self, 
-        prompt: str,
-        system_message: str
+        prompt: str = Body(..., embed=True),
+        system_message: str = Body("You are a helpful assistant.", embed=True)
     ):
         try:
             response = self.llm.create_chat_completion(
@@ -72,7 +72,7 @@ def llama_test(
             route_prefix='/'
         )   
         
-        time.sleep(120)    
+        time.sleep(240)    
         serve.shutdown()  
         return True
     except Exception as e:
@@ -84,7 +84,10 @@ if __name__ == "__main__":
     print('Python version is:' + str(sys.version))
     check_packages = [
         'ray',
-        'fastapi'
+        'fastapi',
+        'llama-cpp-python',
+        'huggingface-hub',
+        'jinja2'
     ]
    
     for pkg_name in check_packages:
