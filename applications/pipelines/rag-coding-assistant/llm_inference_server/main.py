@@ -20,13 +20,21 @@ app = FastAPI()
 )
 @serve.ingress(app)
 class LLAMA_Deployment:
-    def __init__(self):
+    def __init__(
+        self,
+        model_parameters: dict
+    ):
+        if 0 < len(model_parameters):
+            
+
+        model_name = f''
+
         print("Fetching and initializing model directly from Hugging Face Hub...")
         
         # Llama.from_pretrained downloads the model automatically.
         # Any additional standard parameters (like n_gpu_layers, n_ctx) are passed as kwargs.
         '''
-        # works
+        # works on vm1 P100
         self.llm = Llama.from_pretrained(
             repo_id = "unsloth/Qwen3.5-2B-GGUF", # Replace with actual Qwen3.5 GGUF repo path when released
             filename = "*Q4_K_M.gguf",                    # Uses wildcards or exact filenames
@@ -36,7 +44,7 @@ class LLAMA_Deployment:
         )
         '''
         '''
-        # works
+        # works on vm1 P100
         self.llm = Llama.from_pretrained(
             repo_id = "unsloth/DeepSeek-R1-Distill-Llama-8B-GGUF", 
             filename = "*Q4_K_M.gguf",                    
@@ -46,7 +54,7 @@ class LLAMA_Deployment:
         )
         '''
         '''
-        # works
+        # works on vm1 P100
         self.llm = Llama.from_pretrained(
             repo_id = "mistralai/Ministral-3-3B-Instruct-2512-GGUF", 
             filename = "*Q4_K_M.gguf",                    
@@ -55,6 +63,13 @@ class LLAMA_Deployment:
             verbose = False
         )
         '''
+        #self.llm = Llama.from_pretrained(
+        #    repo_id = "unsloth/gemma-4-E2B-it-GGUF", 
+        #    filename = "*Q4_K_M.gguf",  # Pulls the smart QAT Dynamic 4-bit version                  
+        #    n_gpu_layers = -1,              # Completely offloads all layers to the P100 GPU
+        #    n_ctx = 4096,                   # Base context window
+        #    verbose = False
+        #)
         print("Model downloaded and successfully loaded into memory!")
 
     @app.post("/generate")
@@ -65,6 +80,7 @@ class LLAMA_Deployment:
     ):
         try:
             '''
+            qwen
             response = self.llm.create_chat_completion(
                 messages=[
                     {"role": "system", "content": system_message},
@@ -73,6 +89,7 @@ class LLAMA_Deployment:
             )
             '''
             '''
+            deepseek
             response = self.llm.create_chat_completion(
                 messages=[
                     {"role": "system", "content": system_message},
@@ -82,6 +99,8 @@ class LLAMA_Deployment:
                 max_tokens = 1024  # Give it extra room to emit its <think> chain
             )
             '''
+            '''
+            ministral-3
             response = self.llm.create_chat_completion(
                 messages=[
                     {"role": "system", "content": system_message},
@@ -90,6 +109,15 @@ class LLAMA_Deployment:
                 temperature = 0.1, # Mistral recommends < 0.1 for strict task instruction following
                 max_tokens = 1024
             )
+            '''
+            #response = self.llm.create_chat_completion(
+            #    messages=[
+            #        {"role": "system", "content": system_message},
+            #        {"role": "user", "content": prompt}
+            #    ],
+            #    temperature = 1.0, # Official Google DeepMind recommended default for Gemma 4
+            #    max_tokens = 1024
+            #)
             return {"status": "success", "text": response["choices"][0]["message"]["content"].strip()}
         except Exception as e:
             return {"status": "error", "message": str(e)}
@@ -115,8 +143,8 @@ def llama_test(
             route_prefix='/'
         )   
         
-        time.sleep(240)    
-        serve.shutdown()  
+        #time.sleep(240)    
+        #serve.shutdown()  
         return True
     except Exception as e:
         print(f'llama error {e}')
