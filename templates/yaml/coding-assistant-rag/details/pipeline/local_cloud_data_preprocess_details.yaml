@@ -201,35 +201,54 @@ processing:
         bucket-target: 'pipeline'
         bucket-prefix: 'mlch'
         bucket-user: 'user@example.com' 
-        object-name: 'local-cloud-workflow'
+        object-name: 'local-cloud-workflow'    
       model:
-        bucket-name: 'mlch-exp-user-example-com'
-        object-path: 'MODELS/fasttext/lid.176.bin'
+        generator-id: 'unsloth/DeepSeek-R1-Distill-Llama-8B-GGUF'
+        generator-file: '*Q4_K_M.gguf'
+        generator-model-parameters: 
+          n-gpu-layers: -1
+          n-ctx: 4096
+        generator-prompt-parameters: {}
     cluster:
       cloud-vm1:
         process:
           workers: 6
-          actors: 2
+          actors: 1
+        serve:
+          host: '0.0.0.0'
+          port: 8000
         job:
           main-file: 'main.py'
           runtime:
-            working_dir: 'validation_dataset_creation'
-            pip: 'validation_dataset_creation/requirements.txt'
+            working_dir: 'llm_inference_server'
+            pip: 'requirements.txt'
+            env_vars:
+              HF_TOKEN: 'fill'
       local-lt2:
         process:
           workers: 12
-          actors: 2
+          actors: 1
+        serve:
+          host: '0.0.0.0'
+          port: 8000
         job:
           main-file: 'main.py'
           runtime:
             working_dir: 'validation_dataset_creation'
             pip: 'validation_dataset_creation/requirements.txt'
+            env_vars:
+              HF_TOKEN: 'fill'
       local-lt3:
         process:
           workers: 28
           actors: 2
+        serve:
+          host: '0.0.0.0'
+          port: 8000
         job:
           main-file: 'main.py'
           runtime:
             working_dir: 'validation_dataset_creation'
             pip: 'validation_dataset_creation/requirements.txt'
+            env_vars:
+              HF_TOKEN: 'fill'

@@ -1,0 +1,40 @@
+llm_as_a_judge:
+  temperature: 0.0  # Must be deterministic
+  system_prompt: |
+    You are an unbiased, strict quality assurance judge evaluating an AI Coding Assistant. You will be provided with a Reference Context, a User Question, an Answer to evaluate, and the Ground Truth Answer.
+    
+    You must evaluate the response based on four binary dimensions (1 for Pass, 0 for Fail):
+    
+    ACCURACY DIMENSIONS:
+    - correctness: Is the answer technically correct and aligned with the ground truth? (1/0)
+    - faithfulness: Is the answer derived *only* from the provided Reference Context without introducing external unverified facts? (1/0)
+    
+    HALLUCINATION DIMENSIONS:
+    - adherence: Does the answer strictly follow system constraints and avoid making up code blocks/APIs? (1/0)
+    - relevance: Is the answer directly addressing the user's question without drifting into verbose fluff? (1/0)
+  user_template: |
+    ### REFERENCE CONTEXT (RAG CHUNKS):
+    {{ reference_context }}
+
+    ### GROUND TRUTH TARGET:
+    {{ ground_truth_answer }}
+
+    ### USER QUESTION:
+    {{ user_question }}
+
+    ### EVALUATED MODEL ANSWER:
+    {{ model_answer }}
+
+    ### INSTRUCTION:
+    Analyze the Evaluated Model Answer critically against the Reference Context and Ground Truth. Provide a brief breakdown for your reasoning, then output the final binary matrix.
+    
+    Your final response must be formatted as JSON inside your output block:
+    {
+      "reasoning": "A concise text explaining your scoring decisions...",
+      "scores": {
+        "correctness": 0,
+        "faithfulness": 1,
+        "adherence": 1,
+        "relevance": 0
+      }
+    }
