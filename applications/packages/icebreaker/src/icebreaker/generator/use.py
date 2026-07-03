@@ -230,28 +230,79 @@ def generate_separate_output(
     try:
         import re
         import json
+        import ast
     except ImportError as e:
         raise ImportError("generator/use failed to import", e)
 
-    json_pattern = re.compile(r'```json\s*(.*?)\s*```', re.DOTALL | re.IGNORECASE)
-    match = json_pattern.search(output)
-    
-    markdown_text = None
-    parsed_json = None
-    if match:
-        # Extract the JSON string group
-        json_str = match.group(1)
-        
-        # Remove the JSON block from the original text to isolate the Markdown
-        # re.sub replaces the entire matched block with an empty string or newline
-        markdown_text = json_pattern.sub('', output).strip()
+    if not output:
+        return "", None
 
+    json_str = None
+    matched_block = None
+
+    # --- STEP 1: Multi-Stratagem JSON Extraction ---
+    
+    # Strategy A: Look for standard strict ```json ... ``` block
+    json_match = re.search(r'```json\s*([\s\S]*?)\s*```', output, re.IGNORECASE)
+    
+    # Strategy B: Look for generic ``` ... ``` blocks that contain an object or array
+    if not json_match:
+        generic_match = re.search(r'```\s*([\s\S]*?)\s*```', output)
+        if generic_match and any(char in generic_match.group(1) for char in ['{', '[']):
+            json_match = generic_match
+
+    if json_match:
+        json_str = json_match.group(1).strip()
+        matched_block = json_match.group(0)
+    else:
+        # Strategy C: No markdown fences found. Find the outermost raw { ... } or [ ... ]
+        # Greedy matching ensures we capture the entire nested structure
+        raw_match = re.search(r'(\{[\s\S]*\}|\[[\s\S]*\])', output)
+        if raw_match:
+            json_str = raw_match.group(1).strip()
+            matched_block = raw_match.group(0)
+
+    # If absolutely no JSON structure can be found, return everything as markdown
+    if not json_str:
+        return output.strip(), None
+
+    # --- STEP 2: Isolate the Markdown Text ---
+    # Safely strip out only the extracted JSON block from the original response
+    markdown_text = output.replace(matched_block, "", 1).strip()
+
+    # --- STEP 3: Robust JSON Healing and Parsing ---
+    parsed_json = None
+    
+    # Attempt 1: Standard strict JSON load
+    try:
+        parsed_json = json.loads(json_str)
+    except json.JSONDecodeError:
+        
+        # Attempt 2: Use ast.literal_eval to heal LLM defects
+        # (This effortlessly fixes trailing commas, single quotes, and Python primitives)
         try:
-            # Parse the extracted string into a Python object
-            parsed_json = json.loads(json_str)
-        except json.JSONDecodeError as e:
-            raise ValueError(f"Extracted text is not valid JSON: {e}")
+            # Strip JavaScript-style comments if the LLM hallucinated them
+            cleaned_str = re.sub(r'//.*', '', json_str)
+            cleaned_str = re.sub(r'/\*[\s\S]*?\*/', '', cleaned_str)
             
+            # Map JSON lowercase primitives to Python title-case primitives for AST
+            cleaned_str = re.sub(r'\btrue\b', 'True', cleaned_str)
+            cleaned_str = re.sub(r'\bfalse\b', 'False', cleaned_str)
+            cleaned_str = re.sub(r'\bnull\b', 'None', cleaned_str)
+            
+            parsed_json = ast.literal_eval(cleaned_str.strip())
+        except Exception:
+            
+            # Attempt 3: Desperation regex patch for trailing commas inside standard JSON
+            try:
+                fixed_comma_str = re.sub(r',\s*([\]\}])', r'\1', json_str)
+                parsed_json = json.loads(fixed_comma_str)
+            except json.JSONDecodeError as final_err:
+                raise ValueError(
+                    f"Extracted block could not be healed into valid JSON.\n"
+                    f"Problematic Snippet: {json_str[:150]}...\nError: {final_err}"
+                )
+
     return markdown_text, parsed_json
 
 def generate_process_data(

@@ -79,6 +79,10 @@ sparse = [
     "fastembed==0.8.0"
 ]
 
+generator = [
+    "json-repair==0.61.1"
+]
+
 all = [
-    "icebreaker[notebook, env, yaml, parser, swift, data, lang_detect, code_detect, redis, flower, ray, pararellism, logging, qdrant, dense, sparse]"
+    "icebreaker[notebook, env, yaml, parser, swift, data, lang_detect, code_detect, redis, flower, ray, pararellism, logging, qdrant, dense, sparse, generator]"
 ]
