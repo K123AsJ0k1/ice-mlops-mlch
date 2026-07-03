@@ -122,7 +122,7 @@ def compose_yaml_dict(
                 with open(file_path, 'r') as f:
                     content = f.read()
                 fragment_dicts[fragment_name] = yaml.safe_load(content)
-
+    # confirm that env dicts work
     detail_dicts = []
     for root, dirs, files in os.walk(details_folder):
         for file in files:
