@@ -203,11 +203,12 @@ processing:
         bucket-user: 'user@example.com' 
         object-name: 'local-cloud-workflow'    
       model:
-        generator-id: 'unsloth/DeepSeek-R1-Distill-Llama-8B-GGUF'
-        generator-file: '*Q4_K_M.gguf'
         generator-model-parameters: 
+          inference: 'llama'
+          repo-id: 'unsloth/DeepSeek-R1-Distill-Llama-8B-GGUF'
+          filename: '*Q4_K_M.gguf'
           n-gpu-layers: -1
-          n-ctx: 4096
+          n-ctx: 8192
         generator-prompt-parameters: {}
     cluster:
       cloud-vm1:
@@ -217,6 +218,8 @@ processing:
         serve:
           host: '0.0.0.0'
           port: 8000
+          shutdown: False
+          time: 240
         job:
           main-file: 'main.py'
           runtime:
