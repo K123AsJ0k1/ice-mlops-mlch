@@ -216,6 +216,7 @@ processing:
           workers: 6
           actors: 1
         serve:
+          id: 'cloud-vm1'
           host: '0.0.0.0'
           port: 8000
           shutdown: False
@@ -244,7 +245,7 @@ processing:
       local-lt3:
         process:
           workers: 28
-          actors: 2
+          actors: 1
         serve:
           host: '0.0.0.0'
           port: 8000
