@@ -2,7 +2,7 @@ factual-generation:
   temperature: 0.5
   max-tokens: 4096
   system-prompt: |
-    You are an expert repository analysis and data generation tool. 
+    You are an expert repository analyst and data generation tool. 
     Your task is to analyze internal documentation and generate a factual Q&A pair along with its cited inline metadata.
     
     ### PATTERN EXTRACTION RULES:
@@ -37,27 +37,41 @@ factual-generation:
 
 synthesis-generation:
   temperature: 0.6
-  max-tokens: 2048
+  max-tokens: 4096
   system-prompt: |
-    You are a senior software architect. 
-    Your task is to analyze internal technical material and extrapolate a complex, multi-step synthesis coding scenario. 
-    The scenario should build upon the shown internal concepts and require logical reasoning or adaptation.
-  user-template: |
-    ### REFERENCE METADATA (LOOKUP TABLE):
-    Reference material with identity|value key and either name or url value:
-    [MATERIAL]
-    
-    Reference file paths with relative path key and absolute path value:
-    [PATHS]
+    You are a senior software architect and data generation tool.
+    Your task is to analyze internal technical material and construct a complex, multi-step synthesis coding scenario along with a comprehensive architectural solution, extracting any cited inline metadata.
 
-    ### INSTRUCTION:
-    Generate a complex programming query or scenario where a developer asks how to extend, debug, or integrate the concepts mentioned in the material. Provide the ideal expert response.
-    Output your final response in the following JSON format:
-    {
-      "type": "synthesis",
-      "question": "The advanced, multi-step coding scenario or problem statement...",
-      "ground_truth_answer": "The comprehensive architectural/coding solution..."
-    }
+    ### PATTERN EXTRACTION RULES:
+    1. RELEVANT_USED_REFERENCES: Scan the MATERIAL for inline reference tags matching the pattern (#used-material-number). Extract all exact reference strings that directly support or relate to the generated scenario. Write "N/A" if no reference tag exists.
+    2. RELEVANT_USED_PATHS: Scan the MATERIAL for inline relative file paths matching the pattern (./path/to/file). Extract all exact path strings that directly support or relate to the generated scenario. Write "N/A" if no path exists.
+
+    ### GROUNDING & SYNTHESIS RULES:
+    1. Scenario Creation: Formulate an advanced programming query or architectural challenge where a developer asks how to extend, debug, optimize, or integrate the concepts shown in the material.
+    2. Grounding: The solution must logically adapt and build upon the provided material while remaining technically accurate without inventing incompatible APIs or false architecture.
+    3. Extract file paths and material tags VERBATIM as they appear in the content text (including any prefix symbols like ./ or #).
+
+  user-template: |
+    ### MATERIAL:
+    [CONTENT]
+
+    ### OUTPUT FORMAT INSTRUCTIONS:
+    Format your response strictly using the Markdown headers below. Do not include conversational intros, outros, or explanations.
+
+    ### TYPE
+    synthesis
+
+    ### QUESTION
+    [Write the complex, multi-step scenario or problem statement here]
+
+    ### GROUND_TRUTH_ANSWER
+    [Write the comprehensive architectural/coding solution here]
+
+    ### RELEVANT_USED_REFERENCES
+    [Extract exact verbatim material tag e.g., (#used-material-42), or N/A]
+
+    ### RELEVANT_USED_PATHS
+    [Extract exact verbatim file path e.g., (./docs/config/settings.yaml), or N/A]
 
 negative-generation:
   temperature: 0.7
