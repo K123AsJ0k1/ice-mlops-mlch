@@ -33,7 +33,7 @@ factual-generation:
     [Extract the exact verbatim material tag e.g., (#used-material-42), or N/A]
 
     ### RELEVANT_USED_PATHS
-    [Extract the exact verbatim file path e.g., ./docs/config/settings.yaml, or N/A]
+    [Extract the exact verbatim file path e.g., (./docs/config/settings.yaml), or N/A]
 
 synthesis-generation:
   temperature: 0.6
