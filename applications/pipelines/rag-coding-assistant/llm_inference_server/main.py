@@ -12,6 +12,7 @@ def llama_test(
 ):
     try:
         serve_parameters = job_parameters['serve']
+        serve_id = serve_parameters['id']
         serve_host = serve_parameters['host']
         serve_port = serve_parameters['port']
         serve_shutdown = serve_parameters['shutdown']
@@ -19,6 +20,7 @@ def llama_test(
 
         model_parameters = job_parameters['model']
         generator_model_parmaters = model_parameters['generator-model-parameters']
+        generator_model_parmaters['serve-id'] = serve_id
 
         if generator_model_parmaters['inference'] == 'llama':
             print('Setting up LLAMA inference')
@@ -26,7 +28,7 @@ def llama_test(
                 from servers.llama_generator import LLAMA_Generator
             except ImportError as e:
                 raise ImportError("generator/ failed to import", e)
-
+ 
             serve.start(
                 http_options = {
                     'host': serve_host,
