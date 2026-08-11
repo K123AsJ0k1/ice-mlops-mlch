@@ -170,3 +170,28 @@ def fill_list_values(
                 continue
             break
     return target
+
+def save_json_data(
+    data: any,
+    relative_path: str
+):
+    try:
+        import json
+    except ImportError as e:
+        raise ImportError("misc/general", e)
+
+    with open(relative_path, 'w') as f:
+        json.dump(data, f)
+
+def load_json_data(
+    relative_path: str
+) -> any:
+    try:
+        import json
+    except ImportError as e:
+        raise ImportError("misc/general", e)
+
+    with open(relative_path, 'r') as f:
+        data = json.load(f)
+
+    return data

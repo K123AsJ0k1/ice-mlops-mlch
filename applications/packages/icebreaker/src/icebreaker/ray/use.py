@@ -9,6 +9,7 @@ def ray_submit_job(
     except ImportError as e:
         raise ImportError("Failed to import", e)
 
+   # There is a bug here that causes /bin/sh: 1: Syntax error: "(" unexpected
     command = "python " + str(ray_job_file)
     if 0 < len(ray_parameters):
         command = command + " '" + json.dumps(ray_parameters) + "'"
@@ -153,6 +154,7 @@ def ray_cluster_dry_submit(
     runtime_directory_path: str,
     runtime_requirements_path: str,
 ):
+    # There is a bug here that causes /bin/sh: 1: Syntax error: "(" unexpected
     cluster_inputs = {
         cluster_name: step_input 
     }
@@ -199,6 +201,7 @@ def ray_dry_submit_pipeline(
     except ImportError as e:
         raise ImportError("ray/use failed to import", e)
 
+    # There is a bug here that causes /bin/sh: 1: Syntax error: "(" unexpected
     used_ray_client = ray_setup_client(
         dashboard_address = dashboard_address,
         loop_timeout = 5,

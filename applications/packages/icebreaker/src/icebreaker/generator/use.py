@@ -1,29 +1,21 @@
 
-def generate_create_dataset(
+def generate_create_requests(
     swift_client: any,
     storage_parameters: any,
     dataset_paths: list,
     prompt_parameters: any,
     data_ratio: any,
-    join_prompts: bool,
-    request_keys: dict,
-    length_limit: int,
-    inference_parameters: any,
-    debug_prints: bool
-) -> dict:
+    join_prompts: bool
+):
     try:
         from ..objects.use import objects_get_data
-        from ..ray.use import ray_serve_route
         import re
         import json
-        import statistics
-        import time as t
     except ImportError as e:
         raise ImportError("generator/ failed to import", e)
-    
-    process_time_start = t.time()
 
-    dataset_inference_requests = []
+    print('Creating inference requests')
+    inference_requests = []
     case_idx = 0
     question_type_idx = {}
     valid_data_rows = {}
@@ -67,10 +59,11 @@ def generate_create_dataset(
             for data_type, wanted_amount in data_ratio.items():
                 if not data_type in question_type_idx:
                     question_type_idx[data_type] = 0
-
+                
                 system_prompt = prompt_parameters[data_type]['system-prompt']
                 user_template = prompt_parameters[data_type]['user-template']
                 temperature = prompt_parameters[data_type]['temperature']
+                top_p = prompt_parameters[data_type]['top-p']
                 max_tokens = prompt_parameters[data_type]['max-tokens']
 
                 pattern = r'\[([A-Z_1-9]+)\]'
@@ -102,7 +95,7 @@ def generate_create_dataset(
                     })
 
                 for i in range(0, wanted_amount):
-                    dataset_inference_requests.append({
+                    inference_requests.append({
                         'dataset-name': dataset_name,
                         'row-chapter': row_chapter,
                         'row-index': row_idx,
@@ -114,7 +107,8 @@ def generate_create_dataset(
                         'system-prompt-length': system_prompt_length,
                         'user-prompt-length': user_prompt_length,
                         'temperature': temperature,
-                        'max-tokens': max_tokens,
+                        'top-p': top_p,
+                        'max-tokens': max_tokens
                     })
                     question_type_idx[data_type] += 1
             case_idx += 1
@@ -122,17 +116,33 @@ def generate_create_dataset(
     print('Valid cases per dataset')
     for key, value in valid_data_rows.items():
         print(f'{key}|{value}')
-    print(f'Amount of requests: {len(dataset_inference_requests)}')
+    print(f'Amount of requests: {len(inference_requests)}')
+    return inference_requests
+
+def generate_create_outputs(
+    dataset_inference_requests: list,
+    request_keys: dict,
+    length_limit: int,
+    inference_parameters: any,
+    debug_prints: bool
+) -> dict:
+    try:
+        from ..ray.use import ray_serve_route
+        import statistics
+        import time as t
+    except ImportError as e:
+        raise ImportError("generator/ failed to import", e)
+    process_time_start = t.time()
+    print('Creating dataset')
     print(f'Request length limit {length_limit}')
     print('')
     inference_address = inference_parameters['address']
     inference_path = inference_parameters['path']
     prompt_lengths = []
     dataset_metadata = []
-    synthetic_dataset = []
+    model_outputs = []
     gathered_metrics = []
     request_times = []
-
     # The end dataset also required input for double checking
     # There should be columns for messages
     for inference_requests in dataset_inference_requests:
@@ -147,6 +157,7 @@ def generate_create_dataset(
         system_prompt_length = inference_requests['system-prompt-length']
         user_prompt_length = inference_requests['user-prompt-length']
         temperature = inference_requests['temperature']
+        top_p = inference_requests['top-p']
         max_tokens = inference_requests['max-tokens']
 
         if user_prompt_length < length_limit:
@@ -165,6 +176,7 @@ def generate_create_dataset(
             print(f'System prompt length|{system_prompt_length}')
             print(f'User prompt length|{user_prompt_length}')
             print(f'Temperature|{temperature}')
+            print(f'Top-p|{top_p}')
             print(f'Max tokens|{max_tokens}') 
 
             for key in request_keys:
@@ -190,7 +202,7 @@ def generate_create_dataset(
 
                 if output_status == 'success':
                     generated_data = route_output['text']
-                    effiency_metrics = route_output['efficiency_metrics']
+                    effiency_metrics = route_output['efficiency-metrics']
                     dataset_metadata.append({
                         'dataset': dataset_name,
                         'case-chapter': row_chapter,
@@ -204,153 +216,206 @@ def generate_create_dataset(
                         'temperature': temperature,
                         'max-tokens': max_tokens
                     })
-                    request_times.append(request_total_time)
-                    synthetic_dataset.append(generated_data)
+                    model_outputs.append(generated_data)
                     gathered_metrics.append(effiency_metrics)
+                    request_times.append(request_total_time)
             else:
                 print('Request fail')
         print('')
 
     length_mean = statistics.mean(prompt_lengths)
     length_median = statistics.median(prompt_lengths)
+    max_prompt_length = max(prompt_lengths)
+    min_prompt_length = min(prompt_lengths)
 
-    print(f'Max prompt length|{max(prompt_lengths)}')
-    print(f'Min prompt length|{min(prompt_lengths)}')
+    print(f'Max prompt length|{max_prompt_length}')
+    print(f'Min prompt length|{min_prompt_length}')
     print(f'Mean prompt length|{length_mean}')
     print(f'Median prompt length|{length_median}')
-
+    
     process_end_time = t.time()
     process_total_time = round(process_end_time-process_time_start,5)
     print(f'Spent seconds on processing: {process_total_time}')
-    return synthetic_dataset, gathered_metrics, request_times, process_total_time
 
-def generate_separate_output(
-    output: str
+    general_stats = {
+        'length-mean': length_mean,
+        'length-median': length_median,
+        'max-prompt-length': max_prompt_length,
+        'min-prompt-length': min_prompt_length,
+        'process-total-time': process_total_time
+    }
+    
+    return model_outputs, gathered_metrics, request_times, general_stats
+
+def generate_parse_output(
+    text: str
 ) -> any:
     try:
         import re
-        import json
-        import ast
+    except ImportError as e:
+        raise ImportError("generator/use failed to import", e)
+    
+    if '</think>' in text:
+        parts = text.split('</think>', 1)
+        thinking_text = parts[0].strip()
+        main_content = parts[1].strip()
+    else:
+        thinking_text = ""
+        main_content = text
+
+    sections = re.split(r'\n(?=###\s+)', main_content)
+
+    parsed_sections = {}
+    for sec in sections:
+        sec = sec.strip()
+        if not sec:
+            continue
+        
+        # Match '### HEADER_NAME\n Header Content'
+        header_match = re.match(r'^###\s+([^\n]+)\n?(.*)', sec, flags=re.DOTALL)
+        if header_match:
+            header_title = header_match.group(1).strip().lower().replace("_", "-")
+            header_content = header_match.group(2).strip()
+            parsed_sections[header_title] = header_content
+
+    return {
+        'thinking-text': thinking_text,
+        'main-content': main_content,
+        **parsed_sections
+    }
+
+def generate_process_references(
+    used_references: str,
+) -> any:
+    try:
+        import pandas as pd
     except ImportError as e:
         raise ImportError("generator/use failed to import", e)
 
-    if not output:
-        return "", None
+    # N/A
+    if 'N/A' in used_references:
+        return pd.NA
 
-    json_str = None
-    matched_block = None
+    # There can be many
+    # #used-material-n or n
+    if not '(' in used_references or not ')' in used_references:
+        # #used-material-n
+        if '#used-material' in used_references:
+            return used_references
 
-    # --- STEP 1: Multi-Stratagem JSON Extraction ---
+    if '(' in used_references or ')' in used_references:
+        return used_references.replace("(", "").replace(")", "")
+
+    return 'Hallucinated'
     
-    # Strategy A: Look for standard strict ```json ... ``` block
-    json_match = re.search(r'```json\s*([\s\S]*?)\s*```', output, re.IGNORECASE)
-    
-    # Strategy B: Look for generic ``` ... ``` blocks that contain an object or array
-    if not json_match:
-        generic_match = re.search(r'```\s*([\s\S]*?)\s*```', output)
-        if generic_match and any(char in generic_match.group(1) for char in ['{', '[']):
-            json_match = generic_match
-
-    if json_match:
-        json_str = json_match.group(1).strip()
-        matched_block = json_match.group(0)
-    else:
-        # Strategy C: No markdown fences found. Find the outermost raw { ... } or [ ... ]
-        # Greedy matching ensures we capture the entire nested structure
-        raw_match = re.search(r'(\{[\s\S]*\}|\[[\s\S]*\])', output)
-        if raw_match:
-            json_str = raw_match.group(1).strip()
-            matched_block = raw_match.group(0)
-
-    # If absolutely no JSON structure can be found, return everything as markdown
-    if not json_str:
-        return output.strip(), None
-
-    # --- STEP 2: Isolate the Markdown Text ---
-    # Safely strip out only the extracted JSON block from the original response
-    markdown_text = output.replace(matched_block, "", 1).strip()
-
-    # --- STEP 3: Robust JSON Healing and Parsing ---
-    parsed_json = None
-    
-    # Attempt 1: Standard strict JSON load
+def generate_process_paths(
+    used_paths: str
+) -> any:
     try:
-        parsed_json = json.loads(json_str)
-    except json.JSONDecodeError:
-        
-        # Attempt 2: Use ast.literal_eval to heal LLM defects
-        # (This effortlessly fixes trailing commas, single quotes, and Python primitives)
-        try:
-            # Strip JavaScript-style comments if the LLM hallucinated them
-            cleaned_str = re.sub(r'//.*', '', json_str)
-            cleaned_str = re.sub(r'/\*[\s\S]*?\*/', '', cleaned_str)
-            
-            # Map JSON lowercase primitives to Python title-case primitives for AST
-            cleaned_str = re.sub(r'\btrue\b', 'True', cleaned_str)
-            cleaned_str = re.sub(r'\bfalse\b', 'False', cleaned_str)
-            cleaned_str = re.sub(r'\bnull\b', 'None', cleaned_str)
-            
-            parsed_json = ast.literal_eval(cleaned_str.strip())
-        except Exception:
-            
-            # Attempt 3: Desperation regex patch for trailing commas inside standard JSON
-            try:
-                fixed_comma_str = re.sub(r',\s*([\]\}])', r'\1', json_str)
-                parsed_json = json.loads(fixed_comma_str)
-            except json.JSONDecodeError as final_err:
-                raise ValueError(
-                    f"Extracted block could not be healed into valid JSON.\n"
-                    f"Problematic Snippet: {json_str[:150]}...\nError: {final_err}"
-                )
+        import pandas as pd
+    except ImportError as e:
+        raise ImportError("generator/use failed to import", e)
+    #print('paths')
+    #print(used_paths)
+    if 'N/A' in used_paths:
+        return pd.NA
 
-    return markdown_text, parsed_json
+    if not '(' in used_paths or not ')' in used_paths:
+        # #used-material-n
+        #print(used_paths)
+        if './docs/config/settings.yaml' in used_paths:
+            return pd.NA
 
+        if './' in used_paths:
+            return used_paths
+    
+    if '(' in used_paths or ')' in used_paths:
+        if './docs/config/settings.yaml' in used_paths:
+            return pd.NA
+
+        return used_paths.replace("(", "").replace(")", "")
+
+    return 'Hallucinated'
+
+def generate_process_category(
+    answer: str
+) -> any:
+    try:
+        import pandas as pd
+        import re
+    except ImportError as e:
+        raise ImportError("generator/use failed to import", e)
+
+    pattern = r'^\[(?P<action>[^-\]]+)(?:\s*-\s*(?P<type>[^\]]+))?\]\s*:\s*(?P<ground_truth>.*)$'
+    match = re.match(pattern, answer.strip(), flags=re.DOTALL)
+    
+    if match:
+        return {
+            'action': match.group('action').strip(),
+            'category': match.group('type').strip() if match.group('type') else None,
+            'ground-truth-answer': match.group('ground_truth').strip()
+        }
+    
+    # Fallback if the pattern doesn't match bracketed prefix
+    return {
+        'action': pd.NA,
+        'category': pd.NA,
+        'ground-truth-answer': answer.strip()
+    }
+    
 def generate_process_data(
+    inference_requests: list,
     model_outputs: list,
     gathered_metrics: list,
     request_times: list
 ):
     try:
         import pandas as pd
-        from ..generator.use import generate_separate_output
+        from ..generator.use import generate_parse_output
         import copy
     except ImportError as e:
         raise ImportError("generator/use failed to import", e)
-    # model name 
-    # data type
 
+    expanded_df = pd.json_normalize(inference_requests)
     dataset_df_temp = pd.DataFrame(gathered_metrics)
-    expanded_df = pd.json_normalize(dataset_df_temp['raw_token_counts'])
-    df_final = pd.concat([dataset_df_temp.drop(columns = 'raw_token_counts'), expanded_df], axis = 1)
-    df_final['times'] = request_times
-
-    output_data_list = []
+    dataset_df_temp['times'] = request_times
+    
+    temp_2_df = pd.concat([expanded_df, dataset_df_temp], axis = 1)
+    output_list = []
     for output in model_outputs:
-        output_markdown, output_json = generate_separate_output(
-            output = output
+        output_dict = generate_parse_output(
+            text = output
         )
-        print(output)
-        print(output_json)
 
-        if not output_markdown is None or not output_json is None:
-            if '</think>' in output_markdown:
-                output_markdown = output_markdown.replace('</think>', '')
+        #print(output_dict['type'])
+        if 'type' in output_dict:
+            if output_dict['type'] == 'factual' or output_dict['type'] == 'synthesis':
+                if 'relevant-used-references' in output_dict and 'relevant-used-paths' in output_dict:
+                    checked_references = generate_process_references(
+                        used_references = output_dict['relevant-used-references']
+                    )
+                    output_dict['relevant-used-references'] = checked_references
+                    checked_paths = generate_process_paths(
+                        used_paths = output_dict['relevant-used-paths']
+                    )
+                    output_dict['relevant-used-paths'] = checked_paths
 
-            output_json['thinking'] = output_markdown
-            output_data_list.append(output_json)
-        #df_final['thinking'] = output_markdown
+                    #print(checked_references)
+                    #print(checked_paths)
+
+            if output_dict['type'] == 'negative':
+                if 'ground-truth-answer' in output_dict:
+                    category_data = generate_process_category(
+                        answer = output_dict['ground-truth-answer']
+                    )
+                    #print(category_data)
+                    for key, value in category_data.items():
+                        output_dict[key] = value
+        output_list.append(output_dict)
         
+    output_df = pd.json_normalize(output_list)
+    preprocess_df = pd.concat([temp_2_df, output_df], axis = 1)
 
-        #print(output_markdown)
-        #print(output_json)
-        #break
-    #df_final['outputs'] = model_outputs
-    #df_final['times'] = request_times
-
-    output_df = pd.json_normalize(output_data_list)
-
-    print(output_df)
-
-    return df_final
+    return preprocess_df
     
    
