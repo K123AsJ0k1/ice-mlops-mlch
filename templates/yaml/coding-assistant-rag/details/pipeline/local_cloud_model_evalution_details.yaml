@@ -73,8 +73,8 @@ processing:
         job:
           main-file: 'main.py'
           runtime:
-            working_dir: 'model_evalution'
-            pip: 'model_evalution/requirements.txt'
+            working_dir: 'llm_inference_server'
+            pip: 'requirements.txt'
             env_vars:
               HF_TOKEN: 'fill'
       local-lt2:

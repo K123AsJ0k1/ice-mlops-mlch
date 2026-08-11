@@ -1,7 +1,16 @@
 pe-eval:
-  temperature: 0.6
-  top-p: 0.95
-  max-tokens: 4096
+  temperature: 
+    qwen-3-5: 0.2
+    ministral-3: 0.15
+    gemma-4: 1.0
+  top-p: 
+    qwen-3-5: 0.8
+    ministral-3: 0.95 
+    gemma-4: 0.95
+  max-tokens: 
+    qwen-3-5: 2048
+    ministral-3: 2048
+    gemma-4: 2048
   system-prompt: |
     You are an expert software engineering assistant. 
     Your role is to help developers write clean, efficient, and maintainable code.
@@ -17,15 +26,24 @@ pe-eval:
     {USER_QUERY}
 
 pe-rag-eval:
-  temperature: 0.6
-  top-p: 0.95
-  max-tokens: 4096
+  temperature: 
+    qwen-3-5: 0.2
+    ministral-3: 0.15
+    gemma-4: 1.0
+  top-p: 
+    qwen-3-5: 0.8
+    ministral-3: 0.95 
+    gemma-4: 0.95
+  max-tokens: 
+    qwen-3-5: 2048
+    ministral-3: 2048
+    gemma-4: 2048
   system-prompt: |
     You are an expert software engineering assistant.
     Your role is to answer user queries using the technical material provided in the context below.
 
     ### INSTRUCTIONS:
-    1. Primary source: Use the provided `### REPOSITORY CONTEXT` to answer the question.
+    1. Primary source: Use the provided `REPOSITORY CONTEXT` to answer the question.
     2. Format code and explanations cleanly using Markdown headers (`### Solution`, `### Details`).
     3. If the context covers the question, ensure code samples accurately reflect internal APIs and classes shown.
 
@@ -36,10 +54,19 @@ pe-rag-eval:
     ### USER QUERY:
     {USER_QUERY}
 
-pe-rag-bc-variant:
-  temperature: 0.6
-  top-p: 0.95
-  max-tokens: 4096
+pe-rag-bc-eval:
+  temperature: 
+    qwen-3-5: 0.2
+    ministral-3: 0.15
+    gemma-4: 1.0
+  top-p: 
+    qwen-3-5: 0.8
+    ministral-3: 0.95 
+    gemma-4: 0.95
+  max-tokens: 
+    qwen-3-5: 2048
+    ministral-3: 2048
+    gemma-4: 2048
   system-prompt: |
     You are an enterprise software engineering assistant operating under strict scope and security controls.
 
