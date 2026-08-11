@@ -53,6 +53,7 @@ class LLAMA_Generator:
             
             query_messages = request_dict.pop('messages', [])
             query_temperature = request_dict.pop('temperature', 0.5)
+            query_top_p = request_dict.pop('top-p', 0.95)
             query_max_tokens = request_dict.pop('max-tokens', 1024)
 
             if 0 < len(query_messages):
@@ -61,6 +62,7 @@ class LLAMA_Generator:
                 response = self.llm.create_chat_completion(
                     messages = query_messages,
                     temperature = query_temperature,
+                    top_p = query_top_p,
                     max_tokens = query_max_tokens
                 )
                 
@@ -86,11 +88,12 @@ class LLAMA_Generator:
                     'used-model': self.model_name,
                     'n-ctx': self.n_ctx,
                     'temperature': query_temperature,
+                    'top-p': query_top_p,
                     'max-tokens': query_max_tokens,
                     'total-inference-latency-sec': round(total_latency, 4),
                     'tokens-per-second': round(tokens_per_sec, 2),
                     'time-per-output-token-sec': round(time_per_output_token, 4),
-                    'input_to-output-ratio': round(input_to_output_ratio, 2),
+                    'input-to-output-ratio': round(input_to_output_ratio, 2),
                     'context-window-utilization-pct': round(context_utilization * 100, 2),
                     'prompt-tokens': prompt_tokens,
                     'completion-tokens': completion_tokens,
