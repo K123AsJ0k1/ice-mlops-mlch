@@ -233,13 +233,16 @@ processing:
           workers: 12
           actors: 1
         serve:
+          id: 'local-lt2'
           host: '0.0.0.0'
-          port: 8000
+          port: 8350
+          shutdown: False
+          time: 240
         job:
           main-file: 'main.py'
           runtime:
-            working_dir: 'validation_dataset_creation'
-            pip: 'validation_dataset_creation/requirements.txt'
+            working_dir: 'llm_inference_server'
+            pip: 'requirements.txt'
             env_vars:
               HF_TOKEN: 'fill'
       local-lt3:
@@ -247,12 +250,15 @@ processing:
           workers: 28
           actors: 1
         serve:
+          id: 'local-lt3'
           host: '0.0.0.0'
-          port: 8000
+          port: 8350
+          shutdown: False
+          time: 240
         job:
           main-file: 'main.py'
           runtime:
-            working_dir: 'validation_dataset_creation'
-            pip: 'validation_dataset_creation/requirements.txt'
+            working_dir: 'llm_inference_server'
+            pip: 'requirements.txt'
             env_vars:
               HF_TOKEN: 'fill'

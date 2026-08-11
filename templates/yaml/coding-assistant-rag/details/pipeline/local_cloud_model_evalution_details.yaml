@@ -1,0 +1,442 @@
+storage:
+  data-storage: 
+    bucket-target: 'experiment'
+    bucket-prefix: 'mlch'
+    bucket-user: 'user@example.com' 
+  code-storage: 
+    bucket-target: 'pipeline'
+    bucket-prefix: 'mlch'
+    bucket-user: 'user@example.com' 
+  log-storage: 
+    bucket-target: 'pipeline'
+    bucket-prefix: 'mlch'
+    bucket-user: 'user@example.com' 
+  time-storage: 
+    bucket-target: 'pipeline'
+    bucket-prefix: 'mlch'
+    bucket-user: 'user@example.com' 
+    object-name: 'local-cloud-workflow'
+integration:
+  cluster-name: 'local-cloud-cluster'
+  resource-weights:
+    cpu: 0.30
+    gpu: 0.30
+    vram: 0.10 
+    ram: 0.30
+  cluster-priority:
+    cloud-vm1: 0.04
+    cloud-vm2: 0.04
+    local-lt1: 0.02
+    local-lt2: 0.40
+    local-lt3: 0.50
+  hardware-influence: 0.2
+  min-initial-inputs: 1
+  min-batch-size: 1
+  workflow-steps: []
+  multi-loop-amount: 20000
+  multi-loop-wait: 10
+  job-loop-amount: 2
+  job-loop-wait: 5
+processing:
+  step-1: # qwen3.5 baseline, PE, RAG, BC, PE-RAG-BC
+    general:
+      swift: {}
+      data-storage: 
+        bucket-target: 'experiment'
+        bucket-prefix: 'mlch'
+        bucket-user: 'user@example.com'   
+        object-prefix: 'ICEbreaker-tutorial'
+      time-storage: 
+        bucket-target: 'pipeline'
+        bucket-prefix: 'mlch'
+        bucket-user: 'user@example.com' 
+        object-name: 'local-cloud-workflow'    
+      model:
+        generator-model-parameters: 
+          inference: 'llama'
+          repo-id: 'unsloth/Qwen3.5-2B-GGUF'
+          filename: '*Q4_K_M.gguf'
+          n-gpu-layers: -1
+          n-ctx: 8192
+        generator-prompt-parameters: {}
+    cluster:
+      cloud-vm1:
+        process:
+          workers: 6
+          actors: 1
+        serve:
+          id: 'cloud-vm1'
+          host: '0.0.0.0'
+          port: 8000
+          shutdown: False
+          time: 240
+        job:
+          main-file: 'main.py'
+          runtime:
+            working_dir: 'model_evalution'
+            pip: 'model_evalution/requirements.txt'
+            env_vars:
+              HF_TOKEN: 'fill'
+      local-lt2:
+        process:
+          workers: 12
+          actors: 1
+        serve:
+          host: '0.0.0.0'
+          port: 8000
+        job:
+          main-file: 'main.py'
+          runtime:
+            working_dir: 'model_evalution'
+            pip: 'model_evalution/requirements.txt'
+            env_vars:
+              HF_TOKEN: 'fill'
+      local-lt3:
+        process:
+          workers: 28
+          actors: 1
+        serve:
+          host: '0.0.0.0'
+          port: 8000
+        job:
+          main-file: 'main.py'
+          runtime:
+            working_dir: 'model_evalution'
+            pip: 'model_evalution/requirements.txt'
+            env_vars:
+              HF_TOKEN: 'fill'
+  step-2: # ministral baseline, PE, RAG, BC, PE-RAG-BC
+    general:
+      swift: {}
+      data-storage: 
+        bucket-target: 'experiment'
+        bucket-prefix: 'mlch'
+        bucket-user: 'user@example.com'   
+        object-prefix: 'ICEbreaker-tutorial'
+      time-storage: 
+        bucket-target: 'pipeline'
+        bucket-prefix: 'mlch'
+        bucket-user: 'user@example.com' 
+        object-name: 'local-cloud-workflow'    
+      model:
+        generator-model-parameters: 
+          inference: 'llama'
+          repo-id: 'mistralai/Ministral-3-3B-Instruct-2512-GGUF'
+          filename: '*Q4_K_M.gguf'
+          n-gpu-layers: -1
+          n-ctx: 8192
+        generator-prompt-parameters: {}
+    cluster:
+      cloud-vm1:
+        process:
+          workers: 6
+          actors: 1
+        serve:
+          id: 'cloud-vm1'
+          host: '0.0.0.0'
+          port: 8000
+          shutdown: False
+          time: 240
+        job:
+          main-file: 'main.py'
+          runtime:
+            working_dir: 'model_evalution'
+            pip: 'model_evalution/requirements.txt'
+            env_vars:
+              HF_TOKEN: 'fill'
+      local-lt2:
+        process:
+          workers: 12
+          actors: 1
+        serve:
+          host: '0.0.0.0'
+          port: 8000
+        job:
+          main-file: 'main.py'
+          runtime:
+            working_dir: 'model_evalution'
+            pip: 'model_evalution/requirements.txt'
+            env_vars:
+              HF_TOKEN: 'fill'
+      local-lt3:
+        process:
+          workers: 28
+          actors: 1
+        serve:
+          host: '0.0.0.0'
+          port: 8000
+        job:
+          main-file: 'main.py'
+          runtime:
+            working_dir: 'model_evalution'
+            pip: 'model_evalution/requirements.txt'
+            env_vars:
+              HF_TOKEN: 'fill'
+  step-3: # gemma-4 baseline, PE, RAG, BC, PE-RAG-BC
+    general:
+      swift: {}
+      data-storage: 
+        bucket-target: 'experiment'
+        bucket-prefix: 'mlch'
+        bucket-user: 'user@example.com'   
+        object-prefix: 'ICEbreaker-tutorial'
+      time-storage: 
+        bucket-target: 'pipeline'
+        bucket-prefix: 'mlch'
+        bucket-user: 'user@example.com' 
+        object-name: 'local-cloud-workflow'    
+      model:
+        generator-model-parameters: 
+          inference: 'llama'
+          repo-id: 'unsloth/gemma-4-E2B-it-GGUF'
+          filename: '*Q4_K_M.gguf'
+          n-gpu-layers: -1
+          n-ctx: 8192
+        generator-prompt-parameters: {}
+    cluster:
+      cloud-vm1:
+        process:
+          workers: 6
+          actors: 1
+        serve:
+          id: 'cloud-vm1'
+          host: '0.0.0.0'
+          port: 8000
+          shutdown: False
+          time: 240
+        job:
+          main-file: 'main.py'
+          runtime:
+            working_dir: 'model_evalution'
+            pip: 'model_evalution/requirements.txt'
+            env_vars:
+              HF_TOKEN: 'fill'
+      local-lt2:
+        process:
+          workers: 12
+          actors: 1
+        serve:
+          host: '0.0.0.0'
+          port: 8000
+        job:
+          main-file: 'main.py'
+          runtime:
+            working_dir: 'model_evalution'
+            pip: 'model_evalution/requirements.txt'
+            env_vars:
+              HF_TOKEN: 'fill'
+      local-lt3:
+        process:
+          workers: 28
+          actors: 1
+        serve:
+          host: '0.0.0.0'
+          port: 8000
+        job:
+          main-file: 'main.py'
+          runtime:
+            working_dir: 'model_evalution'
+            pip: 'model_evalution/requirements.txt'
+            env_vars:
+              HF_TOKEN: 'fill'
+  step-4: # qwen3.5 judges ministral 3 and gemma results
+    general:
+      swift: {}
+      data-storage: 
+        bucket-target: 'experiment'
+        bucket-prefix: 'mlch'
+        bucket-user: 'user@example.com'   
+        object-prefix: 'ICEbreaker-tutorial'
+      time-storage: 
+        bucket-target: 'pipeline'
+        bucket-prefix: 'mlch'
+        bucket-user: 'user@example.com' 
+        object-name: 'local-cloud-workflow'    
+      model:
+        generator-model-parameters: 
+          inference: 'llama'
+          repo-id: 'unsloth/Qwen3.5-2B-GGUF'
+          filename: '*Q4_K_M.gguf'
+          n-gpu-layers: -1
+          n-ctx: 8192
+        generator-prompt-parameters: {}
+    cluster:
+      cloud-vm1:
+        process:
+          workers: 6
+          actors: 1
+        serve:
+          id: 'cloud-vm1'
+          host: '0.0.0.0'
+          port: 8000
+          shutdown: False
+          time: 240
+        job:
+          main-file: 'main.py'
+          runtime:
+            working_dir: 'model_evalution'
+            pip: 'model_evalution/requirements.txt'
+            env_vars:
+              HF_TOKEN: 'fill'
+      local-lt2:
+        process:
+          workers: 12
+          actors: 1
+        serve:
+          host: '0.0.0.0'
+          port: 8000
+        job:
+          main-file: 'main.py'
+          runtime:
+            working_dir: 'model_evalution'
+            pip: 'model_evalution/requirements.txt'
+            env_vars:
+              HF_TOKEN: 'fill'
+      local-lt3:
+        process:
+          workers: 28
+          actors: 1
+        serve:
+          host: '0.0.0.0'
+          port: 8000
+        job:
+          main-file: 'main.py'
+          runtime:
+            working_dir: 'model_evalution'
+            pip: 'model_evalution/requirements.txt'
+            env_vars:
+              HF_TOKEN: 'fill'
+  step-5: # ministral judges qwen3.5 and gemma
+    general:
+      swift: {}
+      data-storage: 
+        bucket-target: 'experiment'
+        bucket-prefix: 'mlch'
+        bucket-user: 'user@example.com'   
+        object-prefix: 'ICEbreaker-tutorial'
+      time-storage: 
+        bucket-target: 'pipeline'
+        bucket-prefix: 'mlch'
+        bucket-user: 'user@example.com' 
+        object-name: 'local-cloud-workflow'    
+      model:
+        generator-model-parameters: 
+          inference: 'llama'
+          repo-id: 'mistralai/Ministral-3-3B-Instruct-2512-GGUF'
+          filename: '*Q4_K_M.gguf'
+          n-gpu-layers: -1
+          n-ctx: 8192
+        generator-prompt-parameters: {}
+    cluster:
+      cloud-vm1:
+        process:
+          workers: 6
+          actors: 1
+        serve:
+          id: 'cloud-vm1'
+          host: '0.0.0.0'
+          port: 8000
+          shutdown: False
+          time: 240
+        job:
+          main-file: 'main.py'
+          runtime:
+            working_dir: 'model_evalution'
+            pip: 'model_evalution/requirements.txt'
+            env_vars:
+              HF_TOKEN: 'fill'
+      local-lt2:
+        process:
+          workers: 12
+          actors: 1
+        serve:
+          host: '0.0.0.0'
+          port: 8000
+        job:
+          main-file: 'main.py'
+          runtime:
+            working_dir: 'model_evalution'
+            pip: 'model_evalution/requirements.txt'
+            env_vars:
+              HF_TOKEN: 'fill'
+      local-lt3:
+        process:
+          workers: 28
+          actors: 1
+        serve:
+          host: '0.0.0.0'
+          port: 8000
+        job:
+          main-file: 'main.py'
+          runtime:
+            working_dir: 'model_evalution'
+            pip: 'model_evalution/requirements.txt'
+            env_vars:
+              HF_TOKEN: 'fill'
+  step-6: # gemma-4 judeges qwen3.5 and ministral-3
+    general:
+      swift: {}
+      data-storage: 
+        bucket-target: 'experiment'
+        bucket-prefix: 'mlch'
+        bucket-user: 'user@example.com'   
+        object-prefix: 'ICEbreaker-tutorial'
+      time-storage: 
+        bucket-target: 'pipeline'
+        bucket-prefix: 'mlch'
+        bucket-user: 'user@example.com' 
+        object-name: 'local-cloud-workflow'    
+      model:
+        generator-model-parameters: 
+          inference: 'llama'
+          repo-id: 'unsloth/gemma-4-E2B-it-GGUF'
+          filename: '*Q4_K_M.gguf'
+          n-gpu-layers: -1
+          n-ctx: 8192
+        generator-prompt-parameters: {}
+    cluster:
+      cloud-vm1:
+        process:
+          workers: 6
+          actors: 1
+        serve:
+          id: 'cloud-vm1'
+          host: '0.0.0.0'
+          port: 8000
+          shutdown: False
+          time: 240
+        job:
+          main-file: 'main.py'
+          runtime:
+            working_dir: 'model_evalution'
+            pip: 'model_evalution/requirements.txt'
+            env_vars:
+              HF_TOKEN: 'fill'
+      local-lt2:
+        process:
+          workers: 12
+          actors: 1
+        serve:
+          host: '0.0.0.0'
+          port: 8000
+        job:
+          main-file: 'main.py'
+          runtime:
+            working_dir: 'model_evalution'
+            pip: 'model_evalution/requirements.txt'
+            env_vars:
+              HF_TOKEN: 'fill'
+      local-lt3:
+        process:
+          workers: 28
+          actors: 1
+        serve:
+          host: '0.0.0.0'
+          port: 8000
+        job:
+          main-file: 'main.py'
+          runtime:
+            working_dir: 'model_evalution'
+            pip: 'model_evalution/requirements.txt'
+            env_vars:
+              HF_TOKEN: 'fill'
