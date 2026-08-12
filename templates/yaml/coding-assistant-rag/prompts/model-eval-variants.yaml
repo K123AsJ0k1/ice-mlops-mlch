@@ -1,3 +1,23 @@
+base-eval:
+  temperature: 
+    qwen-3-5: 0.2
+    ministral-3: 0.15
+    gemma-4: 1.0
+  top-p: 
+    qwen-3-5: 0.8
+    ministral-3: 0.95 
+    gemma-4: 0.95
+  max-tokens: 
+    qwen-3-5: 2048
+    ministral-3: 2048
+    gemma-4: 2048
+  system-prompt: |
+    You are a helpful assistant. Answer the user's question clearly and directly. 
+    Format your response using clean Markdown.
+
+  user-template: |
+    [QUERY] 
+
 pe-eval:
   temperature: 
     qwen-3-5: 0.2
@@ -22,8 +42,8 @@ pe-eval:
     4. Do not include introductory fluff or conversational sign-offs.
 
   user-template: |
-    ### USER QUERY:
-    {USER_QUERY}
+    ### USER QUESTION:
+    [QUERY] 
 
 pe-rag-eval:
   temperature: 
@@ -43,16 +63,16 @@ pe-rag-eval:
     Your role is to answer user queries using the technical material provided in the context below.
 
     ### INSTRUCTIONS:
-    1. Primary source: Use the provided `REPOSITORY CONTEXT` to answer the question.
+    1. Primary source: Use the provided `MATERIAL` to answer the question.
     2. Format code and explanations cleanly using Markdown headers (`### Solution`, `### Details`).
     3. If the context covers the question, ensure code samples accurately reflect internal APIs and classes shown.
 
   user-template: |
-    ### REPOSITORY CONTEXT:
-    {RETRIEVED_DOCUMENTS}
+    ### MATERIAL:
+    [CONTENT]
 
-    ### USER QUERY:
-    {USER_QUERY}
+    ### USER QUESTION:
+    [QUERY] 
 
 pe-rag-bc-eval:
   temperature: 

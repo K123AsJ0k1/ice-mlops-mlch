@@ -73,7 +73,7 @@ processing:
         job:
           main-file: 'main.py'
           runtime:
-            working_dir: 'llm_inference_server'
+            working_dir: 'model_evalution_server'
             pip: 'requirements.txt'
             env_vars:
               HF_TOKEN: 'fill'
