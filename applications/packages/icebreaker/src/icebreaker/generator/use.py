@@ -372,7 +372,6 @@ def generate_process_data(
     try:
         import pandas as pd
         from ..generator.use import generate_parse_output
-        import copy
     except ImportError as e:
         raise ImportError("generator/use failed to import", e)
 
@@ -386,8 +385,7 @@ def generate_process_data(
         output_dict = generate_parse_output(
             text = output
         )
-
-        #print(output_dict['type'])
+        
         if 'type' in output_dict:
             if output_dict['type'] == 'factual' or output_dict['type'] == 'synthesis':
                 if 'relevant-used-references' in output_dict and 'relevant-used-paths' in output_dict:
@@ -400,21 +398,21 @@ def generate_process_data(
                     )
                     output_dict['relevant-used-paths'] = checked_paths
 
-                    #print(checked_references)
-                    #print(checked_paths)
-
             if output_dict['type'] == 'negative':
                 if 'ground-truth-answer' in output_dict:
                     category_data = generate_process_category(
                         answer = output_dict['ground-truth-answer']
                     )
-                    #print(category_data)
+                    
                     for key, value in category_data.items():
                         output_dict[key] = value
+
         output_list.append(output_dict)
         
     output_df = pd.json_normalize(output_list)
     preprocess_df = pd.concat([temp_2_df, output_df], axis = 1)
+    preprocess_df = preprocess_df.loc[:, ~preprocess_df.columns.duplicated()]
+    preprocess_df = preprocess_df.convert_dtypes()
 
     return preprocess_df
     
