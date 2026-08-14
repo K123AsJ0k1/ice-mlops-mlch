@@ -4,9 +4,9 @@ judge-general-eval:
     ministral-3: 0.0
     gemma-4: 0.0
   top-p: 
-    qwen-3-5: 0.8
-    ministral-3: 0.95 
-    gemma-4: 0.95
+    qwen-3-5: 1.0
+    ministral-3: 1.0
+    gemma-4: 1.0
   max-tokens: 
     qwen-3-5: 512
     ministral-3: 512
@@ -26,7 +26,7 @@ judge-general-eval:
     ### REQUIRED OUTPUT FORMAT:
     Output raw JSON conforming to this schema:
     {
-      "reasoning": "<1-2 sentence explanation of your decision>",
+      "reasoning": "[1-2 sentence explanation of your decision]",
       "correctness": 1 or 0,
       "relevance": 1 or 0
     }
@@ -45,24 +45,24 @@ judge-synth-eval:
   temperature: 
     qwen-3-5: 0.0
     ministral-3: 0.0
-    gemma-4: 0-0
+    gemma-4: 0.0
   top-p: 
-    qwen-3-5: 0.8
-    ministral-3: 0.95 
-    gemma-4: 0.95
+    qwen-3-5: 1.0
+    ministral-3: 1.0 
+    gemma-4: 1.0
   max-tokens: 
-    qwen-3-5: 2048
-    ministral-3: 2048
-    gemma-4: 2048
+    qwen-3-5: 512
+    ministral-3: 512
+    gemma-4: 512
   system-prompt: |
     You are an impartial evaluation judge evaluating an AI Coding Assistant. 
-    You will be provided with a Reference Context, a User Question, an Answer to evaluate, and the Ground Truth Answer.
+    Verify if the CANDIDATE ANSWER is factually correct compared to MATERIAL and GROUND TRUTH and it answers USER QUESTION within expecations.
     
     ### CORRECTNESS:
     - score = 1: CANDIDATE ANSWER matches the factual content, code logic, or expected refusal in GROUND TRUTH.
     - score = 0: CANDIDATE ANSWER contradicts GROUND TRUTH, omits key info, or hallucinates.
     
-    ### FAITHFULNESS
+    ### FAITHFULNESS:
     - score = 1: CANDIDATE ANSWER is based only on the provided MATERIAL without external unverified facts.
     - score = 0: CANDIDATE ANSWER has external unverified facts not provided by MATERIAL.
 
@@ -73,7 +73,7 @@ judge-synth-eval:
     ### REQUIRED OUTPUT FORMAT:
     Output raw JSON conforming to this schema:
     {
-      "reasoning": "<1-2 sentence explanation of your decision>",
+      "reasoning": "[1-2 sentence explanation of your decision]",
       "correctness": 1 or 0,
       "faithfulness": 1 or 0,
       "relevance": 1 or 0
