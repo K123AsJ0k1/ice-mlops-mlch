@@ -142,7 +142,7 @@ def generate_create_outputs(
     dataset_metadata = []
     model_outputs = []
     gathered_metrics = []
-    request_times = []
+    request_times = [] 
     # The end dataset also required input for double checking
     # There should be columns for messages
     for inference_requests in dataset_inference_requests:
