@@ -70,7 +70,7 @@ def search_monitored_batch_query(
     )
     embed_latency_ms = ((time.perf_counter_ns() - start_embed) / 1e6) / len(text_query_batch)
     batch_results = []
-
+    q_relevant_weights = []
     # 2. Query Qdrant
     for idx, query_text in enumerate(text_query_batch):
         q_dense = []
@@ -79,7 +79,7 @@ def search_monitored_batch_query(
         q_sparse = []
         if 0 < len(batch_sparse):
             q_sparse = batch_sparse[idx] if batch_sparse is not None else None
-        q_relevant_ids = []
+        
         if 0 < len(relevant_weights_batch):
             q_relevant_weights = relevant_weights_batch[idx]
 
@@ -113,7 +113,7 @@ def search_monitored_batch_query(
         batch_results.append((query_result, resulted_metrics))
 
     return batch_results
-
+ 
 def search_data_metrics(
     dataset_name: str,
     target_df: any,
@@ -132,7 +132,7 @@ def search_data_metrics(
     sparse_model: any,
     batch_size: int,
     debug_prints: bool
-): 
+):  
     try:
         from ..search.utility import search_get_statistics
     except ImportError as e:
