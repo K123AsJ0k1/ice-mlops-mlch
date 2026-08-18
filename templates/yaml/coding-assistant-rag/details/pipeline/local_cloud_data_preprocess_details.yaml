@@ -38,7 +38,7 @@ integration:
   job-loop-amount: 2
   job-loop-wait: 5
 processing:
-  step-1:
+  step-1: # check code
     general:
       swift: {}
       data-storage: 
