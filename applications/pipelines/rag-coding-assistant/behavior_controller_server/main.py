@@ -27,7 +27,7 @@ def llama_test(
             try:
                 from servers.llama_generator import LLAMA_Generator
             except ImportError as e:
-                raise ImportError("generator/ failed to import", e)
+                raise ImportError("failed to import", e)
  
             serve.start(
                 http_options = {
@@ -40,8 +40,8 @@ def llama_test(
                 LLAMA_Generator.bind(
                     model_parameters = generator_model_parmaters
                 ), 
-                name = 'model_evaluation_server', 
-                route_prefix='/evaluation'
+                name = 'behavior_controller_server', 
+                route_prefix='/controller'
             )   
         
         if serve_shutdown:
