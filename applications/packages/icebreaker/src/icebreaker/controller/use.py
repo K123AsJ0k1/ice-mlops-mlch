@@ -1,91 +1,77 @@
-def controller_create_requests(
-    rag_dataset: any,
-    truth_dataset: any,
-    assistant_requests: list,
-    assistant_outputs: list,
+def controller_create_request(
+    case_index: int,
+    question_index: int,
+    assistant_input: str,
+    assistant_output: list,
     prompt_parameters: any,
     dataset_name: str,
     target_model: str,
     prompt_type: str,
-    question_column: str,
-    answer_column: str,
     join_prompts: bool
 ):
     try:
         import re
     except ImportError as e:
-        raise ImportError("assistant/use failed to import", e)
+        raise ImportError("controller/use failed to import", e)
 
-    print('Creating assistant requests')
-    inference_requests = []
-    case_idx = 0
-    for output in assistant_outputs: 
-        case_request = assistant_requests[case_idx]
-        question_index = case_request['question-index']
-        target_text = truth_dataset[answer_column][question_index]
-        query_text = truth_dataset[question_column][question_index]
-        
-        replacer_dict = {
-            'TARGET': target_text,
-            'QUERY': query_text,
-            'OUTPUT': output
-        }
+    print('Creating controller request')
+    print(f'Used prompt|{prompt_type}')
+    replacer_dict = {
+        'QUERY': assistant_input
+    }
+    
+    if 'output' in prompt_type and 0 < len(assistant_output):
+        replacer_dict['OUTPUT'] = assistant_output
 
-        if 'synth' in prompt_type:
-            row_idx = truth_dataset['row-index'][question_index]
-            replacer_dict['CONTENT'] = rag_dataset['content'][row_idx]
+    temperature = prompt_parameters[prompt_type]['temperature'][target_model]
+    top_p = prompt_parameters[prompt_type]['top-p'][target_model]
+    max_tokens = prompt_parameters[prompt_type]['max-tokens'][target_model]
 
-        temperature = prompt_parameters[prompt_type]['temperature'][target_model]
-        top_p = prompt_parameters[prompt_type]['top-p'][target_model]
-        max_tokens = prompt_parameters[prompt_type]['max-tokens'][target_model]
-
-        system_prompt = prompt_parameters[prompt_type]['system-prompt']
-        user_template = prompt_parameters[prompt_type]['user-template']
-        
-        pattern = r'\[([A-Z_1-9]+)\]'
-        user_prompt = re.sub(
-            pattern, 
-            lambda m: str(replacer_dict.get(m.group(1), m.group(0))), 
-            user_template
-        )
-        sent_messages = []
-        system_prompt_length = 0
-        user_prompt_length = 0
-        if join_prompts:
-            joined_prompt = f'{system_prompt}\n{user_prompt}'
-            user_prompt_length = len(joined_prompt)
-            sent_messages.append({
-                "role": "user", 
-                "content": joined_prompt
-            })
-        else:
-            system_prompt_length = len(system_prompt)
-            sent_messages.append({
-                "role": "system", 
-                "content": system_prompt
-            })
-            user_prompt_length = len(user_prompt)
-            sent_messages.append({
-                "role": "user", 
-                "content": user_prompt
-            })
-
-        inference_requests.append({
-            'dataset-name': dataset_name,
-            'case-index': case_idx,
-            'question-type': prompt_type,
-            'question-index': question_index,
-            'messages': sent_messages,
-            'system-prompt-length': system_prompt_length,
-            'user-prompt-length': user_prompt_length,
-            'target-model': target_model,
-            'temperature': temperature,
-            'top-p': top_p,
-            'max-tokens': max_tokens
+    system_prompt = prompt_parameters[prompt_type]['system-prompt']
+    user_template = prompt_parameters[prompt_type]['user-template']
+    
+    pattern = r'\[([A-Z_1-9]+)\]'
+    user_prompt = re.sub(
+        pattern, 
+        lambda m: str(replacer_dict.get(m.group(1), m.group(0))), 
+        user_template
+    )
+    sent_messages = []
+    system_prompt_length = 0
+    user_prompt_length = 0
+    if join_prompts:
+        joined_prompt = f'{system_prompt}\n{user_prompt}'
+        user_prompt_length = len(joined_prompt)
+        sent_messages.append({
+            "role": "user", 
+            "content": joined_prompt
         })
-        case_idx += 1
-    print(f'Amount of requests: {len(inference_requests)}')
-    return inference_requests
+    else:
+        system_prompt_length = len(system_prompt)
+        sent_messages.append({
+            "role": "system", 
+            "content": system_prompt
+        })
+        user_prompt_length = len(user_prompt)
+        sent_messages.append({
+            "role": "user", 
+            "content": user_prompt
+        })
+
+    inference_request = {
+        'dataset-name': dataset_name,
+        'case-index': case_index,
+        'question-type': prompt_type,
+        'question-index': question_index,
+        'messages': sent_messages,
+        'system-prompt-length': system_prompt_length,
+        'user-prompt-length': user_prompt_length,
+        'target-model': target_model,
+        'temperature': temperature,
+        'top-p': top_p,
+        'max-tokens': max_tokens
+    }
+    return inference_request
 
 def controller_generate_answers(
     dataset_inference_requests: list,

@@ -1,18 +1,114 @@
+def assistant_format_context(
+    query_results: any,
+    wrapper_tag: str,
+    metadata_keys: list,
+    material_key: str,
+    path_key: str,
+    content_key: str
+) -> any:
+    try:
+        import xml.etree.ElementTree as ET
+        from xml.dom import minidom
+    except ImportError as e:
+        raise ImportError("assistant/use failed to import", e)
+
+    collected_metrics = []
+    root = ET.Element(wrapper_tag)
+    for j, (result, metrics) in enumerate(query_results):
+        for i, point in enumerate(result, 1):
+            query_score = point.score
+            query_payload = point.payload
+
+            chunk_attributes = {}
+            chunk_attributes['id'] = str(i)
+            chunk_attributes['score'] = str(round(query_score,2))
+            for metadata_key in metadata_keys:
+                chunk_attributes[metadata_key] = str(query_payload.get(metadata_key))
+
+            chunk_elem = ET.SubElement(root, "chunk", attrib = chunk_attributes)
+
+            reference_material = query_payload.get(material_key)
+            if reference_material:
+                material_attributes = {}
+                for key, value in reference_material.items():
+                    key_split = key.split('|')
+                    material_tag = key_split[0]
+                    value_type = key_split[1]
+
+                    if not material_tag in material_attributes:
+                        material_attributes[material_tag] = {
+                            'tag': material_tag
+                        }
+
+                    material_attributes[material_tag][value_type] = value
+
+                materials = list(material_attributes.values())
+                for item in materials:
+                    ET.SubElement(chunk_elem, "reference-material", attrib = item)
+
+            reference_paths = query_payload.get(path_key)
+            if reference_paths:
+                path_attributes = {}
+                id = 1
+                for key, value in reference_paths.items():
+                    if not id in path_attributes:
+                        path_attributes[id] = {
+                            'id': str(id)
+                        }
+                    path_attributes[id]['relative-path'] = key
+                    path_attributes[id]['absolute-path'] = value
+                    id += 1
+                    
+                paths = list(path_attributes.values())
+                for item in paths:
+                    ET.SubElement(chunk_elem, "reference-path", attrib = item)
+
+            content_elem = ET.SubElement(chunk_elem, "content")
+            # Use \n{query_payload.get(content_key)}\n for presentation
+            content_elem.text = str(f'{query_payload.get(content_key).replace('\n','').replace('\r','')}')
+        collected_metrics.append({
+            'batch-index': j,
+            'batch-metrics': metrics
+        })
+
+    raw_xml = ET.tostring(root, encoding="utf-8")
+    parsed_xml = minidom.parseString(raw_xml)
+    
+    # Pretty-print and strip the default <?xml version="1.0"?> declaration header
+    formatted_xml = parsed_xml.toprettyxml(indent="")
+    xml_lines = formatted_xml.splitlines()
+    
+    if xml_lines and xml_lines[0].startswith("<?xml"):
+        xml_lines = xml_lines[1:]
+
+    formatted_context = "\n".join(xml_lines)
+    return formatted_context, collected_metrics
+            
 def assistant_create_requests(
     target_df: any,
     prompt_parameters: any,
     dataset_name: str,
     target_model: str,
     data_ratio: any,
-    join_prompts: bool
+    join_prompts: bool,
+    qdrant_client: any,
+    query_type: str,
+    collection_name: str,
+    query_limit: int,
+    fusion_limit: int,
+    dense_model: any,
+    sparse_model: any,
+    batch_size: int
 ):
     try:
         import re
+        from ..search.use import search_monitored_batch_query
     except ImportError as e:
         raise ImportError("assistant/use failed to import", e)
 
     print('Creating assistant requests')
     inference_requests = []
+    rag_metrics = []
     case_idx = 0
     question_type_idx = {}
     for _, row in target_df.iterrows(): 
@@ -30,6 +126,41 @@ def assistant_create_requests(
             temperature = prompt_parameters[data_type]['temperature'][target_model]
             top_p = prompt_parameters[data_type]['top-p'][target_model]
             max_tokens = prompt_parameters[data_type]['max-tokens'][target_model]
+
+            if 'rag' in data_type:
+                batch_query_results = search_monitored_batch_query(
+                    qdrant_client = qdrant_client,
+                    query_type = query_type, 
+                    collection_name = collection_name,
+                    text_query_batch = [row['question']], 
+                    relevant_weights_batch = [],
+                    query_limit = query_limit,
+                    fusion_limit = fusion_limit,
+                    dense_model = dense_model,
+                    sparse_model = sparse_model,
+                    batch_size = batch_size
+                )
+
+                formatted_context, batch_metrics = assistant_format_context(
+                    query_results = batch_query_results,
+                    wrapper_tag = 'context',
+                    metadata_keys = [
+                        'part',
+                        'document',
+                        'chapter',
+                        'index',
+                        'absolute-path',
+                        'relevance'
+                    ],
+                    material_key = 'ref-material',
+                    path_key = 'ref-paths',
+                    content_key = 'content'
+                )
+                rag_metrics.append({
+                    'case-index': case_idx,
+                    'batch-metrics': batch_metrics
+                })
+                replacer_dict['CONTENT'] = formatted_context
 
             pattern = r'\[([A-Z_1-9]+)\]'
             user_prompt = re.sub(
@@ -76,36 +207,70 @@ def assistant_create_requests(
                 question_type_idx[data_type] += 1
         case_idx += 1
     print(f'Amount of requests: {len(inference_requests)}')
-    return inference_requests
+    return inference_requests, rag_metrics
 
 def assistant_generate_answers(
     dataset_inference_requests: list,
     request_keys: dict,
     length_limit: int,
     inference_parameters: any,
+    controller_model: str,
+    controller_prompts: any,
     request_categories: list,
     debug_prints: bool
 ) -> dict:
     try:
-        from ..ray.use import ray_serve_route
         import statistics
         import time as t
+        from ..controller.use import controller_create_request
+        from ..assistant.utility import assistant_run_inference
+        from ..controller.utility import controller_extract_output
     except ImportError as e:
         raise ImportError("assistant/use failed to import", e)
     process_time_start = t.time()
     print('Getting answers')
     print(f'Request length limit {length_limit}')
     print('')
-    inference_address = inference_parameters['address']
-    inference_path = inference_parameters['path']
-    prompt_lengths = []
-    model_outputs = []
-    gathered_metrics = []
-    request_times = []
+    run_data = {
+        'requests': {
+            'assistant': {
+                'accept': [],
+                'refuse': []
+            },
+            'controller': {
+                'accept': [],
+                'refuse': []
+            }
+        },
+        'outputs': {
+            'assistant': {
+                'accept': [],
+                'refuse': []
+            },
+            'controller': {
+                'accept': [],
+                'refuse': []
+            }
+        },
+        'metrics': {
+            'assistant': [],
+            'controller': []
+        },
+        'prompt-lengths':{
+            'system': [],
+            'user': []
+        },
+        'request-times': {
+            'assistant': [],
+            'controller': []
+        },
+        'stats': {}
+    }
+
     # The end dataset also required input for double checking
     # There should be columns for messages
     for inference_requests in dataset_inference_requests:
-        sent_request = {}
+        assistant_request = {}
         dataset_name = inference_requests['dataset-name']
         case_index = inference_requests['case-index'] + 1
         question_type = inference_requests['question-type']
@@ -122,10 +287,11 @@ def assistant_generate_answers(
 
         if user_prompt_length < length_limit:
             if 0 < system_prompt_length:
-                prompt_lengths.append(system_prompt_length)
+                run_data['prompt-lengths']['system'].append(system_prompt_length)
             if 0 < user_prompt_length:
-                prompt_lengths.append(user_prompt_length)
+                run_data['prompt-lengths']['user'].append(user_prompt_length)
 
+            print('Assistant print:')
             print(f'Dataset|{dataset_name}')
             print(f'Case|{case_index}')
             print(f'Question type|{question_type}')
@@ -137,73 +303,201 @@ def assistant_generate_answers(
             print(f'Temperature|{temperature}')
             print(f'Top-p|{top_p}')
             print(f'Max tokens|{max_tokens}') 
+            print('')
 
             for key in request_keys:
-                sent_request[key] = inference_requests[key]
+                assistant_request[key] = inference_requests[key]
 
-            request_time_start = t.time()
-            print('Sending request')
-            status_code, route_output = ray_serve_route(
-                route_address = inference_address,
-                route_path = inference_path,
-                route_type = 'POST',
-                route_input = sent_request,
-                timeout = 5
-            )
+            answer_metadata = {
+                'dataset': dataset_name,
+                'case-index': case_index,
+                'question-type': question_type,
+                'question-index': question_index,
+                'category': category_type,
+                'system-prompt-length': system_prompt_length,
+                'user-prompt-length': user_prompt_length,
+            }
 
-            request_end_time = t.time()
-            request_total_time = round(request_end_time-request_time_start,5)
-            print(f'Spent seconds request: {request_total_time}')
+            input_behavior = {
+                'reasoning': '', 
+                'secret-leak': 0, 
+                'off-topic': 0
+            }
+            user_question = ''
+            if 'pe-rag-bc-eval' in question_type:
+                user_message_content = assistant_request['messages'][-1]['content']
+                _, sep, after_tag = user_message_content.partition('### USER REQUEST:')
+                user_question = after_tag.strip()
+                # This only gets questions
+                controller_input_check_request = controller_create_request(
+                    case_index = case_index,
+                    question_index = question_index,
+                    assistant_input = user_question,
+                    assistant_output = '',
+                    prompt_parameters = controller_prompts,
+                    dataset_name = dataset_name,
+                    target_model = controller_model,
+                    prompt_type = 'controller-input-eval',
+                    join_prompts = False
+                )
+    
+                print('Controller prints:')
+                print(f'Question type|{controller_input_check_request['question-type']}')
+                print(f'System prompt length|{controller_input_check_request['system-prompt-length']}')
+                print(f'User prompt length|{controller_input_check_request['user-prompt-length']}')
+                print(f'Model|{controller_model}')
+                print(f'Temperature|{controller_input_check_request['temperature']}')
+                print(f'Top-p|{controller_input_check_request['top-p']}')
+                print(f'Max tokens|{controller_input_check_request['max-tokens']}') 
+                print('')
 
-            if status_code == 200:
-                print('Request success')
-                output_status = route_output['status']
+                controller_inference_tuple = assistant_run_inference(
+                    inference_address = inference_parameters['controller']['address'],
+                    inference_path = inference_parameters['controller']['path'],
+                    sent_request = controller_input_check_request
+                )
 
-                if output_status == 'success':
-                    generated_data = route_output['text']
-                    metadata = {
-                        'dataset': dataset_name,
-                        'case-index': case_index,
-                        'question-type': question_type,
-                        'question-index': question_index,
-                        'category': category_type,
-                        'system-prompt-length': system_prompt_length,
-                        'user-prompt-length': user_prompt_length,
-                    }
+                controller_output = controller_inference_tuple[0]
+                merged_data = answer_metadata | controller_inference_tuple[1]
+                run_data['metrics']['controller'].append(merged_data)
+                run_data['request-times']['controller'].append(controller_inference_tuple[2])
 
-                    effiency_metrics = route_output['efficiency-metrics']
-                    merged_data = metadata | effiency_metrics
-                    model_outputs.append(generated_data)
-                    gathered_metrics.append(merged_data)
-                    request_times.append(request_total_time)
+                input_behavior = controller_extract_output(
+                    output = controller_output
+                )
+
+                print('Controller input check:')
+                print(f'Reasoning|{input_behavior['reasoning']}') 
+                print(f'Secret leak|{input_behavior['secret-leak']}') 
+                print(f'Off topic|{input_behavior['off-topic']}') 
+                print('')
+
+                if input_behavior['secret-leak'] == 1 or input_behavior['off-topic'] == 1:
+                    run_data['outputs']['controller']['refuse'].append(controller_output)
+                    run_data['requests']['controller']['refuse'].append(controller_input_check_request)
+                else:
+                    run_data['outputs']['controller']['accept'].append(controller_output)
+                    run_data['requests']['controller']['accept'].append(controller_input_check_request)
+
+            if input_behavior['secret-leak'] == 0 and input_behavior['off-topic'] == 0:
+                run_data['requests']['assistant']['accept'].append(assistant_request)
+
+                assistant_inference_tuple = assistant_run_inference(
+                    inference_address = inference_parameters['assistant']['address'],
+                    inference_path = inference_parameters['assistant']['path'],
+                    sent_request = assistant_request
+                )
+                
+                merged_data = answer_metadata | assistant_inference_tuple[1]
+                run_data['metrics']['assistant'].append(merged_data)
+                run_data['request-times']['assistant'].append(assistant_inference_tuple[2])
+
+                if not 'pe-rag-bc-eval' in question_type:
+                    run_data['requests']['assistant']['accept'].append(assistant_request)
+                    run_data['outputs']['assistant']['accept'].append(assistant_inference_tuple[0])
+                else:
+                    assistant_output = assistant_inference_tuple[0]
+
+                    controller_output_check_request = controller_create_request(
+                        case_index = case_index,
+                        question_index = question_index,
+                        assistant_input = user_question,
+                        assistant_output = assistant_output,
+                        prompt_parameters = controller_prompts,
+                        dataset_name = dataset_name,
+                        target_model = controller_model,
+                        prompt_type = 'controller-output-eval',
+                        join_prompts = False
+                    )
+
+                    print('')
+                    print(f'Question type|{controller_output_check_request['question-type']}')
+                    print(f'System prompt length|{controller_output_check_request['system-prompt-length']}')
+                    print(f'User prompt length|{controller_output_check_request['user-prompt-length']}')
+                    print(f'Model|{controller_model}')
+                    print(f'Temperature|{controller_output_check_request['temperature']}')
+                    print(f'Top-p|{controller_output_check_request['top-p']}')
+                    print(f'Max tokens|{controller_output_check_request['max-tokens']}') 
+                    print('')
+
+                    controller_inference_tuple = assistant_run_inference(
+                        inference_address = inference_parameters['controller']['address'],
+                        inference_path = inference_parameters['controller']['path'],
+                        sent_request = controller_output_check_request
+                    )
+    
+                    controller_output = controller_inference_tuple[0]
+                    #run_data['outputs']['controller'][].append(controller_output)
+                    merged_data = answer_metadata | controller_inference_tuple[1]
+                    run_data['metrics']['controller'].append(merged_data)
+                    run_data['request-times']['controller'].append(controller_inference_tuple[2])
+    
+                    output_behavior = controller_extract_output(
+                        output = controller_output
+                    )
+    
+                    print('Controller output check:')
+                    print(f'Reasoning|{output_behavior['reasoning']}') 
+                    print(f'Irrelevant|{output_behavior['irrelevant']}') 
+                    print(f'Verbose|{output_behavior['verbose']}') 
+                    print(f'Out of scope|{output_behavior['out-of-scope']}') 
+
+                    if output_behavior['irrelevant'] == 0 and output_behavior['verbose'] == 0 and output_behavior['out-of-scope'] == 0:
+                        run_data['requests']['assistant']['accept'].append(assistant_request)
+                        run_data['outputs']['assistant']['accept'].append(assistant_inference_tuple[0])
+                        run_data['outputs']['controller']['accept'].append(controller_output)
+                        run_data['requests']['controller']['accept'].append(controller_output_check_request)
+                    else:
+                        output_control_output = '[REFUSAL'
+                        if output_behavior['irrelevant'] == 1:
+                            output_control_output += ' - IRRELEVANT'
+                        if output_behavior['verbose'] == 1:
+                            output_control_output += ' - VERBOSE'
+                        if output_behavior['out-of-scope'] == 1:
+                            output_control_output += ' - OUT OF SCOPE'
+                        output_control_output += ']'
+                        run_data['requests']['assistant']['refuse'].append(assistant_request)
+                        run_data['outputs']['assistant']['refuse'].append(output_control_output)
+                        run_data['outputs']['controller']['refuse'].append(controller_output)
+                        run_data['requests']['controller']['refuse'].append(controller_output_check_request)
             else:
-                print('Request fail')
+                run_data['requests']['assistant']['refuse'].append(assistant_request)
+                input_control_output = '[REFUSAL'
+                if input_behavior['secret-leak'] == 1:
+                    input_control_output += ' - SECRET LEAK'
+                if input_behavior['off-topic'] == 1:
+                    input_control_output += ' - OFF TOPIC'
+                input_control_output += ']'
+                
+                run_data['outputs']['assistant']['refuse'].append(input_control_output)
+                run_data['metrics']['assistant'].append({})
+                run_data['request-times']['assistant'].append(0)
         print('')
 
-    length_mean = statistics.mean(prompt_lengths)
-    length_median = statistics.median(prompt_lengths)
-    max_prompt_length = max(prompt_lengths)
-    min_prompt_length = min(prompt_lengths)
+    for key, value in run_data['prompt-lengths'].items():
+        max_prompt_length = max(value)
+        min_prompt_length = min(value)
+        mean_prompt_length = statistics.mean(value)
+        median_prompt_length = statistics.median(value)
+        print(f'Prompt role|{key}')
+        print(f'Max prompt length|{max_prompt_length}')
+        print(f'Min prompt length|{min_prompt_length}')
+        print(f'Mean prompt length|{mean_prompt_length}')
+        print(f'Median prompt length|{median_prompt_length}')
+        stat_key = f'{key}-prompt'
+        run_data['stats'][stat_key] = {
+            'max': max_prompt_length,
+            'min': min_prompt_length,
+            'mean': mean_prompt_length,
+            'median': median_prompt_length
+        }
 
-    print(f'Max prompt length|{max_prompt_length}')
-    print(f'Min prompt length|{min_prompt_length}')
-    print(f'Mean prompt length|{length_mean}')
-    print(f'Median prompt length|{length_median}')
-    
     process_end_time = t.time()
     process_total_time = round(process_end_time-process_time_start,5)
     print(f'Spent seconds on processing: {process_total_time}')
     print('') 
-
-    general_stats = {
-        'length-mean': length_mean,
-        'length-median': length_median,
-        'max-prompt-length': max_prompt_length,
-        'min-prompt-length': min_prompt_length,
-        'process-total-time': process_total_time
-    }
-    
-    return model_outputs, gathered_metrics, request_times, general_stats
+    run_data['stats']['process-total-time'] = process_total_time
+    return run_data
 
 def assistant_print_answers(
     requests: list, 
