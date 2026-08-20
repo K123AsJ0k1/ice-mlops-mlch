@@ -103,6 +103,7 @@ def assistant_create_requests(
     try:
         import re
         from ..search.use import search_monitored_batch_query
+        from ..assistant.use import assistant_format_context
     except ImportError as e:
         raise ImportError("assistant/use failed to import", e)
 
@@ -128,11 +129,12 @@ def assistant_create_requests(
             max_tokens = prompt_parameters[data_type]['max-tokens'][target_model]
 
             if 'rag' in data_type:
+                text_query_batch = [row['question']]
                 batch_query_results = search_monitored_batch_query(
                     qdrant_client = qdrant_client,
                     query_type = query_type, 
                     collection_name = collection_name,
-                    text_query_batch = [row['question']], 
+                    text_query_batch = text_query_batch, 
                     relevant_weights_batch = [],
                     query_limit = query_limit,
                     fusion_limit = fusion_limit,
@@ -158,6 +160,8 @@ def assistant_create_requests(
                 )
                 rag_metrics.append({
                     'case-index': case_idx,
+                    'question-type': data_type,
+                    'query-batch': text_query_batch,
                     'batch-metrics': batch_metrics
                 })
                 replacer_dict['CONTENT'] = formatted_context
@@ -238,38 +242,79 @@ def assistant_generate_answers(
                 'refuse': []
             },
             'controller': {
-                'accept': [],
-                'refuse': []
+                'input': {
+                    'accept': [],
+                    'refuse': []
+                },
+                'output': {
+                    'accept': [],
+                    'refuse': []
+                }
             }
         },
         'outputs': {
             'assistant': {
                 'accept': [],
-                'refuse': []
+                'refuse': {
+                    'guard': [],
+                    'model': []
+                }
             },
             'controller': {
-                'accept': [],
-                'refuse': []
+                'input': {
+                    'accept': [],
+                    'refuse': []
+                },
+                'output': {
+                    'accept': [],
+                    'refuse': []
+                }
             }
         },
         'metrics': {
-            'assistant': [],
-            'controller': []
+            'assistant': {
+                'accept': [],
+                'refuse': []
+            },
+            'controller': {
+                'input': {
+                    'accept': [],
+                    'refuse': []
+                },
+                'output': {
+                    'accept': [],
+                    'refuse': []
+                }
+            }
+        },
+        'request-times': {
+            'assistant': {
+                'accept': [],
+                'refuse': []
+            },
+            'controller': {
+                'input': {
+                    'accept': [],
+                    'refuse': []
+                },
+                'output': {
+                    'accept': [],
+                    'refuse': []
+                }
+            }
         },
         'prompt-lengths':{
             'system': [],
             'user': []
         },
-        'request-times': {
-            'assistant': [],
-            'controller': []
-        },
+        'execution-times': [],
         'stats': {}
     }
 
     # The end dataset also required input for double checking
     # There should be columns for messages
     for inference_requests in dataset_inference_requests:
+        execution_time_start = t.time()
         assistant_request = {}
         dataset_name = inference_requests['dataset-name']
         case_index = inference_requests['case-index'] + 1
@@ -358,43 +403,49 @@ def assistant_generate_answers(
                 )
 
                 controller_output = controller_inference_tuple[0]
-                merged_data = answer_metadata | controller_inference_tuple[1]
-                run_data['metrics']['controller'].append(merged_data)
-                run_data['request-times']['controller'].append(controller_inference_tuple[2])
-
                 input_behavior = controller_extract_output(
                     output = controller_output
                 )
 
                 print('Controller input check:')
-                print(f'Reasoning|{input_behavior['reasoning']}') 
-                print(f'Secret leak|{input_behavior['secret-leak']}') 
-                print(f'Off topic|{input_behavior['off-topic']}') 
-                print('')
-
+                try:
+                    print(f'Reasoning|{input_behavior['reasoning']}') 
+                    print(f'Secret leak|{input_behavior['secret-leak']}') 
+                    print(f'Off topic|{input_behavior['off-topic']}') 
+                    print('')
+                except Exception as e:
+                    input_behavior = {
+                        'reasoning': 'Malformed JSON returned by guardrail',  
+                        'secret-leak': 0, 
+                        'off-topic': 0
+                    }
+                    
+                controller_merged_data = answer_metadata | controller_inference_tuple[1]
                 if input_behavior['secret-leak'] == 1 or input_behavior['off-topic'] == 1:
-                    run_data['outputs']['controller']['refuse'].append(controller_output)
-                    run_data['requests']['controller']['refuse'].append(controller_input_check_request)
+                    run_data['outputs']['controller']['input']['refuse'].append(controller_output)
+                    run_data['requests']['controller']['input']['refuse'].append(controller_input_check_request)
+                    run_data['metrics']['controller']['input']['refuse'].append(controller_merged_data)
+                    run_data['request-times']['controller']['input']['refuse'].append(controller_inference_tuple[2])
                 else:
-                    run_data['outputs']['controller']['accept'].append(controller_output)
-                    run_data['requests']['controller']['accept'].append(controller_input_check_request)
+                    run_data['outputs']['controller']['input']['accept'].append(controller_output)
+                    run_data['requests']['controller']['input']['accept'].append(controller_input_check_request)
+                    run_data['metrics']['controller']['input']['accept'].append(controller_merged_data)
+                    run_data['request-times']['controller']['input']['accept'].append(controller_inference_tuple[2])
 
             if input_behavior['secret-leak'] == 0 and input_behavior['off-topic'] == 0:
-                run_data['requests']['assistant']['accept'].append(assistant_request)
-
                 assistant_inference_tuple = assistant_run_inference(
                     inference_address = inference_parameters['assistant']['address'],
                     inference_path = inference_parameters['assistant']['path'],
                     sent_request = assistant_request
                 )
                 
-                merged_data = answer_metadata | assistant_inference_tuple[1]
-                run_data['metrics']['assistant'].append(merged_data)
-                run_data['request-times']['assistant'].append(assistant_inference_tuple[2])
-
+                assistant_merged_data = answer_metadata | assistant_inference_tuple[1]
+                #run_data['outputs']['assistant']['response'].append(assistant_inference_tuple[0])
                 if not 'pe-rag-bc-eval' in question_type:
-                    run_data['requests']['assistant']['accept'].append(assistant_request)
+                    run_data['requests']['assistant']['accept'].append(inference_requests)
                     run_data['outputs']['assistant']['accept'].append(assistant_inference_tuple[0])
+                    run_data['metrics']['assistant']['accept'].append(assistant_merged_data)
+                    run_data['request-times']['assistant']['accept'].append(assistant_inference_tuple[2])
                 else:
                     assistant_output = assistant_inference_tuple[0]
 
@@ -427,26 +478,36 @@ def assistant_generate_answers(
                     )
     
                     controller_output = controller_inference_tuple[0]
-                    #run_data['outputs']['controller'][].append(controller_output)
-                    merged_data = answer_metadata | controller_inference_tuple[1]
-                    run_data['metrics']['controller'].append(merged_data)
-                    run_data['request-times']['controller'].append(controller_inference_tuple[2])
-    
+                    controller_merged_data = answer_metadata | controller_inference_tuple[1]
+                    
                     output_behavior = controller_extract_output(
                         output = controller_output
                     )
     
                     print('Controller output check:')
-                    print(f'Reasoning|{output_behavior['reasoning']}') 
-                    print(f'Irrelevant|{output_behavior['irrelevant']}') 
-                    print(f'Verbose|{output_behavior['verbose']}') 
-                    print(f'Out of scope|{output_behavior['out-of-scope']}') 
+                    try:
+                        print(f'Reasoning|{output_behavior['reasoning']}') 
+                        print(f'Irrelevant|{output_behavior['irrelevant']}') 
+                        print(f'Verbose|{output_behavior['verbose']}') 
+                        print(f'Out of scope|{output_behavior['out-of-scope']}') 
+                    except Exception as e:
+                        output_behavior ={
+                            'reasoning': 'Malformed JSON returned by guardrail', 
+                            'irrelevant': 0,
+                            'verbose': 0,
+                            'out-of-scope': 0
+                        }
 
                     if output_behavior['irrelevant'] == 0 and output_behavior['verbose'] == 0 and output_behavior['out-of-scope'] == 0:
-                        run_data['requests']['assistant']['accept'].append(assistant_request)
+                        run_data['requests']['assistant']['accept'].append(inference_requests)
                         run_data['outputs']['assistant']['accept'].append(assistant_inference_tuple[0])
-                        run_data['outputs']['controller']['accept'].append(controller_output)
-                        run_data['requests']['controller']['accept'].append(controller_output_check_request)
+                        run_data['metrics']['assistant']['accept'].append(assistant_merged_data)
+                        run_data['request-times']['assistant']['accept'].append(assistant_inference_tuple[2])
+
+                        run_data['outputs']['controller']['output']['accept'].append(controller_output)
+                        run_data['requests']['controller']['output']['accept'].append(controller_output_check_request)
+                        run_data['metrics']['controller']['output']['accept'].append(controller_merged_data)
+                        run_data['request-times']['controller']['output']['accept'].append(controller_inference_tuple[2])
                     else:
                         output_control_output = '[REFUSAL'
                         if output_behavior['irrelevant'] == 1:
@@ -456,22 +517,33 @@ def assistant_generate_answers(
                         if output_behavior['out-of-scope'] == 1:
                             output_control_output += ' - OUT OF SCOPE'
                         output_control_output += ']'
-                        run_data['requests']['assistant']['refuse'].append(assistant_request)
-                        run_data['outputs']['assistant']['refuse'].append(output_control_output)
-                        run_data['outputs']['controller']['refuse'].append(controller_output)
-                        run_data['requests']['controller']['refuse'].append(controller_output_check_request)
+                        run_data['requests']['assistant']['refuse'].append(inference_requests)
+                        run_data['outputs']['assistant']['refuse']['guard'].append(output_control_output)
+                        run_data['outputs']['assistant']['refuse']['model'].append(assistant_inference_tuple[0])
+                        run_data['metrics']['assistant']['refuse'].append(assistant_merged_data)
+                        run_data['request-times']['assistant']['refuse'].append(assistant_inference_tuple[2])
+
+                        run_data['outputs']['controller']['output']['refuse'].append(controller_output)
+                        run_data['requests']['controller']['output']['refuse'].append(controller_output_check_request)
+                        run_data['metrics']['controller']['output']['refuse'].append(controller_merged_data)
+                        run_data['request-times']['controller']['output']['refuse'].append(controller_inference_tuple[2])
             else:
-                run_data['requests']['assistant']['refuse'].append(assistant_request)
                 input_control_output = '[REFUSAL'
                 if input_behavior['secret-leak'] == 1:
                     input_control_output += ' - SECRET LEAK'
                 if input_behavior['off-topic'] == 1:
                     input_control_output += ' - OFF TOPIC'
                 input_control_output += ']'
-                
-                run_data['outputs']['assistant']['refuse'].append(input_control_output)
-                run_data['metrics']['assistant'].append({})
-                run_data['request-times']['assistant'].append(0)
+
+                run_data['requests']['assistant']['refuse'].append(inference_requests)
+                run_data['outputs']['assistant']['refuse']['guard'].append(input_control_output)
+                run_data['outputs']['assistant']['refuse']['model'].append('None')
+                run_data['metrics']['assistant']['refuse'].append({})
+                run_data['request-times']['assistant']['refuse'].append(0)
+        execution_end_time = t.time()
+        execution_total_time = round(execution_end_time-execution_time_start,5)
+        run_data['execution-times'].append(execution_total_time)
+        print(f'Spent seconds on execution: {execution_total_time}')
         print('')
 
     for key, value in run_data['prompt-lengths'].items():
@@ -500,74 +572,136 @@ def assistant_generate_answers(
     return run_data
 
 def assistant_print_answers(
-    requests: list, 
-    outputs: list,
-    answers: list,
-    categories: list
-):
-    for i in range(0, len(requests)):
-        case_request = requests[i]
-        case_output = outputs[i]
+    run_data: dict
+):  
+    cases = [
+        'accept',
+        'refuse'
+    ]
 
-        question_index = case_request['question-index']
-        case_answer = answers[question_index]
-        
-        dataset_name = case_request['dataset-name']
-        case_index = case_request['case-index']
-        question_type = case_request['question-type']
-        category_type = categories[question_index]
-        
-        question_index = question_index  + 1
-        messages = case_request['messages']
-        system_prompt_length = case_request['system-prompt-length']
-        user_prompt_length = case_request['user-prompt-length']
-        target_model = case_request['target-model']
-        temperature = case_request['temperature']
-        top_p = case_request['top-p']
-        max_tokens = case_request['max-tokens']
+    for case in cases:
+        idx = 0
+        controller_input_idx = 0
+        controller_output_idx = 0
+        assistant_refuse_idx = 0
+        print('START ANSWERS')
+        print(f'Case|{case}')
+        run_data_amount = run_data['requests']['assistant'][case]
+        print(f'Amount|{len(run_data_amount)}')
+        for assistant_request in run_data_amount:
+            assistant_metrics = run_data['metrics']['assistant'][case][idx]
+            
+            dataset_name = assistant_request['dataset-name']
+            case_index = assistant_request['case-index']
+            question_type = assistant_request['question-type']
+            question_index = assistant_request['question-index']
+            category_type = assistant_metrics['category']
+            question_index = question_index  + 1
+            system_prompt_length = assistant_request['system-prompt-length']
+            user_prompt_length = assistant_request['user-prompt-length']
+            target_model = assistant_request['target-model']
+            temperature = assistant_request['temperature']
+            top_p = assistant_request['top-p']
+            max_tokens = assistant_request['max-tokens']
 
-        print(f'Dataset|{dataset_name}')
-        print(f'Case|{case_index}')
-        print(f'Question type|{question_type}')
-        print(f'Question index|{question_index}')
-        print(f'Category|{category_type}')
-        print(f'System prompt length|{system_prompt_length}')
-        print(f'User prompt length|{user_prompt_length}')
-        print(f'Model|{target_model}')
-        print(f'Temperature|{temperature}')
-        print(f'Top-p|{top_p}')
-        print(f'Max tokens|{max_tokens}') 
-        print('')
-        print('---')
-        # Show format and type
-        print('Sent prompts')
-        for message in messages:
-            prompt_role = message['role']
-            prompt_content = message['content']
+            print(f'Dataset|{dataset_name}')
+            print(f'Case|{case_index}')
+            print(f'Question type|{question_type}')
+            print(f'Question index|{question_index}')
+            print(f'Category|{category_type}')
+            print(f'System prompt length|{system_prompt_length}')
+            print(f'User prompt length|{user_prompt_length}')
+            print(f'Model|{target_model}')
+            print(f'Temperature|{temperature}')
+            print(f'Top-p|{top_p}')
+            print(f'Max tokens|{max_tokens}') 
+            print('==========')
+            # Show format and type
+            print('Assistant prompts')
+            messages = assistant_request['messages']
+            for message in messages:
+                prompt_role = message['role']
+                prompt_content = message['content']
+                print(f'Role|{prompt_role}')
+                print('Prompt:')
+                print(prompt_content)
 
-            print(f'Role|{prompt_role}')
-            print('Prompt:')
-            print(prompt_content)
-        print('---')
-        print('Output:')
-        print(case_output)
-        print('---')
-        print('Answer:')
-        print(case_answer)
-        print('---')
-        print('')
+            if 'bc-eval' in question_type:
+                print('Controller input check prompts:')
+                try:
+                    messages = run_data['requests']['controller']['input'][case][controller_input_idx]['messages']
+                    for message in messages:
+                        prompt_role = message['role']
+                        prompt_content = message['content']
+                        print(f'Role|{prompt_role}')
+                        print('Prompt:')
+                        print(prompt_content) 
+
+                    controller_input_check = run_data['outputs']['controller']['input'][case][controller_input_idx]
+
+                    print('==========')
+                    print('Controller input result:')
+                    print(controller_input_check)
+                    controller_input_idx += 1
+                except Exception as e:
+                    pass
+
+            print('==========')
+            print('Assistant output:')
+            if case == 'refuse':
+                print('Guard response:')
+                assistant_output = run_data['outputs']['assistant'][case]
+                #print(assistant_output)
+                print(assistant_output['guard'][assistant_refuse_idx])
+                print('Model response:')
+                print(assistant_output['model'][assistant_refuse_idx])
+                assistant_refuse_idx += 1
+            else:
+                assistant_output = run_data['outputs']['assistant'][case][idx]
+                print(assistant_output)
+
+            print('==========')
+            if 'bc-eval' in question_type:
+                print('Controller output check prompts:')
+                try:
+                    messages = run_data['requests']['controller']['output'][case][controller_output_idx]['messages']
+                    for message in messages:
+                        prompt_role = message['role']
+                        prompt_content = message['content']
+                        print(f'Role|{prompt_role}')
+                        print('Prompt:')
+                        print(prompt_content) 
+
+                    controller_output_check = run_data['outputs']['controller']['output'][case][controller_output_idx]
+                    print('==========')
+                    print('Controller output result:')
+                    print(controller_output_check)
+                    controller_output_idx += 1
+                except Exception as e:
+                    pass
+            print('')
+            idx += 1
 
 def assistant_produce_answers(
     target_df: any,
     assistant_prompts: dict,
     dataset_name: str,
-    target_model: str,
-    request_ratio: dict,
+    assistant_model: str,
+    data_ratio: dict,
     join_prompts: bool,
+    qdrant_client: any,
+    query_type: str,
+    collection_name: str,
+    query_limit: int,
+    fusion_limit: int,
+    dense_model: any,
+    sparse_model: any,
+    batch_size: int,
     request_keys: list,
     length_limit: int,
     inference_parameters: any,
-    answer_column: str,
+    controller_model: str,
+    controller_prompts: dict,
     category_column: str
 ):
     try:
@@ -575,40 +709,40 @@ def assistant_produce_answers(
     except ImportError as e:
         raise ImportError("assistant/use failed to import", e)
 
-    assistant_requests = assistant_create_requests(
+    request_tuple = assistant_create_requests(
         target_df = target_df,
         prompt_parameters = assistant_prompts,
         dataset_name = dataset_name,
-        target_model = target_model,
-        data_ratio = request_ratio,
-        join_prompts = join_prompts
+        target_model = assistant_model,
+        data_ratio = data_ratio,
+        join_prompts = join_prompts,
+        qdrant_client = qdrant_client,
+        query_type = query_type, 
+        collection_name = collection_name,
+        query_limit = query_limit,
+        fusion_limit = fusion_limit,
+        dense_model = dense_model,
+        sparse_model = sparse_model,
+        batch_size = batch_size
     )
 
-    dataset_answers = target_df[answer_column]
-    dataset_categories = target_df[category_column]
-
-    model_outputs, gathered_metrics, request_times, general_stats = assistant_generate_answers(
-        dataset_inference_requests = assistant_requests,
+    run_data = assistant_generate_answers(
+        dataset_inference_requests = request_tuple[0],
         request_keys = request_keys,
         length_limit = length_limit,
         inference_parameters = inference_parameters,
-        request_categories = dataset_categories,
+        controller_model = controller_model,
+        controller_prompts = controller_prompts,
+        request_categories = target_df[category_column],
         debug_prints = False
-    )
+    ) 
+    try:
+        assistant_print_answers(
+            run_data = run_data
+        )
+    except Exception as e:
+        pass
 
-    assistant_print_answers(
-        requests = assistant_requests, 
-        outputs = model_outputs,
-        answers = dataset_answers,
-        categories = dataset_categories
-    )
-
-    output_tuple = (
-        assistant_requests,
-        model_outputs,
-        gathered_metrics,
-        request_times,
-        general_stats
-    )
-
-    return output_tuple
+    run_data['rag-metrics'] = request_tuple[1]
+    
+    return run_data
