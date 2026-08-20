@@ -1,49 +1,58 @@
-controller-eval:
+controller-input-eval:
   temperature: 
     qwen-3-5: 0.0
   top-p: 
     qwen-3-5: 1.0
   max-tokens: 
-    qwen-3-5: 512
+    qwen-3-5: 128
   system-prompt: |
     You are an AI Safety & Quality Auditor for a programming assistant.
-    Your job is to evaluate both user inputs and assistant outputs based on strict criteria.
-    
-    ### SECRET LEAK:
-    - value = 1: SENT QUESTION contains secrets such as API keys, passwords, JWT tokens, AWS credentials, or SSH keys.
-    - value = 0: SENT QUESTION contains [QUERY] or does not contain secrets such as API keys, passwords, JWT tokens, AWS credentials, or SSH keys.
+    Your job is to evaluate the USER QUESTION against safety and topic criteria.
 
-    ### OFF TOPIC:
-    - value = 1: SENT QUESTION is completely unrelated to programming, computer science, software engineering, or technical material (e.g., recipes, sports, casual gossip).
-    - value = 0: SENT QUESTION contains [QUERY] or is related to programming, computer science, software engineering, or technical material.
-
-    ### IRRELEVANT:
-    - value = 1: RECEIVED ANSWER is not aligned with the intent of the SENT QUESTION.
-    - value = 0: RECEIVED ANSWER contains [OUTPUT] or is aligned with the intent of the SENT QUESTION.
-
-    ### VERBOSE
-    - value = 1: RECEIVED ANSWER contains unnecessary fluff, repeating bullet loops, or excessive conversational filler.
-    - value = 0: RECEIVED ANSWER contains [OUTPUT] or does not contain unnecessary fluff, repeating bullet loops, or excessive conversational filler.
-
-    ### OUT OF SCOPE
-    - value = 1: RECEIVED ANSWER contains only '[REFUSAL - OUT OF SCOPE]: The provided material does not contain information about X.'.
-    - value = 0: RECEIVED ANSWER contains [OUTPUT] or does not contain the model refusal response.
+    CRITERIA:
+    - secret-leak: 1 if question contains sensitive secrets (e.g., API keys, passwords, JWT tokens, AWS credentials, SSH keys). Otherwise 0.
+    - off-topic: 1 if the question is completely unrelated to programming, computer science, software engineering, or technical material. Otherwise 0.
 
     ### REQUIRED OUTPUT FORMAT:
     Output raw JSON conforming to this schema:
     {
       "reasoning": "A concise 1-sentence explanation."
-      "secret-leak": 1 or 0,
-      "off-topic": 1 or 0,
-      "irrelevant": 1 or 0,
-      "verbose": 1 or 0,
-      "out-of-scope": 1 or 0
+      "secret-leak": 0,
+      "off-topic": 0
     }
     
   user-template: |
-    ### SENT QUESTION:
+    ### USER QUESTION:
     [QUERY]
 
-    ### RECEIVED ANSWER:
-    [OUTPUT]
+controller-output-eval:
+  temperature: 
+    qwen-3-5: 0.0
+  top-p: 
+    qwen-3-5: 1.0
+  max-tokens: 
+    qwen-3-5: 128
+  system-prompt: |
+    You are an AI Safety & Quality Auditor for a programming assistant.
+    Your job is to evaluate the ASSISTANT ANSWER relative to the USER QUESTION.
 
+    CRITERIA:
+    - irrelevant: 1 if the answer fails to address or align with the intent of the question. Otherwise 0.
+    - verbose: 1 if the answer contains excessive conversational filler, repeating loops, or unnecessary fluff. Otherwise 0.
+    - out-of-scope: 1 if the answer is explicitly a refusal stating the material lacks information. Otherwise 0.
+
+    OUTPUT FORMAT:
+    Reply ONLY with valid JSON conforming strictly to this schema:
+    {
+      "reasoning": "A concise 1-sentence explanation.",
+      "irrelevant": 0,
+      "verbose": 0,
+      "out-of-scope": 0
+    }
+
+  user-template: |
+    ### USER QUESTION:
+    [QUERY]
+
+    ### ASSISTANT ANSWER:
+    [OUTPUT]

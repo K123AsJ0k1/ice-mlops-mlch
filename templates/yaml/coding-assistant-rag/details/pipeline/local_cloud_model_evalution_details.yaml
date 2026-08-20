@@ -57,7 +57,9 @@ processing:
           repo-id: 'unsloth/Qwen3.5-0.8B-GGUF'
           filename: '*Q4_K_M.gguf'
           n-gpu-layers: -1
-          n-ctx: 32768
+          n-ctx: 16379
+          type-k: 1
+          type-v: 1
         generator-prompt-parameters: {}
     cluster:
       cloud-vm1:
@@ -124,7 +126,9 @@ processing:
           repo-id: 'unsloth/Qwen3.5-2B-GGUF'
           filename: '*Q4_K_M.gguf'
           n-gpu-layers: -1
-          n-ctx: 32768
+          n-ctx: 65536
+          type-k: 1
+          type-v: 1
         generator-prompt-parameters: {}
     cluster:
       cloud-vm1:
@@ -191,7 +195,9 @@ processing:
           repo-id: 'mistralai/Ministral-3-3B-Instruct-2512-GGUF'
           filename: '*Q4_K_M.gguf'
           n-gpu-layers: -1
-          n-ctx: 32768
+          n-ctx: 65536
+          type-k: 1
+          type-v: 1
         generator-prompt-parameters: {}
     cluster:
       cloud-vm1:
@@ -258,7 +264,9 @@ processing:
           repo-id: 'unsloth/gemma-4-E2B-it-GGUF'
           filename: '*Q4_K_M.gguf'
           n-gpu-layers: -1
-          n-ctx: 32768
+          n-ctx: 65536
+          type-k: 1
+          type-v: 1
         generator-prompt-parameters: {}
     cluster:
       cloud-vm1:
