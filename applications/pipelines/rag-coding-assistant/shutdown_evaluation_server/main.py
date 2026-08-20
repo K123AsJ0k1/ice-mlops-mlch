@@ -4,7 +4,7 @@ from ray import serve
 
 def shutdown_evaluation_server():
     try:   
-        serve.delete('model_evaluation_server') 
+        serve.delete(name = 'model_evaluation_server') 
         return True
     except Exception as e:
         print(f'Serve shutdown: {e}')
@@ -24,7 +24,7 @@ if __name__ == "__main__":
             print(f'package not found error {e}')
 
     print('Running Serve shutdown')
-    job_output = shutdown_evaluation_server
+    job_output = shutdown_evaluation_server()
     print('job success:' + str(job_output))
 
     print('Ray job Complete')

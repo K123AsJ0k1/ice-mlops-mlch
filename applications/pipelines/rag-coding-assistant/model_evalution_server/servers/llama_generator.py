@@ -26,6 +26,8 @@ class LLAMA_Generator:
             model_n_gpu_layers = model_parameters['n-gpu-layers']
             self.serve_id = model_parameters['serve-id']
             self.n_ctx = model_parameters['n-ctx']
+            self.type_k = model_parameters['type-k']
+            self.type_v = model_parameters['type-v']
             self.model_name = f'{model_repo_id}|{model_filename}'
             print(f'Model configurations {model_n_gpu_layers}|{self.n_ctx}')
             print(f'Fetching and initializing {self.model_name} directly from Hugging Face Hub...')
@@ -33,7 +35,9 @@ class LLAMA_Generator:
                 repo_id = model_repo_id, 
                 filename = model_filename,                    
                 n_gpu_layers = model_n_gpu_layers, 
-                n_ctx = self.n_ctx,      
+                n_ctx = self.n_ctx,
+                type_k = self.type_k,
+                type_v = self.type_v,      
                 verbose = False
             )
             print('Model downloaded and successfully loaded into memory!')
@@ -87,6 +91,8 @@ class LLAMA_Generator:
                     'inference-server': self.serve_id,
                     'used-model': self.model_name,
                     'n-ctx': self.n_ctx,
+                    'type-k': self.type_k,
+                    'type-v': self.type_v,
                     'temperature': query_temperature,
                     'top-p': query_top_p,
                     'max-tokens': query_max_tokens,
