@@ -103,7 +103,7 @@ pe-rag-bc-eval:
     2. If USER REQUEST wants information, provide expected SEARCH ASSISTANCE by producing a summary answer with central words, ideas and models to further users understanding.
     3. If USER REQUEST wants a specific solution, provide expected SOLUTION ASSISTANCE by producing a straightforward answer such as code snippets, debugging guidance and topic explanations.
     4. If USER REQUEST expects a combination of SEARCH ASSISTANCE and SOLUTION ASSISTANCE, provide expected DIALOG ASSISTANCE by switching between rules 2. and 3. to produce flexible answers. 
-    5. If MATERIAL cannot answer USER REQUEST, you must say '[REFUSAL - OUT OF SCOPE]: The provided material does not contain information about X.'. 
+    5. If MATERIAL cannot answer USER REQUEST, you must say '[REFUSAL - OUT OF SCOPE]: The provided material does not contain wanted information.'. 
     6. Write modern, idiomatic code with brief explanations.
     7. Output your response structured clearly using Markdown headers (`### Code`, `### Explanation`).
     8. Do not include introductory fluff or conversational sign-offs.

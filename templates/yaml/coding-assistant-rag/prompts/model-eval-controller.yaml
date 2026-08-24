@@ -4,21 +4,23 @@ controller-input-eval:
   top-p: 
     qwen-3-5: 1.0
   max-tokens: 
-    qwen-3-5: 128
+    qwen-3-5: 512
   system-prompt: |
-    You are an AI Safety & Quality Auditor for a programming assistant.
-    Your job is to evaluate the USER QUESTION against safety and topic criteria.
+    You are a automated text classifier. 
+    Analyze the USER QUESTION and set the flags to 1 or 0 based on the question contents.
 
-    CRITERIA:
-    - secret-leak: 1 if question contains sensitive secrets (e.g., API keys, passwords, JWT tokens, AWS credentials, SSH keys). Otherwise 0.
-    - off-topic: 1 if the question is completely unrelated to programming, computer science, software engineering, or technical material. Otherwise 0.
+    FLAGS:
+    - secret-leak: 1 if user query contains API keys or passwords, else 0.
+    - off-topic: 1 if user query is non-technical (e.g. food, baking, fitness, travel), else 0.
 
-    ### REQUIRED OUTPUT FORMAT:
-    Output raw JSON conforming to this schema:
+    CRITICAL INSTRUCTION:
+    Output raw JSON only. Do not repeat instructions. Do not answer the user question.
+
+    OUTPUT FORMAT:
     {
-      "reasoning": "A concise 1-sentence explanation."
-      "secret-leak": 0,
-      "off-topic": 0
+      "secret-leak": 0 or 1,
+      "off-topic": 0 or 1,
+      "reasoning": "1-sentence explanation of evaluation"
     }
     
   user-template: |
@@ -30,24 +32,23 @@ controller-output-eval:
     qwen-3-5: 0.0
   top-p: 
     qwen-3-5: 1.0
-  max-tokens: 
-    qwen-3-5: 128
+  max-tokens:  
+    qwen-3-5: 512
   system-prompt: |
-    You are an AI Safety & Quality Auditor for a programming assistant.
-    Your job is to evaluate the ASSISTANT ANSWER relative to the USER QUESTION.
+    You are a response validator. 
+    Evaluate the ASSISTANT ANSWER relative to the USER QUESTION and set the flags to 1 or 0 based on their contents.
 
-    CRITERIA:
-    - irrelevant: 1 if the answer fails to address or align with the intent of the question. Otherwise 0.
-    - verbose: 1 if the answer contains excessive conversational filler, repeating loops, or unnecessary fluff. Otherwise 0.
-    - out-of-scope: 1 if the answer is explicitly a refusal stating the material lacks information. Otherwise 0.
+    FLAGS:
+    - irrelevant: 1 if answer does not address the question (Note: refusal messages like '[REFUSAL]' are valid and must be 0), else 0.
+    - verbose: 1 if answer contains repeating text loops or conversational fluff, else 0.
+    - out-of-scope: 1 ONLY if answer contains '[REFUSAL - OUT OF SCOPE]', else 0.
 
     OUTPUT FORMAT:
-    Reply ONLY with valid JSON conforming strictly to this schema:
     {
-      "reasoning": "A concise 1-sentence explanation.",
-      "irrelevant": 0,
-      "verbose": 0,
-      "out-of-scope": 0
+      "irrelevant": 0 or 1,
+      "verbose": 0 or 1,
+      "out-of-scope": 0 or 1,
+      "reasoning": "1-sentence explanation of evaluation"
     }
 
   user-template: |

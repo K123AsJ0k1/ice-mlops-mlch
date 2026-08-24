@@ -76,7 +76,7 @@ processing:
           main-file: 'main.py'
           runtime:
             working_dir: 'behavior_controller_server'
-            pip: 'requirements.txt'
+            pip: 'behavior_controller_server/c-vm1-requirements.txt'
             env_vars:
               HF_TOKEN: 'fill'
       local-lt2:
@@ -145,7 +145,7 @@ processing:
           main-file: 'main.py'
           runtime:
             working_dir: 'model_evalution_server'
-            pip: 'requirements.txt'
+            pip: 'model_evalution_server/c-vm1-requirements.txt'
             env_vars:
               HF_TOKEN: 'fill'
       local-lt2:
@@ -213,8 +213,8 @@ processing:
         job:
           main-file: 'main.py'
           runtime:
-            working_dir: 'model_evalution'
-            pip: 'model_evalution/requirements.txt'
+            working_dir: 'model_evalution_server'
+            pip: 'model_evalution_server/c-vm1-requirements.txt'
             env_vars:
               HF_TOKEN: 'fill'
       local-lt2:
@@ -282,8 +282,8 @@ processing:
         job:
           main-file: 'main.py'
           runtime:
-            working_dir: 'model_evalution'
-            pip: 'model_evalution/requirements.txt'
+            working_dir: 'model_evalution_server'
+            pip: 'model_evalution_server/c-vm1-requirements.txt'
             env_vars:
               HF_TOKEN: 'fill'
       local-lt2:
@@ -334,6 +334,8 @@ processing:
           filename: '*Q4_K_M.gguf'
           n-gpu-layers: -1
           n-ctx: 32768
+          type-k: 1
+          type-v: 1
         generator-prompt-parameters: {}
     cluster:
       cloud-vm1:
@@ -349,8 +351,8 @@ processing:
         job:
           main-file: 'main.py'
           runtime:
-            working_dir: 'model_evalution'
-            pip: 'model_evalution/requirements.txt'
+            working_dir: 'model_evalution_server'
+            pip: 'model_evalution_server/c-vm1-requirements.txt'
             env_vars:
               HF_TOKEN: 'fill'
       local-lt2:
@@ -401,6 +403,8 @@ processing:
           filename: '*Q4_K_M.gguf'
           n-gpu-layers: -1
           n-ctx: 32768
+          type-k: 1
+          type-v: 1
         generator-prompt-parameters: {}
     cluster:
       cloud-vm1:
@@ -416,8 +420,8 @@ processing:
         job:
           main-file: 'main.py'
           runtime:
-            working_dir: 'model_evalution'
-            pip: 'model_evalution/requirements.txt'
+            working_dir: 'model_evalution_server'
+            pip: 'model_evalution_server/c-vm1-requirements.txt'
             env_vars:
               HF_TOKEN: 'fill'
       local-lt2:
@@ -468,6 +472,8 @@ processing:
           filename: '*Q4_K_M.gguf'
           n-gpu-layers: -1
           n-ctx: 32768
+          type-k: 1
+          type-v: 1
         generator-prompt-parameters: {}
     cluster:
       cloud-vm1:
@@ -483,8 +489,8 @@ processing:
         job:
           main-file: 'main.py'
           runtime:
-            working_dir: 'model_evalution'
-            pip: 'model_evalution/requirements.txt'
+            working_dir: 'model_evalution_server'
+            pip: 'model_evalution_server/c-vm1-requirements.txt'
             env_vars:
               HF_TOKEN: 'fill'
       local-lt2:
