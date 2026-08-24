@@ -1,8 +1,10 @@
 
-def generate_create_requests(
+def generator_create_requests(
     swift_client: any,
     storage_parameters: any,
     dataset_paths: list,
+    ranking_parameters: any,
+    target_model: str,
     prompt_parameters: any,
     data_ratio: any,
     join_prompts: bool
@@ -10,13 +12,13 @@ def generate_create_requests(
     try:
         from ..objects.use import objects_get_data
         import re
-        import json
+        from ..search.utility import search_process_dataset
     except ImportError as e:
         raise ImportError("generator/ failed to import", e)
 
     print('Creating inference requests')
     inference_requests = []
-    case_idx = 0
+    request_index = 0
     question_type_idx = {}
     valid_data_rows = {}
     for dataset_path in dataset_paths:
@@ -44,17 +46,21 @@ def generate_create_requests(
 
         target_df = data_object[0]
 
-        for _, row in target_df.iterrows():
+        _, relevant_weights, _ = search_process_dataset(
+            target_df = target_df,
+            group_columns = ranking_parameters['group-columns'],
+            value_column = ranking_parameters['value-column'],
+            relevance_column = ranking_parameters['relevance-column'],
+            query_column = ranking_parameters['query-column']
+        )
+
+        for row_idx, (_, row) in enumerate(target_df.iterrows()):
             if row['chapter'] == 0:
                 continue
             valid_data_rows[dataset_name] += 1  
-            row_chapter = row['chapter']
-            row_idx = row['idx']
-            row_char = row['characters']
+            
             replacer_dict = {
-                'CONTENT': row['content'],
-                'MATERIAL': json.dumps(row['ref-material'], indent=2),
-                'PATHS': json.dumps(row['ref-paths'], indent=2)
+                'CONTENT': row['content']
             }
             for data_type, wanted_amount in data_ratio.items():
                 if not data_type in question_type_idx:
@@ -62,9 +68,10 @@ def generate_create_requests(
                 
                 system_prompt = prompt_parameters[data_type]['system-prompt']
                 user_template = prompt_parameters[data_type]['user-template']
-                temperature = prompt_parameters[data_type]['temperature']
-                top_p = prompt_parameters[data_type]['top-p']
-                max_tokens = prompt_parameters[data_type]['max-tokens']
+
+                temperature = prompt_parameters[data_type]['temperature'][target_model]
+                top_p = prompt_parameters[data_type]['top-p'][target_model]
+                max_tokens = prompt_parameters[data_type]['max-tokens'][target_model]
 
                 pattern = r'\[([A-Z_1-9]+)\]'
                 user_prompt = re.sub(
@@ -93,27 +100,30 @@ def generate_create_requests(
                         "role": "user", 
                         "content": user_prompt
                     })
-                # double check names  
-                # add metadata to enable RAG ranking calculations
-                # add relevant weights batch here for later calculations 
+                
                 for i in range(0, wanted_amount):
                     inference_requests.append({
                         'dataset-name': dataset_name,
-                        'row-chapter': row_chapter,
-                        'row-index': row_idx,
-                        'row-characters': row_char,
-                        'case-index': case_idx,
+                        'chunk-part': row['part'],
+                        'chunk-chapter': row['chapter'],
+                        'chunk-idx': row['idx'],
+                        'chunk-characters': row['characters'],
+                        'chunk-relevance': row['relevance'],
+                        'chunk-topic': row['topic'],
+                        'chunk-relevant-weights': relevant_weights[row_idx],
+                        'request-index': request_index,
                         'question-type': data_type,
                         'question-index': question_type_idx[data_type],
                         'messages': sent_messages,
                         'system-prompt-length': system_prompt_length,
                         'user-prompt-length': user_prompt_length,
+                        'target-model': target_model,
                         'temperature': temperature,
                         'top-p': top_p,
                         'max-tokens': max_tokens
                     })
                     question_type_idx[data_type] += 1
-            case_idx += 1
+            request_index += 1
     print('')
     print('Valid cases per dataset')
     for key, value in valid_data_rows.items():
@@ -121,7 +131,7 @@ def generate_create_requests(
     print(f'Amount of requests: {len(inference_requests)}')
     return inference_requests
 
-def generate_create_outputs(
+def generator_create_answers(
     dataset_inference_requests: list,
     request_keys: dict,
     length_limit: int,
@@ -129,293 +139,254 @@ def generate_create_outputs(
     debug_prints: bool
 ) -> dict:
     try:
-        from ..ray.use import ray_serve_route
         import statistics
         import time as t
+        from ..ray.utility import ray_run_inference
+        from ..generator.utility import generator_extract_output
     except ImportError as e:
         raise ImportError("generator/ failed to import", e)
     process_time_start = t.time()
     print('Creating dataset')
     print(f'Request length limit {length_limit}')
     print('')
-    inference_address = inference_parameters['address']
-    inference_path = inference_parameters['path']
-    prompt_lengths = []
-    dataset_metadata = []
-    model_outputs = []
-    gathered_metrics = []
-    request_times = [] 
-    # The end dataset also required input for double checking
-    # There should be columns for messages
+
+    run_data = {
+        'requests': [],
+        'outputs': {
+            'model': [],
+            'data': []
+        },
+        'metrics': [],
+        'request-times': [],
+        'prompt-lengths': {
+            'system': [],
+            'user': []
+        },
+        'execution-times': [],
+        'stats': {}
+    }
+
     for inference_requests in dataset_inference_requests:
-        sent_request = {}
+        execution_time_start = t.time()
+        generator_request = {}
         dataset_name = inference_requests['dataset-name']
-        row_chapter = inference_requests['row-chapter']
-        row_index = inference_requests['row-index']
-        row_characters = inference_requests['row-characters']
-        case_index = inference_requests['case-index'] + 1
+        chunk_part = inference_requests['chunk-part']
+        chunk_chapter = inference_requests['chunk-chapter']
+        chunk_idx = inference_requests['chunk-idx']
+        chunk_characters = inference_requests['chunk-characters']
+        chunk_relevance = inference_requests['chunk-relevance']
+        chunk_topic = inference_requests['chunk-topic']
+        chunk_relevant_weights = inference_requests['chunk-relevant-weights']
+        request_index = inference_requests['request-index'] + 1
         question_type = inference_requests['question-type']
         question_index = inference_requests['question-index'] + 1
+
         system_prompt_length = inference_requests['system-prompt-length']
         user_prompt_length = inference_requests['user-prompt-length']
+        target_model = inference_requests['target-model']
         temperature = inference_requests['temperature']
         top_p = inference_requests['top-p']
         max_tokens = inference_requests['max-tokens']
 
         if user_prompt_length < length_limit:
             if 0 < system_prompt_length:
-                prompt_lengths.append(system_prompt_length)
+                run_data['prompt-lengths']['system'].append(system_prompt_length)
             if 0 < user_prompt_length:
-                prompt_lengths.append(user_prompt_length)
+                run_data['prompt-lengths']['user'].append(user_prompt_length)
 
             print(f'Dataset|{dataset_name}')
-            print(f'Chapter|{row_chapter}')
-            print(f'Index|{row_index}')
-            print(f'Characters|{row_characters}')
-            print(f'Case|{case_index}')
+            print(f'Part|{chunk_part}')
+            print(f'Chapter|{chunk_chapter}')
+            print(f'Index|{chunk_idx}')
+            print(f'Characters|{chunk_characters}')
+            print(f'Request|{request_index}')
             print(f'Question type|{question_type}')
             print(f'Question index|{question_index}')
             print(f'System prompt length|{system_prompt_length}')
             print(f'User prompt length|{user_prompt_length}')
+            print(f'Model|{target_model}')
             print(f'Temperature|{temperature}')
             print(f'Top-p|{top_p}')
             print(f'Max tokens|{max_tokens}') 
 
             for key in request_keys:
-                sent_request[key] = inference_requests[key]
+                generator_request[key] = inference_requests[key]
 
-            request_time_start = t.time()
-            print('Sending request')
-            status_code, route_output = ray_serve_route(
-                route_address = inference_address,
-                route_path = inference_path,
-                route_type = 'POST',
-                route_input = sent_request,
-                timeout = 5
+            answer_metadata = {
+                'dataset': dataset_name,
+                'chunk-part': chunk_part,
+                'chunk-chapter': chunk_chapter,
+                'chunk-idx': chunk_idx,
+                'chunk-characters': chunk_characters,
+                'chunk-relevance': chunk_relevance,
+                'chunk-topic': chunk_topic,
+                'chunk-relevant-weights': chunk_relevant_weights,
+                'request-index': request_index,
+                'question-type': question_type,
+                'question-index': question_index,
+                'system-prompt-length': system_prompt_length,
+                'user-prompt-length': user_prompt_length,
+            }
+
+            generator_inference_tuple = ray_run_inference(
+                inference_address = inference_parameters['generator']['address'],
+                inference_path = inference_parameters['generator']['path'],
+                sent_request = generator_request
             )
 
-            request_end_time = t.time()
-            request_total_time = round(request_end_time-request_time_start,5)
-            print(f'Spent seconds request: {request_total_time}')
+            generator_output = generator_inference_tuple[0]
+            generator_merged_data = answer_metadata | generator_inference_tuple[1]
 
-            if status_code == 200:
-                print('Request success')
-                output_status = route_output['status']
+            generator_data = generator_extract_output(
+                output = generator_output
+            )
 
-                if output_status == 'success':
-                    generated_data = route_output['text']
-                    effiency_metrics = route_output['efficiency-metrics']
-                    dataset_metadata.append({
-                        'dataset': dataset_name,
-                        'case-chapter': row_chapter,
-                        'row-index': row_index,
-                        'characters': row_characters,
-                        'case-index': case_index,
-                        'question-type': question_type,
-                        'question-index': question_index,
-                        'system-prompt-length': system_prompt_length,
-                        'user-prompt-length': user_prompt_length,
-                        'temperature': temperature,
-                        'max-tokens': max_tokens
-                    })
-                    model_outputs.append(generated_data)
-                    gathered_metrics.append(effiency_metrics)
-                    request_times.append(request_total_time)
-            else:
-                print('Request fail')
+            run_data['requests'].append(inference_requests)
+            run_data['outputs']['model'].append(generator_output)
+            run_data['outputs']['data'].append(generator_data)
+            run_data['metrics'].append(generator_merged_data)
+            run_data['request-times'].append(generator_inference_tuple[2])
+        execution_end_time = t.time()
+        execution_total_time = round(execution_end_time-execution_time_start,5)
+        run_data['execution-times'].append(execution_total_time)
+        print(f'Spent seconds on execution: {execution_total_time}')
         print('')
 
-    length_mean = statistics.mean(prompt_lengths)
-    length_median = statistics.median(prompt_lengths)
-    max_prompt_length = max(prompt_lengths)
-    min_prompt_length = min(prompt_lengths)
+    try:
+        for key, value in run_data['prompt-lengths'].items():
+            if 0 < len(value):
+                max_prompt_length = max(value)
+                min_prompt_length = min(value)
+                mean_prompt_length = statistics.mean(value)
+                median_prompt_length = statistics.median(value)
+                print(f'Prompt role|{key}')
+                print(f'Max prompt length|{max_prompt_length}')
+                print(f'Min prompt length|{min_prompt_length}')
+                print(f'Mean prompt length|{mean_prompt_length}')
+                print(f'Median prompt length|{median_prompt_length}')
+                stat_key = f'{key}-prompt'
+                run_data['stats'][stat_key] = {
+                    'max': max_prompt_length,
+                    'min': min_prompt_length,
+                    'mean': mean_prompt_length,
+                    'median': median_prompt_length
+                }
+    except Exception as e:
+        print(e)
 
-    print(f'Max prompt length|{max_prompt_length}')
-    print(f'Min prompt length|{min_prompt_length}')
-    print(f'Mean prompt length|{length_mean}')
-    print(f'Median prompt length|{length_median}')
-    
     process_end_time = t.time()
     process_total_time = round(process_end_time-process_time_start,5)
     print(f'Spent seconds on processing: {process_total_time}')
-
-    general_stats = {
-        'length-mean': length_mean,
-        'length-median': length_median,
-        'max-prompt-length': max_prompt_length,
-        'min-prompt-length': min_prompt_length,
-        'process-total-time': process_total_time
-    }
+    print('') 
+    run_data['stats']['process-total-time'] = process_total_time
     
-    return model_outputs, gathered_metrics, request_times, general_stats
+    return run_data
 
-def generate_parse_output(
-    text: str
-) -> any:
-    try:
-        import re
-    except ImportError as e:
-        raise ImportError("generator/use failed to import", e)
-    
-    if '</think>' in text:
-        parts = text.split('</think>', 1)
-        thinking_text = parts[0].strip()
-        main_content = parts[1].strip()
-    else:
-        thinking_text = ""
-        main_content = text
-
-    sections = re.split(r'\n(?=###\s+)', main_content)
-
-    parsed_sections = {}
-    for sec in sections:
-        sec = sec.strip()
-        if not sec:
-            continue
-        
-        # Match '### HEADER_NAME\n Header Content'
-        header_match = re.match(r'^###\s+([^\n]+)\n?(.*)', sec, flags=re.DOTALL)
-        if header_match:
-            header_title = header_match.group(1).strip().lower().replace("_", "-")
-            header_content = header_match.group(2).strip()
-            parsed_sections[header_title] = header_content
-
-    return {
-        'thinking-text': thinking_text,
-        'main-content': main_content,
-        **parsed_sections
-    }
-
-def generate_process_references(
-    used_references: str,
-) -> any:
-    try:
-        import pandas as pd
-    except ImportError as e:
-        raise ImportError("generator/use failed to import", e)
-
-    # N/A
-    if 'N/A' in used_references:
-        return pd.NA
-
-    # There can be many
-    # #used-material-n or n
-    if not '(' in used_references or not ')' in used_references:
-        # #used-material-n
-        if '#used-material' in used_references:
-            return used_references
-
-    if '(' in used_references or ')' in used_references:
-        return used_references.replace("(", "").replace(")", "")
-
-    return 'Hallucinated'
-    
-def generate_process_paths(
-    used_paths: str
-) -> any:
-    try:
-        import pandas as pd
-    except ImportError as e:
-        raise ImportError("generator/use failed to import", e)
-    #print('paths')
-    #print(used_paths)
-    if 'N/A' in used_paths:
-        return pd.NA
-
-    if not '(' in used_paths or not ')' in used_paths:
-        # #used-material-n
-        #print(used_paths)
-        if './docs/config/settings.yaml' in used_paths:
-            return pd.NA
-
-        if './' in used_paths:
-            return used_paths
-    
-    if '(' in used_paths or ')' in used_paths:
-        if './docs/config/settings.yaml' in used_paths:
-            return pd.NA
-
-        return used_paths.replace("(", "").replace(")", "")
-
-    return 'Hallucinated'
-
-def generate_process_category(
-    answer: str
-) -> any:
-    try:
-        import pandas as pd
-        import re
-    except ImportError as e:
-        raise ImportError("generator/use failed to import", e)
-
-    pattern = r'^\[(?P<action>[^-\]]+)(?:\s*-\s*(?P<type>[^\]]+))?\]\s*:\s*(?P<ground_truth>.*)$'
-    match = re.match(pattern, answer.strip(), flags=re.DOTALL)
-    
-    if match:
-        return {
-            'action': match.group('action').strip(),
-            'category': match.group('type').strip() if match.group('type') else None,
-            'ground-truth-answer': match.group('ground_truth').strip()
-        }
-    
-    # Fallback if the pattern doesn't match bracketed prefix
-    return {
-        'action': pd.NA,
-        'category': pd.NA,
-        'ground-truth-answer': answer.strip()
-    }
-    
-def generate_process_data(
-    inference_requests: list,
-    model_outputs: list,
-    gathered_metrics: list,
-    request_times: list
+def generator_print_answers(
+    run_data: dict
 ):
+    run_requests = run_data['requests']
+    run_model_outputs = run_data['outputs']['model']
+    run_model_data = run_data['outputs']['data']
+    run_metrics = run_data['metrics']
+    print('START ANSWERS')
+    print(f'Amount|{len(run_requests)}')
+    idx = 0
+    for judge_request in run_requests:
+        case_metrics = run_metrics[idx]
+        case_output = run_model_outputs[idx]
+        case_data = run_model_data [idx]
+        question_index = judge_request['question-index']
+        
+        dataset_name = judge_request['dataset-name']
+        request_index = judge_request['request-index']
+        question_type = judge_request['question-type']
+        category_type = case_metrics['category']
+        
+        question_index = question_index + 1
+        messages = judge_request['messages']
+        system_prompt_length = judge_request['system-prompt-length']
+        user_prompt_length = judge_request['user-prompt-length']
+        target_model = judge_request['target-model']
+        temperature = judge_request['temperature']
+        top_p = judge_request['top-p']
+        max_tokens = judge_request['max-tokens']
+
+        print(f'Dataset|{dataset_name}')
+        print(f'Request|{request_index}')
+        print(f'Question type|{question_type}')
+        print(f'Question index|{question_index}')
+        print(f'Category|{category_type}')
+        print(f'System prompt length|{system_prompt_length}')
+        print(f'User prompt length|{user_prompt_length}')
+        print(f'Model|{target_model}')
+        print(f'Temperature|{temperature}')
+        print(f'Top-p|{top_p}')
+        print(f'Max tokens|{max_tokens}') 
+        print('')
+        print('==========')
+        # Show format and type
+        print('Judge prompts:')
+        for message in messages:
+            prompt_role = message['role']
+            prompt_content = message['content']
+
+            print(f'Role|{prompt_role}')
+            print('Prompt:')
+            print(prompt_content)
+        print('==========')
+        print('Answer:')
+        print(case_output)
+        print('==========')
+        print('Output:')
+        print(case_output)
+        print('==========')
+        print('Scores:')
+        print(case_data)
+        print('==========')
+        print('')
+        idx += 1
+
+def generator_produce_answers(
+    swift_client: any,
+    storage_parameters: any,
+    dataset_paths: list,
+    ranking_parameters: any,
+    target_model: str,
+    prompt_parameters: any,
+    data_ratio: any,
+    join_prompts: bool,
+    request_keys: dict,
+    length_limit: int,
+    inference_parameters: any,
+    request_start: int,
+    request_end: int,
+    debug_prints: bool
+):
+    generator_requests = generator_create_requests(
+        swift_client = swift_client,
+        storage_parameters = storage_parameters,
+        dataset_paths = dataset_paths,
+        ranking_parameters = ranking_parameters,
+        target_model = target_model,
+        prompt_parameters = prompt_parameters,
+        data_ratio = data_ratio,
+        join_prompts = join_prompts
+    )
+
+    generator_run_data = generator_create_answers(
+        dataset_inference_requests = generator_requests[request_start:request_end],
+        request_keys = request_keys,
+        length_limit = length_limit,
+        inference_parameters = inference_parameters,
+        debug_prints = debug_prints
+    )
+
     try:
-        import pandas as pd
-        from ..generator.use import generate_parse_output
-    except ImportError as e:
-        raise ImportError("generator/use failed to import", e)
-
-    expanded_df = pd.json_normalize(inference_requests)
-    dataset_df_temp = pd.DataFrame(gathered_metrics)
-    dataset_df_temp['times'] = request_times
-    
-    temp_2_df = pd.concat([expanded_df, dataset_df_temp], axis = 1)
-    output_list = []
-    for output in model_outputs:
-        output_dict = generate_parse_output(
-            text = output
+        generator_print_answers(
+            run_data = generator_run_data
         )
-        
-        if 'type' in output_dict:
-            if output_dict['type'] == 'factual' or output_dict['type'] == 'synthesis':
-                if 'relevant-used-references' in output_dict and 'relevant-used-paths' in output_dict:
-                    checked_references = generate_process_references(
-                        used_references = output_dict['relevant-used-references']
-                    )
-                    output_dict['relevant-used-references'] = checked_references
-                    checked_paths = generate_process_paths(
-                        used_paths = output_dict['relevant-used-paths']
-                    )
-                    output_dict['relevant-used-paths'] = checked_paths
-
-            if output_dict['type'] == 'negative':
-                if 'ground-truth-answer' in output_dict:
-                    category_data = generate_process_category(
-                        answer = output_dict['ground-truth-answer']
-                    )
-                    
-                    for key, value in category_data.items():
-                        output_dict[key] = value
-
-        output_list.append(output_dict)
-        
-    output_df = pd.json_normalize(output_list)
-    preprocess_df = pd.concat([temp_2_df, output_df], axis = 1)
-    preprocess_df = preprocess_df.loc[:, ~preprocess_df.columns.duplicated()]
-    preprocess_df = preprocess_df.convert_dtypes()
-
-    return preprocess_df
+    except Exception as e:
+        print(e)
     
-   
+    return generator_run_data

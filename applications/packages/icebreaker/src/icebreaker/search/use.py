@@ -134,27 +134,17 @@ def search_data_metrics(
     debug_prints: bool
 ):  
     try:
-        from ..search.utility import search_get_statistics
+        from ..search.utility import search_get_statistics, search_process_dataset
     except ImportError as e:
         raise ImportError("embeddings/use failed to import", e)
-
-    relevance_lookup = target_df.groupby(group_columns)[value_column].apply(list).to_dict()
     
-    text_queries = []
-    relevant_weights_batch = []
-    metadata_rows = [] 
-
-    for _, row in target_df.iterrows():
-        group_key = tuple(row[column] for column in group_columns)
-        text_queries.append(row[query_column])
-        relevant_id_batch = relevance_lookup[group_key]
-        relevant_weighed_ids = {}
-        for relevant_id in relevant_id_batch:
-            id_relevance = target_df.loc[target_df[value_column] == relevant_id, relevance_column].values[0]
-            relevant_weighed_ids[relevant_id] = int(id_relevance)
-        
-        relevant_weights_batch.append(relevant_weighed_ids)
-        metadata_rows.append(row)
+    text_queries, relevant_weights_batch, metadata_rows = search_process_dataset(
+        target_df = target_df,
+        group_columns = group_columns,
+        value_column = value_column,
+        relevance_column = relevance_column,
+        query_column = query_column
+    )
    
     batch_outputs = search_monitored_batch_query(
         qdrant_client = qdrant_client,

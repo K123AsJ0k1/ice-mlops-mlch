@@ -153,7 +153,7 @@ def search_process_dataset(
     value_column: str,
     relevance_column: str,
     query_column: str
-):
+): 
     relevance_lookup = target_df.groupby(group_columns)[value_column].apply(list).to_dict()
         
     text_queries = []
