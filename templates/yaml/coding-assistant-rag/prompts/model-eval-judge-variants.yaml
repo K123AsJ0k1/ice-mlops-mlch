@@ -7,7 +7,7 @@ judge-general-eval:
     qwen-3-5: 1.0
     ministral-3: 1.0
     gemma-4: 1.0
-  max-tokens: 
+  max-tokens:  
     qwen-3-5: 512
     ministral-3: 512
     gemma-4: 512

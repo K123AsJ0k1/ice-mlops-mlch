@@ -207,8 +207,10 @@ processing:
           inference: 'llama'
           repo-id: 'unsloth/DeepSeek-R1-Distill-Llama-8B-GGUF'
           filename: '*Q4_K_M.gguf'
-          n-gpu-layers: -1
+          n-gpu-layers: -1 
           n-ctx: 8192
+          type-k: 1
+          type-v: 1
         generator-prompt-parameters: {}
     cluster:
       cloud-vm1:
@@ -224,8 +226,8 @@ processing:
         job:
           main-file: 'main.py'
           runtime:
-            working_dir: 'llm_inference_server'
-            pip: 'requirements.txt'
+            working_dir: 'data_generator_server'
+            pip: 'c-vm1-requirements.txt'
             env_vars:
               HF_TOKEN: 'fill'
       local-lt2:

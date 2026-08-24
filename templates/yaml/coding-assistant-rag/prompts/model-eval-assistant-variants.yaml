@@ -3,7 +3,7 @@ base-eval:
     qwen-3-5: 0.2
     ministral-3: 0.15
     gemma-4: 1.0
-  top-p: 
+  top-p:  
     qwen-3-5: 0.8
     ministral-3: 0.95 
     gemma-4: 0.95

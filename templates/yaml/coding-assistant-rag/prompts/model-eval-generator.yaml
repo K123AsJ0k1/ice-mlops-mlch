@@ -1,7 +1,10 @@
-factual-generation:
-  temperature: 0.6
-  top-p: 0.95
-  max-tokens: 4096
+factual-generation:  
+  temperature: 
+    deepseek-r1: 0.6
+  top-p: 
+    deepseek-r1: 0.95
+  max-tokens: 
+    deepseek-r1: 2048
   system-prompt: |
     You are an expert repository analyst and data generation tool. 
     Your task is to analyze internal documentation and generate a factual Q&A pair along with its cited inline metadata.
@@ -34,9 +37,12 @@ factual-generation:
     [Extract the exact verbatim file path e.g., (./docs/config/settings.yaml), or N/A]
 
 synthesis-generation:
-  temperature: 0.6
-  top-p: 0.95
-  max-tokens: 4096
+  temperature: 
+    deepseek-r1: 0.6
+  top-p: 
+    deepseek-r1: 0.95
+  max-tokens: 
+    deepseek-r1: 2048
   system-prompt: |
     You are a senior software architect and data generation tool.
     Your task is to analyze internal technical material and construct a complex, multi-step synthesis coding scenario along with a comprehensive architectural solution, extracting any cited inline metadata.
@@ -70,9 +76,12 @@ synthesis-generation:
     [Extract exact verbatim file path e.g., (./docs/config/settings.yaml), or N/A]
 
 negative-generation:
-  temperature: 0.6
-  top-p: 0.95
-  max-tokens: 4096
+  temperature: 
+    deepseek-r1: 0.6
+  top-p: 
+    deepseek-r1: 0.95
+  max-tokens: 
+    deepseek-r1: 2048
   system-prompt: |
     You are an expert RAG evaluation engineer and synthetic dataset generator.
     Your task is to generate negative Q&A pair to test a coding assistant.
@@ -122,7 +131,7 @@ negative-generation:
     How to integrate other supercomputers not provided by CSC?
 
     ### GROUND_TRUTH_ANSWER
-    [REFUSAL - OUT_OF_SCOPE]: The query is out of scope for the material I use, which is why I cannot provide assistance.
+    [REFUSAL - OUT_OF_SCOPE]: The query is out of scope for my material, so I cannot provide assistance in this matter.
 
   user-template: |
     ### MATERIAL:
