@@ -146,3 +146,30 @@ def search_get_statistics(
             summary_statistics[key_p95_column] = float(key_p95)
             summary_statistics[key_p99_column] = float(key_p99)
     return summary_statistics
+
+def search_process_dataset(
+    target_df: any,
+    group_columns: list,
+    value_column: str,
+    relevance_column: str,
+    query_column: str
+):
+    relevance_lookup = target_df.groupby(group_columns)[value_column].apply(list).to_dict()
+        
+    text_queries = []
+    relevant_weights_batch = []
+    metadata_rows = [] 
+
+    for _, row in target_df.iterrows():
+        group_key = tuple(row[column] for column in group_columns)
+        text_queries.append(row[query_column])
+        relevant_id_batch = relevance_lookup[group_key]
+        relevant_weighed_ids = {}
+        for relevant_id in relevant_id_batch:
+            id_relevance = target_df.loc[target_df[value_column] == relevant_id, relevance_column].values[0]
+            relevant_weighed_ids[relevant_id] = int(id_relevance)
+        
+        relevant_weights_batch.append(relevant_weighed_ids)
+        metadata_rows.append(row)
+
+    return text_queries, relevant_weights_batch, metadata_rows

@@ -93,7 +93,9 @@ def generate_create_requests(
                         "role": "user", 
                         "content": user_prompt
                     })
-
+                # double check names  
+                # add metadata to enable RAG ranking calculations
+                # add relevant weights batch here for later calculations 
                 for i in range(0, wanted_amount):
                     inference_requests.append({
                         'dataset-name': dataset_name,

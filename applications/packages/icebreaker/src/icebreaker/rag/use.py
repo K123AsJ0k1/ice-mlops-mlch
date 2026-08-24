@@ -190,7 +190,7 @@ def rag_setup_database(
     print('Spent seconds', total_time)
 
     return total_time
- 
+  
 def rag_evalute_database(
     swift_client: any,
     qdrant_client: any,

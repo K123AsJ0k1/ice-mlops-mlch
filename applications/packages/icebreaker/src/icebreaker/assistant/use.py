@@ -84,7 +84,7 @@ def assistant_format_context(
     formatted_context = "\n".join(xml_lines)
     return formatted_context, collected_metrics
             
-def assistant_create_requests(
+def assistant_create_requests( 
     target_df: any,
     prompt_parameters: any,
     dataset_name: str,
@@ -119,7 +119,7 @@ def assistant_create_requests(
         }
         for data_type, wanted_amount in data_ratio.items():
             if not data_type in question_type_idx:
-                question_type_idx[data_type] = 0
+                question_type_idx[data_type] = 0 
             
             system_prompt = prompt_parameters[data_type]['system-prompt']
             user_template = prompt_parameters[data_type]['user-template']
@@ -142,7 +142,8 @@ def assistant_create_requests(
                     sparse_model = sparse_model,
                     batch_size = batch_size
                 )
-
+                # idx is neededd for RAG ranking
+                # Remembe to consider the general case
                 formatted_context, batch_metrics = assistant_format_context(
                     query_results = batch_query_results,
                     wrapper_tag = 'context',
@@ -158,6 +159,10 @@ def assistant_create_requests(
                     path_key = 'ref-paths',
                     content_key = 'content'
                 )
+                # It is most likely easiest to simply put the payload
+                # We might be able to ranking here if calculate relevant
+                # weights batch for factual and synthesis during the generation
+                # and add them into the dataset
                 rag_metrics.append({
                     'case-index': case_idx,
                     'question-type': data_type,

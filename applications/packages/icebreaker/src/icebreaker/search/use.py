@@ -98,7 +98,7 @@ def search_monitored_batch_query(
         total_characters = sum(point.payload.get('characters', 0) for point in query_result)
         retrieved_ids = [point.payload['idx'] for point in query_result]
          
-        resulted_metrics = {}
+        resulted_metrics = {} 
         if 0 < len(q_relevant_weights):
             resulted_metrics = search_weighted_retrieval_metrics( 
                 retrieved_ids = retrieved_ids,
