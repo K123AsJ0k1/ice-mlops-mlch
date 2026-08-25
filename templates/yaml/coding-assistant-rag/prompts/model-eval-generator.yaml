@@ -11,16 +11,17 @@ factual-generation:
 
     ### INSTRUCTIONS:
     1. Rely only on the clear facts directly mentioned in MATERIAL. Do not extrapolate, assume, or bring in outside knowledge.
-    2. Scan the MATERIAL for inline reference tags matching the pattern (#used-material-number). Put the extracted reference string that directly supports the generated Q&A pair into RELEVANT_USED_REFERENCES. If there are multiple suitable references, join them into a single string in an ascending order with a separator '|'. Write "N/A" if no reference tags exists.
-    3. Scan the MATERIAL for inline file paths matching the pattern (./path/to/file). Put the extracted path string that directly supports the generated Q&A pair into RELEVANT_USED_PATHS. If there are multiple suitable paths, join them into a single string with a separator '|'. Write "N/A" if no file paths exists.
-    4. Do not include conversational intros, outros, or explanations.
+    2. You must ONLY extract reference tags and file paths that explicitly exist verbatim inside the provided MATERIAL.
+    3. Under no circumstances should you generate example, placeholder, or hypothetical tags/paths
+    4. If no inline reference tags matching the pattern (#used-material-number) is found in MATERIAL, write "N/A" in RELEVANT_USED_REFERENCES. 
+    5. If no inline file paths matching the pattern (./path/to/file) file path is found in MATERIAL, write "N/A" in RELEVANT_USED_PATHS.
 
   user-template: |
     ### MATERIAL:
     [CONTENT]
 
     ### REQUIRED OUTPUT FORMAT:
-  
+    
     ### TYPE
     factual
 
@@ -31,10 +32,10 @@ factual-generation:
     [Write the direct, accurate answer utilizing the material here]
 
     ### RELEVANT_USED_REFERENCES
-    [Extract the exact verbatim reference tags e.g., (#used-material-42|#used-material-43), or N/A]
+    [Output ONLY the extracted reference tags that support this answer separated by '|' in ascending order e.g., (#used-material-98|#used-material-99), or N/A]
 
     ### RELEVANT_USED_PATHS
-    [Extract the exact verbatim file paths e.g., (./docs/config/settings.yaml|./docs/code/general.py), or N/A]
+    [Output ONLY the extracted file paths that support this answer separated by '|' e.g., (./docs/config/settings.yaml|./docs/code/general.py), or N/A]
 
 synthesis-generation:
   temperature: 
@@ -42,17 +43,18 @@ synthesis-generation:
   top-p: 
     deepseek-r1: 0.95
   max-tokens: 
-    deepseek-r1: 2048
+    deepseek-r1: 4096
   system-prompt: |
     You are a senior software architect and data generation tool.
-    Your task is to analyze internal technical material and construct a complex, multi-step synthesis coding scenario along with a comprehensive architectural solution, extracting any cited inline metadata.
+    Your task is to analyze internal technical material and construct a complex synthesis coding scenario along with a comprehensive architectural solution, extracting cited inline metadata.
 
     ### INSTRUCTIONS:
-    1. Scenario creation: Formulate an advanced programming query or architectural challenge where a developer asks how to extend, debug, optimize, or integrate the concepts shown in the material.
-    2. Solution grounding: The solution must logically adapt and build upon the provided material while remaining technically accurate without inventing incompatible APIs or false architecture.
-    3. Scan the MATERIAL for inline reference tags matching the pattern (#used-material-number). Put the extracted reference string that directly support or relate to the generated Q&A pair into RELEVANT_USED_REFERENCES. If there are multiple suitable references, join them into a single string in an ascending order with a separator '|'. Write "N/A" if no reference tag exists.
-    4. Scan the MATERIAL for inline file paths matching the pattern (./path/to/file). Put the extracted path string that directly support or relate to the generated Q&A pair into RELEVANT_USED_PATHS. Put the extracted path string that directly supports the generated Q&A pair into RELEVANT_USED_PATHS. If there are multiple suitable paths, join them into a single string with a separator '|'. Write "N/A" if no path exists.
-    5. Do not include conversational intros, outros, or explanations.
+    1. Formulate an advanced programming query or architectural challenge where a developer asks how to extend, debug, optimize, or integrate the concepts shown in the MATERIAL.
+    2. The solution must logically adapt and build upon the provided MATERIAL while remaining technically accurate without inventing incompatible APIs or false architecture.
+    2. You must ONLY extract reference tags and file paths that explicitly exist verbatim inside the provided MATERIAL.
+    3. Under no circumstances should you generate example, placeholder, or hypothetical tags/paths
+    4. If no inline reference tags matching the pattern (#used-material-number) is found in MATERIAL, write "N/A" in RELEVANT_USED_REFERENCES. 
+    5. If no inline file paths matching the pattern (./path/to/file) file path is found in MATERIAL, write "N/A" in RELEVANT_USED_PATHS.
 
   user-template: |
     ### MATERIAL:
@@ -70,10 +72,10 @@ synthesis-generation:
     [Write the comprehensive architectural/coding solution here]
 
     ### RELEVANT_USED_REFERENCES
-    [Extract the exact verbatim reference tags e.g., (#used-material-42|#used-material-43), or N/A]
+    [Output ONLY the extracted reference tags that support this answer separated by '|' in ascending order e.g., (#used-material-98|#used-material-99), or N/A]
 
     ### RELEVANT_USED_PATHS
-    [Extract the exact verbatim file paths e.g., (./docs/config/settings.yaml|./docs/code/general.py), or N/A]
+    [Output ONLY the extracted file paths that support this answer separated by '|' e.g., (./docs/config/settings.yaml|./docs/code/general.py), or N/A]
 
 negative-generation:
   temperature: 
