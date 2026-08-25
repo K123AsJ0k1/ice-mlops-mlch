@@ -64,8 +64,8 @@ def search_weighted_retrieval_metrics(
     try: 
         import numpy as np
     except ImportError as e:
-        raise ImportError("qdrant/utility failed to import", e)
-
+        raise ImportError("search/utility failed to import", e)
+    # Be aware will be zero if keys are str
     # Convert dictionary values to handle lookup and metrics tracking
     # Counts how many documents are strictly relevant (grade > 0)
     total_relevant_count = sum(1 for grade in true_relevant_weights.values() if grade > 0)

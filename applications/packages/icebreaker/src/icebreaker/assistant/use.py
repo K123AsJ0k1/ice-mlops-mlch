@@ -89,6 +89,7 @@ def assistant_create_requests(
     prompt_parameters: any,
     dataset_name: str,
     target_model: str,
+    type_column: str,
     data_ratio: any,
     join_prompts: bool,
     qdrant_client: any,
@@ -96,7 +97,9 @@ def assistant_create_requests(
     collection_name: str,
     query_limit: int,
     fusion_limit: int,
+    dense_model_name: str,
     dense_model: any,
+    sparse_model_name: str,
     sparse_model: any,
     batch_size: int
 ):
@@ -111,15 +114,15 @@ def assistant_create_requests(
     inference_requests = []
     rag_metrics = []
     request_idx = 0
-    question_type_idx = {}
+    assistant_type_idx = {}
     for _, row in target_df.iterrows(): 
        
         replacer_dict = {
             'QUERY': row['question']
         }
         for data_type, wanted_amount in data_ratio.items():
-            if not data_type in question_type_idx:
-                question_type_idx[data_type] = 0 
+            if not data_type in assistant_type_idx:
+                assistant_type_idx[data_type] = 0 
             
             system_prompt = prompt_parameters[data_type]['system-prompt']
             user_template = prompt_parameters[data_type]['user-template']
@@ -130,20 +133,26 @@ def assistant_create_requests(
 
             if 'rag' in data_type:
                 text_query_batch = [row['question']]
+
+                relevant_weights_batch = []
+                if 'chunk-relevant-weights' in row:
+                    relevant_weights_batch = row['chunk-relevant-weights']
+
                 batch_query_results = search_monitored_batch_query(
                     qdrant_client = qdrant_client,
                     query_type = query_type, 
                     collection_name = collection_name,
                     text_query_batch = text_query_batch, 
-                    relevant_weights_batch = [],
+                    relevant_weights_batch = relevant_weights_batch,
                     query_limit = query_limit,
                     fusion_limit = fusion_limit,
+                    dense_model_name = dense_model_name,
                     dense_model = dense_model,
+                    sparse_model_name = sparse_model_name,
                     sparse_model = sparse_model,
                     batch_size = batch_size
                 )
-                # idx is neededd for RAG ranking
-                # Remembe to consider the general case
+                
                 formatted_context, batch_metrics = assistant_format_context(
                     query_results = batch_query_results,
                     wrapper_tag = 'context',
@@ -164,8 +173,9 @@ def assistant_create_requests(
                 # weights batch for factual and synthesis during the generation
                 # and add them into the dataset
                 rag_metrics.append({
-                    'case-index': request_idx,
-                    'question-type': data_type,
+                    'request-index': request_idx,
+                    'assistant-variant': data_type,
+                    'question-type': row[type_column],
                     'query-batch': text_query_batch,
                     'batch-metrics': batch_metrics
                 })
@@ -203,8 +213,9 @@ def assistant_create_requests(
                 inference_requests.append({
                     'dataset-name': dataset_name,
                     'request-index': request_idx,
-                    'question-type': data_type,
-                    'question-index': question_type_idx[data_type],
+                    'question-type': row[type_column],
+                    'assistant-variant': data_type,
+                    'assistant-index': assistant_type_idx[data_type],
                     'messages': sent_messages,
                     'system-prompt-length': system_prompt_length,
                     'user-prompt-length': user_prompt_length,
@@ -213,7 +224,7 @@ def assistant_create_requests(
                     'top-p': top_p,
                     'max-tokens': max_tokens
                 })
-                question_type_idx[data_type] += 1
+                assistant_type_idx[data_type] += 1
         request_idx += 1
     print(f'Amount of requests: {len(inference_requests)}')
     return inference_requests, rag_metrics

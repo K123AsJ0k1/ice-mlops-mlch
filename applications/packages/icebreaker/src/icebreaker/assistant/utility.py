@@ -1,3 +1,4 @@
+'''
 def assistant_run_inference(
     inference_address: str,
     inference_path: str,
@@ -36,3 +37,4 @@ def assistant_run_inference(
     else:
         print('Request fail')
     return model_output, model_metrics, request_total_time
+'''

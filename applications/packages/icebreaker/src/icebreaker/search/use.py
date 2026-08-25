@@ -49,7 +49,9 @@ def search_monitored_batch_query(
     relevant_weights_batch: list,
     query_limit: int,
     fusion_limit: int,
+    dense_model_name: str,
     dense_model: any,
+    sparse_model_name: str,
     sparse_model: any,
     batch_size: int
 ) -> any:
@@ -81,8 +83,12 @@ def search_monitored_batch_query(
             q_sparse = batch_sparse[idx] if batch_sparse is not None else None
         
         if 0 < len(relevant_weights_batch):
-            q_relevant_weights = relevant_weights_batch[idx]
-
+            if isinstance(relevant_weights_batch, list):
+                q_relevant_weights = relevant_weights_batch[idx]
+            if isinstance(relevant_weights_batch, dict):
+                q_relevant_weights = relevant_weights_batch
+            q_relevant_weights = {int(k): v for k, v in q_relevant_weights.items()}
+        
         start_search = time.perf_counter_ns()
         query_result = qdrant_modifiable_query( 
             qdrant_client = qdrant_client, 
@@ -96,15 +102,27 @@ def search_monitored_batch_query(
         search_latency_ms = (time.perf_counter_ns() - start_search) / 1e6
         
         total_characters = sum(point.payload.get('characters', 0) for point in query_result)
-        retrieved_ids = [point.payload['idx'] for point in query_result]
-         
+        retrieved_idx = [point.payload['idx'] for point in query_result]
+        
         resulted_metrics = {} 
         if 0 < len(q_relevant_weights):
             resulted_metrics = search_weighted_retrieval_metrics( 
-                retrieved_ids = retrieved_ids,
+                retrieved_ids = retrieved_idx,
                 true_relevant_weights = q_relevant_weights
             ) 
-        
+            resulted_metrics['relevant-weights'] = q_relevant_weights
+
+        resulted_metrics['retrieved-idx'] = retrieved_idx
+        resulted_metrics['query-score'] = [point.score for point in query_result]
+        resulted_metrics['query-topic'] = [point.payload['topic'] for point in query_result]
+        resulted_metrics['query-relevance'] = [int(point.payload['relevance']) for point in query_result]
+        resulted_metrics['query-part'] = [int(point.payload['part']) for point in query_result]
+        resulted_metrics['query-document'] = [int(point.payload['document']) for point in query_result]
+        resulted_metrics['query-chapter'] = [int(point.payload['chapter']) for point in query_result]
+        resulted_metrics['query-index'] = [int(point.payload['index']) for point in query_result] 
+
+        resulted_metrics['dense-model'] = dense_model_name
+        resulted_metrics['sparse-model'] = sparse_model_name
         resulted_metrics['embedding-latency-ms'] = embed_latency_ms
         resulted_metrics['search-latency-ms'] = search_latency_ms
         resulted_metrics['total-latency-ms'] = embed_latency_ms + search_latency_ms
