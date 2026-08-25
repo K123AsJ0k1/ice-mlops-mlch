@@ -140,57 +140,32 @@ def generator_extract_output(
                 for key, value in category_data.items():
                     output_dict[key] = value
     return output_dict
-'''
+
 def generate_process_data(
-    inference_requests: list,
-    model_outputs: list,
-    gathered_metrics: list,
-    request_times: list
-):
+    run_data: any
+) -> any:
     try:
         import pandas as pd
-        from ..generator.use import generate_parse_output
     except ImportError as e:
-        raise ImportError("generator/use failed to import", e)
+        raise ImportError("generator/utility failed to import", e)
 
-    expanded_df = pd.json_normalize(inference_requests)
-    dataset_df_temp = pd.DataFrame(gathered_metrics)
-    dataset_df_temp['times'] = request_times
-    
-    temp_2_df = pd.concat([expanded_df, dataset_df_temp], axis = 1)
-    output_list = []
-    for output in model_outputs:
-        output_dict = generate_parse_output(
-            text = output
-        )
-        
-        if 'type' in output_dict:
-            if output_dict['type'] == 'factual' or output_dict['type'] == 'synthesis':
-                if 'relevant-used-references' in output_dict and 'relevant-used-paths' in output_dict:
-                    checked_references = generate_process_references(
-                        used_references = output_dict['relevant-used-references']
-                    )
-                    output_dict['relevant-used-references'] = checked_references
-                    checked_paths = generate_process_paths(
-                        used_paths = output_dict['relevant-used-paths']
-                    )
-                    output_dict['relevant-used-paths'] = checked_paths
+    run_requests = run_data['requests']
+    run_model_output = run_data['outputs']['model']
+    run_data_output = run_data['outputs']['data']
+    run_metrics = run_data['metrics']
+    run_request_times = run_data['request-times']
+    run_execution_times = run_data['execution-times']
 
-            if output_dict['type'] == 'negative':
-                if 'ground-truth-answer' in output_dict:
-                    category_data = generate_process_category(
-                        answer = output_dict['ground-truth-answer']
-                    )
-                    
-                    for key, value in category_data.items():
-                        output_dict[key] = value
+    expanded_df_1 = pd.DataFrame(run_requests)
+    expanded_df_1['model-output'] = run_model_output
+    expanded_df_2 = pd.DataFrame(run_data_output)  
+    expanded_df_3 = pd.DataFrame(run_metrics)
+    expanded_df_3['request-time-sec'] = run_request_times
+    expanded_df_3['execution-time-sec'] = run_execution_times
 
-        output_list.append(output_dict)
-        
-    output_df = pd.json_normalize(output_list)
-    preprocess_df = pd.concat([temp_2_df, output_df], axis = 1)
+    preprocess_df = pd.concat([expanded_df_1, expanded_df_2, expanded_df_3], axis = 1)
     preprocess_df = preprocess_df.loc[:, ~preprocess_df.columns.duplicated()]
     preprocess_df = preprocess_df.convert_dtypes()
 
     return preprocess_df
-'''
+    

@@ -110,7 +110,7 @@ def assistant_create_requests(
     print('Creating assistant requests')
     inference_requests = []
     rag_metrics = []
-    case_idx = 0
+    request_idx = 0
     question_type_idx = {}
     for _, row in target_df.iterrows(): 
        
@@ -164,7 +164,7 @@ def assistant_create_requests(
                 # weights batch for factual and synthesis during the generation
                 # and add them into the dataset
                 rag_metrics.append({
-                    'case-index': case_idx,
+                    'case-index': request_idx,
                     'question-type': data_type,
                     'query-batch': text_query_batch,
                     'batch-metrics': batch_metrics
@@ -202,7 +202,7 @@ def assistant_create_requests(
             for i in range(0, wanted_amount):
                 inference_requests.append({
                     'dataset-name': dataset_name,
-                    'case-index': case_idx,
+                    'request-index': request_idx,
                     'question-type': data_type,
                     'question-index': question_type_idx[data_type],
                     'messages': sent_messages,
@@ -214,7 +214,7 @@ def assistant_create_requests(
                     'max-tokens': max_tokens
                 })
                 question_type_idx[data_type] += 1
-        case_idx += 1
+        request_idx += 1
     print(f'Amount of requests: {len(inference_requests)}')
     return inference_requests, rag_metrics
 

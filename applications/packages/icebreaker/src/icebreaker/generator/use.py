@@ -301,7 +301,6 @@ def generator_print_answers(
         dataset_name = judge_request['dataset-name']
         request_index = judge_request['request-index']
         question_type = judge_request['question-type']
-        category_type = case_metrics['category']
         
         question_index = question_index + 1
         messages = judge_request['messages']
@@ -316,7 +315,6 @@ def generator_print_answers(
         print(f'Request|{request_index}')
         print(f'Question type|{question_type}')
         print(f'Question index|{question_index}')
-        print(f'Category|{category_type}')
         print(f'System prompt length|{system_prompt_length}')
         print(f'User prompt length|{user_prompt_length}')
         print(f'Model|{target_model}')
@@ -326,7 +324,7 @@ def generator_print_answers(
         print('')
         print('==========')
         # Show format and type
-        print('Judge prompts:')
+        print('Generator prompts:')
         for message in messages:
             prompt_role = message['role']
             prompt_content = message['content']
@@ -338,10 +336,7 @@ def generator_print_answers(
         print('Answer:')
         print(case_output)
         print('==========')
-        print('Output:')
-        print(case_output)
-        print('==========')
-        print('Scores:')
+        print('Data:')
         print(case_data)
         print('==========')
         print('')
@@ -358,9 +353,9 @@ def generator_produce_answers(
     join_prompts: bool,
     request_keys: dict,
     length_limit: int,
-    inference_parameters: any,
     request_start: int,
     request_end: int,
+    inference_parameters: any,
     debug_prints: bool
 ):
     generator_requests = generator_create_requests(
@@ -374,8 +369,11 @@ def generator_produce_answers(
         join_prompts = join_prompts
     )
 
+    if 0 < request_end:
+        generator_requests = generator_requests[request_start:request_end]
+
     generator_run_data = generator_create_answers(
-        dataset_inference_requests = generator_requests[request_start:request_end],
+        dataset_inference_requests = generator_requests,
         request_keys = request_keys,
         length_limit = length_limit,
         inference_parameters = inference_parameters,
