@@ -1,17 +1,10 @@
+import ray
 import time as t
-from ray import serve
-from fastapi import FastAPI, Request
-
-app = FastAPI()
-
-@serve.deployment(
-    num_replicas = 1,
-    ray_actor_options = {
-        "num_cpus": 1, 
-        "num_gpus": 1
-    } 
-)
-@serve.ingress(app)
+ 
+@ray.remote(
+    num_cpus = 1,
+    memory = 0.2 * 1024 * 1024 * 1024
+) 
 class LLAMA_Generator:
     def __init__(
         self,
@@ -20,7 +13,7 @@ class LLAMA_Generator:
         from llama_cpp import Llama
 
         if 0 < len(model_parameters):
-            start_time = t.time()
+            start_time = t.time() 
             model_repo_id = model_parameters['repo-id']
             model_filename = model_parameters['filename']
             model_n_gpu_layers = model_parameters['n-gpu-layers']
@@ -35,7 +28,7 @@ class LLAMA_Generator:
                 repo_id = model_repo_id, 
                 filename = model_filename,                    
                 n_gpu_layers = model_n_gpu_layers, 
-                n_ctx = self.n_ctx,
+                n_ctx = self.n_ctx, 
                 type_k = self.type_k,
                 type_v = self.type_v,      
                 verbose = False
@@ -45,19 +38,22 @@ class LLAMA_Generator:
 
             total_time = round(end_time-start_time,5)
             print(f'Spent seconds loading model: {total_time}')
+        
+    def batch_generate_outputs(
+        self,
+        worker_index: int,
+        actor_index: int,
+        batch_index: int,
+        used_key: str,
+        requests: list
+    ) -> any:
 
-    @app.post("/generate")
-    async def generate(
-        self, 
-        request: Request
-    ):
-        try:
-            request_dict = await request.json()
-            
-            query_messages = request_dict.pop('messages', [])
-            query_temperature = request_dict.pop('temperature', 0.5)
-            query_top_p = request_dict.pop('top-p', 0.95)
-            query_max_tokens = request_dict.pop('max-tokens', 1024)
+        generated_outputs = []
+        for request in requests:
+            query_messages = request.pop('messages', [])
+            query_temperature = request.pop('temperature', 0.5)
+            query_top_p = request.pop('top-p', 0.95)
+            query_max_tokens = request.pop('max-tokens', 1024)
 
             if 0 < len(query_messages):
                 inference_start = t.time()
@@ -105,11 +101,16 @@ class LLAMA_Generator:
                     'total-tokens': total_tokens
                 }
 
-                return {
-                    'status': 'success', 
+                generated_outputs.append({
                     'text': content.strip(),
                     'efficiency-metrics': metrics_payload
-                }
-            return {'status': 'error', 'message': 'Empty query messages array provided.'}
-        except Exception as e:
-            return {'status': 'error', 'message': str(e)}
+                })
+
+        result = {
+            'worker': worker_index,
+            'actor': actor_index,
+            'batch': batch_index,
+            'key': used_key,
+            'outputs': generated_outputs
+        }
+        return result

@@ -126,7 +126,7 @@ def evalution_dataset_creation(
             ]
         )
         print(f"Total collected rows: {len(final_dataset_df)}")
-
+        # There is a bug that creates empty dataframes
         if target_rows < len(final_dataset_df):
             final_dataset_df = final_dataset_df.sample(n = target_rows, random_state = 42).reset_index(drop = True)
             print(f"Normalized dataset down to accurate target row amount N: {len(final_dataset_df)}")

@@ -29,7 +29,7 @@ class LLAMA_Generator:
             self.type_k = model_parameters['type-k']
             self.type_v = model_parameters['type-v']
             self.model_name = f'{model_repo_id}|{model_filename}'
-            print(f'Model configurations {model_n_gpu_layers}|{self.n_ctx}')
+            print(f'Model configurations {model_n_gpu_layers}|{self.n_ctx}|{self.type_k}|{self.type_v}')
             print(f'Fetching and initializing {self.model_name} directly from Hugging Face Hub...')
             self.llm = Llama.from_pretrained(
                 repo_id = model_repo_id, 
@@ -51,7 +51,6 @@ class LLAMA_Generator:
         self, 
         request: Request
     ):
-        import re
         try:
             request_dict = await request.json()
             
@@ -86,7 +85,7 @@ class LLAMA_Generator:
                 
                 input_to_output_ratio = (prompt_tokens / completion_tokens) if completion_tokens > 0 else 0
                 context_utilization = (total_tokens / self.n_ctx) if self.n_ctx > 0 else 0
-                # Add inference server host name for easier cost calculations
+                
                 metrics_payload = {
                     'inference-server': self.serve_id,
                     'used-model': self.model_name,
@@ -104,7 +103,6 @@ class LLAMA_Generator:
                     'prompt-tokens': prompt_tokens,
                     'completion-tokens': completion_tokens,
                     'total-tokens': total_tokens
-                    
                 }
 
                 return {

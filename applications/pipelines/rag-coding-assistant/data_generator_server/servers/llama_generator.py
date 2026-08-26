@@ -20,20 +20,24 @@ class LLAMA_Generator:
         from llama_cpp import Llama
 
         if 0 < len(model_parameters):
-            start_time = t.time()
+            start_time = t.time() 
             model_repo_id = model_parameters['repo-id']
             model_filename = model_parameters['filename']
             model_n_gpu_layers = model_parameters['n-gpu-layers']
             self.serve_id = model_parameters['serve-id']
             self.n_ctx = model_parameters['n-ctx']
+            self.type_k = model_parameters['type-k']
+            self.type_v = model_parameters['type-v']
             self.model_name = f'{model_repo_id}|{model_filename}'
-            print(f'Model configurations {model_n_gpu_layers}|{self.n_ctx}')
+            print(f'Model configurations {model_n_gpu_layers}|{self.n_ctx}|{self.type_k}|{self.type_v}')
             print(f'Fetching and initializing {self.model_name} directly from Hugging Face Hub...')
             self.llm = Llama.from_pretrained(
                 repo_id = model_repo_id, 
                 filename = model_filename,                    
                 n_gpu_layers = model_n_gpu_layers, 
-                n_ctx = self.n_ctx,      
+                n_ctx = self.n_ctx, 
+                type_k = self.type_k,
+                type_v = self.type_v,      
                 verbose = False
             )
             print('Model downloaded and successfully loaded into memory!')
@@ -46,8 +50,7 @@ class LLAMA_Generator:
     async def generate(
         self, 
         request: Request
-    ):
-        import re
+    ): 
         try:
             request_dict = await request.json()
             
@@ -82,11 +85,13 @@ class LLAMA_Generator:
                 
                 input_to_output_ratio = (prompt_tokens / completion_tokens) if completion_tokens > 0 else 0
                 context_utilization = (total_tokens / self.n_ctx) if self.n_ctx > 0 else 0
-                # Add inference server host name for easier cost calculations
+                
                 metrics_payload = {
                     'inference-server': self.serve_id,
                     'used-model': self.model_name,
                     'n-ctx': self.n_ctx,
+                    'type-k': self.type_k,
+                    'type-v': self.type_v,
                     'temperature': query_temperature,
                     'top-p': query_top_p,
                     'max-tokens': query_max_tokens,
@@ -98,7 +103,6 @@ class LLAMA_Generator:
                     'prompt-tokens': prompt_tokens,
                     'completion-tokens': completion_tokens,
                     'total-tokens': total_tokens
-                    
                 }
 
                 return {

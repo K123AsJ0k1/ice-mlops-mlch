@@ -36,12 +36,12 @@ def llama_test(
                 }
             )
 
-            serve.run(
+            serve.run( 
                 LLAMA_Generator.bind(
                     model_parameters = generator_model_parmaters
                 ), 
-                name = 'llama_server', 
-                route_prefix='/'
+                name = 'data_generator_server', 
+                route_prefix='/generator'
             )   
         
         if serve_shutdown:
