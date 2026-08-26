@@ -47,6 +47,7 @@ def search_monitored_batch_query(
     collection_name: str,
     text_query_batch: list, 
     relevant_weights_batch: list,
+    relevance_threshold: float,
     query_limit: int,
     fusion_limit: int,
     dense_model_name: str,
@@ -58,7 +59,7 @@ def search_monitored_batch_query(
     try:
         import time
         from ..qdrant.use import qdrant_modifiable_query
-        from ..search.utility import search_weighted_retrieval_metrics
+        from ..search.utility import search_default_ranking_metrics
     except ImportError as e:
         raise ImportError("embeddings/use failed to import", e)
     
@@ -106,9 +107,10 @@ def search_monitored_batch_query(
         
         resulted_metrics = {} 
         if 0 < len(q_relevant_weights):
-            resulted_metrics = search_weighted_retrieval_metrics( 
+            resulted_metrics = search_default_ranking_metrics( 
                 retrieved_ids = retrieved_idx,
-                true_relevant_weights = q_relevant_weights
+                true_relevant_weights = q_relevant_weights,
+                relevance_threshold = relevance_threshold
             ) 
             resulted_metrics['relevant-weights'] = q_relevant_weights
 

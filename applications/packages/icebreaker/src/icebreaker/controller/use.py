@@ -1,6 +1,7 @@
 def controller_create_request(
-    case_index: int,
-    question_index: int,
+    request_index: int,
+    assistant_index: int,
+    assistant_variant: str,
     assistant_input: str,
     assistant_output: list,
     prompt_parameters: any,
@@ -60,9 +61,10 @@ def controller_create_request(
 
     inference_request = {
         'dataset-name': dataset_name,
-        'case-index': case_index,
+        'request-index': request_index,
         'question-type': prompt_type,
-        'question-index': question_index,
+        'assistant-index': assistant_index,
+        'assistant-variant': assistant_variant,
         'messages': sent_messages,
         'system-prompt-length': system_prompt_length,
         'user-prompt-length': user_prompt_length,

@@ -119,6 +119,71 @@ def search_weighted_retrieval_metrics(
     
     return resulted_metrics
 
+def search_default_ranking_metrics(
+    retrieved_ids: list, 
+    true_relevant_weights: dict,
+    relevance_threshold: float = 2.0  
+):
+    # Threshold: Grades >= 2 count as binary "relevant"
+    """
+    Computes standard academic retrieval metrics.
+    - P@1 & R@3 use binary binarization (Grade >= rel_threshold).
+    - NDCG@3 & NDCG@5 use full graded relevance (3, 2, 1, 0).
+    """
+    try: 
+        import numpy as np
+    except ImportError as e:
+        raise ImportError("qdrant/utility failed to import", e)
+
+    # 1. Binary relevance vector for P@1 and R@3 (Grade >= 2)
+    binary_relevance = [
+        1 if true_relevant_weights.get(_id, 0) >= relevance_threshold else 0 
+        for _id in retrieved_ids
+    ]
+    
+    total_relevant_docs = sum(
+        1 for weight in true_relevant_weights.values() if weight >= relevance_threshold
+    )
+
+    # --- Precision@1 (Binary) ---
+    p_at_1 = float(binary_relevance[0]) if binary_relevance else 0.0
+
+    # --- Recall@3 (Binary) ---
+    if total_relevant_docs > 0:
+        hits_top_3 = sum(binary_relevance[:3])
+        r_at_3 = float(hits_top_3 / total_relevant_docs)
+    else:
+        r_at_3 = 0.0
+
+    # 2. Full Graded relevance vector for NDCG (Supports 3, 2, 1, 0)
+    graded_relevance = [true_relevant_weights.get(_id, 0) for _id in retrieved_ids]
+
+    def compute_graded_dcg(rel_vector):
+        return sum([((2**r) - 1) / np.log2(idx + 2) for idx, r in enumerate(rel_vector)])
+    
+    def compute_graded_idcg(k):
+        sorted_weights = sorted(true_relevant_weights.values(), reverse=True)
+        ideal_relevance = (sorted_weights + [0] * k)[:k]
+        return compute_graded_dcg(ideal_relevance)
+
+    # Compute Actual & Ideal DCG
+    dcg_3 = compute_graded_dcg(graded_relevance[:3])
+    dcg_5 = compute_graded_dcg(graded_relevance[:5])
+    
+    idcg_3 = compute_graded_idcg(3)
+    idcg_5 = compute_graded_idcg(5)
+    
+    # Compute NDCG
+    ndcg_3 = float(dcg_3 / idcg_3) if idcg_3 > 0 else 0.0
+    ndcg_5 = float(dcg_5 / idcg_5) if idcg_5 > 0 else 0.0
+    
+    return {
+        'p@1': p_at_1,
+        'r@3': r_at_3,
+        'ndcg@3': ndcg_3,
+        'ndcg@5': ndcg_5
+    }
+
 def search_get_statistics(
     gathered_metrics: dict,
     percentile_filter: list
