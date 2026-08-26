@@ -10,7 +10,7 @@ def evalution_summarize_metrics(
         raise ImportError("evaluation/use failed to import", e)
     
     data_df = pd.DataFrame(list_of_dicts)
-
+    
     general_stats_df = data_df[relevant_columns].agg(wanted_stats)
 
     group_stats_df = data_df.groupby(group_column)[relevant_columns].agg(wanted_stats)
@@ -67,15 +67,17 @@ def evalution_nested_metrics(
         )
         
         key_stats = {}
+        #print(data)
         if 0 < len(data):
             if isinstance(data[0], dict):
-                root_key = target_key.split('|')[0]
-                key_stats = evalution_summarize_metrics(
-                    list_of_dicts = data,
-                    relevant_columns = relevant_key_columns[root_key],
-                    wanted_stats = wanted_stats,
-                    group_column = key_group_column[root_key]
-                )
+                if 0 < len(data[0]):
+                    root_key = target_key.split('|')[0]
+                    key_stats = evalution_summarize_metrics(
+                        list_of_dicts = data,
+                        relevant_columns = relevant_key_columns[root_key],
+                        wanted_stats = wanted_stats,
+                        group_column = key_group_column[root_key]
+                    )
             else:
                 root_key = target_key.split('|')[0]
                 key_stats = evalution_summarize_list(

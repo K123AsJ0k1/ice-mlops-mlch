@@ -670,6 +670,7 @@ def assistant_print_answers(
                 print(assistant_output)
 
             print('==========')
+            # In the synthetic case, it is most likely idx causing problems
             if 'bc-eval' in assistant_variant:
                 print('Controller output check prompts:')
                 try:
@@ -718,7 +719,8 @@ def assistant_produce_answers(
     category_column: str,
     summary_target_keys: list,
     summary_relevant_key_columns: dict,
-    summary_wanted_stats: list
+    summary_wanted_stats: list,
+    summary_key_group_column: dict
 ):
     try:
         from ..assistant.use import assistant_create_requests, assistant_generate_answers, assistant_print_answers
@@ -768,12 +770,16 @@ def assistant_produce_answers(
     run_data['rag-metrics'] = request_tuple[1]
 
     try:
-        run_data['stats'] = evalution_nested_metrics(
+        # This removes the process time
+        nested_stats = evalution_nested_metrics(
             run_data = run_data,
             target_keys = summary_target_keys,
             relevant_key_columns = summary_relevant_key_columns,
-            wanted_stats = summary_wanted_stats
+            wanted_stats = summary_wanted_stats,
+            key_group_column = summary_key_group_column
         )
+
+        run_data['stats'] = run_data['stats'] | nested_stats
     except Exception as e:
         print(e)
 
