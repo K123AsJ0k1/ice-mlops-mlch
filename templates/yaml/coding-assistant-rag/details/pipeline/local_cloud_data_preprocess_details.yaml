@@ -82,7 +82,7 @@ processing:
         job:
           main-file: 'main.py'
           runtime:
-            working_dir: 'evalution_dataset_creation'
+            working_dir: 'data_preprocess_general_dataset'
             pip: 'requirements.txt'
       cloud-vm2:
         process:
@@ -91,7 +91,7 @@ processing:
         job:
           main-file: 'main.py'
           runtime:
-            working_dir: 'evalution_dataset_creation'
+            working_dir: 'data_preprocess_general_dataset'
             pip: 'requirements.txt'
       local-lt1:
         process:
@@ -100,7 +100,7 @@ processing:
         job:
           main-file: 'main.py'
           runtime:
-            working_dir: 'evalution_dataset_creation'
+            working_dir: 'data_preprocess_general_dataset'
             pip: 'requirements.txt'
       local-lt2:
         process:
@@ -109,7 +109,7 @@ processing:
         job:
           main-file: 'main.py'
           runtime:
-            working_dir: 'evalution_dataset_creation'
+            working_dir: 'data_preprocess_general_dataset'
             pip: 'requirements.txt'
       local-lt3:
         process:
@@ -118,7 +118,7 @@ processing:
         job:
           main-file: 'main.py'
           runtime:
-            working_dir: 'evalution_dataset_creation'
+            working_dir: 'data_preprocess_general_dataset'
             pip: 'requirements.txt'
   step-2:
     general:
@@ -153,7 +153,7 @@ processing:
         job:
           main-file: 'main.py'
           runtime:
-            working_dir: 'rag_database_setup'
+            working_dir: 'data_preprocess_database_setup'
             pip: 'c-vm1-requirements.txt'
             env_vars:
               HF_TOKEN: 'fill'
@@ -169,7 +169,7 @@ processing:
         job:
           main-file: 'main.py'
           runtime:
-            working_dir: 'rag_database_setup'
+            working_dir: 'data_preprocess_database_setup'
             pip: 'l-lt23-requirements.txt'
             env_vars:
               HF_TOKEN: 'fill'
@@ -185,7 +185,7 @@ processing:
         job:
           main-file: 'main.py'
           runtime:
-            working_dir: 'rag_database_setup'
+            working_dir: 'data_preprocess_database_setup'
             pip: 'l-lt23-requirements.txt'
             env_vars:
               HF_TOKEN: 'fill'
@@ -226,7 +226,7 @@ processing:
         job:
           main-file: 'main.py'
           runtime:
-            working_dir: 'data_generator_server'
+            working_dir: 'data_preprocess_synthetic_dataset'
             pip: 'c-vm1-requirements.txt'
             env_vars:
               HF_TOKEN: 'fill'
@@ -243,7 +243,7 @@ processing:
         job:
           main-file: 'main.py'
           runtime:
-            working_dir: 'llm_inference_server'
+            working_dir: 'data_preprocess_synthetic_dataset'
             pip: 'requirements.txt'
             env_vars:
               HF_TOKEN: 'fill'
@@ -260,7 +260,7 @@ processing:
         job:
           main-file: 'main.py'
           runtime:
-            working_dir: 'llm_inference_server'
+            working_dir: 'data_preprocess_synthetic_dataset'
             pip: 'requirements.txt'
             env_vars:
               HF_TOKEN: 'fill'

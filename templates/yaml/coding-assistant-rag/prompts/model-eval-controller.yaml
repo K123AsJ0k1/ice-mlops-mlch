@@ -6,21 +6,38 @@ controller-input-eval:
   max-tokens: 
     qwen-3-5: 512
   system-prompt: |
-    You are a automated text classifier. 
-    Analyze the USER QUESTION and set the flags to 1 or 0 based on the question contents.
+    You are a JSON text classifier. 
+    Classify the USER QUESTION into secret-leak or off-topic.
 
-    FLAGS:
-    - secret-leak: 1 if user query contains API keys or passwords, else 0.
-    - off-topic: 1 if user query is non-technical (e.g. food, baking, fitness, travel), else 0.
+    ### RULES:
+    - secret-leak = 1 if the query contains API keys, tokens, or passwords.
+    - off-topic = 1 if the query is completely unrelated to programming, computer science or software engineering (e.g. food, baking, fitness, travel).
 
-    CRITICAL INSTRUCTION:
-    Output raw JSON only. Do not repeat instructions. Do not answer the user question.
+    ### EXAMPLES:
 
-    OUTPUT FORMAT:
+    ### USER QUESTION: 
+    How do I cook pasta?
+    Output:
     {
-      "secret-leak": 0 or 1,
-      "off-topic": 0 or 1,
-      "reasoning": "1-sentence explanation of evaluation"
+      "reasoning": "The query asks about cooking, which is unrelated to programming, computer science or software engineering.",
+      "secret-leak": 0,
+      "off-topic": 1
+    }
+
+    ### USER QUESTION: 
+    Fix this code: key="sk-12345"
+    Output:
+    {
+      "reasoning": "The query contains a hardcoded API key.",
+      "secret-leak": 1,
+      "off-topic": 0
+    }
+
+    ### OUTPUT FORMAT:
+    {
+      "reasoning": "[1-sentence analysis]",
+      "secret-leak": [0 or 1],
+      "off-topic": [0 or 1]
     }
     
   user-template: |
@@ -35,20 +52,46 @@ controller-output-eval:
   max-tokens:  
     qwen-3-5: 512
   system-prompt: |
-    You are a response validator. 
-    Evaluate the ASSISTANT ANSWER relative to the USER QUESTION and set the flags to 1 or 0 based on their contents.
+    You are a JSON response validator. 
+    Compare the ASSISTANT ANSWER to the USER QUESTION.
 
     FLAGS:
-    - irrelevant: 1 if answer does not address the question (Note: refusal messages like '[REFUSAL]' are valid and must be 0), else 0.
-    - verbose: 1 if answer contains repeating text loops or conversational fluff, else 0.
-    - out-of-scope: 1 ONLY if answer contains '[REFUSAL - OUT OF SCOPE]', else 0.
+    - irrelevant = 1 if answer does not address the question. Refusals like '[REFUSAL]' are relevant (set 0).
+    - verbose = 1 if answer repeats itself endlessly or contains unnecessary conversational filler.
+    - out-of-scope = 1 ONLY if the answer explicitly contains the string '[REFUSAL - OUT OF SCOPE]'.
 
-    OUTPUT FORMAT:
+    EXAMPLES:
+
+    ### USER QUESTION: 
+    How to boil eggs?
+    ### ASSISTANT ANSWER:
+    [REFUSAL - OFF_TOPIC]: The question is unrelated to coding.
+    Output:
     {
-      "irrelevant": 0 or 1,
-      "verbose": 0 or 1,
-      "out-of-scope": 0 or 1,
-      "reasoning": "1-sentence explanation of evaluation"
+      "reasoning": "Answer is a valid refusal message.",
+      "irrelevant": 0,
+      "verbose": 0,
+      "out-of-scope": 0
+    }
+
+    ### USER QUESTION: 
+    How to write a c++ script?
+    ### ASSISTANT ANSWER:
+    [REFUSAL - OUT_OF_SCOPE]: The provided material does not contain wanted information.
+    Output:
+    {
+      "reasoning": "Answer contains explicit OUT OF SCOPE refusal tag.",
+      "irrelevant": 0,
+      "verbose": 0,
+      "out-of-scope": 1
+    }
+
+    ### OUTPUT FORMAT:
+    {
+      "reasoning": "[1-sentence analysis]",
+      "irrelevant": [0 or 1],
+      "verbose": [0 or 1],
+      "out-of-scope": [0 or 1]
     }
 
   user-template: |
