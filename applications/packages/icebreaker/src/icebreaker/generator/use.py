@@ -177,7 +177,7 @@ def generator_create_answers(
         chunk_relevance = inference_requests['chunk-relevance']
         chunk_topic = inference_requests['chunk-topic']
         chunk_relevant_weights = inference_requests['chunk-relevant-weights']
-        request_index = inference_requests['request-index'] + 1
+        request_index = inference_requests['request-index']
         question_type = inference_requests['question-type']
         question_index = inference_requests['question-index'] + 1
 
@@ -187,8 +187,8 @@ def generator_create_answers(
         temperature = inference_requests['temperature']
         top_p = inference_requests['top-p']
         max_tokens = inference_requests['max-tokens']
-
-        if user_prompt_length < length_limit:
+        used_context = system_prompt_length + user_prompt_length
+        if used_context < length_limit:
             if 0 < system_prompt_length:
                 run_data['prompt-lengths']['system'].append(system_prompt_length)
             if 0 < user_prompt_length:
@@ -199,7 +199,7 @@ def generator_create_answers(
             print(f'Chapter|{chunk_chapter}')
             print(f'Index|{chunk_idx}')
             print(f'Characters|{chunk_characters}')
-            print(f'Request|{request_index}')
+            print(f'Request|{request_index + 1}')
             print(f'Question type|{question_type}')
             print(f'Question index|{question_index}')
             print(f'System prompt length|{system_prompt_length}')
@@ -288,12 +288,10 @@ def generator_print_answers(
     run_requests = run_data['requests']
     run_model_outputs = run_data['outputs']['model']
     run_model_data = run_data['outputs']['data']
-    run_metrics = run_data['metrics']
     print('START ANSWERS')
     print(f'Amount|{len(run_requests)}')
     idx = 0
     for judge_request in run_requests:
-        case_metrics = run_metrics[idx]
         case_output = run_model_outputs[idx]
         case_data = run_model_data [idx]
         question_index = judge_request['question-index']

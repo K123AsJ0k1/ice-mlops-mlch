@@ -116,8 +116,8 @@ def controller_generate_answers(
         temperature = inference_requests['temperature']
         top_p = inference_requests['top-p']
         max_tokens = inference_requests['max-tokens']
-
-        if user_prompt_length < length_limit:
+        used_context = system_prompt_length + user_prompt_length
+        if used_context < length_limit:
             if 0 < system_prompt_length:
                 prompt_lengths.append(system_prompt_length)
             if 0 < user_prompt_length:

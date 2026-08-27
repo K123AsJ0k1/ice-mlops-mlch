@@ -179,9 +179,6 @@ def assistant_create_requests(
                     'query-batch': text_query_batch,
                 }
 
-                #print(batch_metrics)
-                #print(batch_metadata)
-
                 merged_data = batch_metrics[0] | batch_metadata
                 
                 rag_metrics.append(merged_data)
@@ -337,7 +334,7 @@ def assistant_generate_answers(
         execution_time_start = t.time()
         assistant_request = {}
         dataset_name = inference_requests['dataset-name']
-        request_index = inference_requests['request-index'] + 1
+        request_index = inference_requests['request-index']
         question_type = inference_requests['question-type']
         assistant_variant = inference_requests['assistant-variant']
         assistant_index = inference_requests['assistant-index']
@@ -348,8 +345,19 @@ def assistant_generate_answers(
         temperature = inference_requests['temperature']
         top_p = inference_requests['top-p']
         max_tokens = inference_requests['max-tokens']
+        used_context = system_prompt_length + user_prompt_length
 
-        if user_prompt_length < length_limit:
+        answer_metadata = {
+            'dataset': dataset_name,
+            'request-index': request_index,
+            'assistant-variant': assistant_variant,
+            'assistant-index': assistant_index,
+            'question-type': question_type,
+            'system-prompt-length': system_prompt_length,
+            'user-prompt-length': user_prompt_length,
+        }
+
+        if used_context < length_limit:
             if 0 < system_prompt_length:
                 run_data['prompt-lengths']['system'].append(system_prompt_length)
             if 0 < user_prompt_length:
@@ -357,7 +365,7 @@ def assistant_generate_answers(
 
             print('Assistant print:')
             print(f'Dataset|{dataset_name}')
-            print(f'Request|{request_index}')
+            print(f'Request|{request_index + 1}')
             print(f'Question type|{question_type}')
             print(f'Assistant variant|{assistant_variant}')
             print(f'Assistant index|{assistant_index }')
@@ -373,16 +381,6 @@ def assistant_generate_answers(
             for key in request_keys:
                 assistant_request[key] = inference_requests[key]
 
-            answer_metadata = {
-                'dataset': dataset_name,
-                'request-index': request_index,
-                'assistant-variant': assistant_variant,
-                'assistant-index': assistant_index,
-                'question-type': question_type,
-                'system-prompt-length': system_prompt_length,
-                'user-prompt-length': user_prompt_length,
-            }
-
             input_behavior = {
                 'reasoning': '', 
                 'secret-leak': 0, 
@@ -395,7 +393,7 @@ def assistant_generate_answers(
                 user_question = after_tag.strip()
                 # This only gets questions
                 controller_input_check_request = controller_create_request(
-                    request_index = request_index,
+                    request_index = request_index, 
                     assistant_index = assistant_index,
                     assistant_variant = assistant_variant,
                     assistant_input = user_question,
@@ -560,14 +558,16 @@ def assistant_generate_answers(
                 run_data['requests']['assistant']['refuse'].append(inference_requests)
                 run_data['outputs']['assistant']['refuse']['guard'].append(input_control_output)
                 run_data['outputs']['assistant']['refuse']['model'].append('None')
-                run_data['metrics']['assistant']['refuse'].append({})
+                
+                run_data['metrics']['assistant']['refuse'].append(answer_metadata)
                 run_data['request-times-sec']['assistant']['refuse'].append(0)
         else:
             input_control_output = '[REFUSAL - CONTEXT LIMIT REACHED]'
             run_data['requests']['assistant']['refuse'].append(inference_requests)
             run_data['outputs']['assistant']['refuse']['guard'].append(input_control_output)
             run_data['outputs']['assistant']['refuse']['model'].append('None')
-            run_data['metrics']['assistant']['refuse'].append({})
+            
+            run_data['metrics']['assistant']['refuse'].append(answer_metadata)
             run_data['request-times-sec']['assistant']['refuse'].append(0)
         execution_end_time = t.time()
         execution_total_time = round(execution_end_time-execution_time_start,5)
@@ -614,7 +614,7 @@ def assistant_print_answers(
             max_tokens = assistant_request['max-tokens']
 
             print(f'Dataset|{dataset_name}')
-            print(f'Request|{request_index}')
+            print(f'Request|{request_index + 1}')
             print(f'Question type|{question_type}')
             print(f'Assistant variant|{assistant_variant}')
             print(f'Assistant index|{assistant_index}')
@@ -728,7 +728,7 @@ def assistant_produce_answers(
     except ImportError as e:
         raise ImportError("assistant/use failed to import", e)
 
-    request_tuple = assistant_create_requests(
+    assistant_requests = assistant_create_requests(
         target_df = target_df,
         prompt_parameters = assistant_prompts,
         dataset_name = dataset_name,
@@ -749,8 +749,8 @@ def assistant_produce_answers(
         relevance_threshold = relevance_threshold
     )
 
-    run_data = assistant_generate_answers(
-        dataset_inference_requests = request_tuple[0],
+    assistant_run_data = assistant_generate_answers(
+        dataset_inference_requests = assistant_requests[0],
         request_keys = request_keys,
         length_limit = length_limit,
         inference_parameters = inference_parameters,
@@ -762,25 +762,25 @@ def assistant_produce_answers(
 
     try:
         assistant_print_answers(
-            run_data = run_data
+            run_data = assistant_run_data
         )
     except Exception as e:
         print(e)
 
-    run_data['rag-metrics'] = request_tuple[1]
+    assistant_run_data['rag-metrics'] = assistant_requests[1]
 
     try:
         # This removes the process time
         nested_stats = evalution_nested_metrics(
-            run_data = run_data,
+            run_data = assistant_run_data,
             target_keys = summary_target_keys,
             relevant_key_columns = summary_relevant_key_columns,
             wanted_stats = summary_wanted_stats,
             key_group_column = summary_key_group_column
         )
 
-        run_data['stats'] = run_data['stats'] | nested_stats
+        assistant_run_data['stats'] = assistant_run_data['stats'] | nested_stats
     except Exception as e:
         print(e)
 
-    return run_data
+    return assistant_run_data
