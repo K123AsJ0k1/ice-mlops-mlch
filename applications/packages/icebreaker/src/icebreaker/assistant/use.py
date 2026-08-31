@@ -235,15 +235,14 @@ def assistant_create_requests(
 def assistant_generate_answers(
     dataset_inference_requests: list,
     request_keys: dict,
+    char_to_token_ratio: float,
     length_limit: int,
     inference_parameters: any,
     controller_model: str,
     controller_prompts: any,
-    request_categories: list,
     debug_prints: bool
 ) -> dict:
     try:
-        import statistics
         import time as t
         from ..controller.use import controller_create_request
         from ..ray.utility import ray_run_inference
@@ -356,8 +355,8 @@ def assistant_generate_answers(
             'system-prompt-length': system_prompt_length,
             'user-prompt-length': user_prompt_length,
         }
-
-        if used_context < length_limit:
+        # checks if context is too large
+        if used_context < char_to_token_ratio * length_limit:
             if 0 < system_prompt_length:
                 run_data['prompt-lengths']['system'].append(system_prompt_length)
             if 0 < user_prompt_length:
@@ -387,6 +386,7 @@ def assistant_generate_answers(
                 'off-topic': 0
             }
             user_question = ''
+            # Checks variants
             if 'pe-rag-bc-eval' in assistant_variant:
                 user_message_content = assistant_request['messages'][-1]['content']
                 _, sep, after_tag = user_message_content.partition('### USER REQUEST:')
@@ -440,17 +440,21 @@ def assistant_generate_answers(
                     }
                     
                 controller_merged_data = answer_metadata | controller_inference_tuple[1]
+                controller_request_time_sec = controller_inference_tuple[2]
+                # Checks if guardrail activated
                 if input_behavior['secret-leak'] == 1 or input_behavior['off-topic'] == 1:
                     run_data['outputs']['controller']['input']['refuse'].append(controller_output)
                     run_data['requests']['controller']['input']['refuse'].append(controller_input_check_request)
                     run_data['metrics']['controller']['input']['refuse'].append(controller_merged_data)
-                    run_data['request-times-sec']['controller']['input']['refuse'].append(controller_inference_tuple[2])
+                    run_data['request-times-sec']['controller']['input']['refuse'].append(controller_request_time_sec)
                 else:
                     run_data['outputs']['controller']['input']['accept'].append(controller_output)
                     run_data['requests']['controller']['input']['accept'].append(controller_input_check_request)
                     run_data['metrics']['controller']['input']['accept'].append(controller_merged_data)
-                    run_data['request-times-sec']['controller']['input']['accept'].append(controller_inference_tuple[2])
+                    run_data['request-times-sec']['controller']['input']['accept'].append(controller_request_time_sec)
             # Maybe check if this makes sense
+            # Checks if no filters were activated
+            # This includes other variants
             if input_behavior['secret-leak'] == 0 and input_behavior['off-topic'] == 0:
                 assistant_inference_tuple = ray_run_inference(
                     inference_address = inference_parameters['assistant']['address'],
@@ -459,7 +463,7 @@ def assistant_generate_answers(
                 )
                 
                 assistant_merged_data = answer_metadata | assistant_inference_tuple[1]
-                
+                # filters other variants
                 if not 'pe-rag-bc-eval' in assistant_variant:
                     run_data['requests']['assistant']['accept'].append(inference_requests)
                     run_data['outputs']['assistant']['accept'].append(assistant_inference_tuple[0])
@@ -517,7 +521,7 @@ def assistant_generate_answers(
                             'verbose': 0,
                             'out-of-scope': 0
                         }
-
+                    # Checks that no filters were activated
                     if output_behavior['irrelevant'] == 0 and output_behavior['verbose'] == 0 and output_behavior['out-of-scope'] == 0:
                         run_data['requests']['assistant']['accept'].append(inference_requests)
                         run_data['outputs']['assistant']['accept'].append(assistant_inference_tuple[0])
@@ -712,11 +716,11 @@ def assistant_produce_answers(
     batch_size: int,
     relevance_threshold: float,
     request_keys: list,
+    char_to_token_ratio: float,
     length_limit: int,
     inference_parameters: any,
     controller_model: str,
     controller_prompts: dict,
-    category_column: str,
     summary_target_keys: list,
     summary_relevant_key_columns: dict,
     summary_wanted_stats: list,
@@ -752,11 +756,11 @@ def assistant_produce_answers(
     assistant_run_data = assistant_generate_answers(
         dataset_inference_requests = assistant_requests[0],
         request_keys = request_keys,
+        char_to_token_ratio = char_to_token_ratio,
         length_limit = length_limit,
         inference_parameters = inference_parameters,
         controller_model = controller_model,
         controller_prompts = controller_prompts,
-        request_categories = target_df[category_column],
         debug_prints = False
     ) 
 
@@ -770,7 +774,6 @@ def assistant_produce_answers(
     assistant_run_data['rag-metrics'] = assistant_requests[1]
 
     try:
-        # This removes the process time
         nested_stats = evalution_nested_metrics(
             run_data = assistant_run_data,
             target_keys = summary_target_keys,
