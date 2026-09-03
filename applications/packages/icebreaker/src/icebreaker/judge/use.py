@@ -9,7 +9,7 @@ def judge_create_requests(
     question_column: str,
     answer_column: str,
     join_prompts: bool
-):
+) -> list:
     try:
         import re
     except ImportError as e:
@@ -17,39 +17,29 @@ def judge_create_requests(
  
     print('Creating judge requests')
     inference_requests = []
-    
-    assistant_run_outputs = run_data['outputs']['assistant']
-    assistant_run_metrics = run_data['metrics']['assistant']
-    
-    accepted_outputs = assistant_run_outputs['accept']
-    refused_outputs = assistant_run_outputs['refuse']['guard']
-    #print('asd')
-    accepted_metrics = assistant_run_metrics['accept']
-    refused_metrics = assistant_run_metrics['refuse']
-    
-    joined_outputs = accepted_outputs + refused_outputs
-    joined_metrics = accepted_metrics + refused_metrics
-    # 
-    question_idx = 0
-    for output in joined_outputs: 
-        # This is caused by the earlier bug
-        output_metrics = joined_metrics[question_idx]
-        if 'request-index' in output_metrics:
-            request_idx = output_metrics['request-index'] - 1
-            #print(request_idx)
-            assistant_variant = joined_metrics[question_idx]['assistant-variant']
-            question_type = joined_metrics[question_idx]['question-type']
+
+    run_data_records = run_data['records']
+    judge_idx = 0
+    for record in run_data_records:
+        assistant_data = record['assistant-data']
+
+        if 0 < len(assistant_data):
+            assistant_variant = assistant_data['request']['assistant-variant']
+            judged_model_metrics = assistant_data['metrics']
+            question_type = assistant_data['request']['question-type']
+            request_idx = assistant_data['request']['request-index']
+            output_text = assistant_data['output'] 
+            
             target_text = truth_dataset[answer_column][request_idx]
             query_text = truth_dataset[question_column][request_idx]
-            
+
             replacer_dict = {
                 'TARGET': target_text,
                 'QUERY': query_text,
-                'OUTPUT': output
+                'OUTPUT': output_text
             }
 
             if 'synthetic' in prompt_type:
-                # Misalinged content
                 chunk_idx = truth_dataset['chunk-idx'][request_idx]
                 replacer_dict['CONTENT'] = rag_dataset['content'][chunk_idx]
 
@@ -93,22 +83,23 @@ def judge_create_requests(
                 'dataset-name': dataset_name,
                 'request-index': request_idx,
                 'question-type': used_question_type,
-                'question-index': question_idx,
+                'judge-index': judge_idx,
                 'messages': sent_messages,
                 'system-prompt-length': system_prompt_length,
                 'user-prompt-length': user_prompt_length,
+                'judged-model-metrics': judged_model_metrics,
                 'target-model': target_model,
                 'temperature': temperature,
                 'top-p': top_p,
                 'max-tokens': max_tokens
             })
-            question_idx += 1
+        judge_idx += 1
     print(f'Amount of requests: {len(inference_requests)}')
     return inference_requests
 
 def judge_generate_answers(
     dataset_inference_requests: list,
-    request_keys: dict,
+    char_to_token_ratio: float,
     length_limit: int,
     inference_parameters: any,
     debug_prints: bool
@@ -119,168 +110,156 @@ def judge_generate_answers(
         from ..judge.utility import judge_extract_output
     except ImportError as e:
         raise ImportError("assistant/use failed to import", e)
+    
     process_time_start = t.time()
     print('Getting answers')
-    print(f'Request length limit {length_limit}')
+    token_limit = char_to_token_ratio * length_limit
+    print(f'Request token limit {token_limit}\n')
     print('')
     
-    run_data = {
-        'requests': [],
-        'outputs': {
-            'model': [],
-            'score': []
-        },
-        'metrics': [],
-        'request-times-sec': [],
-        'prompt-lengths':{
-            'system': [],
-            'user': []
-        },
-        'execution-times-sec': [],
-        'stats': {}
-    }
-    
-    for inference_requests in dataset_inference_requests:
+    run_records = []
+    for inference_request in dataset_inference_requests:
         execution_time_start = t.time()
-        judge_request = {}
-        dataset_name = inference_requests['dataset-name']
-        request_index = inference_requests['request-index']
-        question_type = inference_requests['question-type']
 
-        system_prompt_length = inference_requests['system-prompt-length']
-        user_prompt_length = inference_requests['user-prompt-length']
-        target_model = inference_requests['target-model']
-        temperature = inference_requests['temperature']
-        top_p = inference_requests['top-p']
-        max_tokens = inference_requests['max-tokens']
+        dataset_name = inference_request['dataset-name']
+        request_index = inference_request['request-index']
+        question_type = inference_request['question-type']
+        judge_index = inference_request['judge-index']
+        
+        system_prompt_length = inference_request['system-prompt-length']
+        user_prompt_length = inference_request['user-prompt-length']
+        judged_model_metrics = inference_request['judged-model-metrics']
+        target_model = inference_request['target-model']
         used_context = system_prompt_length + user_prompt_length
-        if used_context < length_limit:
-            if 0 < system_prompt_length:
-                run_data['prompt-lengths']['system'].append(system_prompt_length)
-            if 0 < user_prompt_length:
-                run_data['prompt-lengths']['user'].append(user_prompt_length)
 
-            print('Judge print:')
-            print(f'Dataset|{dataset_name}')
-            print(f'Request|{request_index + 1}')
-            print(f'Question type|{question_type}')
-            print(f'System prompt length|{system_prompt_length}')
-            print(f'User prompt length|{user_prompt_length}')
-            print(f'Model|{target_model}')
-            print(f'Temperature|{temperature}')
-            print(f'Top-p|{top_p}')
-            print(f'Max tokens|{max_tokens}') 
+        print('Assistant request:')
+        print(f'Request|{request_index + 1}')
+        print(f'Question type|{question_type}')
+        print(f'Context|{used_context}')
 
-            for key in request_keys:
-                judge_request[key] = inference_requests[key]
+        record = {
+            "metadata": {
+                "dataset": dataset_name,
+                "request-index": request_index,
+                "question-type": question_type,
+                'judge-index': judge_index,
+                "system-prompt-length": system_prompt_length,
+                "user-prompt-length": user_prompt_length,
+                "judged-model-metrics": judged_model_metrics,
+                "target-model": target_model
+            },
+            "status": "ACCEPTED", # ACCEPTED, REFUSED_CONTEXT
+            "refusal-reason": None,
+            "judge-data": {},
+            "judge-request": inference_request,
+            "execution-time-sec": 0.0
+        }
 
-            answer_metadata = {
-                'dataset': dataset_name,
-                'request-index': request_index,
-                'question-type': question_type,
-                'system-prompt-length': system_prompt_length,
-                'user-prompt-length': user_prompt_length,
-            }
+        if token_limit <= used_context:
+            record["status"] = "REFUSED_CONTEXT"
+            record["refusal-reason"] = "CONTEXT_LIMIT_REACHED"
+            record["execution-time-sec"] = round(t.time() - execution_time_start, 5)
+            run_records.append(record)
+            continue
+        
+        jdg_out, jdg_meta, jdg_time = ray_run_inference(
+            inference_address = inference_parameters['judge']['address'],
+            inference_path = inference_parameters['judge']['path'],
+            sent_request = inference_request
+        )
 
-            judge_inference_tuple = ray_run_inference(
-                inference_address = inference_parameters['judge']['address'],
-                inference_path = inference_parameters['judge']['path'],
-                sent_request = judge_request
-            )
+        jdg_score = judge_extract_output(output = jdg_out)
 
-            judge_output = judge_inference_tuple[0]
-            judge_merged_data = answer_metadata | judge_inference_tuple[1]
+        record["judge-data"] = {
+            "request": inference_request,
+            "output": jdg_out,
+            "score": jdg_score,
+            "metrics": jdg_meta,
+            "latency-sec": jdg_time
+        }
 
-            judge_score = judge_extract_output(
-                output = judge_output
-            )
-            judge_score['question-type'] = question_type
+        print("--- Judge Scores ---")
+        try:
+            print(f"Reasoning  : {jdg_score.get('reasoning', 'N/A')}")
+            print(f"Correctness: {jdg_score.get('correctness', 'N/A')}")
+            if "synth" in question_type:
+                print(f"Faithfulness: {jdg_score.get('faithfulness', 'N/A')}")
+            print(f"Relevance  : {jdg_score.get('relevance', 'N/A')}")
+        except Exception as e:
+            pass
 
-            print('Judge output score:')
-            try:
-                print(f'Reasoning|{judge_score['reasoning']}') 
-                print(f'Correctness|{judge_score['correctness']}') 
-                if 'synth' in question_type:
-                    print(f'Faithfulness|{judge_score['faithfulness']}') 
-                print(f'Relevance|{judge_score['relevance']}') 
-            except Exception as e:
-                pass
+        record["execution-time-sec"] = round(t.time() - execution_time_start, 5)
+        run_records.append(record)
 
-            run_data['requests'].append(inference_requests)
-            run_data['outputs']['model'].append(judge_output)
-            run_data['outputs']['score'].append(judge_score)
-            run_data['metrics'].append(judge_merged_data)
-            run_data['request-times-sec'].append(judge_inference_tuple[2])
-        execution_end_time = t.time()
-        execution_total_time = round(execution_end_time-execution_time_start,5)
-        run_data['execution-times-sec'].append(execution_total_time)
-        print(f'Spent seconds on execution: {execution_total_time}')
-        print('')
-
-    process_end_time = t.time()
-    process_total_time = round(process_end_time-process_time_start,5)
-    print(f'Spent seconds on processing: {process_total_time}')
+    total_process_time = round(t.time() - process_time_start, 5)
+    print(f'Spent seconds on processing: {total_process_time}')
     print('') 
-    run_data['stats']['process-total-time'] = process_total_time
-    
-    return run_data
+
+    return {
+        "records": run_records,
+        "stats": {
+            "total-process-time-sec": total_process_time,
+            "total-samples-evaluated": len(run_records)
+        }
+    }
 
 def judge_print_answers(
     run_data: dict
 ):
-    run_requests = run_data['requests']
-    run_outputs = run_data['outputs']['model']
-    run_scores = run_data['outputs']['score']
-    idx = 0
-    print('START ANSWERS')
-    print(f'Amount|{len(run_requests)}')
-    for judge_request in run_requests:
-        case_output = run_outputs[idx]
-        case_score = run_scores[idx]
-        
-        dataset_name = judge_request['dataset-name']
-        request_index = judge_request['request-index']
-        question_type = judge_request['question-type']
-        question_index = judge_request['question-index']
-        
-        messages = judge_request['messages']
-        system_prompt_length = judge_request['system-prompt-length']
-        user_prompt_length = judge_request['user-prompt-length']
-        target_model = judge_request['target-model']
-        temperature = judge_request['temperature']
-        top_p = judge_request['top-p']
-        max_tokens = judge_request['max-tokens']
+    records = run_data.get('records', [])
+    
+    print(f"START JUDGE ANSWERS | Total records: {len(records)}")
 
-        print(f'Dataset|{dataset_name}')
-        print(f'Request|{request_index}')
-        print(f'Question type|{question_type}')
-        print(f'Question index|{question_index + 1}')
-        print(f'System prompt length|{system_prompt_length}')
-        print(f'User prompt length|{user_prompt_length}')
-        print(f'Model|{target_model}')
-        print(f'Temperature|{temperature}')
-        print(f'Top-p|{top_p}')
-        print(f'Max tokens|{max_tokens}') 
-        print('')
-        print('==========')
-        # Show format and type
-        print('Judge prompts:')
-        for message in messages:
-            prompt_role = message['role']
-            prompt_content = message['content']
+    for idx, record in enumerate(records, start=1):
+        # judge model
+        metadata = record.get('metadata', {})
+        judged_model_metrics = metadata.get('judged-model-metrics', {})
+        judge_data = record.get('judge-data', {})
+        judge_metrics = judge_data.get('metrics')
+        
+        judge_req = judge_data.get('request', {})
+        score = judge_data.get('score')
 
-            print(f'Role|{prompt_role}')
-            print('Prompt:')
-            print(prompt_content)
+        print(f"=== Sample {idx}/{len(records)} ===")
+        print(f"Status | {record.get('status', 'unknown')}")
+        if record.get('error'):
+            print(f"Error | {record['error']}")
+
+        print(f"Dataset | {metadata.get('dataset')}")
+        print(f"Judged model | {judged_model_metrics.get('used-model')}")
+        print(f"Request | {metadata.get('request-index')}")
+        print(f"Question Type | {metadata.get('question-type')}")
+        print(f"Question Index | {metadata.get('question-index', 0) + 1}")
+        print(f"System Prompt Length | {metadata.get('system-prompt-length')}")
+        print(f"User Prompt Length | {metadata.get('user-prompt-length')}")
+        print(f"Judge model | {judge_metrics.get('used-model')}")
+        print(f"Inference Latency | {record.get('execution-time-sec', 0.0)}s")
         print('==========')
-        print('Output:')
-        print(case_output)
+
+        # Prompts
+        print('Judge Prompts:')
+        messages = judge_req.get('messages', [])
+        if messages:
+            for message in messages:
+                print(f"  Role | {message.get('role')}")
+                print('  Prompt:')
+                print(f"    {message.get('content')}\n")
+        else:
+            print('  No message list available.')
+
         print('==========')
-        print('Scores:')
-        print(case_score)
+        print('Raw Judge Output:')
+        print(judge_data.get('output') or 'N/A')
+
         print('==========')
-        print('')
-        idx += 1
+        print('Parsed Scores:')
+        if score:
+            for key, val in score.items():
+                print(f"  {key}: {val}")
+        else:
+            print('  No scores available.')
+
+        print('=' * 40 + '\n')
 
 def judge_produce_answers(
     rag_dataset: any,
@@ -293,9 +272,10 @@ def judge_produce_answers(
     question_column: str,
     answer_column: str,
     join_prompts: bool,
-    request_keys: list,
+    char_to_token_ratio: float,
     length_limit: int,
     inference_parameters: any,
+    summary_root_keys: dict,
     summary_target_keys: list,
     summary_relevant_key_columns: dict,
     summary_wanted_stats: list,
@@ -303,7 +283,7 @@ def judge_produce_answers(
 ):
     try:
         from ..judge.use import judge_create_requests, judge_generate_answers, judge_print_answers
-        from ..evalution.use import evalution_nested_metrics
+        from ..evaluation.use import evaluation_nested_metrics
     except ImportError as e:
         raise ImportError("assistant/use failed to import", e)
 
@@ -322,7 +302,7 @@ def judge_produce_answers(
 
     judge_run_data = judge_generate_answers(
         dataset_inference_requests = judge_requests,
-        request_keys = request_keys,
+        char_to_token_ratio = char_to_token_ratio,
         length_limit = length_limit,
         inference_parameters = inference_parameters,
         debug_prints = False
@@ -333,20 +313,22 @@ def judge_produce_answers(
             run_data = judge_run_data 
         )
     except Exception as e:
+        print('print')
         print(e)
 
     try:
-        # This removes the process time
-        nested_stats = evalution_nested_metrics(
+        nested_stats = evaluation_nested_metrics(
             run_data = judge_run_data,
+            root_keys = summary_root_keys,
             target_keys = summary_target_keys,
             relevant_key_columns = summary_relevant_key_columns,
             wanted_stats = summary_wanted_stats,
             key_group_column = summary_key_group_column
         )
-
+        
         judge_run_data['stats'] = judge_run_data['stats'] | nested_stats
     except Exception as e:
+        print('stats')
         print(e)
 
     return judge_run_data 

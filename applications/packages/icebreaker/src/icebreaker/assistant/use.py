@@ -234,7 +234,6 @@ def assistant_create_requests(
 
 def assistant_generate_answers(
     dataset_inference_requests: list,
-    request_keys: dict,
     char_to_token_ratio: float,
     length_limit: int,
     inference_parameters: any,
@@ -257,18 +256,18 @@ def assistant_generate_answers(
 
     # Flat records list for row-based downstream analytics
     run_records = []
-    for inference_requests in dataset_inference_requests:
+    for inference_request in dataset_inference_requests:
         execution_time_start = t.time()
         
-        dataset_name = inference_requests['dataset-name']
-        request_index = inference_requests['request-index']
-        question_type = inference_requests['question-type']
-        assistant_variant = inference_requests['assistant-variant']
-        assistant_index = inference_requests['assistant-index']
+        dataset_name = inference_request['dataset-name']
+        request_index = inference_request['request-index']
+        question_type = inference_request['question-type']
+        assistant_variant = inference_request['assistant-variant']
+        assistant_index = inference_request['assistant-index']
         
-        system_prompt_length = inference_requests['system-prompt-length']
-        user_prompt_length = inference_requests['user-prompt-length']
-        target_model = inference_requests['target-model']
+        system_prompt_length = inference_request['system-prompt-length']
+        user_prompt_length = inference_request['user-prompt-length']
+        target_model = inference_request['target-model']
         used_context = system_prompt_length + user_prompt_length
 
         print('Assistant request:')
@@ -276,7 +275,6 @@ def assistant_generate_answers(
         print(f'Question type|{question_type}')
         print(f'Assistant variant|{assistant_variant}')
 
-        # Base trace schema for single inference run
         record = {
             "metadata": {
                 "dataset": dataset_name,
@@ -293,7 +291,7 @@ def assistant_generate_answers(
             "assistant-data": {},
             "controller-input-data": {},
             "controller-output-data": {},
-            "assistant-request": inference_requests,
+            "assistant-request": inference_request,
             "execution-time-sec": 0.0
         }
 
@@ -308,8 +306,8 @@ def assistant_generate_answers(
         user_question = ""
 
         # Safely extract user question regardless of variant path
-        if 'messages' in inference_requests and inference_requests['messages']:
-            user_message_content = inference_requests['messages'][-1].get('content', '')
+        if 'messages' in inference_request and inference_request['messages']:
+            user_message_content = inference_request['messages'][-1].get('content', '')
             _, _, after_tag = user_message_content.partition('### USER REQUEST:')
             user_question = after_tag.strip() if after_tag else user_message_content
 
@@ -367,11 +365,11 @@ def assistant_generate_answers(
         ast_out, ast_meta, ast_time = ray_run_inference(
             inference_address=inference_parameters['assistant']['address'],
             inference_path=inference_parameters['assistant']['path'],
-            sent_request = inference_requests
+            sent_request = inference_request
         )
 
         record["assistant-data"] = {
-            "request": inference_requests,
+            "request": inference_request,
             "output": ast_out,
             "metrics": ast_meta,
             "latency-sec": ast_time
@@ -445,7 +443,8 @@ def assistant_print_answers(
     print(f"START ANSWERS | Total Records: {len(records)}\n")
 
     for idx, record in enumerate(records, start=1):
-        meta = record["metadata"]
+        meta = record.get("metadata")
+        assistant_data = record.get("assistant-data")
         print(f"=== Record {idx}/{len(records)} ===")
         print(f"Status|{record['status']}")
         if record["refusal-reason"]:
@@ -456,7 +455,10 @@ def assistant_print_answers(
         print(f"Question Type|{meta['question-type']}")
         print(f"Assistant Variant|{meta['assistant-variant']}")
         print(f"Assistant Index|{meta['assistant-index']}")
-        print(f"Model|{meta['target-model']}")
+        if 0 < len(assistant_data):
+            print(f"Model|{assistant_data.get('metrics').get('used-model')}")
+        else:
+            print(f"Model|None")
         print(f"Execution Latency|{record['execution-time-sec']}s")
         print("----------")
 
@@ -469,19 +471,23 @@ def assistant_print_answers(
         # 2. Controller Input Check (if ran)
         if record.get("controller-input-data"):
             ctrl_in = record["controller-input-data"]
+            used_model = ctrl_in['metrics']['used-model']
             print("Controller Input Check Result:")
+            print(f"  Model: {used_model}")
             print(f"  Output: {ctrl_in['output']}")
             print(f"  Behavior: {ctrl_in['behavior']}\n")
 
         # 3. Assistant Output
         print("Assistant Output:")
-        print(record.get("assistant-data").get('output') or "None (Refused before generation)")
+        print(assistant_data.get('output') or "None (Refused before generation)")
         print("----------")
 
         # 4. Controller Output Check (if ran)
         if record.get("controller-output-data"):
             ctrl_out = record["controller-output-data"]
+            used_model = ctrl_out['metrics']['used-model']
             print("Controller Output Check Result:")
+            print(f"  Model: {used_model}")
             print(f"  Output: {ctrl_out['output']}")
             print(f"  Behavior: {ctrl_out['behavior']}\n")
 
@@ -506,7 +512,6 @@ def assistant_produce_answers(
     sparse_model: any,
     batch_size: int,
     relevance_threshold: float,
-    request_keys: list,
     char_to_token_ratio: float,
     length_limit: int,
     inference_parameters: any,
@@ -547,7 +552,6 @@ def assistant_produce_answers(
 
     assistant_run_data = assistant_generate_answers(
         dataset_inference_requests = assistant_requests[0],
-        request_keys = request_keys,
         char_to_token_ratio = char_to_token_ratio,
         length_limit = length_limit,
         inference_parameters = inference_parameters,
@@ -574,7 +578,6 @@ def assistant_produce_answers(
             wanted_stats = summary_wanted_stats,
             key_group_column = summary_key_group_column
         )
-
 
         assistant_run_data['stats'] = assistant_run_data['stats'] | nested_stats
     except Exception as e:
