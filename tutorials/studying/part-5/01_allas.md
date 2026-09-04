@@ -12,9 +12,11 @@ difficulty: "Easy"
 
 2. <span id="used-material-2"></span> [The Allas object storage](https://docs.csc.fi/data/Allas/)
 
-3. <span id="used-material-3"></span> [Accessing Allas](https://docs.csc.fi/data/Allas/accessing_allas/)
+3. <span id="used-material-3"></span> [Introduction to the Allas storage service](https://docs.csc.fi/data/Allas/introduction/)
 
-4. <span id="used-material-4"></span> [CAP theorem](https://en.wikipedia.org/wiki/CAP_theorem)
+4. <span id="used-material-4"></span> [Accessing Allas](https://docs.csc.fi/data/Allas/accessing_allas/)
+
+5. <span id="used-material-5"></span> [CAP theorem](https://en.wikipedia.org/wiki/CAP_theorem)
 
 ## Why use Allas? 
 
@@ -30,11 +32,11 @@ These enable us to use the CSC-run Allas to create data containers (buckets) to 
 
 ## How to use Allas?
 
-Assuming that you have setup a MyCSC account and a CSC project mentioned in the [cPouta chapter](../part-4/02_cpouta.md), we can gain access to Allas by enabling the service [(2)](#used-material-2) in MyCSC. We will again only provide relevant details, so you should check the details from [(2)](#used-material-2) as necessary. When Allas is enabled, check [(3)](#used-material-3) for different ways to access it. For our use case, the access methods are the UI and Python clients, with the latter elaborated later. The dashboard can be accessed either via the [cPouta dashboard](https://pouta.csc.fi/) by clicking the project object store and containers or via the [Allas dashboard](https://allas.csc.fi/). Both are valid methods; the former may be more convenient, so the choice is left to you.
+Assuming that you have setup a MyCSC account and a CSC project mentioned in the [cPouta chapter](../part-4/02_cpouta.md), we can gain access to Allas by enabling the service in MyCSC. We will again only provide relevant details, so you should check the details from |[(2)](#used-material-2), [(3)](#used-material-2)| as necessary. When Allas is enabled, check [(4)](#used-material-4) for different ways to access it. For our use case, the access methods are the UI and Python clients, with the latter elaborated later. The dashboard can be accessed either via the [cPouta dashboard](https://pouta.csc.fi/) by clicking the project object store and containers or via the [Allas dashboard](https://allas.csc.fi/). Both are valid methods; the former may be more convenient, so the choice is left to you.
 
 ## Storage management
 
-Object storage platforms, such as Allas, provide guaranteed availability and partition tolerance, with some providing strong consistency based on the CAP theorem [(4)](#used-material-4). CAP theorem states that distributed data stores can provide at most 2 guarantees out of 3, which are:
+Object storage platforms, such as Allas, provide guaranteed availability and partition tolerance, with some providing strong consistency based on the CAP theorem [(5)](#used-material-5). CAP theorem states that distributed data stores can provide at most 2 guarantees out of 3, which are:
 
 - Consistency = All data reads receive the most recent write or an error
 
