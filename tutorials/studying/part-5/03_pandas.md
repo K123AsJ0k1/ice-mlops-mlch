@@ -123,7 +123,7 @@ restored_dataframe = pd.read_parquet(deserialized_data)
 
 ## Pandas DataFrame Splitting and Serialization
 
-When storing Pandas Dataframes with amounts of rows in millions and amounts of colums over 10, there is a need for dataframe splitting and serialization to reduce memory requirements of processing and storage to enable faster object storage interactions. The solution for processing such large dataframes is to use Dask |[(4)](#used-material-4), [(5)](#used-material-5)|, while Parquet handels the serialization |[(6)](#used-material-6), [(7)](#used-material-7)|. An example of their united use is the following:
+When storing Pandas DataFrames with millions of rows and more than 10 columns, you need to split and serialize the DataFrame to reduce memory requirements for processing and storage and enable faster object storage interactions. The solution for processing such large DataFrames is to use Dask |(4), (5)|, while Parquet handles the serialization |(6), (7)|. An example of their united use is the following:
 
 ```
 dask_dfs = []
@@ -163,6 +163,6 @@ for i, partition in enumerate(partitions):
     table_index += 1 
 ```
 
-This example code uses Dask to collectively rename the dataframe batches that are saved as parquet with to_delayed() and compute() enabling controlled use of memory by using disk when the Pandas dataframes won't fit in the memory. For our use case this code also divides the collective data into dataframes with 20 000 rows, which enables data manipulation without needing Dask. 
+This example code uses Dask to rename DataFrame batches saved as Parquet files, using to_delayed() and compute() to control memory by spilling to disk when the Pandas DataFrames won't fit in memory. For our use case, this code also splits the data into DataFrames of 20,000 rows, enabling data manipulation without needing Dask. 
 
 ---
