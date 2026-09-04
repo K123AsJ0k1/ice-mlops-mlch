@@ -28,7 +28,7 @@ Dictionaries are widely used as the main data type in object storage for the fol
 
 - Easy way to decouple data from code, manage states with declarative representation, and provide self-described structure (abstracted)
 
-- Widely supported by major programming languages, pipeline tools, and RESTful networks.
+- Widely supported by major programming languages, pipeline tools, and RESTful networks (interoperable)
 
 This makes dictionaries the default data type that lets us provide details to automation, abstract them away, and interact with them in any system.  
 
