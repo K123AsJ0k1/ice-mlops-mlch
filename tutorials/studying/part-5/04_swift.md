@@ -184,6 +184,6 @@ The Python SWIFT client uses PUT, CREATE, GET, DELETE, and LIST functions to man
         - Get data
         - Nested update
 
-The function level hides SWIFT client details and provides try-except blocks to prevent runtime errors, which the interaction level uses to simplify use with parameters and provide concurrency locking, while the serialization level simplifies use of different serialization types with parameters. This enables using serialization-level functions when possible, with code needing to use interaction-level functions only when necessary.
+The function level hides SWIFT client details and provides try-except blocks to prevent runtime errors, which the interaction level uses to simplify use with parameters and provide concurrency locking, while the serialization level simplifies use of different serialization types with parameters. This enables using serialization-level functions when possible, with code needing to use interaction-level functions only when necessary. 
 
 ---
