@@ -123,7 +123,7 @@ restored_dataframe = pd.read_parquet(deserialized_data)
 
 ## Pandas DataFrame Splitting and Serialization
 
-When storing Pandas DataFrames with millions of rows and more than 10 columns, you need to split and serialize the DataFrame to reduce memory requirements for processing and storage and enable faster object storage interactions. The solution for processing such large DataFrames is to use Dask |(4), (5)|, while Parquet handles the serialization |(6), (7)|. An example of their united use is the following:
+When storing Pandas DataFrames with millions of rows and more than 10 columns, you need to split and serialize the DataFrame to reduce memory requirements for processing and storage. The solution for processing such large DataFrames is to use Dask |(4), (5)|, while Parquet handles the serialization |(6), (7)|. An example of their united use is the following:
 
 ```
 dask_dfs = []
