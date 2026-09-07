@@ -107,7 +107,7 @@ def set_formatted_user(
     try:
         import re
     except ImportError as e:
-        raise ImportError("misc/Failed to import", e)
+        raise ImportError("misc/general failed to import", e)
     return re.sub(r'[^a-z0-9]+', '-', user)
 ```
 
