@@ -337,6 +337,8 @@ raycluster-kuberay-head-jjx4s            1/1     Running     0              10d
 raycluster-kuberay-worker-worker-8kd9v   1/1     Running     0              10d
 ```
 
+5. Assuming you have setup KinD networking with the [Istio chapter](../part-4/11_istio.md), you should be able to local forward to the virtual machine and check the dashboard using http://ray.cloud.dash-1.oss:7001. When running serve, set the address to 0.0.0.0 and the port to 8000 to use http://ray.cloud.serve-1.oss:7001 for interactions.
+
 With this, you have a Kubernetes cloud cluster that can easily interact with other services running in the Kind platform. This enables faster Ray script prototyping than local and cloud Compose clusters. Still, it can be limited by the resources available to the Kind platform and by how many services request those same resources.
 
 Resource challenges generally depend on how easy and cheap it is to add more resources with your cloud vendor. For example, for CSC for academic institutions, you only need to send an email with a good reason to the service desk to get more resources, and it's free for those institutions. A way to consider the resources a KinD platform requires is to use the following command:
@@ -360,9 +362,5 @@ Allocated resources:
 Here, Kubernetes allocates resources to services using the requests and limits provided by those services. Be aware that requests are the minimum amount of resources, while limits are the maximum amount of resources for a specific pod. 
 
 As long as the resource configuration isn't so large that the pod stays in pending status, Kubernetes will run it. This is called guaranteed scheduling, which aims to ensure that no node is ever overcommitted beyond its capacity at deployment. 
-
-## HPC SLURM Ray
-
-- Give example lumi script
 
 ---
