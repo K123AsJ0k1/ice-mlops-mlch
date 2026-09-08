@@ -1,0 +1,49 @@
+docker compose -f local-cloud-compose-ray-cluster-with-chisel.yaml
+[+] Running 3/0
+ ✔ Container ray-head       Created                                                                                                  0.0s 
+ ✔ Container chisel-client  Recreated                                                                                                0.1s 
+ ✔ Container ray-worker     Created                                                                                                  0.0s 
+Attaching to chisel-client, ray-head, ray-worker
+chisel-client  | 2026/06/01 10:31:36 client: TLS verification using CA /run/secrets/cpouta-oss-crt
+chisel-client  | 2026/06/01 10:31:36 client: Connecting to wss://chisel.oss:7008
+chisel-client  | 2026/06/01 10:31:36 client: tun: proxy#5000=>mlflow.mlflow.svc.cluster.local:5000: Listening
+chisel-client  | 2026/06/01 10:31:36 client: tun: proxy#9100=>minio-service.storage.svc.cluster.local:9100: Listening
+chisel-client  | 2026/06/01 10:31:36 client: tun: proxy#27017=>mongo-service.storage.svc.cluster.local:27017: Listening
+chisel-client  | 2026/06/01 10:31:36 client: tun: proxy#7687=>neo4j-service.storage.svc.cluster.local:7687: Listening
+chisel-client  | 2026/06/01 10:31:36 client: tun: proxy#7201=>qdrant-service.storage.svc.cluster.local:7201: Listening
+chisel-client  | 2026/06/01 10:31:36 client: tun: proxy#6379=>redis-service.storage.svc.cluster.local:6379: Listening
+chisel-client  | 2026/06/01 10:31:36 client: Connected (Latency 11.303584ms)
+ray-worker     | 2026-06-01 03:31:37,825        INFO scripts.py:1094 -- Local node IP: 172.29.0.2
+ray-worker     | 2026-06-01 03:31:39,039        SUCC scripts.py:1110 -- --------------------
+ray-worker     | 2026-06-01 03:31:39,039        SUCC scripts.py:1111 -- Ray runtime started.
+ray-worker     | 2026-06-01 03:31:39,039        SUCC scripts.py:1112 -- --------------------
+ray-worker     | 2026-06-01 03:31:39,039        INFO scripts.py:1114 -- To terminate the Ray runtime, run
+ray-worker     | 2026-06-01 03:31:39,039        INFO scripts.py:1115 --   ray stop
+ray-worker     | 2026-06-01 03:31:39,039        INFO scripts.py:1123 -- --block
+ray-worker     | 2026-06-01 03:31:39,040        INFO scripts.py:1124 -- This command will now block forever until terminated by a signal.
+ray-worker     | 2026-06-01 03:31:39,040        INFO scripts.py:1127 -- Running subprocesses are monitored and a message will be printed if any of them terminate unexpectedly. Subprocesses exit with SIGTERM will be treated as graceful, thus NOT reported.
+ray-head       | 2026-06-01 03:31:37,684        INFO usage_lib.py:473 -- Usage stats collection is enabled by default without user confirmation because this terminal is detected to be non-interactive. To disable this, add `--disable-usage-stats` to the command that starts the cluster, or run the following command: `ray disable-usage-stats` before starting the cluster. See https://docs.ray.io/en/master/cluster/usage-stats.html for more details.
+ray-head       | 2026-06-01 03:31:37,684        INFO scripts.py:913 -- Local node IP: 172.29.0.15
+ray-head       | 2026-06-01 03:31:40,754        SUCC scripts.py:949 -- --------------------
+ray-head       | 2026-06-01 03:31:40,754        SUCC scripts.py:950 -- Ray runtime started.
+ray-head       | 2026-06-01 03:31:40,754        SUCC scripts.py:951 -- --------------------
+ray-head       | 2026-06-01 03:31:40,754        INFO scripts.py:953 -- Next steps
+ray-head       | 2026-06-01 03:31:40,755        INFO scripts.py:956 -- To add another node to this Ray cluster, run
+ray-head       | 2026-06-01 03:31:40,755        INFO scripts.py:959 --   ray start --address='172.29.0.15:6379'
+ray-head       | 2026-06-01 03:31:40,755        INFO scripts.py:968 -- To connect to this Ray cluster:
+ray-head       | 2026-06-01 03:31:40,755        INFO scripts.py:970 -- import ray
+ray-head       | 2026-06-01 03:31:40,755        INFO scripts.py:971 -- ray.init()
+ray-head       | 2026-06-01 03:31:40,755        INFO scripts.py:983 -- To submit a Ray job using the Ray Jobs CLI:
+ray-head       | 2026-06-01 03:31:40,755        INFO scripts.py:984 --   RAY_API_SERVER_ADDRESS='http://172.29.0.15:8265' ray job submit --working-dir . -- python my_script.py
+ray-head       | 2026-06-01 03:31:40,755        INFO scripts.py:993 -- See https://docs.ray.io/en/latest/cluster/running-applications/job-submission/index.html 
+ray-head       | 2026-06-01 03:31:40,755        INFO scripts.py:997 -- for more information on submitting Ray jobs to the Ray cluster.
+ray-head       | 2026-06-01 03:31:40,755        INFO scripts.py:1002 -- To terminate the Ray runtime, run
+ray-head       | 2026-06-01 03:31:40,755        INFO scripts.py:1003 --   ray stop
+ray-head       | 2026-06-01 03:31:40,755        INFO scripts.py:1006 -- To view the status of the cluster, use
+ray-head       | 2026-06-01 03:31:40,755        INFO scripts.py:1007 --   ray status
+ray-head       | 2026-06-01 03:31:40,755        INFO scripts.py:1011 -- To monitor and debug Ray, view the dashboard at 
+ray-head       | 2026-06-01 03:31:40,755        INFO scripts.py:1012 --   172.29.0.15:8265
+ray-head       | 2026-06-01 03:31:40,755        INFO scripts.py:1019 -- If connection to the dashboard fails, check your firewall settings and network configuration.
+ray-head       | 2026-06-01 03:31:40,755        INFO scripts.py:1123 -- --block
+ray-head       | 2026-06-01 03:31:40,755        INFO scripts.py:1124 -- This command will now block forever until terminated by a signal.
+ray-head       | 2026-06-01 03:31:40,755        INFO scripts.py:1127 -- Running subprocesses are monitored and a message will be printed if any of them terminate unexpectedly. Subprocesses exit with SIGTERM will be treated as graceful, thus NOT reported.

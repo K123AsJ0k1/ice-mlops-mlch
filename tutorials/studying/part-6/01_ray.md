@@ -236,12 +236,12 @@ This pattern can be repeated sequentially to have a longer pipeline in the Ray s
 
 ## Local and cloud Compose Ray
 
-Assuming you have installed Docker on your local computer or cloud virtual machine as described in the [Docker chapter](../part-1/07_docker.md), we can setup a local and cloud Ray cluster with the example [compose YAML](./deployments/local-cloud-compose-ray-cluster.yaml). This can be done in the following steps:
+Assuming you have installed Docker on your local computer or cloud virtual machine as described in the [Docker chapter](../part-1/07_docker.md), we can setup a local and cloud Ray cluster with the example [compose YAML](./deployments/ray/local-cloud-compose-ray-cluster.yaml). This can be done in the following steps:
 
 1. Go to the folder
 
 ```
-cd ice-mlops-mlch/tutorials/studying/part-6/deployments
+cd ice-mlops-mlch/tutorials/studying/part-6/deployments/ray
 ```
 
 2. Edit the CPU, RAM, and GPU amounts to fit the host.
@@ -289,7 +289,7 @@ For these reasons, unless you have proper local servers, the local side will be 
 
 ## Cloud Kubernetes Ray
 
-Assuming you have checked the KubeRay mentioned in the [Helm chapter](../part-4/07_helm.md), we can set it up using the example [YAML configuration](./deployments/cloud-kubernetes-ray-cluster.yaml). This can be done in the following way:
+Assuming you have checked the KubeRay mentioned in the [Helm chapter](../part-4/07_helm.md), we can set it up using the example [YAML configuration](./deployments/ray/cloud-kubernetes-ray-cluster.yaml). This can be done in the following way:
 
 1. Confirm whether you will use a CPU or GPU image [(4)](#used-material-4). The latter requires that you have completed the setup described in the [KinD chapter](../part-4/05_kind.md).
 
@@ -320,7 +320,7 @@ worker:
 3. Assuming you have a running KubeRay operator and not Ray Cluster, use the following command to create a new cluster:
 
 ```
-cd ice-mlops-mlch/tutorials/studying/part-6/deployments
+cd ice-mlops-mlch/tutorials/studying/part-6/deployments/ray
 helm install raycluster kuberay/ray-cluster --version 1.0.0 -f cloud-kubernetes-ray-cluster.yaml
 ```
 

@@ -1,0 +1,17 @@
+kubectl logs chisel-server-69757d5cb4-6z6wc -n chisel
+2026/06/01 10:14:33 server: Reverse tunnelling enabled
+2026/06/01 10:14:33 server: Fingerprint ---
+2026/06/01 10:14:33 server: User authentication enabled
+2026/06/01 10:14:33 server: Listening on http://0.0.0.0:8080
+2026/06/01 10:21:07 server: session#1: Client version (<unknown>) differs from server version ()
+2026/06/01 10:21:07 server: session#1: tun: proxy#R:8100=>ray-head:8265: Listening
+2026/06/01 10:21:07 server: session#1: tun: proxy#R:8301=>ray-head:8350: Listening
+2026/06/01 10:25:04 server: session#2: Client version (<unknown>) differs from server version ()
+2026/06/01 10:25:04 server: session#2: tun: proxy#R:8100=>ray-head:8265: Listening
+2026/06/01 10:25:04 server: session#2: tun: proxy#R:8301=>ray-head:8350: Listening
+2026/06/01 10:27:27 server: session#3: Client version (<unknown>) differs from server version ()
+2026/06/01 10:27:27 server: session#3: tun: proxy#R:8100=>ray-head:8265: Listening
+2026/06/01 10:27:27 server: session#3: tun: proxy#R:8301=>ray-head:8350: Listening
+2026/06/01 10:31:36 server: session#4: Client version (<unknown>) differs from server version ()
+2026/06/01 10:31:36 server: session#4: tun: proxy#R:8100=>ray-head:8265: Listening
+2026/06/01 10:31:36 server: session#4: tun: proxy#R:8301=>ray-head:8350: Listening
