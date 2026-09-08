@@ -14,6 +14,8 @@ difficulty: "Intermediate"
 
 3. <span id="used-material-3"></span> [Ray: The Complete Guide from Beginner to Professional](https://medium.com/@sjbpr1/ray-the-complete-guide-from-beginner-to-professional-74160d98749b)
 
+4. <span id="used-material-4"></span> [Ray dockerhub](https://hub.docker.com/r/rayproject/ray)
+
 ## Why use Ray?
 
 Ray is the most common unified scaling framework for Pythonic Web, Big Data, and AI for the following reasons:
@@ -54,7 +56,7 @@ Ray job scripts are self-contained folders with the requirements, main, and func
     - actors
     - functions
 
-In our case, we'll keep functions in the repository package for easier testing, which is why they usually don't exist in our Ray Scripts. To execute any code, we need to use either JobSubmissionClient or Ray client. The first one only requires a dashboard connection to run the following code:
+In our case, we'll keep functions in the repository package for easier testing, which is why they usually don't exist in our Ray job scripts. To execute any code, we need to use either JobSubmissionClient or Ray client. The first one only requires a dashboard connection to run the following code:
 
 ```
 from ray.job_submission import JobSubmissionClient
@@ -232,10 +234,135 @@ def main_function(job_parameters: any)
 
 This pattern can be repeated sequentially to have a longer pipeline in the Ray script. Still, since we have access to object storage and various computing infrastructures, it is much better to have a maximum of 1-2 parallel steps per Ray script to keep them short, enable easier distribution of tasks, and make the workflow using these Ray scripts more tolerant of failure. We will go more in depth later on how to create Ray-based workflows.
 
-## Local Compose Ray
+## Local and cloud Compose Ray
+
+Assuming you have installed Docker on your local computer or cloud virtual machine as described in the [Docker chapter](../part-1/07_docker.md), we can setup a local and cloud Ray cluster with the example [compose YAML](./deployments/local-cloud-compose-ray-cluster.yaml). This can be done in the following steps:
+
+1. Go to the folder
+
+```
+cd ice-mlops-mlch/tutorials/studying/part-6/deployments
+```
+
+2. Edit the CPU, RAM, and GPU amounts to fit the host.
+
+```
+ray-head:
+    deploy:
+        resources:
+            reservations: 
+                devices: # remove if you don't have NVIDIA GPU
+                - driver: nvidia
+                    count: 1
+                    capabilities: [gpu]
+                limits:
+                    cpus: '30' # reduce to maximum-2CPUs aka (32-2) = 30
+                    memory: '15g' # reduce to around half of maximum-1GB = (32/2-1) = 15GB   
+```
+
+3. Confirm if you are going to use CPU or GPU docker image [(4)](#used-material-4).
+
+```
+(ray-head/ray-worker):
+    image: rayproject/ray:2.49.2-py312-(cu128/cpu)
+```
+
+4. Run the YAML with compose.
+
+```
+docker compose -f local-cloud-compose-ray-cluster.yaml up
+```
+
+5. If there are no errors, you should be able to check the dashboard at http://localhost:8265. If you plan to use Ray Serve, set the address to 0.0.0.0 and the port to 8350 to enable interactions at http://localhost:8350.
+
+6. To shut down the cluster, run CTRL + C. You can also stop it with
+
+```
+docker compose -f local-cloud-compose-ray-cluster.yaml stop
+```
+
+With this, you have a local or cloud cluster that you can distribute tasks to utilize available resources. However, be aware that the biggest challenge with local clusters is resource constraints, which are further reduced by the operating system and any other background tasks. 
+
+The main resource you will always lack is RAM, which is why the shown compose YAML puts most of the resources into the ray-head. You must also account for limited RAM when planning workflow batch jobs to prevent them from failing due to OOM errors.
+
+For these reasons, unless you have proper local servers, the local side will be used to enable incremental development of your workflow and Ray scripts. It also provides a workflow speedup depending on input distribution, which we cover in more detail later.
 
 ## Cloud Kubernetes Ray
 
+Assuming you have checked the KubeRay mentioned in the [Helm chapter](../part-4/07_helm.md), we can set it up using the example [YAML configuration](./deployments/cloud-kubernetes-ray-cluster.yaml). This can be done in the following way:
+
+1. Confirm whether you will use a CPU or GPU image [(4)](#used-material-4). The latter requires that you have completed the setup described in the [KinD chapter](../part-4/05_kind.md).
+
+2. Edit the CPU, RAM, and GPU amounts to fit your cloud virtual machine.
+
+```
+head:
+  resources:
+    limits:
+      cpu: "4" # reduce to half of available cpus-1CPUs aka (10/2-1) = 4
+      memory: "52G" # reduce to around half of maximum-1GB aka (106/2-1) = 52 GB
+      nvshare.com/gpu: "1" # Use this to share a single GPU with nvshare
+    requests:
+      cpu: "4" # reduce to maximum-2CPUs aka (32-2) = 30
+      memory: "52G"
+
+worker:
+  resources:
+    limits:
+      cpu: "4" # reduce to half of available cpus-1CPUs aka (10/2-1) = 4
+      memory: "52G" # reduce to around half of maximum-1GB aka (106/2-1) = 52 GB
+      nvshare.com/gpu: "1" # Use this to share a single GPU with nvshare
+    requests:
+      cpu: "4" # reduce to maximum-2CPUs aka (32-2) = 30
+      memory: "52G" # reduce to around half of maximum-1GB aka (106/2-1) = 52 GB
+```
+
+3. Assuming you have a running KubeRay operator and not Ray Cluster, use the following command to create a new cluster:
+
+```
+cd ice-mlops-mlch/tutorials/studying/part-6/deployments
+helm install raycluster kuberay/ray-cluster --version 1.0.0 -f cloud-kubernetes-ray-cluster.yaml
+```
+
+4. Confirm that the Ray cluster pod status is running.
+
+```
+kubectl get pods 
+
+NAME                                     READY   STATUS      RESTARTS       AGE
+kuberay-operator-9986f78b7-599nf         1/1     Running     12 (28h ago)   10d
+nvshare-tf-matmul-1                      0/1     Completed   0              31d
+nvshare-tf-matmul-2                      0/1     Completed   0              31d
+raycluster-kuberay-head-jjx4s            1/1     Running     0              10d
+raycluster-kuberay-worker-worker-8kd9v   1/1     Running     0              10d
+```
+
+With this, you have a Kubernetes cloud cluster that can easily interact with other services running in the Kind platform. This enables faster Ray script prototyping than local and cloud Compose clusters. Still, it can be limited by the resources available to the Kind platform and by how many services request those same resources.
+
+Resource challenges generally depend on how easy and cheap it is to add more resources with your cloud vendor. For example, for CSC for academic institutions, you only need to send an email with a good reason to the service desk to get more resources, and it's free for those institutions. A way to consider the resources a KinD platform requires is to use the following command:
+
+```
+kubectl describe nodes
+Allocated resources:
+  (Total limits may be over 100 percent, i.e., overcommitted.)
+  Resource           Requests            Limits
+  --------           --------            ------
+  cpu                13135m (93%)        35200m (251%)
+  memory             113800869120 (92%)  126371972Ki (104%)
+  ephemeral-storage  0 (0%)              0 (0%)
+  hugepages-1Gi      0 (0%)              0 (0%)
+  hugepages-2Mi      0 (0%)              0 (0%)
+  nvidia.com/gpu     1                   1
+  nvshare.com/gpu    2                   2
+
+```
+
+Here, Kubernetes allocates resources to services using the requests and limits provided by those services. Be aware that requests are the minimum amount of resources, while limits are the maximum amount of resources for a specific pod. 
+
+As long as the resource configuration isn't so large that the pod stays in pending status, Kubernetes will run it. This is called guaranteed scheduling, which aims to ensure that no node is ever overcommitted beyond its capacity at deployment. 
+
 ## HPC SLURM Ray
+
+- Give example lumi script
 
 ---
