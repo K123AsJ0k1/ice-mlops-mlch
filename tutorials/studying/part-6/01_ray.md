@@ -361,6 +361,6 @@ Allocated resources:
 
 Here, Kubernetes allocates resources to services using the requests and limits provided by those services. Be aware that requests are the minimum amount of resources, while limits are the maximum amount of resources for a specific pod. 
 
-As long as the resource configuration isn't so large that the pod stays in pending status, Kubernetes will run it. This is called guaranteed scheduling, which aims to ensure that no node is ever overcommitted beyond its capacity at deployment. 
+As long as the resource configuration isn't so large that the pod stays in pending status, Kubernetes will run it. This is called guaranteed scheduling, which aims to ensure that no node is ever overcommitted beyond its capacity at deployment. We will in general address scheduling related challenges later.
 
 ---
