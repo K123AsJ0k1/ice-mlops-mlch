@@ -12,7 +12,7 @@ difficulty: "Intermediate"
 
 ## Why use Parallelism?
 
-The use of pararellism to split a task between parallel program run in multiple CPU and GPU units for effienct use of resources and faster execution time is enabled in MLOps and LLMOps with the following strategies [(1)](#used-material-1):
+MLOps and LLMOps use parallelism to split tasks across multiple CPU and GPU units, improving resource use and execution speed, using the following strategies  [(1)](#used-material-1):
 
 - Data Parallelism = Splitting input data across multiple nodes running the same model, with each processing a different subset
     - Pros: 
