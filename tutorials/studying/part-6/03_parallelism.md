@@ -48,11 +48,11 @@ The differences between them are the following:
     - Applicability = Data parallelism is simpler and used when the model fits into a single GPU, while pipeline parallelism is complex and used for large models that don't fit into a single GPU 
     - Efficiency = Data parallelism has communication bottlenecks with large numbers of GPUs, and pipeline parallelism needs to handle pipeline bubbles and use complex scheduling
 
-- tensor parallelism vs. pipeline parallelism:
+- Tensor parallelism vs. pipeline parallelism:
     - Layer granularity = Tensor parallelism handles individual model layers across GPUs, while pipeline parallelism uses coarser granularity to split the model into stages
     - Communication overhead = Tensor parallelism has more intra-layer communication overhead, while pipeline parallelism uses communication mostly between stages
 
-These 3 strategies are widely used to optimize LLM training: data parallelism handles large datasets and scales across GPUs, tensor parallelism splits large layers between GPUs, and pipeline parallelism divides the model into stages to distribute computational load and memory requirements. We will use similar strategies to use resources efficiently and speed up the pipelines in our use-case workflow. 
+These 3 strategies are widely used to optimize LLM training: data parallelism handles large datasets and scales across GPUs, tensor parallelism splits large layers between GPUs, and pipeline parallelism divides the model into stages to distribute computational load and memory requirements. We will use similar strategies to speed up use-case workflow pipelines and use resources efficiently. 
 
 ## How to use Parallelism?
 
