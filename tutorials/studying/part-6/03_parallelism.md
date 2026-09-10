@@ -56,9 +56,13 @@ These 3 strategies are widely used to optimize training efficiency for large lan
 
 ## How to use Parallelism?
 
-For our use case, we will use pipelined execution and data partitioning for data analysis and preprocessing, reserving the terms data parallelism, tensor parallelism, and pipeline parallelism for LLM inference. Pipelined execution will use suitable dictionary schemas, Python functions, and orchestration tools so users can create a pipeline dictionary with all necessary input information and steps to run Ray scripts. Data partitioning will use object storage paths, Python functions, and cluster-specific Ray script configurations to first divide the given object paths between clusters, then divide those object paths between Ray tasks, and finally divide the data to be processed by Ray actors. 
+For our use case, we will use pipelined execution and data partitioning for data analysis and preprocessing, reserving the terms data parallelism, tensor parallelism, and pipeline parallelism for LLM inference. 
 
-We will cover Pipelined execution in detail later, while we cover the details of Data partitioning here. We have already covered partitioning data for Ray tasks in the [Ray chapter](./01_ray.md), which is why we will go over dividing the data for clusters and actors. The cluster division uses load balanced round robin to divide a list Allas objects between available clusters during each workflow step with the following code:
+Pipelined execution will use suitable dictionary schemas, Python functions, and orchestration tools so users can create a pipeline dictionary with all necessary input information and steps to run Ray scripts. 
+
+Data partitioning will use object storage paths, Python functions, and cluster-specific Ray script configurations to first divide the given object paths between clusters, then divide those object paths between Ray tasks, and finally divide the data to be processed by Ray actors. 
+
+We will cover data partitioning here with pipelined execution coming later. We have already covered partitioning data for Ray tasks in the [Ray chapter](./01_ray.md), which is why we will go over dividing the data for clusters and actors. The cluster division uses load balanced round robin to divide a list Allas objects between available clusters during each workflow step with the following code:
 
 ```
 from ..ray.use import ray_get_clients
@@ -154,7 +158,9 @@ local-lt2 given batch input size 31
 local-lt3 given batch input size 51
 ```
 
-With this, we simplified data partitioning by giving objects suitable names, enabling path prefixes to select the desired list of object paths to divide. After the Ray script divides these paths among available Ray tasks, each task must split them into batches to use available actors efficiently within resource constraints. The main goal is to divide the object data into batch sizes that the most constrained infrastructure can process, ensuring actor RAM or VRAM use does not cause OOM errors. Here is an example pattern for actor batching:
+With this, we simplified data partitioning by giving objects suitable names, enabling path prefixes to select the desired list of object paths to divide. After the Ray script divides these paths among available Ray tasks, each task must split them into batches to use available actors efficiently within resource constraints. 
+
+The main goal is to divide the object data into batch sizes that the most constrained infrastructure can process, ensuring actor RAM or VRAM use does not cause OOM errors. Here is an example pattern for actor batching:
 
 ```
 import ray
@@ -284,6 +290,6 @@ def database_setup(
 
 This code sets up a database by iterating through the given object paths, sending them to actors in 5% batches, waiting for the actors to complete the batches, and processing the information to store in a database. This pattern is very similar to the previously shown task pattern, except that each task assigns its batches to a single actor. 
 
-It's sensible to have more tasks than actors because actors use persistent resources to load heavy models and handle heavy calculations. In contrast, tasks aim to use these resources efficiently by sending a balanced number of batches. Both help ensure the Ray script runs within the cluster resources, since this lets us adjust resource requirements. We will cover Ray script resource management in more depth later.
+It's sensible to have more tasks than actors because actors use persistent resources to load heavy models and handle heavy calculations. In contrast, tasks aim to use these resources efficiently by sending a balanced number of batches. Both help ensure the Ray script runs within the cluster resources, since this lets us adjust resource requirements. We will cover more details later.
 
 ---
