@@ -1,0 +1,33 @@
+clusters:
+  vm1:
+    spent-units-per-hour: 60
+    activate: False
+    resources:
+      nodes: 'head-worker-1'
+      cpu: '8'
+      ram: '104 GB'
+      gpu: 
+        - hardware: 'NVIDIA Tesla P100-PCIE-16GB'
+          vram: '16384 MiB'
+    network:
+      kubernetes:
+        dash: 'raycluster-kuberay-head-svc.default.svc.cluster.local:8265'
+        serve: 'raycluster-kuberay-head-svc.default.svc.cluster.local:8000'
+      istio:
+        dash: 'ray.cloud.dash-1.oss:7100'
+        serve: 'ray.cloud.serve-1.oss:7100'
+  vm2:
+    spent-units-per-hour: 23
+    activate: False
+    resources:
+      nodes: 'head'
+      cpu: '12'
+      ram: '85 GB'
+      gpu: 'None'
+    network:
+      kubernetes:
+        dash: 'chisel-server-service.chisel.svc.cluster.local:8401'
+        serve: 'chisel-server-service.chisel.svc.cluster.local:8451'
+      istio:
+        dash: 'ray.cloud.dash-2.oss:7100'
+        serve: 'ray.cloud.serve-2.oss:7100'

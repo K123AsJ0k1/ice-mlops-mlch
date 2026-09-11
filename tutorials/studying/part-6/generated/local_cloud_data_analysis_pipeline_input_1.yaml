@@ -1,0 +1,247 @@
+run: local-cloud-data-analysis-run
+experiment: local-cloud-data-analysis-experiment
+storage:
+  swift: &id001
+    last-auth-time: 0
+    auth-url: tutorial
+    pre-auth-token: tutorial
+    pre-auth-url: tutorial
+    auth-version: tutorial
+    project-name: tutorial
+    user-domain-name: tutorial
+    project-domain-name: tutorial
+  mlflow:
+    tracking-uri: http://mlflow.mlflow.svc.cluster.local:5000
+    s3-endpoint-url: http://mlflow-minio-service.mlflow.svc.cluster.local:9000
+    experiment-name: mlch-code-assistant-rag-pipeline
+    run-name: ray-data-analysis-pipeline
+    run-tags:
+      workflow-type: local-cloud
+      pipeline-step: internal-data-analysis
+  data-storage:
+    bucket-target: experiment
+    bucket-prefix: mlch
+    bucket-user: user@example.com
+  code-storage:
+    bucket-target: pipeline
+    bucket-prefix: mlch
+    bucket-user: user@example.com
+  log-storage:
+    bucket-target: pipeline
+    bucket-prefix: mlch
+    bucket-user: user@example.com
+  time-storage:
+    bucket-target: pipeline
+    bucket-prefix: mlch
+    bucket-user: user@example.com
+    object-name: local-cloud-workflow
+integration:
+  cluster-yamls:
+    local-cluster-parameters:
+      clusters:
+        lt1:
+          hardware-costs: 1648.62
+          activate: true
+          resources:
+            nodes: head
+            cpu: '12'
+            ram: 13 GB
+            gpu: None
+          network:
+            kubernetes:
+              dash: chisel-server-service.chisel.svc.cluster.local:8100
+              serve: chisel-server-service.chisel.svc.cluster.local:8301
+            istio:
+              dash: ray.local.dash-1.oss:7100
+              serve: ray.local.serve-1.oss:7100
+        lt2:
+          hardware-costs: 1903.59
+          activate: true
+          resources:
+            nodes: head
+            cpu: '14'
+            ram: 11 GB
+            gpu:
+            - hardware: NVIDIA GeForce RTX 4070
+              vram: 8188 MiB
+          network:
+            kubernetes:
+              dash: chisel-server-service.chisel.svc.cluster.local:8101
+              serve: chisel-server-service.chisel.svc.cluster.local:8302
+            istio:
+              dash: ray.local.dash-2.oss:7100
+              serve: ray.local.serve-2.oss:7100
+        lt3:
+          hardware-costs: 4333.87
+          activate: true
+          resources:
+            nodes: head
+            cpu: '30'
+            ram: 15 GB
+            gpu:
+            - hardware: NVIDIA GeForce RTX 4090
+              vram: 16186 MiB
+          network:
+            kubernetes:
+              dash: chisel-server-service.chisel.svc.cluster.local:8102
+              serve: chisel-server-service.chisel.svc.cluster.local:8303
+            istio:
+              dash: ray.local.dash-3.oss:7100
+              serve: ray.local.serve-3.oss:7100
+    cloud-cluster-parameters:
+      clusters:
+        vm1:
+          spent-units-per-hour: 60
+          activate: false
+          resources:
+            nodes: head-worker-1
+            cpu: '8'
+            ram: 104 GB
+            gpu:
+            - hardware: NVIDIA Tesla P100-PCIE-16GB
+              vram: 16384 MiB
+          network:
+            kubernetes:
+              dash: raycluster-kuberay-head-svc.default.svc.cluster.local:8265
+              serve: raycluster-kuberay-head-svc.default.svc.cluster.local:8000
+            istio:
+              dash: ray.cloud.dash-1.oss:7100
+              serve: ray.cloud.serve-1.oss:7100
+        vm2:
+          spent-units-per-hour: 23
+          activate: true
+          resources:
+            nodes: head
+            cpu: '12'
+            ram: 85 GB
+            gpu: None
+          network:
+            kubernetes:
+              dash: chisel-server-service.chisel.svc.cluster.local:8401
+              serve: chisel-server-service.chisel.svc.cluster.local:8451
+            istio:
+              dash: ray.cloud.dash-2.oss:7100
+              serve: ray.cloud.serve-2.oss:7100
+    local:
+      clusters:
+        lt1:
+          activate: true
+        lt2:
+          activate: true
+        lt3:
+          activate: true
+    cloud:
+      clusters:
+        vm2:
+          activate: true
+  resource-weights:
+    cpu: 0.95
+    ram: 0.05
+  cluster-name: local-cloud-cluster
+  cluster-priority:
+    cloud-vm1: 0.04
+    cloud-vm2: 0.29
+    local-lt1: 0.02
+    local-lt2: 0.25
+    local-lt3: 0.4
+  hardware-influence: 0.0
+  min-initial-inputs: 1
+  min-batch-size: 1
+  workflow-steps:
+  - step-1
+  - step-2
+  multi-loop-amount: 20000
+  multi-loop-wait: 10
+  job-loop-amount: 2
+  job-loop-wait: 5
+processing:
+  step-1:
+    general:
+      swift: *id001
+      data-storage:
+        bucket-target: experiment
+        bucket-prefix: mlch
+        bucket-user: user@example.com
+        object-prefix: ICEbreaker-tutorial
+      time-storage:
+        bucket-target: pipeline
+        bucket-prefix: mlch
+        bucket-user: user@example.com
+        object-name: local-cloud-workflow
+      model:
+        bucket-name: mlch-exp-user-example-com
+        object-path: MODELS/fasttext/lid.176.bin
+      config:
+        analysis-parameters:
+          language-default: en
+          language-column: content
+          language-threshold: 0.68
+          language-replacer: {}
+          format-default: null
+          format-column: absolute-path
+          format-threshold: null
+          format-replacer:
+            py: python
+            sh: bash
+    cluster:
+      cloud-vm1:
+        mlflow:
+          tracking-uri: http://mlflow.mlflow.svc.cluster.local:5000
+          s3-endpoint-url: http://mlflow-minio-service.mlflow.svc.cluster.local:9000
+          experiment-name: mlch-code-assistant-rag-pipeline
+          run-name: ray-data-analysis-pipeline-step-1-cloud-vm1
+          run-tags:
+            workflow-type: local-cloud
+            pipeline-step: internal-data-analysis
+        process:
+          workers: 6
+          actors: 2
+        job:
+          main-file: main.py
+          runtime:
+            working_dir: internal_data_analysis
+            pip: requirements.txt
+  step-2:
+    general:
+      swift: *id001
+      data-storage:
+        bucket-target: experiment
+        bucket-prefix: mlch
+        bucket-user: user@example.com
+        object-prefix: openai-humaneval
+      time-storage:
+        bucket-target: pipeline
+        bucket-prefix: mlch
+        bucket-user: user@example.com
+        object-name: local-cloud-workflow
+      model:
+        bucket-name: mlch-exp-user-example-com
+        object-path: MODELS/fasttext/lid.176.bin
+      config:
+        analysis-parameters:
+          language-default: en
+          language-column: question
+          language-threshold: 0.68
+          language-replacer: {}
+          format-default: python
+          format-column: question
+          format-threshold: 0.8
+          format-replacer: {}
+    cluster:
+      cloud-vm1:
+        mlflow:
+          tracking-uri: http://mlflow.mlflow.svc.cluster.local:5000
+          s3-endpoint-url: http://mlflow-minio-service.mlflow.svc.cluster.local:9000
+          experiment-name: mlch-code-assistant-rag-pipeline
+          run-name: ray-data-analysis-pipeline-step-2-cloud-vm1
+          run-tags:
+            workflow-type: local-cloud
+            pipeline-step: internal-data-analysis
+        process:
+          workers: 6
+          actors: 2
+        job:
+          main-file: main.py
+          runtime:
+            working_dir: external_data_analysis
+            pip: requirements.txt

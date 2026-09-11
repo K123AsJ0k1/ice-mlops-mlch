@@ -1,0 +1,50 @@
+clusters:
+  lt1: 
+    hardware-costs: 1648.62
+    activate: False
+    resources:
+      nodes: 'head'
+      cpu: '12'
+      ram: '13 GB'
+      gpu: 'None'
+    network:
+      kubernetes:
+        dash: 'chisel-server-service.chisel.svc.cluster.local:8100'
+        serve: 'chisel-server-service.chisel.svc.cluster.local:8301'
+      istio:
+        dash: 'ray.local.dash-1.oss:7100'
+        serve: 'ray.local.serve-1.oss:7100'
+  lt2:
+    hardware-costs: 1903.59
+    activate: False
+    resources:
+      nodes: 'head'
+      cpu: '14'
+      ram: '11 GB'
+      gpu: 
+        - hardware: 'NVIDIA GeForce RTX 4070'
+          vram: '8188 MiB'
+    network:
+      kubernetes:
+        dash: 'chisel-server-service.chisel.svc.cluster.local:8101'
+        serve: 'chisel-server-service.chisel.svc.cluster.local:8302'
+      istio:
+        dash: 'ray.local.dash-2.oss:7100'
+        serve: 'ray.local.serve-2.oss:7100'
+  lt3: 
+    hardware-costs: 4333.87
+    activate: False
+    resources:
+      nodes: 'head'
+      cpu: '30'
+      ram: '15 GB'
+      gpu: 
+        - hardware: 'NVIDIA GeForce RTX 4090'
+          vram: '16186 MiB'
+    network:
+      kubernetes:
+        dash: 'chisel-server-service.chisel.svc.cluster.local:8102'
+        serve: 'chisel-server-service.chisel.svc.cluster.local:8303'
+      istio:
+        dash: 'ray.local.dash-3.oss:7100'
+        serve: 'ray.local.serve-3.oss:7100'

@@ -1,1 +1,3 @@
 jupyterlab
+icebreaker[yaml] @ git+https://github.com/K123AsJ0k1/ice-mlops-mlch.git@main#subdirectory=applications/packages/icebreaker
+
