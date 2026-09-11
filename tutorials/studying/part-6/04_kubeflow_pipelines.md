@@ -125,6 +125,6 @@ data_analysis_pipeline_time = kubeflow_manage_run(
 )
 ```
 
-Together, these pieces ensure Jupyter Notebooks can collect pipeline inputs, load the pipeline function, submit it to the OSS MLOps platform, monitor its progress via available dashboards, and interact with the resulting pipeline artifacts. We will provide such a demonstration later.
+Together, these pieces enable Jupyter Notebooks to collect pipeline inputs, load the pipeline function, submit the pipeline to OSS MLOps platform, and interact with the resulting pipeline artifacts. The user themself can monitor the progress by checking available available dashboards,. We will provide such a demonstration later.
 
 ---
