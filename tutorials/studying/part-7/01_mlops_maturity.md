@@ -108,7 +108,7 @@ This means MLOps platform choices are never final, as changes in the use case ca
 - The more you prove, the more you do additional work created by friction unrelated to the use case, but you increase the understanding of available solutions 
     - Example: Creating a local-cloud-HPC integration MLOps platform that can utilize the CSC ecosystem
 
-This balancing act gets harder as the complexity, necessity, and specialty of the use case grow, given the world's complexity and the developer's finite resources. For example, processing GPS data from multiple sensors only requires sensors, databases, servers, and applications, while serving a chatbot for millions of people requires economic and even political power. With this, we can create the following diagram:  
+This balancing act gets harder as the complexity, necessity, and specialty of the use case grow, given the world's complexity and the developer's finite resources. For example, gathering GPS data from reindeers for processing only requires sensors, databases, servers, and applications, while serving a chatbot for millions of people requires economic and even political power. With this, we can create the following diagram:  
 
 ![Figure 1](./images/responsiblity_action_pyramid_for_mlops_platforms.png)
 
