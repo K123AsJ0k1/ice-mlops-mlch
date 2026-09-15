@@ -1,16 +1,16 @@
 ---
-technologies: "Enviroment constraints"
+technologies: "Environment constraints"
 category: "Explanation and use of concept"
 difficulty: "Intermediate"
 ---
 
-# Enviroment constraints
+# Environment constraints
 
 ## Used material
 
 1. <span id="used-material-1"></span> [A Design Framework for Cloud-HPC Integration in MLOps](https://dl.acm.org/doi/10.1145/3672608.3707866) 
 
-## What are enviroment constraints?
+## What are environment constraints?
 
 As we summarize in the [ICE chapter](../part-1/02_ice.md), when we integrate various environments into an MLOps platform, each environment has its own benefits and limitations that must be considered during implementation. We can describe these trade-offs as development constraints for local, cloud, storage and HPC in the areas of security, resources, and experience in the following way:
 
@@ -45,8 +45,8 @@ As we summarize in the [ICE chapter](../part-1/02_ice.md), when we integrate var
 
 These constraints enable us, during the design and implementation of the local-cloud-HPC integrated MLOps platform, to consider the development requirements of each infrastructure. This makes it easier to select and design suitable software to enable unified pipelines based on maturity, interoperability, and abstraction. 
 
-## How to use enviroment constraints?
+## How to use environment constraints?
 
-We will use environment constraints to evaluate the demonstrated local-cloud-HPC MLOps platform. As shown in  [(1)](#used-material-1), the evaluation will check each constraint and the platform's ability to meet the development requirements. Ideally, the platform would have a solution for each constraint, but some can be hard to achieve completely such as SMU due to OSS not being completly disposable. We will cover this more in detail later.
+We will use environment constraints to evaluate the demonstrated local-cloud-HPC MLOps platform. As shown in  [(1)](#used-material-1), the evaluation will check each constraint and the platform's ability to meet the development requirements. Ideally, the platform would have a solution for each constraint, but some are hard to achieve completely, such as SMU, because OSS is not completely disposable. We will cover this in more detail later.
 
 ---
