@@ -114,6 +114,6 @@ This balancing act gets harder as the complexity, necessity, and specialty of th
 
 A useful heuristic for checking whether an MLOps platform achieves this balance is to use 'The purpose of a system is what it does' (POSIWID) [(7)](#used-material-7). If an MLOps platform consistently fails to enable the desired use case, it is too imbalanced to achieve its purpose.  
 
-These considerations reinforce the need for maturity, interoperability, and abstraction described in the [ICE chapter](../part-1/02_ice.md), because they enable the exploration of the  necessary trust and proofs needed to create hardware-, software-, and vendor-agnostic ML workflows and products.
+These considerations reinforce the need for maturity, interoperability, and abstraction described in the [ICE chapter](../part-1/02_ice.md), because they enable the exploration of the necessary trust and proofs needed to create hardware-, software-, and vendor-agnostic ML workflows and products. WWe will use MLOps maturity and the balance between trust and proofs to evaluate the resulting local-cloud-HPC MLOps platform later. 
 
 ---
