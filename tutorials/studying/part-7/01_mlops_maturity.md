@@ -26,28 +26,28 @@ difficulty: "Intermediate"
 
 When we select or design MLOps platforms for a use case, we need to consider the platform's ability to evolve through iterative development to match a specific level of MLOps maturity. We can think of MLOps maturity through a framework with five stages and five dimensions [(1)](#used-material-1):
 
-- Stages
-    - Ad hoc 
+- Stages:
+    - Ad hoc: 
         - Fragmented data, model, deployment, operations & infrastructure, and organization dimensions
         - No regulatory compliance or operational excellence
         - MLOps use and design for a use case begins here
         - Example use case: experimentation with open source ML tools
-    - DataOps
+    - DataOps:
         - Standardized processes for data and organisation dimensions 
         - No regulatory complience or operational excellence
         - Tools and collaboration are established here
         - Example use case: data analysis of research group data
-    - Manual MLOps
+    - Manual MLOps:
         - Standardized processes for model, deployment, and operations & infrastructure dimensions
         - Can achieve regulatory complience, but not operational excellence
         - Models, inference and compute are establised here
         - Example use case: evaluation of models using open-source data
-    - Automated MLOps
+    - Automated MLOps:
         - Full automation of data, model, deployment, operations & infrastructure and organization dimensions
         - Can achieve operational excellence, but not regulatory complience
         - Proper automation of interacting systems is established here
         - Example use case: Using ML bots to test game levels
-    - Kaizen MLOps
+    - Kaizen MLOps:
         - Continuous improvement of data, model, deployment, operations & infrastructure and organization dimensions
         - Enables achieving regulatory compliance and operational excellence
         - Iterative processes are established here
@@ -66,15 +66,15 @@ In this example, users selecting the first form assume they don’t mind vendor 
 We can think about the assumptions and friction surrounding MLOps platforms using responsibility and action pyramids. The responsibility pyramid, built from attribute requirements, helps us consider the platform's durability, where assuring assumptions through analysis and interaction becomes harder the lower we go:
 
 - Responsibility pyramid:
-    1. Assumed assurance of computation (AAC)
+    1. Assumed assurance of computation (AAC):
         - Definition: the computation of programs run by various systems works
         - Example of working: LUMI running a Ray script sent by OSS Kubeflow Pipelines runs on cPouta
         - Example of failing: MLOps tutorials created and configured on Ubuntu not working with macOS   
-    2. Assumed assurance of partnership (AAP)
+    2. Assumed assurance of partnership (AAP):
         - Definition: existing collaborations work
         - Example of working: HPE and LUMI maintainers fixing filesystem slowdown causing bug in LUMI Luster
         - Example of failing: Kubeflow Pipelines developers changing the names of Docker images without users knowing
-    3. Assumed assurance of access (AAA)
+    3. Assumed assurance of access (AAA):
         - Definition: having the capability to utilize wanted resources
         - Example of working: cPouta having free NVIDIA GPUs for running a virtual machine for local-cloud-HPC integration
         - Example of failing: CSC decommissioning Puhti and Mahti to enable focus of effort on Roihu
@@ -86,15 +86,15 @@ In general, developers want to provide enough features and minimize required wor
 Both sides consider various design principles of the action pyramid to ensure the most important AAC, AAP, and AAA attribute requirements. In ideal circumstances, these principles create an inverted pyramid where actions become more complicated as abstraction grows, but the real world increases effort through friction:
 
 - Action pyramid:
-    1. Integration of physical environments (IPE)
+    1. Integration of physical environments (IPE):
         - Problem: How to organize the interactions of various objects
         - Example solution: Physically turning on laptops and activating their controllers
         - Example friction: The developer does not know how to use or create interfaces for automation 
-    2. Integration of agentic environments (IAE)
+    2. Integration of agentic environments (IAE):
         - Problem: How to align the interests of various actors
         - Example solution: CSC leading the EuroHPC consortium to host LUMI
         - Example friction: The developer does not know how to interact with the vendor to utilize their supercomputer
-    3. Integration of computational environments (ICE)
+    3. Integration of computational environments (ICE):
         - Problem: How to unify the programs of various systems
         - Example solution: Integrating laptops, cPouta virtual machines, Allas, Roihu, and LUMI
         - Example friction: The developer not having enough money to buy or rent computational resources
