@@ -21,6 +21,7 @@ As we summarize in the [ICE chapter](../part-1/02_ice.md), when we integrate var
         - Available minimum borrowing (AMB): Allows software to run within the shared, constrained local resources
     - Experience:
         - Flexible software utilization (FSU): Enables local infrastructure to host almost any kind of software
+        
 - Cloud:
     - Security:
         - Secured minimum access (SMA): Allows users and applications to utilize virtual machine (VM) instances via a secure communication protocol
@@ -28,6 +29,7 @@ As we summarize in the [ICE chapter](../part-1/02_ice.md), when we integrate var
         - Requested minimum borrowing (RMB): Enables users to create VM instances with set resources within the limits set by the user's budgets and ecosystem resources
     - Experience: 
         - Stateless microservice utilization (SMU): Expects users to divide applications into small disposable components for better tolerance and scalability
+
 - Storage:
     - Security:
         - Controlled authenticated access (CAA): Enables users and applications to interact with storage using provided methods
@@ -47,6 +49,6 @@ These constraints enable us, during the design and implementation of the local-c
 
 ## How to use environment constraints?
 
-We will use environment constraints to evaluate the demonstrated local-cloud-HPC MLOps platform. As shown in  [(1)](#used-material-1), the evaluation will check each constraint and the platform's ability to meet the development requirements. Ideally, the platform would have a solution for each constraint, but some are hard to achieve completely, such as SMU, because OSS is not completely disposable. We will cover this in more detail later.
+We will use environment constraints to evaluate the demonstrated local-cloud-HPC MLOps platform. As shown in [(1)](#used-material-1), the evaluation will check each constraint and the platform's ability to meet the development requirements. Ideally, the platform would have a solution for each constraint, but some are hard to achieve completely, such as SMU, because OSS is not completely disposable. We will cover this in more detail later.
 
 ---

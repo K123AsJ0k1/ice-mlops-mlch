@@ -446,6 +446,6 @@ In the data processing stage, we will load the internal datasets into a RAG vect
 
 In the model evaluation, we will evaluate 6 different Qwen3.5 model sizes using 4 assistant variants. The compared model sizes are 2B, 4B, 9B, 27B, 35B, and 122B, with 2-9B in Unsloth GGUF Q4_K_M quantization and 27-122B in Qwen FP8 quantization. We compare the baseline, PE, PE-RAG, and PE-RAG-BC variants to assess their positive and negative effects.
 
-In the solution analysis, we will evaluate the collected metrics with statistical methods and review artifacts manually to select the best model and variant. After that, we will confirm, through manual prompting, that the best model and variant behave as expected using a conversational interface. We will show later how to use the provided tools to implement this demonstration scenario.
+In the solution analysis, we will evaluate the collected metrics with statistical methods and review artifacts manually to select the best model and variant. After that, we will confirm, through manual prompting, that the best model and variant behave as expected using a conversational interface. We will show later how to use the provided tools to implement this scenario.
 
 ---
