@@ -75,7 +75,7 @@ env_dict = Config(RepositoryEnv(env_path))
 hf_token = env_dict.get('HF_TOKEN')
 ```
 
-Be aware that even though this token only has read permissions, you should still double-check for accidental leaks. The main concerns are Jupyter Notebook prints, code debug prints, and Ray script logs. Remember to double-check at least these sources for exposed tokens before sending files to a public GitHub repository. With the token, we can start to use the Datasets Package [(2)](#used-material-2) to download the external datasets from Hugging Face Datasets [(3)](#used-material-3) mentioned in [LLM application development chapter](./04_llm_application_development.md):
+Be aware that even though this token only has read permissions, you should still need to prevent accidental leaks. The main concerns are Jupyter Notebook prints, code debug prints, and Ray script logs. Remember to double-check at least these sources for exposed tokens before sending files to a public GitHub repository. With the token, we can start to use the Datasets Package [(2)](#used-material-2) to download the external datasets from Hugging Face Datasets [(3)](#used-material-3) mentioned in [LLM application development chapter](./04_llm_application_development.md):
 
 - Openai/openai_humaneval [(3)](#used-material-3):
     - Columns:
@@ -239,7 +239,7 @@ total_storage_time = experiment_store_data(
 
 With this, we are now able to use the functions mentioned in [SWIFT chapter](../part-5/04_swift.md) to interact with these datasets by loading them into available RAM. For models, we will let inference frameworks handle downloading and loading by providing the token until download sizes get too large or constraints make it hard for the inference frameworks to manage the file system, which we will cover later. 
 
-For this reason, we will primarily use Hugging Face Models [(9)](#used-material-9) to check model family collections for available variants and find a suitable quantization for running them. The collections, variants quantizations of the models mentioned [LLM application development chapter](./04_llm_application_development.md) are:
+We will primarily use Hugging Face Models [(9)](#used-material-9) to check model family collections for available variants and find a suitable quantization for running them. The collections, variants quantizations of the models mentioned [LLM application development chapter](./04_llm_application_development.md) are:
 
 - Collection: DeepSeek-R1 [(10)](#used-material-10)
     - Variant: deepseek-ai/DeepSeek-R1-Distill-Llama-8B 
@@ -267,6 +267,6 @@ For this reason, we will primarily use Hugging Face Models [(9)](#used-material-
         - unsloth/gemma-4-E4B-it-GGUF [(22)](#used-material-22)
     - Reason: Good summary and coding abilities for size to judge document and code answers
 
-These models enable incremental development within the constraints of local-cloud infrastructure, while allowing us to increase assistant size with HPC infrastructure to confirm whether increasing model size affects the abilities of coding assistance. The small sizes of the data generator, behavior controller, and answer evaluators also let us run multiple models on the same GPU, which we will use for parallelized workflows later.
+These models enable incremental development within the constraints of local-cloud infrastructure, while allowing us to increase assistant size with HPC infrastructure to confirm whether increasing model size affects the abilities of coding assistance. The small sizes also let us run multiple models on the same GPU, which we will use for parallelized workflows later.
 
 ---
