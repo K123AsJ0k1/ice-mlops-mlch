@@ -195,14 +195,14 @@ The demonstration for the local-cloud-HPC MLOps platform will be a enhanced codi
     - System design:
         - Latency: 
             - Data Generator: Max 60 sec
-            - Answer evaluator: Max 2 sec
-            - Behavior controller: Max 1 sec
-            - Coding assistant: Max 5 sec
+            - Coding assistant: Max 10 sec
+            - Behavior controller: Max 5 sec
+            - Answer evaluator: Max 5 sec
         - Throughput: 
             - Data Generator: Must be high due to the amount of data
-            - Answer evaluator: Must be high due to the amount of data
-            - Behavior controller: Can be low due to one per server
             - Coding assistant: Can be low due to lack of users
+            - Behavior controller: Can be low due to one per server
+            - Answer evaluator: Must be high due to the amount of data
         - Development:
             - Critical software:
                 - Docker
@@ -225,19 +225,19 @@ The demonstration for the local-cloud-HPC MLOps platform will be a enhanced codi
         - Architecture: Near state-of-the-art multimodal architectures 
         - Ability: 
             - Data generator: Reasoning for generating data
-            - Answer evaluator: Accuracy for judging based on scoring rubric
-            - Behavior controller: Speed for judging based on set expectations
             - Coding assistant: Coding abilities for discussing tutorials
+            - Behavior controller: Speed for judging based on set expectations
+            - Answer evaluator: Accuracy for judging based on scoring rubric
         - Size:
             - Data generator: 8B
-            - Answer evaluator: 7-8B
-            - Behavior controller: 0.8-2B
             - Coding assistant: 2-122B
+            - Behavior controller: 0.8-2B
+            - Answer evaluator: 7-8B
         - Improvement:
             - Data generator: PE
-            - Answer evaluator: PE
-            - Behavior controller: PE
             - Coding assistant: PE-RAG-BC
+            - Behavior controller: PE
+            - Answer evaluator: PE
     - Utilization design:
         - Granularity: Complete answer to a question based on material
         - Flow: Entering input, waiting for output, and creating another input
@@ -270,11 +270,6 @@ The demonstration for the local-cloud-HPC MLOps platform will be a enhanced codi
         - Choose near-SOTA open-source models from HuggingFace in the 2-122B range that run either in llama-cpp or vLLM:
             - Data generator: 
                 - unsloth/DeepSeek-R1-Distill-Llama-8B-GGUF with Q4_K_M
-            - Answer evaluator:
-                - unsloth/Ministral-3-8B-Instruct-2512-GGUF with Q4_K_M
-                - unsloth/gemma-4-E4B-it-GGUF with Q4_K_M
-            - Behavior controller: 
-                - unsloth/Qwen3.5-2B-GGUF with Q4_K_M
             - Coding assistant:    
                 - Local-cloud
                     - unsloth/Qwen3.5-2B-GGUF with Q4_K_M
@@ -284,6 +279,11 @@ The demonstration for the local-cloud-HPC MLOps platform will be a enhanced codi
                     - Qwen/Qwen3.5-27B-FP8
                     - Qwen/Qwen3.5-35B-A3B-FP8
                     - Qwen/Qwen3.5-122B-A10B-FP8
+            - Behavior controller: 
+                - unsloth/Qwen3.5-2B-GGUF with Q4_K_M
+            - Answer evaluator:
+                - unsloth/Ministral-3-8B-Instruct-2512-GGUF with Q4_K_M
+                - unsloth/gemma-4-E4B-it-GGUF with Q4_K_M
     2. Finding suitable data:
         - Self-made internal data: 
             - Datasets:
