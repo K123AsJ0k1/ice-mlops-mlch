@@ -260,7 +260,7 @@ With this framework, we can list the necessary design requirements when creating
 As described in the [LLM application development chapter](./04_llm_application_development.md), the demonstration use-case application will require a data generator, coding assistant, behavior controller, and answer evaluator models. We can achieve this with suitable prompt engineering for the models chosen for these roles. The YAML-based prompts for the roles are as follows:
 
 - Data generator:
-    - Model: DeepSeek-R1-Distill-Llama-8B-GGUF with Q4_K_M
+    - Model 1: DeepSeek-R1-Distill-Llama-8B-GGUF with Q4_K_M
     - Task: Producing factual, synthesis, and negative QA pairs
     - [Used PE methods:](./prompts/data-generator-prompts.yaml)
         - Providing instructions
@@ -287,7 +287,7 @@ As described in the [LLM application development chapter](./04_llm_application_d
         - Retrieval augmentation
 
 - Behavior controller:
-    - Model: Qwen3.5-2B-GGUF with Q4_K_M
+    - Model 1: Qwen3.5-2B-GGUF with Q4_K_M
     - Task: Checking user inputs and model outputs
     - [Used PE methods:](./prompts/behavior-controller-prompts.yaml)
         - Providing instructions
