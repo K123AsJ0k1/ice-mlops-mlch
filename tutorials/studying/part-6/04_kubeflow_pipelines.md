@@ -34,7 +34,7 @@ These features make KFP the default pipeline platform for creating MLOps workflo
 
 ## How to use Kubeflow Pipelines?
 
-Assuming you set up the OSS MLOps platform using the OSS chapter and the network with the Istio chapter, you can start using KFP right away by opening http://kubeflow.oss:7001. In the dashboard, click Runs to see the list of pipeline runs. This will most likely be empty, which is why you should check the example picture below:
+Assuming you set up the OSS MLOps platform using the [OSS chapter](../part-4/06_oss_mlops_platform.md) and the network with the [Istio chapter](../part-4/11_istio.md), you can start using KFP right away by opening http://kubeflow.oss:7001. In the dashboard, click Runs to see the list of pipeline runs. This will most likely be empty, which is why you should check the example picture below:
 
 ![Figure 1](./images/kubeflow-dashboard-runs.png)
 
