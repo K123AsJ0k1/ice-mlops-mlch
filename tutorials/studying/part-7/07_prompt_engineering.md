@@ -262,7 +262,7 @@ As described in the [LLM application development chapter](./04_llm_application_d
 - Data generator:
     - Model: DeepSeek-R1-Distill-Llama-8B-GGUF with Q4_K_M
     - Task: Producing factual, synthesis, and negative QA pairs
-    - [Used PE methods](./prompts/data-generator-prompts.yaml)
+    - [Used PE methods:](./prompts/data-generator-prompts.yaml)
         - Providing instructions
         - Being clear and precise
         - Role prompting
@@ -273,7 +273,7 @@ As described in the [LLM application development chapter](./04_llm_application_d
 - Coding assistant:
     - Model: Qwen3.5-(2-122)B-GGUF with Q4_K_M/FP8
     - Task: Assisting developers with searching for knowledge, providing solutions, and discussing information and solutions
-    - [Used PE methods](./prompts/coding-assistant-prompts.yaml)
+    - [Used PE methods:](./prompts/coding-assistant-prompts.yaml)
         - Providing instructions
         - Being clear and precise
         - Role prompting
@@ -284,7 +284,7 @@ As described in the [LLM application development chapter](./04_llm_application_d
 - Behavior controller:
     - Qwen3.5-2B-GGUF with Q4_K_M
     - Task: Checking user inputs and model outputs
-    - [Used PE methods](./prompts/behavior-controller-prompts.yaml)
+    - [Used PE methods:](./prompts/behavior-controller-prompts.yaml)
         - Providing instructions
         - Being clear and precise
         - Role prompting
@@ -295,16 +295,54 @@ As described in the [LLM application development chapter](./04_llm_application_d
 - Answer evaluator:
     - Ministral-3-8B-Instruct-2512-GGUF and Gemma-4-E4B-it-GGUF with Q4_K_M
     - Task: Evaluating the given candidate answer against the ground truth and the user question
-    - [Used PE methods](./prompts/answer-evaluator-prompts.yaml)
+    - [Used PE methods:](./prompts/answer-evaluator-prompts.yaml)
         - Providing instructions
         - Being clear and precise
         - Role prompting
         - Use of delimiters for separation
         - Temperature and top-p
 
-With these prompts, we can use the chosen models consistently to complete the expected tasks. We only need to replace the placeholders with suitable text, send the created prompt for processing, and preprocess the output. 
+With these prompts, we can use the chosen models consistently to complete the expected tasks. We only need to replace the placeholders with suitable text, send the created prompt for processing, and preprocess the output. We can replace the placeholders with the following regex:
 
-For the data generator, behavior controller, and answer evaluator, we first parse the output using string-detection techniques. These use the patterns provided by the models and prompts. Here are the parsers used:
+```
+import re
+
+replacer_dict = {
+    'CONTENT': 'Test'
+}
+
+user_template = prompt_parameters[prompt_type]['user-template']
+pattern = r'\[([A-Z_1-9]+)\]'
+user_prompt = re.sub(
+    pattern, 
+    lambda m: str(replacer_dict.get(m.group(1), m.group(0))), 
+    user_template
+)
+```
+
+We can create the model-suitable messages with the following:
+
+```
+sent_messages = []
+system_prompt = prompt_parameters[prompt_type]['system-prompt']
+if join_prompts:
+    joined_prompt = f'{system_prompt}\n{user_prompt}'
+    sent_messages.append({
+        "role": "user", 
+        "content": joined_prompt
+    })
+else:
+    sent_messages.append({
+        "role": "system", 
+        "content": system_prompt
+    })
+    sent_messages.append({
+        "role": "user", 
+        "content": user_prompt
+    })
+```
+
+We can preprocess the output by creating a function that uses the given output text. For the data generator, behavior controller, and answer evaluator, these parse the output using the following string-detection techniques:
 
 - Data generator parser
 
@@ -356,6 +394,8 @@ except Exception as e:
     return {}
 ```
 
-As we can see, output parsers need to handle cases where the output has been malformed for some reason. Malformed outputs become more common when prompts are unclear, the available token limit is too small, the model is small, or it uses aggressive quantization. We will show later how to ensure output consistency.
+As we can see, output parsers need to handle cases where the output has been malformed for some reason. Malformed outputs become more common when prompts are unclear, the available token limit is too small, the model is small, or it uses aggressive quantization. In those cases, you may need to resend the prompt if you expect a specific number of outputs.
+
+Together, these let us create template prompts with model-specific configurations that we can manage with appropriate functions. It is recommended to use available LLMs to reduce the effort of creating suitable prompts, but be aware that you'll most likely need to edit them through trial and error to get the desired output. We will go into evaluating models later.
 
 ---
