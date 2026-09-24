@@ -302,6 +302,60 @@ As described in the [LLM application development chapter](./04_llm_application_d
         - Use of delimiters for separation
         - Temperature and top-p
 
-With these prompts, we can use the chosen models consistently to complete the expected tasks. We only need to replace the place holders with suitable text, sent the created prompt to be processed and preprocess the produced output. 
+With these prompts, we can use the chosen models consistently to complete the expected tasks. We only need to replace the placeholders with suitable text, send the created prompt for processing, and preprocess the output. 
+
+For the data generator, behavior controller, and answer evaluator, we first parse the output using string-detection techniques. These use the patterns provided by the models and prompts. Here are the parsers used:
+
+- Data generator parser
+
+```
+if '</think>' in text:
+    parts = text.split('</think>', 1)
+    thinking_text = parts[0].strip()
+    main_content = parts[1].strip()
+else:
+    thinking_text = ""
+    main_content = text
+
+sections = re.split(r'\n(?=###\s+)', main_content)
+
+parsed_sections = {}
+for sec in sections:
+    sec = sec.strip()
+    if not sec:
+        continue
     
+    # Match '### HEADER_NAME\n Header Content'
+    header_match = re.match(r'^###\s+([^\n]+)\n?(.*)', sec, flags=re.DOTALL)
+    if header_match:
+        header_title = header_match.group(1).strip().lower().replace("_", "-")
+        header_content = header_match.group(2).strip()
+        parsed_sections[header_title] = header_content
+
+output = {
+    'thinking-text': thinking_text,
+    'main-content': main_content,
+    **parsed_sections
+}
+```
+
+- Behavior controller and answer evaluator parser
+
+```
+json_match = re.search(r"\{.*\}", output, re.DOTALL)
+
+if not json_match:
+    return {}
+
+json_str = json_match.group(0)
+
+try:
+    data = json.loads(json_str)
+    return data
+except Exception as e:
+    return {}
+```
+
+As we can see, output parsers need to handle cases where the output has been malformed for some reason. Malformed outputs become more common when prompts are unclear, the available token limit is too small, the model is small, or it uses aggressive quantization. We will show later how to ensure output consistency.
+
 ---
