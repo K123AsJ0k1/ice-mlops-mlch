@@ -394,7 +394,7 @@ except Exception as e:
     return {}
 ```
 
-As we can see, output parsers need to handle cases where the output has been malformed for some reason. Malformed outputs become more common when prompts are unclear, the available token limit is too small, the model is small, or it uses aggressive quantization. In those cases, you may need to resend the prompt if you expect a specific number of outputs.
+As we can see, output parsers need to handle cases where the output has been malformed for some reason. Malformed outputs become more common when prompts are unclear, the available token limit is too small, the model is small, or aggressive quantization is used. In those cases, you may need to resend the prompt if you expect a specific number of outputs.
 
 Together, these let us create template prompts with model-specific configurations that we can manage with appropriate functions. It is recommended to use available LLMs to reduce the effort of creating suitable prompts, but be aware that you'll most likely need to edit them through trial and error to get the desired output. We will go into evaluating models later.
 
