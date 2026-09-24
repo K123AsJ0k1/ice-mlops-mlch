@@ -271,7 +271,12 @@ As described in the [LLM application development chapter](./04_llm_application_d
         - Temperature and top-p
 
 - Coding assistant:
-    - Model: Qwen3.5-(2-122)B-GGUF with Q4_K_M/FP8
+    - Model 1: Qwen3.5-2B-GGUF with Q4_K_M
+    - Model 2: Qwen3.5-4B-GGUF with Q4_K_M
+    - Model 3: Qwen3.5-9B-GGUF with Q4_K_M
+    - Model 4: Qwen3.5-27B-FP8
+    - Model 5: Qwen3.5-35B-A3B-FP8
+    - Model 6: Qwen3.5-122B-A10B-FP8
     - Task: Assisting developers with searching for knowledge, providing solutions, and discussing information and solutions
     - [Used PE methods:](./prompts/coding-assistant-prompts.yaml)
         - Providing instructions
@@ -282,7 +287,7 @@ As described in the [LLM application development chapter](./04_llm_application_d
         - Retrieval augmentation
 
 - Behavior controller:
-    - Qwen3.5-2B-GGUF with Q4_K_M
+    - Model: Qwen3.5-2B-GGUF with Q4_K_M
     - Task: Checking user inputs and model outputs
     - [Used PE methods:](./prompts/behavior-controller-prompts.yaml)
         - Providing instructions
@@ -293,7 +298,8 @@ As described in the [LLM application development chapter](./04_llm_application_d
         - Temperature and top-p
 
 - Answer evaluator:
-    - Ministral-3-8B-Instruct-2512-GGUF and Gemma-4-E4B-it-GGUF with Q4_K_M
+    - Model 1: Ministral-3-8B-Instruct-2512-GGUF
+    - Model 2: Gemma-4-E4B-it-GGUF with Q4_K_M
     - Task: Evaluating the given candidate answer against the ground truth and the user question
     - [Used PE methods:](./prompts/answer-evaluator-prompts.yaml)
         - Providing instructions
