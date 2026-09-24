@@ -100,7 +100,7 @@ Prompt engineering is the systematic design and optimization of input prompts to
             - Enables saving time and resources, while enabling models to adapt to new tasks and domains
             - Requires conceptualization and design of prompt patterns with proper structure and documentation
             - Five primary categories: input semantics, output customization, error identification, prompt improvement, and interactions
-    - Prompt optimization
+    - Prompt optimization:
         - Prompt optimization with textual gradients (ProTeGi):
             - Definition: Using textual gradients to adjust a prompt to get the desired task performance
                 - Uses an iterative approach with beam search and bandit selection to explore potential prompts and select promising candidates
@@ -125,24 +125,24 @@ Prompt engineering is the systematic design and optimization of input prompts to
                 - The reward function uses the effectiveness of the prompt based on model output
                 - The feedback is used to adjust and optimize the prompts through iterations
                 - The used model can learn to generate better prompts for similar questions in the future
-        - GPTs (plugins)
+        - GPTs (plugins):
             - Definition: External prompt engineering assistant
                 - They analyze user inputs and produce pertinent outputs within a self-defined context 
                 - Reduce the effort required to create your own prompts
                 - Can be integrated into Python and invoked directly
                 - Their closed-source nature makes it unclear what methods are implemented
-    - Retrieval augmentation
+    - Retrieval augmentation:
         - Definition: Incorporating up-to-date external knowledge into the input to reduce hallucinations
             - Makes the model less inconsistent with facts 
             - Enables real-world data support
             - Has many variations
-    - Reasoning and active interaction
-        - Automatic reasoning and tool usage (ART)
+    - Reasoning and active interaction:
+        - Automatic reasoning and tool usage (ART):
             - Definition: Encourages the generation of reasoning steps with strategic use of external tools
                 - Combines the principles of CoT
                 - Enables tasks that require precise calculations, updated information, and complex data processing 
                 - Valuable for technical problem-solving tasks such as financial calculations and data analysis
-        - Reasoning and acting framework (ReAct)
+        - Reasoning and acting framework (ReAct):
             - Definition: Prompting a model to generate reasoning traces and task-specific actions
                 - Uses a dual approach to make the model consider the problem, divide the reasoning sequence, and execute actions with tools
                 - Effective in scenarios that require detailed reasoning followed by specific actions
@@ -168,7 +168,7 @@ Prompt engineering is the systematic design and optimization of input prompts to
         - Definition: Using a lightweight neural network to create input-conditioned prompt vectors for each image without modifying the used model
             - Enables the model to adapt to new and unseen data without needing to fine-tune
             - Addresses the limitations of static prompt methods such as CoOp
-    - Multimodal prompt learning (MaPLe)
+    - Multimodal prompt learning (MaPLe):
         - Definition: Embedding prompts within the stages of transformer architecture to adaptively learn task-specific contextual information 
             - Uses a hierarchical learning mechanism to enable the model to process and integrate information at different abstraction levels
             - Shown to outperform CoCoOp
@@ -217,7 +217,7 @@ Prompt engineering is the systematic design and optimization of input prompts to
         - Definition: Using PE to make the model generate synthetic datasets 
             - Can be used for unlabeled data annotation, training data generation, and assisted training data generation
             - Has been used for synthetic data for classification tasks
-    - Agents
+    - Agents:
         - AI Agents:
             - Definition: Using PE to improve the abilities of task-oriented agent systems 
                 - Focus on concrete applications and predefined functionalities
@@ -236,7 +236,7 @@ Prompt engineering is the systematic design and optimization of input prompts to
                 - PE is the central component for shaping interpretative fidelity, guiding strategic adjustments, and self-regulation in dynamic and uncertain environments 
 
 - Security methods:
-    - Training phase defenses and mitigations
+    - Training phase defenses and mitigations:
         - Data poisoning: 
             - Definition: Injecting malicious or misleading data into the corpus to corrupt model knowledge 
                 - Requires ensuring the quality and authenticity of the training data corpus
@@ -246,7 +246,7 @@ Prompt engineering is the systematic design and optimization of input prompts to
                 - Requires detecting and neutralizing triggers embedded during training
                 - Main approaches are model inspection and trigger detection methods, and model auditing and model editing techniques
         - A general defense against both is data quality assurance, robust optimization, model auditing, and community benchmarks
-    - Inference-phase defenses and mitigations
+    - Inference-phase defenses and mitigations:
         - Prompt-level adversarial attacks:
             - Definition: Injecting textual cues into the input to make the model produce undesired or misleading output without alerting the parameters
         - Model stealing:
@@ -257,22 +257,51 @@ With this framework, we can list the necessary design requirements when creating
 
 ## How to use Prompt engineering?
 
-As described in the [LLM application development chapter](./04_llm_application_development.md), the demonstration use case application will require a data generator, coding assistant, behavior controller, and answer evaluator models. We can achieve this with suitable prompt engineering for the models chosen for these roles:
+As described in the [LLM application development chapter](./04_llm_application_development.md), the demonstration use-case application will require a data generator, coding assistant, behavior controller, and answer evaluator models. We can achieve this with suitable prompt engineering for the models chosen for these roles. The YAML-based prompts for the roles are as follows:
 
 - Data generator:
-    - DeepSeek-R1-Distill-Llama-8B-GGUF with Q4_K_M
+    - Model: DeepSeek-R1-Distill-Llama-8B-GGUF with Q4_K_M
+    - Task: Producing factual, synthesis, and negative QA pairs
     - [Used PE methods](./prompts/data-generator-prompts.yaml)
+        - Providing instructions
+        - Being clear and precise
+        - Role prompting
+        - Use of delimiters for separation
+        - Few-shot prompting
+        - Temperature and top-p
 
 - Coding assistant:
-    - Qwen3.5-(2-122)B-GGUF with Q4_K_M/FP8
+    - Model: Qwen3.5-(2-122)B-GGUF with Q4_K_M/FP8
+    - Task: Assisting developers with searching for knowledge, providing solutions, and discussing information and solutions
     - [Used PE methods](./prompts/coding-assistant-prompts.yaml)
+        - Providing instructions
+        - Being clear and precise
+        - Role prompting
+        - Use of delimiters for separation
+        - Temperature and top-p
+        - Retrieval augmentation
 
 - Behavior controller:
     - Qwen3.5-2B-GGUF with Q4_K_M
+    - Task: Checking user inputs and model outputs
     - [Used PE methods](./prompts/behavior-controller-prompts.yaml)
+        - Providing instructions
+        - Being clear and precise
+        - Role prompting
+        - Use of delimiters for separation
+        - Few-shot prompting
+        - Temperature and top-p
 
 - Answer evaluator:
     - Ministral-3-8B-Instruct-2512-GGUF and Gemma-4-E4B-it-GGUF with Q4_K_M
+    - Task: Evaluating the given candidate answer against the ground truth and the user question
     - [Used PE methods](./prompts/answer-evaluator-prompts.yaml)
+        - Providing instructions
+        - Being clear and precise
+        - Role prompting
+        - Use of delimiters for separation
+        - Temperature and top-p
+
+With these prompts, we can use the chosen models consistently to complete the expected tasks. We only need to replace the place holders with suitable text, sent the created prompt to be processed and preprocess the produced output. 
     
 ---

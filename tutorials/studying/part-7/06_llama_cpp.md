@@ -10,9 +10,9 @@ difficulty: "Intermediate"
 
 1. <span id="used-material-1"></span> [llama-cpp-python pip package](https://pypi.org/project/llama-cpp-python/)
 
-2. <span id="used-material-2"></span> [llama-cpp-python  API Reference](https://llama-cpp-python.readthedocs.io/en/latest/api-reference/)
+2. <span id="used-material-2"></span> [llama-cpp-python API Reference](https://llama-cpp-python.readthedocs.io/en/latest/api-reference/)
 
-3. <span id="used-material-3"></span> [GGUF](https://github.com/ggml-org/ggml/blob/master/docs/gguf.md)
+3. <span id="used-material-3"></span> [GGUF dics](https://github.com/ggml-org/ggml/blob/master/docs/gguf.md)
 
 ## Why use Llama.cpp?
 
@@ -30,7 +30,7 @@ These features make llama.cpp the default inference framework for old architectu
 
 Assuming you have checked the [Ray chapter](../part-6/01_ray.md), we can use Ray Serve with llama-cpp-python [(1)](#used-material-1) to create the example [inference server Ray script](./ray/llama_cpp_server/main.py). The critical parts of this Ray script consist of the following:
 
-1. Giving the cluster the packages with correct CUDA compatability 
+1. Giving the cluster the packages with correct CUDA compatibility 
 
 ```
 # For NVIDIA P100 with CUDA 13.0
@@ -42,7 +42,7 @@ llama-cpp-python>=0.3.1
 llama-cpp-python>=0.3.1
 ```
 
-2. Creating a serve instance with a unique name and prefix
+2. Creating a Ray serve instance with a unique name and prefix
 
 ```
 serve_instance_name = serve_parameters['name']
@@ -57,7 +57,7 @@ serve.run(
 ) 
 ```
 
-3. Using the provided parameters to initilize the model
+3. Using the provided parameters to initialize the model
 
 ```
 from llama_cpp import Llama
@@ -80,7 +80,7 @@ self.llm = Llama.from_pretrained(
 )
 ```
 
-4. When the model is running, processing the sent HTTP JSON inputs
+4. Processing the sent HTTP JSON inputs
 
 ```
 request_dict = await request.json()
@@ -112,7 +112,7 @@ The explanations for the parameters given in steps 3 and 4 are the following |[(
     - n_ctx: Maximum context window available to the model, such as 8192. Includes both input prompt tokens and the generated output tokens. Increasing the value increases VRAM use
     - type_k: Data type used to quantize and store key vectors in KV cache, such as 1 for GGML_TYPE_F16
     - type_v: Data type used to quantize and store value vectors in KV cache, such as 1 for GGML_TYPE_F16
-    - flash_attn: Set true to use flash attention during context processing and inference. Requires new GPUs. Makes processing faster with reduced VRAM consumption.
+    - flash_attn: Set to true to use flash attention during context processing and inference. Requires new GPUs. Speeds up processing and reduces VRAM usage.
     - verbose: Set to true to see detailed C++ low-level logs
 - Inference:
     - messages: A list of dictionaries representing the conversation history in sequence. Each has a role and content, such as [{"role": "system", "content": "You are a helpful assistant."}, {"role": "user", "content": "Hello!"}]

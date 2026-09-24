@@ -1,16 +1,10 @@
 base-eval:
   temperature: 
     qwen-3-5: 0.2
-    ministral-3: 0.15
-    gemma-4: 1.0
   top-p:  
     qwen-3-5: 0.8
-    ministral-3: 0.95 
-    gemma-4: 0.95
   max-tokens: 
     qwen-3-5: 2048
-    ministral-3: 2048
-    gemma-4: 2048
   system-prompt: |
     You are a helpful assistant. Answer the user's question clearly and directly. 
     Format your response using clean Markdown.
@@ -21,16 +15,10 @@ base-eval:
 pe-eval:
   temperature: 
     qwen-3-5: 0.2
-    ministral-3: 0.15
-    gemma-4: 1.0
   top-p: 
     qwen-3-5: 0.8
-    ministral-3: 0.95 
-    gemma-4: 0.95
   max-tokens: 
     qwen-3-5: 2048
-    ministral-3: 2048
-    gemma-4: 2048
   system-prompt: |
     You are an expert software engineering assistant. 
     Your role is to help developers search reliable information, provide working solutions and discuss information and solutions.
@@ -50,16 +38,10 @@ pe-eval:
 pe-rag-eval:
   temperature: 
     qwen-3-5: 0.2
-    ministral-3: 0.15
-    gemma-4: 1.0
   top-p: 
     qwen-3-5: 0.8
-    ministral-3: 0.95 
-    gemma-4: 0.95
   max-tokens: 
     qwen-3-5: 2048
-    ministral-3: 2048
-    gemma-4: 2048
   system-prompt: |
     You are an expert software engineering assistant.
     Your role is to use technical material to help developers search reliable information, provide working solutions and discuss information and solutions.
@@ -84,16 +66,10 @@ pe-rag-eval:
 pe-rag-bc-eval:
   temperature: 
     qwen-3-5: 0.2
-    ministral-3: 0.15
-    gemma-4: 1.0
   top-p: 
     qwen-3-5: 0.8
-    ministral-3: 0.95 
-    gemma-4: 0.95
   max-tokens: 
     qwen-3-5: 2048
-    ministral-3: 2048
-    gemma-4: 2048
   system-prompt: |
     You are an expert software engineering assistant operating under strict scope.
     Your role is to use technical material to help developers search reliable information, provide working solutions and discuss information and solutions.
