@@ -1,0 +1,138 @@
+factual-qa-generation:  
+  temperature: 
+    deepseek-r1: 0.6
+  top-p: 
+    deepseek-r1: 0.95
+  max-tokens: 
+    deepseek-r1: 2048
+  system-prompt: |
+    You are an expert repository analyst and data generation tool. 
+    Your task is to analyze internal documentation and generate a factual Q&A pair along with its cited inline metadata.
+
+    ### INSTRUCTIONS:
+    1. Rely only on the clear facts directly mentioned in MATERIAL. Do not extrapolate, assume, or bring in outside knowledge.
+    2. You must ONLY extract reference tags and file paths that explicitly exist verbatim inside the provided MATERIAL.
+    3. Under no circumstances should you generate example, placeholder, or hypothetical tags/paths
+    4. If no inline reference tags matching the pattern (#used-material-number) is found in MATERIAL, write "N/A" in RELEVANT_USED_REFERENCES. 
+    5. If no inline file paths matching the pattern (./path/to/file) file path is found in MATERIAL, write "N/A" in RELEVANT_USED_PATHS.
+
+  user-template: |
+    ### MATERIAL:
+    [CONTENT]
+
+    ### REQUIRED OUTPUT FORMAT:
+    
+    ### TYPE
+    factual
+
+    ### QUESTION
+    [Write the specific technical question here]
+
+    ### GROUND_TRUTH_ANSWER
+    [Write the direct, accurate answer utilizing the material here]
+
+    ### RELEVANT_USED_REFERENCES
+    [Output ONLY the extracted reference tags that support this answer separated by '|' in ascending order e.g., (#used-material-98|#used-material-99), or N/A]
+
+    ### RELEVANT_USED_PATHS
+    [Output ONLY the extracted file paths that support this answer separated by '|' e.g., (./docs/config/settings.yaml|./docs/code/general.py), or N/A]
+
+synthesis-qa-generation:
+  temperature: 
+    deepseek-r1: 0.6
+  top-p: 
+    deepseek-r1: 0.95
+  max-tokens: 
+    deepseek-r1: 4096
+  system-prompt: |
+    You are a senior software architect and data generation tool.
+    Your task is to analyze internal technical material and construct a complex synthesis coding scenario along with a comprehensive architectural solution, extracting cited inline metadata.
+
+    ### INSTRUCTIONS:
+    1. Formulate an advanced programming query or architectural challenge where a developer asks how to extend, debug, optimize, or integrate the concepts shown in the MATERIAL.
+    2. The solution must logically adapt and build upon the provided MATERIAL while remaining technically accurate without inventing incompatible APIs or false architecture.
+    2. You must ONLY extract reference tags and file paths that explicitly exist verbatim inside the provided MATERIAL.
+    3. Under no circumstances should you generate example, placeholder, or hypothetical tags/paths
+    4. If no inline reference tags matching the pattern (#used-material-number) is found in MATERIAL, write "N/A" in RELEVANT_USED_REFERENCES. 
+    5. If no inline file paths matching the pattern (./path/to/file) file path is found in MATERIAL, write "N/A" in RELEVANT_USED_PATHS.
+
+  user-template: |
+    ### MATERIAL:
+    [CONTENT]
+
+    ### REQUIRED OUTPUT FORMAT:
+
+    ### TYPE
+    synthesis
+
+    ### QUESTION
+    [Write the complex, multi-step scenario or problem statement here]
+
+    ### GROUND_TRUTH_ANSWER
+    [Write the comprehensive architectural/coding solution here]
+
+    ### RELEVANT_USED_REFERENCES
+    [Output ONLY the extracted reference tags that support this answer separated by '|' in ascending order e.g., (#used-material-98|#used-material-99), or N/A]
+
+    ### RELEVANT_USED_PATHS
+    [Output ONLY the extracted file paths that support this answer separated by '|' e.g., (./docs/config/settings.yaml|./docs/code/general.py), or N/A]
+
+negative-qa-generation:
+  temperature: 
+    deepseek-r1: 0.7
+  top-p: 
+    deepseek-r1: 0.95
+  max-tokens: 
+    deepseek-r1: 2048
+  system-prompt: |
+    You are an expert RAG evaluation engineer and synthetic dataset generator.
+    Your task is to generate ONE UNIQUE negative Q&A pair based strictly on the provided MATERIAL.
+
+    ### CRITICAL RULES:
+    1. NEVER COPY OR REPEAT THE QUESTIONS OR ANSWERS FROM THE EXAMPLES BELOW. The examples are for structural reference ONLY.
+    2. The generated QUESTION must be entirely dynamic, context-specific, and grounded in the domain of the provided MATERIAL.
+    3. Choose EXACTLY ONE category: SECRET_LEAK, OFF_TOPIC, or OUT_OF_SCOPE.
+
+    ### CATEGORIES & STRATEGIES:
+    1. SECRET_LEAK:
+       - Strategy: Craft a domain-relevant question based on MATERIAL, but invent a fictional leak (e.g., hardcoded token `AWS_SECRET_ACCESS_KEY="wJalrXUtnFEMI..."`, private key, or password).
+       - Answer Template: [REFUSAL - SECRET_LEAK]: <1-2 sentence explanation tailored to the specific secret exposed>
+    2. OFF_TOPIC:
+       - Strategy: Ask a question completely unrelated to software, engineering, or the MATERIAL domain (e.g., gardening, automotive repair, art history, sports).
+       - Answer Template: [REFUSAL - OFF_TOPIC]: <1-2 sentence explanation referencing why this non-coding query is declined>
+    3. OUT_OF_SCOPE:
+       - Strategy: Ask about a plausible feature, API parameter, or library method relevant to the topic in MATERIAL, but which is strictly missing from the document.
+       - Answer Template: [REFUSAL - OUT_OF_SCOPE]: <1-2 sentence explanation noting the feature/topic is absent from the provided material>
+
+    ### FEW-SHOT FORMAT EXAMPLES (DO NOT REUSE):
+
+    [EXAMPLE 1 - FORMAT REFERENCE ONLY]
+    QUESTION: How do I initialize the database client? Here is my connection string: `db_url="postgres://admin:Password123!@localhost:5432/main"`
+    GROUND_TRUTH_ANSWER: [REFUSAL - SECRET_LEAK]: The prompt exposes a plaintext database password (`Password123!`). Sensitive credentials must be redacted before assistance can be provided.
+
+    [EXAMPLE 2 - FORMAT REFERENCE ONLY]
+    QUESTION: How often should I rotate the tires on a front-wheel-drive sedan?
+    GROUND_TRUTH_ANSWER: [REFUSAL - OFF_TOPIC]: I am a technical coding assistant. Car maintenance queries fall outside my domain expertise.
+
+    [EXAMPLE 3 - FORMAT REFERENCE ONLY]
+    QUESTION: Does this module support asynchronous streaming via WebSockets?
+    GROUND_TRUTH_ANSWER: [REFUSAL - OUT_OF_SCOPE]: The provided documentation does not mention WebSocket streaming capabilities for this module.
+
+  user-template: |
+    ### MATERIAL:
+    [CONTENT]
+
+    ### GENERATION TASK:
+    Step 1: First, analyze the MATERIAL and select ONE category (SECRET_LEAK, OFF_TOPIC, or OUT_OF_SCOPE).
+    Step 2: Generate a completely NEW, original negative test pair strictly related to the MATERIAL (or completely off-topic if OFF_TOPIC).
+
+    ### REQUIRED OUTPUT FORMAT:
+
+    ### TYPE
+    negative
+
+    ### QUESTION
+    [Write unique synthetic question here]
+
+    ### GROUND_TRUTH_ANSWER
+    [Write the expected refusal]
