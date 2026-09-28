@@ -21,7 +21,7 @@ spec:
         image: pgsty/silo:RELEASE.2026-09-16T00-00-00Z
         imagePullPolicy: Always
         command: [ "/bin/bash" ]
-        args: [ "-c", "mkdir -p /data && minio server --address :9000 --console-address :9001 /data" ]
+        args: [ "-c", "mkdir -p /data && silo server --address :9000 --console-address :9001 /data" ]
         ports:
           - containerPort: 9000
           - containerPort: 9001 
