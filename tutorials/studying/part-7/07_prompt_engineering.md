@@ -253,7 +253,7 @@ Prompt engineering is the systematic design and optimization of input prompts to
             - Definition: Using PE to replicate functionality or extract proprietary knowledge from the model
         - General defenses against both are prompt validation, sanitation techniques, content moderation, alignment reinforcement schemes, adversarial training, and access control measures 
 
-With this framework, we can list the necessary design requirements when creating prompts for different models and specific tasks in our LLM applications. We will use this to produce prompts for our demonstration use case. 
+With this framework, we can list the necessary design requirements when creating prompts for different models and specific tasks in LLM applications. We will use this to produce prompts for our demonstration use case. 
 
 ## How to use Prompt engineering?
 

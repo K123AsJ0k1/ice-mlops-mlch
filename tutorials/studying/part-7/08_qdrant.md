@@ -36,7 +36,7 @@ Qdrant is widely used for the following reasons:
 
 - Widely supported by many tools, exposes dual protocol APIs of gRPC and REST, and enables dynamic tenant isolation (interoperable)
 
-These features make Qdrant the default vector database for retrieval-augmented generation. We will use its hybrid search to add context text to LLM prompts and provide accurate, up-to-date tutorial material. 
+These features make Qdrant the default vector database in our demonstration for retrieval-augmented generation. We will use its hybrid search to add context text to LLM prompts and provide accurate, up-to-date tutorial material. 
 
 ## How to use Qdrant?
 

@@ -26,7 +26,7 @@ difficulty: "Intermediate"
 
 9. <span id="used-material-9"></span> [Unleashing the potential of prompt engineering for large language models](https://www.sciencedirect.com/science/article/pii/S2666389925001084)
 
-10. <span id="used-material-10"></span> [Maximizing RAG efficiency: A comparative analysis of RAG methods](https://www.cambridge.org/core/journals/natural-language-processing/article/maximizing-rag-efficiency-a-comparative-analysis-of-rag-methods/D7B259BCD35586E04358DF06006E0A85)
+10. <span id="used-material-10"></span> [From vectors to knowledge graphs: A comprehensive analysis of modern retrieval-augmented generation architectures](https://www.sciencedirect.com/science/article/abs/pii/S1574013726000341)
 
 11. <span id="used-material-11"></span> [Transformers in source code generation: A comprehensive survey](https://www.sciencedirect.com/science/article/abs/pii/S1383762124001309?via%3Dihub)
 

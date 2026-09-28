@@ -1,0 +1,283 @@
+---
+technologies: "Retrieval-Augmented Generation"
+category: "Explanation and use of concept"
+difficulty: "Intermediate"
+---
+
+# Retrieval-Augmented Generation
+
+## Used material
+
+1. <span id="used-material-1"></span> [From vectors to knowledge graphs: A comprehensive analysis of modern retrieval-augmented generation architectures](https://www.sciencedirect.com/science/article/abs/pii/S1574013726000341)
+
+## Why use Retrieval-Augmented Generation?
+
+Retrieval-Augmented Generation (RAG) addresses a core LLM limitation by using an external retriever to provide an LLM with up-to-date, domain-specific evidence during inference, expanding its factual horizon and reducing hallucinations without retraining the model to update its parametric knowledge [(1)](#used-material-1). RAG pipeline considerations are as follows:
+
+- Pipeline approaches:
+    - Vector RAG:
+        - Definition: Using an embedding model with a high-dimensional vector index to retrieve semantically similar material
+        - Benefit: The default choice for RAG due to capturing paraphrases and latent semantic similarities
+    - Graph RAG:
+        - Definition: Using a graph-structured index to represent entities or concepts and edges to capture relationships
+        - Benefit: More precise, explainable, and contextually rich information retrieval
+    - Multimodal RAG
+        - Definition: Using joint embedding spaces or modality-specific indexes to enable retrieval of images, video, and audio
+        - Benefit: Enables models to handle zero-shot domain-specific tasks
+    - Agentic RAG:
+        - Definition: Using an LLM as a reasoning engine for dynamic task decomposition and strategic tool utilization
+        - Benefit: Enables models with recursive self-correction and multi-step evidence aggregation
+    - Hybrid RAG:
+        - Definition: Utilization of multiple approaches with optional cooperation with agentic systems 
+        - Benefit: Enables a robust approach to unifying different signals under adaptive tool utilization
+
+- Indexing process:
+    - Data sourcing and ingestion: 
+        - Definition: Finding and creating a way to get RAG material
+        - Example: Creating tutorial material for a GitHub repository and creating a parser
+    - Index selection constraints:
+        - Scale
+        - Latency SLO and throughput
+        - Memory budget
+        - Update cadence
+        - Need for filters / hybrid lexical + semantic retrieval
+    - Indexing families:
+        - Exact indexes: 
+            - Pros: Exact neighbors and maximal recall
+            - Cons: Only suitable for small to medium-sized corpus
+        - Graph-based ANN:
+            - Pros: Excellent latency-recall 
+            - Cons: Increased RAM use due to graph edges and can become hard to maintain during heavy updates 
+        - Inverted-file clustering + compression 
+            - Pros: Low memory cost 
+            - Cons: No tuning complexity and potential quantization miss
+        - Sparse inverted indexes for lexical and hybrid retrieval:
+            - Pros: Strong precision for exact terms, boolean constraints, and structured filters
+            - Cons: Limited to specific data types
+        - Disk-oriented / hybrid-memory ANN:
+            - Pros: Major memory savings with high recall
+            - Cons: Increased latency
+    - Choice considerations:
+        - Latency-recall
+        - Memory footprint and compression
+        - Hardware-aware acceleration
+        - Build time, re-indexing, and updates
+        - Filtered and hybrid queries
+    - Text cleaning and normalization:
+        - Definition: Sanitizing the raw material to preserve only meaningful tokens
+        - Benefit: Makes text easier to fit into an LLM context window
+        - Example: Removing punctuation, stop words, and redundant determiners 
+    - Chunking strategy:
+        - Definition: Breaking a document into self-contained segments
+        - Benefit: Makes each segment fit into the context window and increases retrieval accuracy
+        - Example: Processing text per task to ensure chunks remain semantically coherent and compact enough to avoid truncation 
+        - Levels:
+            - Token: 
+                - Definition: Splitting text by a fixed token window such as 256 
+                - Pros: Simple and fast while ensuring each chunk fits model limits
+                - Cons: Lower semantic cohesion that can hurt relevance ranking
+            - Sentence:
+                - Definition: Breaking at sentence boundaries to preserve local grammar
+                - Pros: Improves readability and citation fidelity
+                - Cons: Risks fragmenting multi-sentence ideas
+            - Semantic:
+                - Definition: Embedding whole paragraphs to split where cosine similarity drops to group semantically related sentences
+                - Pros: Maximizes context preservation and boosts retrieval precision on long documents
+                - Cons: Is more expensive because it requires extra embedding passes and heuristic optimization
+        - Effects:
+            - Small chunks provide better similarity scores, but increase the number of vectors and fragment related ideas
+            - Large chunks reduce index size and capture more context, but risk diluting relevance and might exceed the context window of some models
+            - Overlap of 5- 15% of K tokens is used to prevent boundary effects and ensure continuity   
+        - Factors:
+            - Task tolerance to recall vs. precision trade-offs
+            - Memory and latency constraints of the serving environment
+            - Maximum context window of the target model
+    - Embedding:
+        - Definition: Converting knowledge base into high-dimensiona vectors with embedidng model
+        - Pros: Enables finding top-k similar vectors to the query vector, which are conceptually related information
+        - Cons: Purely vector-based retreival might return results similar in topic but not relevant 
+    - Index construction
+        - Definition: Transforming the material into a searchable database to enable queries
+        - Database tiers:
+            - Libraries:
+                - Definition: Databases that maximize control and single-node performance, but let surrounding application handle the rest
+                - Example: FAISS
+            - Embedded/Local stores:
+                - Definition: Databases that package indexing and persistence behind a lightweight interface, with scaling done by an orchestrator
+                - Example: Chroma
+            - Server and managed platforms:
+                - Definition: Databases with built-in distribution, metadata filtering, hybrid retrieval, and production tooling
+                - Example: Qdrant
+    - Governance hooks
+        - Definition: Middleware that gatekeep different stages of RAG lifecycle
+        - Example: Creating a qdrant client for interactions
+
+- Retrieval component:
+    - Architectures:
+        - Sparse retrieval:
+            - TF IDF: 
+                - Definition: Assigning each term in a document a weight for its importance
+                - Benefit: Captures the intuition that a document mentioning a term many times that is seen in few documents is relevant
+            - BM25:
+                - Definition: Sums term relevance scores with saturated frequency contribution scaled by term IDF and document length normalization
+                - Benefit: Captures robust heuristics that rank documents with a weighted sum of query term frequencies that penalizes long documents and common terms   
+        - Dense retrieval:
+            - Bi-encoders:
+                - Definition: Encodes query and document separately into their own vectors
+                - Pros: Scalable
+                - Cons: Cannot capture token-level interactions between the query and document
+            - Cross-encoders:
+                - Definition: Query and document are concatenated and fed together into a transformer that gives a score or classification
+                - Pros: Highest accuracy
+                - Cons: computational cost
+            - Poly-encoders:
+                - Definition: A document is represented by multiple vectors, with the query encoder checking each to produce a final score
+                - Pros: More accurate than bi-encoders and faster than cross-encoders
+                - Cons: Lessened representational richness
+        - LLM-based Retrievers:
+            - Definition: Using an LLM as a retriever or to assist with retrieval
+            - Example: LLM generating queries or using an LLM to filter retrieved results
+    - Query enhancement:
+        - Definition: Methods that improve query accuracy and relevance
+        - Types:
+            - Query expansion
+                - Definition: Augmenting queries with contextual information to bridge lexical and semantic gaps between user and document language
+            - Query rewriting:
+                - Definition: Using an LLM to rewrite the query to close vocabulary and intent gaps between the user's query and the language of the material
+            - Query decomposition:
+                - Definition: Breaking down a user query into smaller, specific sub-queries
+    - Knowledge enhancement:
+        - Knowledge merging:
+            - Definition: Tackling token budget and coherence problems when multiple pieces of evidence are pulled from heterogeneous retrievers
+            - Example: Reciprocal-rank fusion that merges sparse and dense retrieval
+        - Knowledge pruning:
+            - Definition: Deliberate removal or down-weighting of less relevant material to ensure most information evidence reaches the LLM
+            - Families:
+                - Ranking methods to reorder the hit list with relevance signals
+                - Aggregating lists from parallel sparse + dense retrievers 
+
+- Generation techniques:
+    - Metric considerations:
+        - Answer fidelity
+        - Information coverage
+        - Latency/compute cost
+        - Multi-hop reasoning
+        - Explainability
+        - Engineering complexity
+    - Multi-document Fusion:
+        - Definition: Encoding each passage separately and letting the LLM decoder attend to them all
+        - Pros: Yields high-quality answers for complex queries
+        - Cons: Increased decoder workflow
+    - Retrieval-Conditioned prompting:
+        - Definition: Injecting vector or embedding signals into the prompt
+        - Pros: Maintaining long contexts and biasing the model toward relevant information for better relevance with minimal latency
+        - Cons: Requires a modified LLM interface
+    - Self-Reflective Generation:
+        - Definition: Generating an answer draft to critique it to revise the answer
+        - Pros: Large factual-accuracy gains with modest extra compute relative to one-shot generation
+        - Cons: Needs robust self-evaluation heuristics and two-pass decoding
+    - Iterative Retrieve-Generate Loops:
+        - Definition: Step-by-step retrieval using previous answers
+        - Pros: Ideal for true multi-hop reasoning
+        - Cons: Each iteration multiplies total latency
+    - Post-Hox Research and revision:
+        - Definition: Using the initial answer to query sources for every claim and editing unsupported text
+        - Pros: Improves attribution without retraining to increase answer transparency
+        - Cons: Adds retrieval and rewriting costs
+    - Citation-aware decoding:
+        - Definition: The model is trained or prompted to output inline citations for statements
+        - Pros: Boosted transparency via forced grounding to get high trust
+        - Cons: Requires specialized data, awkward generation, and additional complexity
+    - Hallucination guards:
+        - Definition: Enforcing the model to reuse phrases from sources or trigger a retrieval during hallucination
+        - Pros: Cuts fabricated content
+        - Cons: Model might refuse to answer if evidence is sparse
+
+- RAG evaluation:
+    - Retrieval relevance:
+        - Precision@K
+        - Recall@K
+        - Mean Average Precision (MAP)
+        - Mean Reciprocal Rank (MRR)
+        - Normalized Discounted Cumulative Gain (NDCG) 
+    - Groundedness:
+        - QAGS
+        - QAFactEval
+        - Attribution Accuracy
+    - Answer Relevance:
+        - LLM-as-a-judge
+    - Correctness:
+        - Lexical overlap metrics:
+            - Exact Match (EM)
+            - Token-level F1-score
+            - BLEU
+            - ROUGE
+        - Semantic similarity metrics:
+            - BERTScore
+    - Human evaluation:
+        - Expert Annotations for Correctness
+        - Likert Scale Ratings
+        - Pairwise A/B Testing
+        - Criteria-based Human Evalution
+        - User Feedback and Behavioral Signals 
+    - Deployment perspective: 
+        - Surface quality:
+            - Definition: Does the answer read well and align with any available ground truth reference
+        - Groundedness:
+            - Definition: Does each factual claim map back to relevant retreived evidence
+
+- RAG challenges:
+    - Retrieval-Grounded Alignment:
+        - Definition: The model does not attend to the correct information, and it is difficult to evaluate answer conformity 
+        - Solution: Using graph RAG explicitly representing entity relationships for better fact fusion 
+    - Residual Hallucination and Retrieval Failures:
+        - Definition: Retriever fails to find relevant information or provides irrelevant or conflicting data
+        - Solution: Using graph structures for precise retrieval with structured queries and relational context
+    - Pipeline complexity:
+        - Definition: The complexity of RAG pipelines requires optimizing for low latency and resource use as data scales
+    - Context Length and Information Overload:
+        - Definition: The model isn't able to consider or find relevant information due to the size of retrieved passages
+    - Knowledge Update and Scope:  
+        - Definition: The index needs to include new content to prevent dropping answer accuracy
+        - Solution: Structured knowledge graphs enable easier incremental updates because adding or modifying nodes is straightforward
+    - Adaptation and cross-domain robustness:
+        - Definition: RAG pipelines commonly degrade in performance when the task domain shifts
+
+- Real-world applications:
+    - Conversational shopping assistant:
+        - Solved problem: Providing comparative answers to complex shopping queries
+    - Managed RAG platform:
+        - Solved problem: Reducing overhead of building and scaling RAG pipelines for customers
+    - Natural language to SQL Query generation:
+        - Solved problem: Solving the user pain of selecting the correct database tables for a query
+    - Automated Industry Classification:
+        - Solved problem: Providing a standardized, auditable system
+    - Dasher Support Chatbot:
+        - Solved problem: Reducing human agent workload in providing fast, accurate, and compliant support to contractors
+    - Technical Support Q&A:
+        - Solved problem: Providing relational context between support tickets
+    - Multimodal Video Q&A:
+        - Solved problem: Enabling natural language questions about video content with answers linked to specific timestamps
+    - Academic /Journalistic Writing Assistant:
+        - Solved problem: Enabling fact-grounded drafting with fewer hallucinations
+    - Code Co-pilot over repositories and API Docs:
+        - Solved problem: Grounding generated code in real projects and documentation
+    - Clinical Trial Data Analysis:
+        - Solved problem: Integrating and synthesizing heterogeneous data for accelerated clinical trial reporting
+    - Biomedical Research Support:
+        - Solved problem: Enhancing contextual understanding of diseases by integrating textual and visual data
+    - RAG-as-a-Service for Legal
+        - Solved problem: Providing a platform for legal research, contract analysis, and summarization 
+    - AI Co-Pilot for Litigators:
+        - Solved problem: Automating legal research and drafting with generated claims anchored to verifiable legal sources
+    - Financial Document Summarization and analysis:
+        - Solved problem: Streamlined analysis of long and complex financial documents
+    - AI Faculty Chatbot / Virtual tutor:
+        - Solved problem: Enabling context -aware support grounded in specific course materials
+
+With this framework, we can list the design requirements when using a RAG to create context for prompts in an LLM application. We will use this to provide the coding assistant with tutorial material in our demonstration use case. 
+
+## How to use Retrieval-Augmented Generation?
+
+- Show ray scripts
+- Mention qunatization
