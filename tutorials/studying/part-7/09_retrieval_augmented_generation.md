@@ -330,7 +330,6 @@ total_time = experiment_store_data(
 
 ```
 from icebreaker.rag.use import rag_preprocess_datasets
-
 preprocessed_datasets = rag_preprocess_datasets(
     swift_client = wift_client,
     storage_parameters = {
@@ -370,7 +369,7 @@ preprocessed_datasets = rag_preprocess_datasets(
 
 4. Setting up Qdrant with the [example Ray script](./ray/rag_database_setup/)
 
-5. Using search_monitored_batch_query shown in [Qdrant chapter](./08_qdrant.md) to get passages
+5. Using search_monitored_batch_query() function shown in [Qdrant chapter](./08_qdrant.md) to get passages
 
 6. Formatting the passages into XML with the example [RAG function](./rag_func/use.py)
 
@@ -378,6 +377,6 @@ preprocessed_datasets = rag_preprocess_datasets(
 
 8. Sending the completed prompt to be processed by Ray serve or actor ran LLMs  
 
-With this, we have a hybrid vector RAG pipeline that enables us to provide tutorial material for our coding assistant. This RAG pipeline could be further improved using the Neo4j mentioned in the [Istio chapter](../part-4/11_istio.md), but since our aim is to keep the demonstration simple, we will focus on utilizing this hybrid variant to its greatest extent. 
+With this, we have a hybrid vector RAG pipeline that enables us to provide tutorial material for our coding assistant. This RAG pipeline could be further improved using the Neo4j mentioned in the [Istio chapter](../part-4/11_istio.md). However, we aim to keep the demonstration simple, so we will focus on using this hybrid variant to its fullest. We will cover this later.
 
 ---
