@@ -9,7 +9,7 @@ spec:
   - dashboards-gateway-1
   http:
   - route:
-    - destination:
+    - destination:  
         host: ray-hpc-1-dash.integration.svc.cluster.local
         port:
           number: 8125
