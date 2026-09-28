@@ -279,5 +279,105 @@ With this framework, we can list the design requirements when using a RAG to cre
 
 ## How to use Retrieval-Augmented Generation?
 
-- Show ray scripts
-- Mention qunatization
+As we described in the [LLM application development chapter](./04_llm_application_development.md), [Prompt engineering chapter](./07_prompt_engineering.md), and [Qdrant chapter](./08_qdrant.md), the tutorial files are parsed and loaded into a Qdrant vector database with BAAI/bge-m3 as the dense model and prithivida/Splade-PP_en_v1 as the sparse model to enable DBSF hybrid search, with the retrieved 5 passages formatted and added to the prompt. This is done in the following steps:
+
+1. Parsing the tutorial folders into JSON format
+
+```
+from icebreaker.parser.generator import generator_divide_material
+part_n_material = generator_divide_material(
+    directory = 'ice-mlops-mlch/tutorials/studying/part-n',
+    file_types = [
+        'md',
+        'ipynb',
+        'py',
+        'yaml',
+        'txt'
+    ],
+    exclude_folders = [
+        'images',
+        'part_n_venv',
+        '__pycache__',
+        '.ipynb_checkpoints'
+    ],
+    repository_name = 'ice-mlops-mlch',
+    save_material = True,
+    storage_folder = 'material',
+    storage_name = 'part-n',
+    header_start = 'studying',
+    debug_prints = False
+)
+```
+
+2. Storing the parsed tutorial data into Allas
+
+```
+from icebreaker.setup.experiment import experiment_store_data
+total_time = experiment_store_data(
+    storage_client = workflow_swift_client,
+    file_parameters = {
+        'bucket-target': 'experiment',
+        'bucket-prefix': 'mlch',
+        'bucket-user': 'user@example.com',
+        'data-source': 'material',
+        'object-prefix': 'ICEbreaker-tutorial-v10'
+    },
+    data_type = 'internal'
+)
+```
+
+3. Preprocessing the data to have 1-3 graded relevance. Primary sources get grade 3, referenced secondary sources get grade 2, and other secondary sources get grade 1 
+
+```
+from icebreaker.rag.use import rag_preprocess_datasets
+
+preprocessed_datasets = rag_preprocess_datasets(
+    swift_client = wift_client,
+    storage_parameters = {
+        'bucket-target': 'experiment',
+        'bucket-prefix': 'mlch',
+        'bucket-user': 'user@example.com',
+        'object-serialization': 'pickle'
+    },
+    dataset_paths = [
+        'DATA/SOURCE/ICEbreaker-tutorial-v10-part-1.pkl',
+        'DATA/SOURCE/ICEbreaker-tutorial-v10-part-2.pkl',
+        'DATA/SOURCE/ICEbreaker-tutorial-v10-part-3.pkl',
+        'DATA/SOURCE/ICEbreaker-tutorial-v10-part-4.pkl',
+        'DATA/SOURCE/ICEbreaker-tutorial-v10-part-5.pkl',
+        'DATA/SOURCE/ICEbreaker-tutorial-v10-part-6.pkl',
+        'DATA/SOURCE/ICEbreaker-tutorial-v10-part-7.pkl',
+        'DATA/SOURCE/ICEbreaker-tutorial-v10-part-8.pkl'
+    ],
+    ref_column = 'ref-paths',
+    path_column = 'absolute-path',
+    material_grades = {
+        'md': ('primary',3),
+        'ipynb': ('primary',3),
+        'py': ('secondary',1),
+        'yaml': ('secondary',1),
+        'txt': ('secondary',1),
+        'sh': ('secondary',1),
+        'env': ('secondary',1)
+    },
+    blacklist_prefixes = [
+        '.yaml',
+        '.txt'
+    ],
+    insert_prefix = 'v10'
+)
+```
+
+4. Setting up Qdrant with the [example Ray script](./ray/rag_database_setup/)
+
+5. Using search_monitored_batch_query shown in [Qdrant chapter](./08_qdrant.md) to get passages
+
+6. Formatting the passages into XML with the example [RAG function](./rag_func/use.py)
+
+7. Replacing the prompt template placeholders with regex shown in [Prompt engineering chapter](./07_prompt_engineering.md)
+
+8. Sending the completed prompt to be processed by Ray serve or actor ran LLMs  
+
+With this, we have a hybrid vector RAG pipeline that enables us to provide tutorial material for our coding assistant. This RAG pipeline could be further improved using the Neo4j mentioned in the [Istio chapter](../part-4/11_istio.md), but since our aim is to keep the demonstration simple, we will focus on utilizing this hybrid variant to its greatest extent. 
+
+---
