@@ -63,7 +63,7 @@ spec:
                   key: DB_PASSWORD
             - name: BACKEND_STORE_URI
               value: $(DB_DIALECT)://$(DB_USER):$(DB_PASSWORD)@$(DB_HOST):$(DB_PORT)/$(DB_NAME)
-          image: t9k4b5ndjok1/multi-local-cloud-hpc-integration:mlflow_v3.16.1
+          image: t9k4b5ndjok1/multi-local-cloud-hpc-integration:mlflow_v3.16.1-2
           imagePullPolicy: IfNotPresent
           ports:
             - containerPort: 5000

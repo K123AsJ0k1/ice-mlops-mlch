@@ -8,7 +8,7 @@ ARG MYSQLCLIENT_VERSION=2.1.0
 RUN apt-get update
 RUN apt-get -y install default-libmysqlclient-dev
 
-RUN pip install --upgrade pip setuptools wheel && pip install mlflow==${MLFLOW_VERSION} psycopg2==${PSYCOPG2_VERSION} protobuf>=4.25.0 boto3==1.43.6
+RUN pip install --upgrade pip setuptools wheel && pip install mlflow==${MLFLOW_VERSION} "psycopg[binary]" psycopg2==${PSYCOPG2_VERSION} protobuf>=4.25.0 boto3==1.43.6
 
 # RUN pip install PyMySQL==${PYMYSQL_VERSION}
 RUN pip install mysqlclient==${MYSQLCLIENT_VERSION}
