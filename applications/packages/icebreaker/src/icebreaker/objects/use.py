@@ -11,7 +11,7 @@ def objects_store_data(
         from ..storage.management import object_storage_interaction
         from ..pyarrow.use import pyarrow_serialize_dataframe
     except ImportError as e:
-        raise ImportError("clusters/use failed to import", e)
+        raise ImportError("objects/use failed to import", e)
     
     stored_data = None
     if storage_parameters['object-serialization'] == 'pickle':
@@ -46,7 +46,7 @@ def objects_get_data(
         from ..storage.management import object_storage_interaction
         from ..pyarrow.use import pyarrow_deserialize_dataframe
     except ImportError as e:
-        raise ImportError("clusters/use failed to import", e)
+        raise ImportError("objects/use failed to import", e)
     
     storage_parameters['mode'] = 'get'
     stored_object = object_storage_interaction(
@@ -91,7 +91,7 @@ def objects_nested_update(
         from ..storage.management import object_storage_interaction
         from ..misc.dict import update_nested_dict
     except ImportError as e:
-        raise ImportError("clusters/use failed to import", e)
+        raise ImportError("objects/use failed to import", e)
     
     storage_parameters['mode'] = 'get'
     stored_object = object_storage_interaction(
