@@ -8,19 +8,15 @@ difficulty: "Intermediate"
 
 ## Used material
 
-1. <span id="used-material-1"></span> [Run Redis on Docker](https://redis.io/docs/latest/operate/oss_and_stack/install/install-stack/docker/)
+1. <span id="used-material-1"></span> [Celery pip package](https://pypi.org/project/celery/)
 
-2. <span id="used-material-2"></span> [Redis pip package](https://pypi.org/project/redis/)
+2. <span id="used-material-2"></span> [Celery periodic tasks](https://docs.celeryq.dev/en/latest/userguide/periodic-tasks.html)
 
-3. <span id="used-material-3"></span> [Celery pip package](https://pypi.org/project/celery/)
+3. <span id="used-material-3"></span> [Celery beat](https://docs.celeryq.dev/en/stable/reference/celery.beat.html)
 
-4. <span id="used-material-4"></span> [Celery periodic tasks](https://docs.celeryq.dev/en/latest/userguide/periodic-tasks.html)
+4. <span id="used-material-4"></span> [Celery tasks](https://docs.celeryq.dev/en/main/userguide/tasks.html)
 
-5. <span id="used-material-5"></span> [Celery beat](https://docs.celeryq.dev/en/stable/reference/celery.beat.html)
-
-6. <span id="used-material-6"></span> [Celery tasks](https://docs.celeryq.dev/en/main/userguide/tasks.html)
-
-7. <span id="used-material-7"></span> [Celery periodic tasks](https://docs.celeryq.dev/en/stable/userguide/periodic-tasks.html)
+5. <span id="used-material-5"></span> [Celery periodic tasks](https://docs.celeryq.dev/en/stable/userguide/periodic-tasks.html)
 
 ## Why use Beat?
 
@@ -36,7 +32,7 @@ These enable us to use Beat to create a decoupled scheduler to run periodic task
 
 ## How to use Beat?
 
-Assuming we have a running Redis container [(1)](#used-material-1), a running Celery instance setup with [Celery chapter](./01_celery.ipynb), and a running Flower monitor setup with [Flower chapter](./02_flower.ipynb), we can start the Beat scheduler by setting up a venv |[(2)](#used-material-2),[(3)](#used-material-3)| and executing [run](./beat/run_beat.py) in the following way |[(4)](#used-material-4),[(5)](#used-material-5)|:
+Assuming you have setup a running Redis container with the [Redis chapter](../part-2/02_redis.ipynb), a running Celery instance setup with [Celery chapter](./01_celery.ipynb), and a running Flower monitor setup with [Flower chapter](./02_flower.ipynb), we can start the Beat scheduler by setting up a venv |[(1)](#used-material-1),[(2)](#used-material-2)| and executing [run](./beat/run_beat.py) in the following way |[(3)](#used-material-3),[(4)](#used-material-4)|:
 
 ```
 cd beat
@@ -62,7 +58,7 @@ The purpose of this structure is to keep things as simple as possible, since the
 
 Finding the correct time for a Celery task depends on the execution time, set constraints, and task function. For our use case, execution times are in the minute range, the main constraint is minimizing impact on the target systems, and the tasks serve as interactive pathways for inputs and outputs. Therefore, our times are roughly 15-60 seconds, depending on how willing we are to wait. 
 
-Our locking code ensures serial execution of code, but shorter times result in more useless rows in Flower metrics, which we can reduce by setting a rate limit on scheduled tasks [(6)](#used-material-6). For example, we could set ‘4/m’ or ‘1/m’ (see row 19) for the [submitter-trigger](./celery/tasks/scheduled/trigger.py) to achieve our desired range. Be aware that rate-limited tasks are not ignored; they are placed in a backlog, which means bad configuration can lead to stale tasks.
+Our locking code ensures serial execution of code, but shorter times result in more useless rows in Flower metrics, which we can reduce by setting a rate limit on scheduled tasks [(5)](#used-material-5). For example, we could set ‘4/m’ or ‘1/m’ (see row 19) for the [submitter-trigger](./celery/tasks/scheduled/trigger.py) to achieve our desired range. Be aware that rate-limited tasks are not ignored; they are placed in a backlog, which means bad configuration can lead to stale tasks.
 
 ## Important parts of Beat
 
