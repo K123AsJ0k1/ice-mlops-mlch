@@ -28,7 +28,7 @@ These make Docker Compose the default container orchestrator for local environme
 
 ## How to use Docker Compose?
 
-Assuming you setup either Docker Desktop or Docker Engine with the [Docker chapter](../part-1/07_docker.md), you only need to write a YAML file to run Docker containers |[(1)](#used-material-1), [(2)](#used-material-2)|. For example, we can run a Redis container by using the [redis](./redis.yaml) file in the following way:
+Assuming you setup either Docker Desktop or Docker Engine using the [Docker chapter](../part-1/07_docker.md), you only need to write a YAML file to run Docker containers |[(1)](#used-material-1), [(2)](#used-material-2)|. For example, we can run a Redis container by using the [redis](./redis.yaml) file in the following way:
 
 ```
 docker compose -f redis.yaml up
