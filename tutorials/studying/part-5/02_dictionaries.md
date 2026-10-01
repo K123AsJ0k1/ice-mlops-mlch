@@ -18,7 +18,7 @@ difficulty: "Easy"
 
 5. <span id="used-material-5"></span> [Understanding Python Pickling with example](https://www.geeksforgeeks.org/python/understanding-python-pickling-example/)
 
-6. <span id="used-material-6"></span> [pickle — Python object serialization](https://docs.python.org/3/library/pickle.html)
+6. <span id="used-material-6"></span> [pickle - Python object serialization](https://docs.python.org/3/library/pickle.html)
 
 ## Why use Dictionaries? 
 
