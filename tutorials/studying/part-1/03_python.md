@@ -8,13 +8,15 @@ difficulty: "Easy"
 
 ## Used material
 
-1. <span id="used-material-1"></span> [How to Install Python on Your System: A Guide](https://realpython.com/installing-python/)
+1. <span id="used-material-1"></span> [Python downloads](https://www.python.org/downloads/)
 
-2. <span id="used-material-2"></span> [Python Pip user guide](https://pip.pypa.io/en/latest/user_guide/)
+2. <span id="used-material-2"></span> [How to Install Python on Your System: A Guide](https://realpython.com/installing-python/)
 
-3. <span id="used-material-2"></span> [Pip install version guide](https://builtin.com/articles/pip-install-specific-version)
+3. <span id="used-material-3"></span> [Python Pip user guide](https://pip.pypa.io/en/latest/user_guide/)
 
-4. <span id="used-material-3"></span> [Python Conda user guide](https://docs.conda.io/projects/conda/en/stable/user-guide/getting-started.html)
+4. <span id="used-material-4"></span> [Pip install version guide](https://builtin.com/articles/pip-install-specific-version)
+
+5. <span id="used-material-5"></span> [Python Conda user guide](https://docs.conda.io/projects/conda/en/stable/user-guide/getting-started.html)
 
 ## Why use Python?
 
@@ -30,7 +32,7 @@ These make Python the default language for ML developers seeking reduced frictio
 
 ## How to use Python?
 
-Setup Python on your computer [(1)](#used-material-1). In our use case, we interact with Python in the following ways [(2)](#used-material-2):
+Setup Python on your computer |[(1)](#used-material-1), [(2)](#used-material-2)|. In our use case, we interact with Python in the following ways [(3)](#used-material-3):
 
 - Creating virtual environments
 
@@ -82,13 +84,13 @@ celery==5.6.2
 redis==7.3.0
 ```
 
-This can be used to switch package versions by downgrading or upgrading a package when a package causes dependency problems. PIP usually provides good enough error messages that specify what packages are causing the problems. Package versions can be changed in the following way [(3)](#used-material-3):
+This can be used to switch package versions by downgrading or upgrading a package when a package causes dependency problems. PIP usually provides good enough error messages that specify what packages are causing the problems. Package versions can be changed in the following way [(4)](#used-material-4):
 
 ```
 pip uninstall (package)
 pip install (package)==(version)
 ```
 
-It might also be that the Python version is incompatible with the packages you want to run. In such cases, you either need to downgrade the package, consider other ways to get the functions you want, or use conda to run a specific Python version [(4)](#used-material-4).
+It might also be that the Python version is incompatible with the packages you want to run. In such cases, you either need to downgrade the package, consider other ways to get the functions you want, or use conda to run a specific Python version [(5)](#used-material-5).
 
 ---

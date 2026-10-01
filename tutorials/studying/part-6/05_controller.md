@@ -8,15 +8,11 @@ difficulty: "Intermediate"
 
 ## Used material
 
-1. <span id="used-material-1"></span> [Python downloads](https://www.python.org/downloads/)
+1. <span id="used-material-1"></span> [Getting Started - Installing Git](https://git-scm.com/book/en/v2/Getting-Started-Installing-Git)
 
-2. <span id="used-material-2"></span> [How to Install Python on Your System: A Guide](https://realpython.com/installing-python/)
+2. <span id="used-material-2"></span> [Filename too long in Git for Windows](https://stackoverflow.com/questions/22575662/filename-too-long-in-git-for-windows)
 
-3. <span id="used-material-3"></span> [Getting Started - Installing Git](https://git-scm.com/book/en/v2/Getting-Started-Installing-Git)
-
-4. <span id="used-material-4"></span> [Filename too long in Git for Windows](https://stackoverflow.com/questions/22575662/filename-too-long-in-git-for-windows)
-
-5. <span id="used-material-5"></span> [Fixing PowerShell Script Execution Policy Issue When Activating Python venv ](https://dev.to/she11_qa/fixing-powershell-script-execution-policy-issue-when-activating-python-venv-582j)
+3. <span id="used-material-3"></span> [Fixing PowerShell Script Execution Policy Issue When Activating Python venv ](https://dev.to/she11_qa/fixing-powershell-script-execution-policy-issue-when-activating-python-venv-582j)
 
 ## Why use Controller?
 
@@ -32,7 +28,7 @@ These features enable the Controller to reduce the manual terminal actions scatt
 
 ## How to use Controller?
 
-Assuming you have setup Python |[(1)](#used-material-1), [(2)](#used-material-2)|, Git [(3)](#used-material-3), and Docker as described in [Docker chapter](../part-1/07_docker.md) on your local or cloud machines, we can make the controller run with the following steps:
+Assuming you have used the [Python chapter](../part-1/03_python.md) to setup computers, Git [(3)](#used-material-3), and Docker as described in [Docker chapter](../part-1/07_docker.md) on your local or cloud machines, we can make the controller run with the following steps:
 
 1. Download the repository into a suitable folder
 
