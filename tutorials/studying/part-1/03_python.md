@@ -30,7 +30,7 @@ These make Python the default language for ML developers seeking reduced frictio
 
 ## How to use Python?
 
-Setup Python on your computer [(1)](#used-material-1). In our use case we interact with Python in the following ways [(2)](#used-material-2):
+Setup Python on your computer [(1)](#used-material-1). In our use case, we interact with Python in the following ways [(2)](#used-material-2):
 
 - Creating virtual environments
 
