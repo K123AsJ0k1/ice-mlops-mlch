@@ -164,35 +164,29 @@ def mlflow_get_prompt(
 
     return prompt_details
 
-'''
-def mlflow_create_span(
-    mlflow_client: any, 
-    span_name: str,
-    trace_id: any,
-    span_id: any,
-    span_inputs: dict,
-    span_attributes: dict,
-    span_outputs: dict
-):
-    child_span = mlflow_client.start_span(
-        name = span_name,
-        trace_id = trace_id,
-        parent_id = span_id
+def mlflow_create_dataset(
+    mlflow_client: any,
+    dataset_name: str,
+    experiment_id: str,
+    dataset_tags: dict,
+    dataset_records: list
+) -> any:
+    dataset = mlflow_client.create_dataset(
+        name = dataset_name,
+        experiment_id = experiment_id,  
+        tags = dataset_tags
     )
 
-    child_span.set_inputs(span_inputs)
-    child_span.set_attributes(span_attributes)
-    child_span.set_outputs(span_outputs)
+    dataset_result = dataset.merge_records(dataset_records)
 
-    mlflow_client.end_span(
-        trace_id = child_span.trace_id,
-        span_id = child_span.span_id,
-        status = "OK"
+    return dataset.dataset_id
+
+def mlflow_get_dataset(
+    mlflow_client: any,
+    dataset_id: str
+) -> any:
+    dataset = mlflow_client.get_dataset( 
+        dataset_id = dataset_id
     )
-'''
-    
 
-
-# consider synthetic dataset function
-# consider llm as a judge function
-# consider evalution function
+    return dataset.to_df()
