@@ -32,7 +32,7 @@ These enable us to use the CSC-run Allas to create data containers (buckets) to 
 
 ## How to use Allas?
 
-Assuming that you have setup a MyCSC account and a CSC project mentioned in the [cPouta chapter](../part-4/02_cpouta.md), we can gain access to Allas by enabling the service in MyCSC. We will again only provide relevant details, so you should check the details from |[(2)](#used-material-2), [(3)](#used-material-2)| as necessary. When Allas is enabled, check [(4)](#used-material-4) for different ways to access it. For our use case, the access methods are the UI and Python clients, with the latter elaborated later. The dashboard can be accessed either via the [cPouta dashboard](https://pouta.csc.fi/) by clicking the project object store and containers or via the [Allas dashboard](https://allas.csc.fi/). Both are valid methods; the former may be more convenient, so the choice is left to you.
+Assuming that you have setup a MyCSC account and a CSC project mentioned in the [cPouta chapter](../part-4/02_cpouta.md), we can gain access to Allas by enabling the service in MyCSC. We will again only provide relevant details, so you should check the details from |[(2)](#used-material-2), [(3)](#used-material-3)| as necessary. When Allas is enabled, check [(4)](#used-material-4) for different ways to access it. For our use case, the access methods are the UI and Python clients, with the latter elaborated later. The dashboard can be accessed either via the [cPouta dashboard](https://pouta.csc.fi/) by clicking the project object store and containers or via the [Allas dashboard](https://allas.csc.fi/). Both are valid methods; the former may be more convenient, so the choice is left to you.
 
 ## Storage management
 
