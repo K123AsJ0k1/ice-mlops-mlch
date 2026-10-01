@@ -22,7 +22,7 @@ difficulty: "Intermediate"
 
 7. <span id="used-material-7"></span> [Nvshare GitHub](https://github.com/grgalex/nvshare?tab=readme-ov-file#deploy_k8s)
 
-8. <span id="used-material-9"></span> [Kubernetes NodePort](https://www.tkng.io/services/nodeport/)
+8. <span id="used-material-8"></span> [Kubernetes NodePort](https://www.tkng.io/services/nodeport/)
 
 9. <span id="used-material-9"></span> [Docker Port publishing and mapping](https://docs.docker.com/engine/network/port-publishing/)
 
