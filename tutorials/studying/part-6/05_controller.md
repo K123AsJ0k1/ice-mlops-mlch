@@ -28,7 +28,7 @@ These features enable the Controller to reduce the manual terminal actions scatt
 
 ## How to use Controller?
 
-Assuming you have used the [Python chapter](../part-1/03_python.md) to setup computers, Git [(3)](#used-material-3), and Docker as described in [Docker chapter](../part-1/07_docker.md) on your local or cloud machines, we can make the controller run with the following steps:
+Assuming you have used the [Python chapter](../part-1/03_python.md) to setup computers, Git [(1)](#used-material-1), and Docker as described in [Docker chapter](../part-1/07_docker.md) on your local or cloud machines, we can make the controller run with the following steps:
 
 1. Download the repository into a suitable folder
 
@@ -37,7 +37,7 @@ git clone https://github.com/K123AsJ0k1/ice-mlops-mlch.git
 cd multi-cloud-hpc-oss-mlops-platform
 ```
 
-If you have problems with Windows, use the following to enable cross-platform paths [(4)](#used-material-4):
+If you have problems with Windows, use the following to enable cross-platform paths [(2)](#used-material-2):
 
 ```
 git config --global core.longpaths true
@@ -73,7 +73,7 @@ source exp_venv/bin/activate
 pip install -r packages.txt
 ```
 
-If you have problems with Windows, use the following to enable pip installs [(5)](#used-material-5):
+If you have problems with Windows, use the following to enable pip installs [(3)](#used-material-3):
 
 ```
 python -m venv exp_venv
