@@ -364,9 +364,9 @@ dpkg -l | grep nvidia-container-toolkit
 
 It is recommended that you create a note about the driver, CUDA, and container toolkit versions that work. In our case they are:
 
-- Driver = 535.288.01
+- Driver = 535.288.01 or 580.178.04
 - CUDA = release 12.2, V12.2.91
-- Toolkit = 1.19.0-1
+- Toolkit = 1.19.0-1 or 1.20.1-1
 
 Be aware that any weird GPU problems are solved by either a CUDA [(15)](#used-material-15) or driver [(17)](#used-material-17) change. The old CUDA can be removed with:
 
