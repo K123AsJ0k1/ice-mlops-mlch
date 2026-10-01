@@ -62,7 +62,7 @@ Our locking code ensures serial execution of code, but shorter times result in m
 
 ## Important parts of Beat
 
-The most important parts to keep an eye on when trying to understand or develop a Beat scheduling are [(7)](#used-material-7):
+The most important parts to keep an eye on when trying to understand or develop a Beat scheduling are [(5)](#used-material-5):
 
 - Entry = Name of the scheduling configuration (see use in [setup beat](./beat/setup_beat.py) row 39)
 - Task = Name of the scheduled task (see use in [setup beat](./beat/setup_beat.py) row 40)
