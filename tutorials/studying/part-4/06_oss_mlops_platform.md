@@ -24,7 +24,7 @@ These enable us to use the OSS MLOps platform as a flexible environment for deve
 
 ## How to use OSS MLOps platform?
 
-Assuming that you have setup a VM with Docker Engine, we can setup the OSS MLOps platform to run in the following way:
+Assuming that you setup a VM with Docker Engine with the [cPouta chapter](./02_cpouta.md), we can setup the OSS MLOps platform to run in the following way [(1)](#used-material-1):
 
 ```
 git clone git@github.com:K123AsJ0k1/multi-cloud-hpc-oss-mlops-platform.git
