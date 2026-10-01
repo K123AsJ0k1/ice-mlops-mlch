@@ -26,7 +26,7 @@ These enable us to use JupyterLab as a development environment for documented, i
 
 ## How to use JupyterLab?
 
-To run the JupyterLab server [(1)](#used-material-1), we need to setup an environment and start it up with the following:
+Assuming you have used the [Python chapter](./03_python.md) to setup your computer, we can run the JupyterLab server [(1)](#used-material-1) by creating an virtual environment and start it up with the following:
 
 ```
 python3 -m venv part_1_venv
