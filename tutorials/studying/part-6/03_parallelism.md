@@ -16,41 +16,41 @@ MLOps and LLMOps use parallelism to split tasks across multiple CPU and GPU unit
 
 - Data Parallelism = Splitting input data across multiple nodes running the same model, with each processing a different subset
     - Pros: 
-        - Simplicity = Easy to implement by duplicating a model and splitting data
-        - Scalability = Efficient scaling as the number of nodes increases
+        - Simplicity: Easy to implement by duplicating a model and splitting data
+        - Scalability: Efficient scaling as the number of nodes increases
     - Cons:
-        - Memory redundancy = Each node stores the same model, leading to memory inefficiencies as size increases
-        - Communication overhead = Model gradients must be synchronized across nodes, leading to communication overhead as the number of nodes increases
+        - Memory redundancy: Each node stores the same model, leading to memory inefficiencies as size increases
+        - Communication overhead: Model gradients must be synchronized across nodes, leading to communication overhead as the number of nodes increases
 
 - Tensor Parallelism = Splitting a model's tensors across multiple GPUs, with each GPU computing different parts of the model's layers
     - Pros:
-        - Memory efficiency = Splitting tensors reduces memory requirements per GPU, which allows processing larger models
-        - Scalability of large layers = Larger model layers can be distributed across multiple GPUs to decrease the computation burden
+        - Memory efficiency: Splitting tensors reduces memory requirements per GPU, which allows processing larger models
+        - Scalability of large layers: Larger model layers can be distributed across multiple GPUs to decrease the computation burden
     - Cons:
-        - Complexity = Implementing tensor splitting and its communication across GPUs adds complexity
-        - Communication overhead = Frequent exchange of results between GPUs can create overhead and reduce gained speedup
+        - Complexity: Implementing tensor splitting and its communication across GPUs adds complexity
+        - Communication overhead: Frequent exchange of results between GPUs can create overhead and reduce gained speedup
 
 - Pipeline Parallelism = Splitting a model into different stages, with each stage using a different GPU, to enable simultaneous processing of multiple batches
     - Pros: 
-        - Memory distribution = Distributing the model reduces the memory burden of an individual GPU
-        - Improved utilization = Overlapping computation of different batches can lead to better GPU utilization and reduced idle time
+        - Memory distribution: Distributing the model reduces the memory burden of an individual GPU
+        - Improved utilization: Overlapping computation of different batches can lead to better GPU utilization and reduced idle time
     - Cons:
-        - Pipeline bubbles = The pipeline must be filled, leading to a delay before full utilization, aka pipeline bubble 
-        - Complexity in implementation = The model must be carefully divided into stages alongside its inter-stage communication
+        - Pipeline bubbles: The pipeline must be filled, leading to a delay before full utilization, aka pipeline bubble 
+        - Complexity in implementation: The model must be carefully divided into stages alongside its inter-stage communication
 
 The differences between them are the following:
 
 - Data parallelism vs. tensor parallelism
-    - Memory usage = Tensor parallelism reduces memory usage across GPUs, while data parallelism has redundancy due to storing the model on all GPUs
-    - Communication = Data parallelism primarily uses gradient synchronization, while tensor parallelism uses frequent communication of intermediate results
+    - Memory usage: Tensor parallelism reduces memory usage across GPUs, while data parallelism has redundancy due to storing the model on all GPUs
+    - Communication: Data parallelism primarily uses gradient synchronization, while tensor parallelism uses frequent communication of intermediate results
 
 - Data parallelism vs. pipeline parallelism:
-    - Applicability = Data parallelism is simpler and used when the model fits into a single GPU, while pipeline parallelism is complex and used for large models that don't fit into a single GPU 
-    - Efficiency = Data parallelism has communication bottlenecks with large numbers of GPUs, and pipeline parallelism needs to handle pipeline bubbles and use complex scheduling
+    - Applicability: Data parallelism is simpler and used when the model fits into a single GPU, while pipeline parallelism is complex and used for large models that don't fit into a single GPU 
+    - Efficiency: Data parallelism has communication bottlenecks with large numbers of GPUs, and pipeline parallelism needs to handle pipeline bubbles and use complex scheduling
 
 - Tensor parallelism vs. pipeline parallelism:
-    - Layer granularity = Tensor parallelism handles individual model layers across GPUs, while pipeline parallelism uses coarser granularity to split the model into stages
-    - Communication overhead = Tensor parallelism has more intra-layer communication overhead, while pipeline parallelism uses communication mostly between stages
+    - Layer granularity: Tensor parallelism handles individual model layers across GPUs, while pipeline parallelism uses coarser granularity to split the model into stages
+    - Communication overhead: Tensor parallelism has more intra-layer communication overhead, while pipeline parallelism uses communication mostly between stages
 
 These 3 strategies are widely used to optimize LLM training: data parallelism handles large datasets and scales across GPUs, tensor parallelism splits large layers between GPUs, and pipeline parallelism divides the model into stages to distribute computational load and memory requirements. We will use similar strategies to speed up use-case workflow pipelines and use resources efficiently. 
 

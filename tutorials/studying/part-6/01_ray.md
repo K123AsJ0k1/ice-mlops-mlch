@@ -90,8 +90,8 @@ In the same code, ray_runtime contains a nested dictionary that includes at leas
 
 ```
 {
-    'working_dir': '/home/$USER/main_staging/ice-mlops-mlch/applications/pipelines/rag-coding-assistant/model_evalution_server',
-    'pip': '/home/$USER/main_staging/ice-mlops-mlch/applications/pipelines/rag-coding-assistant/model_evalution_server/requirements.txt',
+    'working_dir': '/home/$USER/ice-mlops-mlch/applications/pipelines/rag-coding-assistant/model_evalution_server',
+    'pip': '/home/$USER/ice-mlops-mlch/applications/pipelines/rag-coding-assistant/model_evalution_server/requirements.txt',
     'env_vars': {
         'TOKEN': 'test'
     }
