@@ -36,7 +36,7 @@ These enable us to use Open WebUI as a customized interface that lets the user i
 
 ## How to use Open WebUI?
 
-Assuming we have a running OSS MLOps platform setup in the [OSS chapter](./06_oss_mlops_platform.md), we can use the commands of the [Kustomize chapter](./08_kustomize.md) to setup the provided [language deployment](./kustomize/language/kustomization.yaml) created with |[(1)](#used-material-1), [(2)](#used-material-2), [(3)](#used-material-3), [(4)](#used-material-4), [(5)](#used-material-5)|. It will deploy the Ollama backend and the Open WebUI front end to provide an easy-to-use inference platform for open-source LLMs. We can deploy them by running the following steps:
+Assuming we have a running OSS MLOps platform setup in the [OSS chapter](./06_oss_mlops_platform.md), we can use the commands of the [Kustomize chapter](./08_kustomize.md) to setup the provided [language deployment](./kustomize/language/kustomization.yaml) created with |[(1)](#used-material-1), [(2)](#used-material-2), [(3)](#used-material-3), [(4)](#used-material-4), [(5)](#used-material-5), [(6)](#used-material-6)|. It will deploy the Ollama backend and the Open WebUI front end to provide an easy-to-use inference platform for open-source LLMs. We can deploy them by running the following steps:
 
 1. Deploy the stack with language folder
 
