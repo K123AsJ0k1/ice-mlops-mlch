@@ -12,6 +12,8 @@ difficulty: "Intermediate"
 
 2. <span id="used-material-2"></span> [How to create a Python package and publish it on GitHub](https://medium.com/@thomas.vidori/how-to-create-a-python-package-and-publish-it-on-github-eebc78b2a12d)
 
+3. <span id="used-material-3"></span> [Autoreload of modules in IPython](https://stackoverflow.com/questions/1907993/autoreload-of-modules-in-ipython)
+
 ## Why use Pip? 
 
 The Python Pip is the default package manager in Python tools for the following reasons:
@@ -151,5 +153,16 @@ icebreaker[all] @ git+https://github.com/K123AsJ0k1/ice-mlops-mlch.git@main#subd
 ```
 
 From these, we will mainly use 2 and 3 to use the package in various local, cloud, and HPC environments.
+
+## Updating functions in JupyterLab
+
+When you use a local package with the -e flag, you can make the notebook automatically update to the newest package code by running the following commands [(3)](#used-material-3):
+
+```
+%load_ext autoreload
+%autoreload 2
+```
+
+Be aware that if you are developing nested functions with the help of a notebook, there can be some wierd errors that make it difficult to debug what exactly happened. The solution is to restart the notebook kernel to rerun the functions.
 
 ---

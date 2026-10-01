@@ -1,6 +1,6 @@
 ---
 technologies: "Dictionaries"
-category: "Explanations and use of technology"
+category: "Explanation and use of technology"
 difficulty: "Easy"
 ---
 
