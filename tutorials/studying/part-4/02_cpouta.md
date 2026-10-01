@@ -219,7 +219,7 @@ sudo apt install nvidia-driver-535
 5. Reboot VM (Confirm that you are using the correct terminal)
 
 ```
-Sudo reboot
+sudo reboot
 ```
 
 6. Confirm drivers 

@@ -210,9 +210,9 @@ ssh Host lf-cpouta
 
 ![Figure 1](./images/oss-kubeflow-ui.png)
 
-- [Kubeflow MinIO](http://kubeflow.minio.oss:7001)  (user is minio and password minio123)
+- [Kubeflow MinIO](http://kubeflow.minio.oss:7001) (user is minio and password minio123)
 
-![Figure 2](./images/oss-kubeflow-minio-ui.png)
+![Figure 2](./images/oss-minio-ui.png)
 
 - [MLflow UI](http://mlflow.oss:7001)
 
@@ -220,7 +220,7 @@ ssh Host lf-cpouta
 
 - [MLflow MinIO](http://mlflow.minio.oss:7001) (user and password is minioadmin)
 
-![Figure 4](./images/oss-mlflow-minio-ui.png)
+![Figure 4](./images/oss-minio-ui.png)
 
 - [Prometheus](http://prometheus.oss:7001)
 
