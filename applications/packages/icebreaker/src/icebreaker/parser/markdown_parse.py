@@ -22,31 +22,37 @@ def markdown_extract_piece_references(content: str, used_material: dict) -> dict
         return {}
 
     # Matches any markdown link pointing to an anchor ID: [label](#anchor_id)
-    # Group 1 = anchor ID without the '#' prefix
     raw_anchors = re.findall(r'\[.*?\]\(#([^\)]+)\)', content)
 
     section_materials = {}
-    for anchor in set(raw_anchors):
+    # Iterate through raw_anchors in order of appearance
+    for anchor in raw_anchors:
         anchor_clean = anchor.strip()
 
-        # 1. Direct key match (e.g., "user-material-1" == "user-material-1")
+        # Helper logic to match anchor to key in used_material
+        matched_key = None
+
         if anchor_clean in used_material:
-            section_materials[anchor_clean] = used_material[anchor_clean]
-            continue
+            matched_key = anchor_clean
+        elif f"#{anchor_clean}" in used_material:
+            matched_key = f"#{anchor_clean}"
+        else:
+            # Fallback by numerical ID (e.g., 'user-material-1' -> key ending in '1')
+            num_match = re.search(r'\d+$', anchor_clean)
+            if num_match:
+                digits = num_match.group(0)
+                for key in used_material:
+                    if (
+                        key == digits
+                        or key.endswith(f"-{digits}")
+                        or key.endswith(f".{digits}")
+                    ):
+                        matched_key = key
+                        break
 
-        # 2. Key with '#' prefix match (if keys in used_material include '#')
-        if f"#{anchor_clean}" in used_material:
-            section_materials[f"#{anchor_clean}"] = used_material[f"#{anchor_clean}"]
-            continue
-
-        # 3. Fallback: match by numerical ID suffix (e.g. anchor 'user-material-1' matching key '1')
-        num_match = re.search(r'\d+$', anchor_clean)
-        if num_match:
-            digits = num_match.group(0)
-            for key, val in used_material.items():
-                if key == digits or key.endswith(f"-{digits}") or key.endswith(f".{digits}"):
-                    section_materials[key] = val
-                    break
+        # Add to output dictionary if found and not already added
+        if matched_key and matched_key not in section_materials:
+            section_materials[matched_key] = used_material[matched_key]
 
     return section_materials
 
