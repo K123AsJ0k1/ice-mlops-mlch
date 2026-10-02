@@ -5,27 +5,27 @@ def qdrant_create_collection(
 ) -> any:
     try:
         result = None
-        if 'vectors-config' in configuration and not 'sparse-vectors-config' in configuration:
+        if 'dense-vectors-config' in configuration and not 'sparse-vectors-config' in configuration:
             print('dense')
             result = qdrant_client.create_collection(
                 collection_name = collection_name,
-                vectors_config = configuration['vectors-config']
+                vectors_config = configuration['dense-vectors-config']
             )
-        if 'sparse-vectors-config' in configuration and not 'vectors-config' in configuration:
+        if 'sparse-vectors-config' in configuration and not 'dense-vectors-config' in configuration:
             print('sparse')
             result = qdrant_client.create_collection(
                 collection_name = collection_name,
                 sparse_vectors_config = configuration['sparse-vectors-config']
             )
-        if 'vectors-config' in configuration and 'sparse-vectors-config' in configuration:
+        if 'dense-vectors-config' in configuration and 'sparse-vectors-config' in configuration:
             print('hybrid')
             result = qdrant_client.create_collection(
                 collection_name = collection_name,
-                vectors_config = configuration['vectors-config'],
+                vectors_config = configuration['dense-vectors-config'],
                 sparse_vectors_config = configuration['sparse-vectors-config']
             )
         return result
-    except Exception as e:
+    except Exception as e: 
         print(e)
         return None
 
@@ -294,87 +294,3 @@ def qdrant_modifiable_query(
         print(f"Error HSRRF query: {e}")
         return None
     
-def qdrant_simple_hybrid_config():
-    try:
-        from qdrant_client.models import models
-    except ImportError as e:
-        raise ImportError("qdrant/use failed to import", e)
-
-    try:
-        hybrid_search_config = {
-            'vectors-config': {
-                "dense": models.VectorParams(size=384, distance=models.Distance.COSINE)
-            },
-            'sparse-vectors-config': {
-                "sparse": models.SparseVectorParams(
-                    index=models.SparseIndexParams(on_disk=False)
-                )
-            }
-        }
-        return hybrid_search_config
-    except Exception as e:
-        print(f"Error hybrid config: {e}")
-        return None
-    
-def qdrant_default_hybrid_config():
-    try:
-        from qdrant_client.models import models
-    except ImportError as e:
-        raise ImportError("qdrant/use failed to import", e)
-
-    try:
-        hybrid_search_config = {
-            'vectors-config': {
-                "dense": models.VectorParams(size=384, distance=models.Distance.COSINE)
-            },
-            'sparse-vectors-config': {
-                "sparse": models.SparseVectorParams(modifier=models.Modifier.IDF)
-            }
-        }
-        return hybrid_search_config
-    except Exception as e:
-        print(f"Error hybrid config: {e}")
-        return None
-    
-def qdrant_baai_hybrid_config():
-    try:
-        from qdrant_client.models import models
-    except ImportError as e:
-        raise ImportError("qdrant/use failed to import", e)
-
-    try:
-        hybrid_search_config = {
-            'vectors-config': {
-                "dense": models.VectorParams(size=1024, distance=models.Distance.COSINE)
-            },
-            'sparse-vectors-config': {
-                "sparse": models.SparseVectorParams(modifier=models.Modifier.IDF)
-            }
-        }
-        return hybrid_search_config
-    except Exception as e:
-        print(f"Error hybrid config: {e}")
-        return None
-
-def qdrant_hybrid_config():
-    try:
-        from qdrant_client.models import Distance, VectorParams, SparseVectorParams
-    except ImportError as e:
-        raise ImportError("qdrant/use failed to import", e)
-
-    try:
-        hybrid_search_config = {
-            "dense_vectors_config": {
-                "dense": VectorParams(
-                    size = 768,  
-                    distance = Distance.COSINE
-                )
-            },
-            "sparse_vectors_config": {
-                "sparse": SparseVectorParams()  
-            }
-        }
-        return hybrid_search_config
-    except Exception as e:
-        print(f"Error building hybrid config: {e}")
-        return None

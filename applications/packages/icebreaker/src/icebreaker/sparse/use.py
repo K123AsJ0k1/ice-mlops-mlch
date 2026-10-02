@@ -36,8 +36,16 @@ def sparse_create_gte_embeddings(
     text_inputs: list,
     batch_size: int 
 ): 
-    sparse_dicts = sparse_model.encode_document(
-        text_inputs,
-        batch_size = batch_size
+    import torch
+    
+    sparse_tensors: torch.Tensor = sparse_model.encode_document(
+        text_inputs, 
+        batch_size=batch_size, 
+        convert_to_tensor = True,
+        convert_to_sparse_tensor = False
     )
-    return sparse_dicts
+
+    if sparse_tensors.ndim == 1:
+        sparse_tensors = sparse_tensors.unsqueeze(0)
+
+    return sparse_tensors

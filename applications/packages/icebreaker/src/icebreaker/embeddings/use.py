@@ -7,6 +7,7 @@ def embeddings_batch_create_vectors(
 ):
     try: 
         import time as t
+        import torch
         from qdrant_client import models
         from ..dense.use import dense_create_vectors
         from ..sparse.use import sparse_create_gte_embeddings
@@ -33,19 +34,27 @@ def embeddings_batch_create_vectors(
     }
     if not sparse_model is None:
         sparse_batch_start_time = t.time()
-        sparse_dicts = sparse_create_gte_embeddings(
+        sparse_tensors = sparse_create_gte_embeddings(
             sparse_model = sparse_model,
             text_inputs = text_input_batch,
             batch_size = batch_size
         )
         
-        dense_vectors['data'] = [
-            models.SparseVector(
-                indices = list(sparse_dict.keys()),
-                values = list(sparse_dict.values())
+        qdrant_vectors = []
+        # Loop over each document's 1D sparse tensor row
+        for doc_tensor in sparse_tensors:
+            # Get non-zero indices (token IDs) and their corresponding non-zero weights
+            non_zero_indices = torch.nonzero(doc_tensor).squeeze(-1)
+            non_zero_values = doc_tensor[non_zero_indices]
+            
+            qdrant_vectors.append(
+                models.SparseVector(
+                    indices = non_zero_indices.tolist(),
+                    values = non_zero_values.tolist()
+                )
             )
-            for sparse_dict in sparse_dicts 
-        ]
+        sparse_vectors['data'] = qdrant_vectors
+            
         sparse_batch_end_time = t.time()
         sparse_vectors['time'] = sparse_batch_end_time - sparse_batch_start_time
 

@@ -13,7 +13,8 @@ def rag_setup_database(
     try: 
         import time as t
         from ..objects.use import objects_get_data
-        from ..qdrant.use import qdrant_create_collection, qdrant_upload_points, qdrant_hybrid_config
+        from ..qdrant.use import qdrant_create_collection, qdrant_upload_points
+        from ..qdrant.utility import qdrant_hybrid_config
         from ..embeddings.use import embeddings_create_hybrid_points
     except ImportError as e:
         raise ImportError("rag/use failed to import", e)
@@ -24,7 +25,7 @@ def rag_setup_database(
     status = qdrant_create_collection(
         qdrant_client = qdrant_client, 
         collection_name = collection_name,
-        configuration =  qdrant_hybrid_config()
+        configuration = qdrant_hybrid_config()
     )
 
     dense_times = {}
