@@ -355,3 +355,26 @@ def qdrant_baai_hybrid_config():
     except Exception as e:
         print(f"Error hybrid config: {e}")
         return None
+
+def qdrant_hybrid_config():
+    try:
+        from qdrant_client.models import Distance, VectorParams, SparseVectorParams
+    except ImportError as e:
+        raise ImportError("qdrant/use failed to import", e)
+
+    try:
+        hybrid_search_config = {
+            "dense_vectors_config": {
+                "dense": VectorParams(
+                    size = 768,  
+                    distance = Distance.COSINE
+                )
+            },
+            "sparse_vectors_config": {
+                "sparse": SparseVectorParams()  
+            }
+        }
+        return hybrid_search_config
+    except Exception as e:
+        print(f"Error building hybrid config: {e}")
+        return None

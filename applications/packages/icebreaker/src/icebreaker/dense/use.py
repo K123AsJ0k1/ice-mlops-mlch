@@ -1,5 +1,5 @@
 
-def dense_create_baai_vectors(
+def dense_create_vectors(
     dense_model: any,
     text_inputs: list,
     batch_size: int

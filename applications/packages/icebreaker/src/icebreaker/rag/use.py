@@ -7,12 +7,13 @@ def rag_setup_database(
     dataset_paths: list,
     text_column: str,
     dense_model: any,
-    sparse_model: any
+    sparse_model: any,
+    batch_size: int
 ) -> any:  
     try: 
         import time as t
         from ..objects.use import objects_get_data
-        from ..qdrant.use import qdrant_create_collection, qdrant_upload_points, qdrant_baai_hybrid_config
+        from ..qdrant.use import qdrant_create_collection, qdrant_upload_points, qdrant_hybrid_config
         from ..embeddings.use import embeddings_create_hybrid_points
     except ImportError as e:
         raise ImportError("rag/use failed to import", e)
@@ -23,9 +24,12 @@ def rag_setup_database(
     status = qdrant_create_collection(
         qdrant_client = qdrant_client, 
         collection_name = collection_name,
-        configuration = qdrant_baai_hybrid_config() 
+        configuration =  qdrant_hybrid_config()
     )
 
+    dense_times = {}
+    sparse_times = {}
+    total_times = {}
     for dataset_path in dataset_paths:
         data_object = objects_get_data(
             swift_client = swift_client,
@@ -50,26 +54,38 @@ def rag_setup_database(
         dataset_name = dataset_path.split('/')[-1].split('.')[0]
         df_records = data_object[0].to_dict('records')
 
-        hybrid_points = embeddings_create_hybrid_points(
+        total_batch_start_time = t.time()
+        results = embeddings_create_hybrid_points(
             dataset_name = dataset_name,
             dataset_records = df_records,
             text_column = text_column,
             dense_model = dense_model,
-            sparse_model = sparse_model
+            sparse_model = sparse_model,
+            batch_size = batch_size
         )
+        total_batch_end_time = t.time()
+
         # Maybe check if the points already exist
         status = qdrant_upload_points(
             qdrant_client = qdrant_client, 
             collection_name = collection_name,
-            points = hybrid_points
+            points = results['points']
         ) 
-    
+
+        dense_times[dataset_name] = results['dense-time']
+        sparse_times[dataset_name] = results['sparse-time']
+        total_times[dataset_name] = total_batch_end_time - total_batch_start_time
+
     end_time = t.time()
 
-    total_time = round(end_time-start_time,5)
-    print('Spent seconds', total_time)
+    setup_time = round(end_time-start_time,5)
 
-    return total_time
+    return {
+        'dense-times': dense_times,
+        'sparse-times': sparse_times,
+        'total-times': total_times,
+        'setup-time': setup_time
+    }
   
 def rag_evalute_database(
     swift_client: any,

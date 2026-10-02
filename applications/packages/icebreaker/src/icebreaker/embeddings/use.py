@@ -6,36 +6,53 @@ def embeddings_batch_create_vectors(
     batch_size: int
 ):
     try: 
+        import time as t
         from qdrant_client import models
-        from ..dense.use import dense_create_baai_vectors
-        from ..sparse.use import sparse_create_spalde_embeddings
+        from ..dense.use import dense_create_vectors
+        from ..sparse.use import sparse_create_gte_embeddings
     except ImportError as e:
         raise ImportError("embeddings/use failed to import", e)
     
-    dense_vectors = [] 
+    dense_vectors = {
+        'data': None,
+        'time': 0
+    } 
     if not dense_model is None:
-        dense_vectors = dense_create_baai_vectors(
+        dense_batch_start_time = t.time()
+        dense_vectors['data'] = dense_create_vectors(
             dense_model = dense_model, 
             text_inputs = text_input_batch,
             batch_size = batch_size
         )
-    sparse_vectors = []
+        dense_batch_end_time = t.time()
+        dense_vectors['time'] = dense_batch_end_time - dense_batch_start_time
+
+    sparse_vectors = {
+        'data': None,
+        'time': 0
+    }
     if not sparse_model is None:
-        sparse_embeddings_iter = sparse_create_spalde_embeddings(
+        sparse_batch_start_time = t.time()
+        sparse_dicts = sparse_create_gte_embeddings(
             sparse_model = sparse_model,
             text_inputs = text_input_batch,
             batch_size = batch_size
         )
         
-        sparse_vectors = [
+        dense_vectors['data'] = [
             models.SparseVector(
-                indices = emb.indices.tolist(),
-                values = emb.values.tolist()
+                indices = list(sparse_dict.keys()),
+                values = list(sparse_dict.values())
             )
-            for emb in sparse_embeddings_iter
+            for sparse_dict in sparse_dicts 
         ]
+        sparse_batch_end_time = t.time()
+        sparse_vectors['time'] = sparse_batch_end_time - sparse_batch_start_time
 
-    return dense_vectors, sparse_vectors
+    return {
+        'dense': dense_vectors,
+        'sparse': sparse_vectors
+    }
 
 def embeddings_create_hybrid_points(
     dataset_name: str,
@@ -43,6 +60,7 @@ def embeddings_create_hybrid_points(
     text_column: str,
     dense_model: any,
     sparse_model: any,
+    batch_size: int
 ) -> list:
     try:  
         from ..qdrant.use import qdrant_create_point
@@ -52,16 +70,17 @@ def embeddings_create_hybrid_points(
     
     text_data_list = [row[text_column] for row in dataset_records]
 
-    dense_vectors, sparse_vectors = embeddings_batch_create_vectors(
+    results = embeddings_batch_create_vectors(
         text_input_batch = text_data_list,
         dense_model = dense_model,
-        sparse_model = sparse_model
+        sparse_model = sparse_model,
+        batch_size = batch_size
     ) 
 
     points = []
     for i, row in enumerate(dataset_records):
-        d_vec = dense_vectors[i] if dense_vectors is not None else None
-        s_vec = sparse_vectors[i] if sparse_vectors is not None else None
+        d_vec = results['dense']['data'][i] if results['dense']['data'] is not None else None
+        s_vec = results['sparse']['data'][i] if results['sparse']['data'] is not None else None
 
         point_uuid = embeddings_generate_uuid(
             id = dataset_name,
@@ -74,9 +93,14 @@ def embeddings_create_hybrid_points(
             point_sparse_vector = {"sparse": s_vec} if s_vec else None,
             point_payload = row
         )
+
         points.append(created_point)
 
-    return points
+    return {
+        'points': points,
+        'dense-time': results['dense']['time'],
+        'sparse-time': results['sparse']['time']
+    }
     
 def embeddings_check_collection(
     vector_client: any,

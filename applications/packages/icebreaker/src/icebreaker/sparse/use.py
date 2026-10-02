@@ -30,3 +30,14 @@ def sparse_create_spalde_embeddings(
         batch_size = batch_size
     )
     return sparse_embeddings
+
+def sparse_create_gte_embeddings(
+    sparse_model: any,
+    text_inputs: list,
+    batch_size: int 
+): 
+    sparse_dicts = sparse_model.encode_document(
+        text_inputs,
+        batch_size = batch_size
+    )
+    return sparse_dicts
