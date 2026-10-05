@@ -31,7 +31,7 @@ def sparse_create_spalde_embeddings(
     )
     return sparse_embeddings
 
-def sparse_create_gte_embeddings(
+def sparse_create_neural_sparse_embeddings(
     sparse_model: any,
     text_inputs: list,
     batch_size: int 

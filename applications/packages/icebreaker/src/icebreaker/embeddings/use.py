@@ -10,31 +10,30 @@ def embeddings_batch_create_vectors(
         import torch
         from qdrant_client import models
         from ..dense.use import dense_create_vectors
-        from ..sparse.use import sparse_create_gte_embeddings
+        from ..sparse.use import sparse_create_neural_sparse_embeddings
     except ImportError as e:
         raise ImportError("embeddings/use failed to import", e)
     
     dense_vectors = {
         'data': None,
-        'time': 0
+        'mean-time-ms': 0
     } 
     if not dense_model is None:
-        dense_batch_start_time = t.time()
+        dense_batch_start_time = t.perf_counter_ns()
         dense_vectors['data'] = dense_create_vectors(
             dense_model = dense_model, 
             text_inputs = text_input_batch,
             batch_size = batch_size
         )
-        dense_batch_end_time = t.time()
-        dense_vectors['time'] = dense_batch_end_time - dense_batch_start_time
+        dense_vectors['mean-time-ms'] = ((t.perf_counter_ns() - dense_batch_start_time) / 1e6) / len(text_input_batch)
 
     sparse_vectors = {
         'data': None,
-        'time': 0
+        'mean-time-ms': 0
     }
     if not sparse_model is None:
-        sparse_batch_start_time = t.time()
-        sparse_tensors = sparse_create_gte_embeddings(
+        sparse_batch_start_time = t.perf_counter_ns()
+        sparse_tensors = sparse_create_neural_sparse_embeddings(
             sparse_model = sparse_model,
             text_inputs = text_input_batch,
             batch_size = batch_size
@@ -54,9 +53,7 @@ def embeddings_batch_create_vectors(
                 )
             )
         sparse_vectors['data'] = qdrant_vectors
-            
-        sparse_batch_end_time = t.time()
-        sparse_vectors['time'] = sparse_batch_end_time - sparse_batch_start_time
+        sparse_vectors['mean-time-ms'] = ((t.perf_counter_ns() - sparse_batch_start_time) / 1e6) / len(text_input_batch)
 
     return {
         'dense': dense_vectors,
@@ -78,7 +75,7 @@ def embeddings_create_hybrid_points(
         raise ImportError("embeddings/use failed to import", e)
     
     text_data_list = [row[text_column] for row in dataset_records]
-
+    
     results = embeddings_batch_create_vectors(
         text_input_batch = text_data_list,
         dense_model = dense_model,
@@ -104,11 +101,11 @@ def embeddings_create_hybrid_points(
         )
 
         points.append(created_point)
-
+    
     return {
         'points': points,
-        'dense-time': results['dense']['time'],
-        'sparse-time': results['sparse']['time']
+        'dense-mean-time-ms': results['dense']['mean-time-ms'],
+        'sparse-mean-time-ms': results['sparse']['mean-time-ms']
     }
     
 def embeddings_check_collection(
