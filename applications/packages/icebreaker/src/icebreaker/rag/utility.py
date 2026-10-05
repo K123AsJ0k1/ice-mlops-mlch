@@ -266,18 +266,18 @@ def rag_format_data(
     formatted_metrics = {}
     for case, case_data in retrieval_outputs.items():
         if case == 'tables':
-            dataset_tables = {}
-            dataset_metrics = {}
             for dataset_name, dataset in case_data.items():
+                dataset_tables = {}
+                dataset_metrics = {}
+                query_idx_list = []
+                query_relevance_list = []
+                query_weights_list = []
+                query_score_list = []
+                query_part_list = []
+                query_document_list = []
+                query_topic_list = []
                 for key, value in dataset.items():
                     if key == 'results':
-                        query_idx_list = []
-                        query_relevance_list = []
-                        query_weights_list = []
-                        query_score_list = []
-                        query_part_list = []
-                        query_document_list = []
-                        query_topic_list = []
                         for i, queries in enumerate(value, 1):
                             idx_list = []
                             relevance_list = []
@@ -317,11 +317,18 @@ def rag_format_data(
                                 dataset_tables[name].append(value)
                     if 'time' in key:
                         dataset_metrics[key] = value
+
                 created_dataframe = pd.DataFrame(dataset_tables)
                 formatted_tables[dataset_name] = created_dataframe
-                metric_dict = created_dataframe[metric_columns].agg(
-                    ['mean', 'std', 'median', p95, p99, 'min', 'max']
-                ).to_dict()
+                metric_dict = created_dataframe[metric_columns].agg([
+                    'mean', 
+                    'std', 
+                    'median', 
+                    p95, 
+                    p99, 
+                    'min', 
+                    'max'
+                ]).to_dict()
                 metric_dict = flatten_nested_dict(
                     target_dict = metric_dict,
                     parent_key = '',

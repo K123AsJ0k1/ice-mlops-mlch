@@ -31,9 +31,11 @@ def mlflow_add_logs(
     run_id: str, 
     parameters: dict,
     metrics: dict,
+    metrics_prefix: str,
     metrics_step: int,
     table: any,
-    table_path: str
+    table_folder: str,
+    table_name: str
 ):
     if 0 < len(parameters):
         for key, val in parameters.items():
@@ -45,6 +47,7 @@ def mlflow_add_logs(
     if 0 < len(metrics):
         for key, val in metrics.items():
             formatted_key = key.replace('@', '-')
+            formatted_key = f'{metrics_prefix}/{formatted_key}'
             mlflow_client.log_metric(
                 run_id = run_id, 
                 key = formatted_key, 
@@ -54,6 +57,7 @@ def mlflow_add_logs(
     if 0 < len(table):
         # Requires boto3 and botocore
         # Also needs AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY and MLFLOW_S3_ENDPOINT_URL env
+        table_path = f'datasets/{table_folder}/{table_name}.json'
         mlflow_client.log_table(
             run_id = run_id, 
             data = table,
