@@ -109,17 +109,25 @@ def rag_evalute_retrieval(
 ):
     try:
         from ..objects.use import objects_get_data
-        from ..rag.utility import rag_data_metrics
+        from ..rag.utility import rag_retrieval_output, rag_format_data
     except ImportError as e:
         raise ImportError("embeddings/use failed to import", e)
 
-    #database_metrics = {}
-    collective_metrics = {}
-    collective_metrics['query-type'] = query_type
+    retrieval_outputs = {
+        'parameters': {
+            'type': query_type,
+            'query-limit': query_limit,
+            'fusion-limit': fusion_limit,
+            'relevance-threshold': relevance_threshold,
+            'batch-size': batch_size
+        },
+        'tables': {}
+    }
+    
     if query_type == 'dense' or 'hybrid' in query_type:
-        collective_metrics['dense-model'] = dense_model_name
+        retrieval_outputs['parameters']['dense-model'] = dense_model_name
     if query_type == 'sparse'  or 'hybrid' in query_type:
-        collective_metrics['sparse-model'] = sparse_model_name
+        retrieval_outputs['parameters']['sparse-model'] = sparse_model_name
     
     for dataset_path in dataset_paths:
         data_object = objects_get_data(
@@ -144,7 +152,7 @@ def rag_evalute_retrieval(
         dataset_name = dataset_path.split('/')[-1].split('.')[0]
         target_df = data_object[0]
          
-        gathered_dataset_metrics = rag_data_metrics(
+        dataset_output = rag_retrieval_output(
             dataset_name = dataset_name, 
             target_df = target_df,
             query_column = query_column,
@@ -162,25 +170,22 @@ def rag_evalute_retrieval(
             batch_size = batch_size,
             debug_prints = debug_prints
         ) 
+        retrieval_outputs['tables'][dataset_name] = dataset_output
 
-        #database_metrics[dataset_name] = dataframe_stats
-        dataset_metrics = {}
-        for key, values in gathered_dataset_metrics.items():
-            if key not in dataset_metrics:
-                dataset_metrics[key] = []
-            dataset_metrics[key].extend(values)
-        collective_metrics[dataset_name] = dataset_metrics
-    
-    #database_metrics['summary'] = rag_get_statistics(
-    #    gathered_metrics = global_collective_metrics,
-    #    percentile_filter = [
-    #        'p@1',
-    #        'r@3',
-    #        'rr',
-    #        'ap',
-    #        'ndcg@3',
-    #        'ndcg@5'
-    #    ]
-    #)
+    formatted_rag_data = rag_format_data(
+        retrieval_outputs = retrieval_outputs,
+        metric_columns = [
+            'p@1',
+            'r@3',
+            'rr',
+            'ap',
+            'ndcg@3',
+            'ndcg@5',
+            'embedding-latency-ms',
+            'search-latency-ms',
+            'total-latency-ms',
+            'total-characters'
+        ]
+    )
 
-    return collective_metrics
+    return formatted_rag_data

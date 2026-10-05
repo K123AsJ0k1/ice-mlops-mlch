@@ -26,21 +26,39 @@ def mlflow_get_run(
 ) -> any:
     return mlflow_client.get_run(run_id)
 
-def mlflow_log_metrics(
+def mlflow_add_logs(
     mlflow_client: any,
     run_id: str, 
-    metrics: any, 
-    step: int
-) -> None:
-    for key, val in metrics.items():
-        # Doesn't filter for some reason
-        if not isinstance(val, list) or not isinstance(val, dict):
+    parameters: dict,
+    metrics: dict,
+    metrics_step: int,
+    table: any,
+    table_path: str
+):
+    if 0 < len(parameters):
+        for key, val in parameters.items():
+            mlflow_client.log_param(
+                run_id = run_id,
+                key = key,
+                value = val
+            )
+    if 0 < len(metrics):
+        for key, val in metrics.items():
+            formatted_key = key.replace('@', '-')
             mlflow_client.log_metric(
                 run_id = run_id, 
-                key = key, 
+                key = formatted_key, 
                 value = val, 
-                step = step
+                step = metrics_step
             )
+    if 0 < len(table):
+        # Requires boto3 and botocore
+        # Also needs AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY and MLFLOW_S3_ENDPOINT_URL env
+        mlflow_client.log_table(
+            run_id = run_id, 
+            data = table,
+            artifact_file = table_path
+        )
 
 def mlflow_log_artifact(
     mlflow_client: any,

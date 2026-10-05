@@ -149,10 +149,10 @@ def rag_batch_query(
                 true_relevant_weights = q_relevant_weights,
                 relevance_threshold = relevance_threshold
             ) 
-            resulted_metrics['relevant-weights'] = q_relevant_weights
+            #resulted_metrics['relevant-weights'] = q_relevant_weights
 
-        resulted_metrics['dense-model'] = dense_model_name
-        resulted_metrics['sparse-model'] = sparse_model_name
+        #resulted_metrics['dense-model'] = dense_model_name
+        #resulted_metrics['sparse-model'] = sparse_model_name
         resulted_metrics['embedding-latency-ms'] = total_embed_total_ms
         resulted_metrics['search-latency-ms'] = search_latency_ms
         resulted_metrics['total-latency-ms'] = total_embed_total_ms + search_latency_ms
@@ -170,35 +170,7 @@ def rag_batch_query(
         'sparse-mean-time-ms': result['sparse']['mean-time-ms'],
     }
 
-def rag_get_statistics(
-    gathered_metrics: dict,
-    percentile_filter: list
-):
-    try:
-        import statistics
-        import numpy as np
-    except ImportError as e:
-        raise ImportError("embeddings/use failed to import", e)
-    
-    summary_statistics = {}
-    for key, value in gathered_metrics.items():
-        key_mean_column = f'{key}-mean'
-        key_median_column = f'{key}-median'
-        key_mean = statistics.mean(value)
-        key_median = statistics.median(value)
-        summary_statistics[key_mean_column] = float(key_mean)
-        summary_statistics[key_median_column] = float(key_median)
-
-        if not key in percentile_filter:
-            key_p95_column = f'{key}-p95'
-            key_p99_column = f'{key}-p99'
-            key_p95 = np.percentile(value, 95)
-            key_p99 = np.percentile(value, 99)
-            summary_statistics[key_p95_column] = float(key_p95)
-            summary_statistics[key_p99_column] = float(key_p99)
-    return summary_statistics
-
-def rag_data_metrics(
+def rag_retrieval_output(
     dataset_name: str,
     target_df: any,
     query_column: str,
@@ -236,13 +208,12 @@ def rag_data_metrics(
     )
     
     print('')
-    gathered_metrics = {}
-    for j, result, in enumerate(batch_outputs['results']):
-        query_text = df_text_queries[j]
-        true_relevant_weight = df_relevant_weights[j]
-        query_metrics = batch_outputs['metrics'][j]
-        
-        if debug_prints:
+    if debug_prints:
+        for j, result, in enumerate(batch_outputs['results']):
+            query_text = df_text_queries[j]
+            true_relevant_weight = df_relevant_weights[j]
+            query_metrics = batch_outputs['metrics'][j]
+            
             print(f'Dataset|{dataset_name}')
             print(f'Collection|{collection_name}')
             print(f'Case|{j+1}')
@@ -271,9 +242,96 @@ def rag_data_metrics(
                 print(f"{i}|{p.get('idx')}|{p.get('relevance')}|{point.score}|{p.get('part')}|{p.get('document')}|{p.get('chapter')}|{p.get('index')}|{p.get('topic')}")
             print('') 
 
-        for key, value in query_metrics.items():
-            if key not in gathered_metrics:
-                gathered_metrics[key] = []
-            gathered_metrics[key].append(value)
+    return batch_outputs
+
+def rag_format_data(
+    retrieval_outputs: any,
+    metric_columns: list
+) -> any:
+    try:
+        import numpy as np
+        import pandas as pd
+        from ..misc.dict import flatten_nested_dict
+    except ImportError as e:
+        raise ImportError("evaluation/use failed to import", e)
     
-    return gathered_metrics
+    def p95(x): 
+        clean_x = x.dropna()
+        return np.percentile(clean_x, 95) if len(clean_x) > 0 else np.nan
+    def p99(x): 
+        clean_x = x.dropna()
+        return np.percentile(clean_x, 99) if len(clean_x) > 0 else np.nan
+
+    formatted_tables = {}
+    formatted_metrics = {}
+    for case, case_data in retrieval_outputs.items():
+        if case == 'tables':
+            dataset_tables = {}
+            dataset_metrics = {}
+            for dataset_name, dataset in case_data.items():
+                for key, value in dataset.items():
+                    if key == 'results':
+                        query_idx_list = []
+                        query_relevance_list = []
+                        query_weights_list = []
+                        query_score_list = []
+                        query_part_list = []
+                        query_document_list = []
+                        query_topic_list = []
+                        for i, queries in enumerate(value, 1):
+                            idx_list = []
+                            relevance_list = []
+                            weights_list = []
+                            score_list = []
+                            part_list = []
+                            document_list = []
+                            topic_list = []
+                            for j, point in enumerate(queries, 1):
+                                p = point.payload
+                                idx_list.append(p.get('idx'))
+                                relevance_list.append(p.get('relevance'))
+                                weights_list.append(p.get('ranking-weights'))
+                                score_list.append(point.score)
+                                part_list.append(p.get('part'))
+                                document_list.append(p.get('document'))
+                                topic_list.append(p.get('topic'))
+                            query_idx_list.append(idx_list)
+                            query_relevance_list.append(relevance_list)
+                            query_weights_list.append(weights_list)
+                            query_score_list.append(score_list)
+                            query_part_list.append(part_list)
+                            query_document_list.append(document_list)
+                            query_topic_list.append(topic_list)
+                        dataset_tables['idx'] = query_idx_list
+                        dataset_tables['relevance'] = query_relevance_list
+                        dataset_tables['weights'] = query_weights_list
+                        dataset_tables['score'] = query_score_list
+                        dataset_tables['part'] = query_part_list
+                        dataset_tables['document'] = query_document_list
+                        dataset_tables['topic'] = query_topic_list
+                    if key == 'metrics':
+                        for i, metrics in enumerate(value, 1):
+                            for name, value in metrics.items():
+                                if not name in dataset_tables:
+                                    dataset_tables[name] = []
+                                dataset_tables[name].append(value)
+                    if 'time' in key:
+                        dataset_metrics[key] = value
+                created_dataframe = pd.DataFrame(dataset_tables)
+                formatted_tables[dataset_name] = created_dataframe
+                metric_dict = created_dataframe[metric_columns].agg(
+                    ['mean', 'std', 'median', p95, p99, 'min', 'max']
+                ).to_dict()
+                metric_dict = flatten_nested_dict(
+                    target_dict = metric_dict,
+                    parent_key = '',
+                    seperator = '-'
+                )
+                formatted_metrics[dataset_name] = dataset_metrics | metric_dict
+                
+    return {
+        'parameters': retrieval_outputs['parameters'],
+        'tables': formatted_tables,
+        'metrics': formatted_metrics
+    }
+                            
