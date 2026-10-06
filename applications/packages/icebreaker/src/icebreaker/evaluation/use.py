@@ -335,7 +335,8 @@ def evalute_add_datasets(
     experiment_name: str,
     dataset_type: str,
     dataset_paths: list,
-    dataset_tags: dict
+    dataset_tags: dict,
+    dataset_user: str
 ):
     try:
         from ..objects.use import objects_get_data
@@ -385,6 +386,10 @@ def evalute_add_datasets(
                         },
                         'expectations': {
                             'ground_truth': row['content'],
+                            'part': row['part'],
+                            'chapter': row['chapter'],
+                            'idx': row['idx'],
+                            'characters': row['characters'],
                             'relevance': row['relevance'],
                             'weights': row['ranking-weights']
                         },
@@ -393,10 +398,12 @@ def evalute_add_datasets(
                         },
                         'tags': {
                             'name': data_name,
-                            'part': data_part
+                            'part': data_part,
+                            'mlflow.user': dataset_user
                         }
                     })
         used_dataset_name = f'{data_name}_{dataset_type}_{data_part}' 
+        dataset_tags['mlflow.user'] = dataset_user
         dataset_id = mlflow_create_dataset(
             mlflow_client = mlflow_client,
             dataset_name = used_dataset_name,

@@ -86,11 +86,58 @@ def evalution_rag_pipe(
 
     return formatted_rag_data
 
-def evalution_generator_pipe():
-
+def evalution_generator_pipe(
+    mlflow_client: any,
+    experiment_name: str,
+    trace_name: str,
+    trace_attributes: dict,
+    trace_tags: dict,
+    span_names: list
+):
+    try:
+        import mlflow
+        from ..mlflow.use import mlflow_get_or_create_experiment, mlflow_get_prompt, mlflow_create_trace, mlflow_start_span
+    except ImportError as e:
+        raise ImportError("evaluation/pipe failed to import", e)
+    
     experiment_id = mlflow_get_or_create_experiment(
         mlflow_client = mlflow_client,
-        name = 'mlch-code-assistant-rag-pipeline'
+        name = experiment_name
     ) 
 
     mlflow.set_experiment(experiment_id = experiment_id)
+
+    # each trace has input and output
+
+    request_trace = mlflow_create_trace(
+        mlflow_client = mlflow_client,  
+        trace_name = trace_name,
+        experiment_id = experiment_id,
+        trace_attributes = trace_attributes,
+        trace_tags = trace_tags
+    )
+
+    model_request = mlflow_get_prompt(
+        mlflow_client = mlflow_client,
+        prompt_name = 'assistant-base-variant-qwen-3-5',
+        prompt_version = 1,
+        prompt_replacements = {
+            'query': 'test'
+        }
+    )
+
+    
+
+    #child_span = mlflow_start_span(
+    #    mlflow_client = mlflow_client, 
+    #    span_name = 'model-span',
+    #    trace_id = test_trace.trace_id,
+    #    span_id = test_trace.span_id
+    #)
+
+    #from icebreaker.mlflow.utility import mlflow_token_usage, mlflow_llm_cost
+    #child_span.set_inputs({'messages': prompt_details['prompt']})
+    #child_span.set_attributes({f'request.{k}': v for k, v in prompt_details['config'].items()})
+    #child_span.set_attributes(mlflow_token_usage(input_tokens = 500, output_tokens = 500))
+    #child_span.set_attributes(mlflow_llm_cost(model_provider = 'llama.cpp', model_name = 'unsloth/Qwen3.5-9B-GGUF', input_cost = 0.00035, output_cost = 0.00035))
+    #child_span.set_outputs({'output': 'test'})

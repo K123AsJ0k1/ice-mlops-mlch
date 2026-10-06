@@ -1,136 +1,4 @@
-
-def generator_create_requests(
-    swift_client: any,
-    storage_parameters: any,
-    dataset_paths: list,
-    ranking_parameters: any,
-    target_model: str,
-    prompt_parameters: any,
-    data_ratio: any,
-    join_prompts: bool
-):
-    try:
-        from ..objects.use import objects_get_data
-        import re
-        from ..search.utility import search_process_dataset
-    except ImportError as e:
-        raise ImportError("generator/ failed to import", e)
-
-    print('Creating inference requests')
-    inference_requests = []
-    request_index = 0
-    question_type_idx = {}
-    valid_data_rows = {}
-    for dataset_path in dataset_paths:
-        data_object = objects_get_data(
-            swift_client = swift_client,
-            storage_parameters = {
-                'bucket-target': storage_parameters['bucket-target'],
-                'bucket-prefix': storage_parameters['bucket-prefix'],
-                'bucket-user': storage_parameters['bucket-user'],
-                'object-name': 'root',
-                'object-serialization': storage_parameters['object-serialization'],
-                'path-replacers': {
-                    'name': dataset_path
-                },
-                'path-names': [],
-                'debug-prints': True,
-                'lock-parameters': {},
-                'lock-location': None,
-                'overwrite': True
-            },
-            dict_format = False
-        )    
-        dataset_name = dataset_path.split('/')[-1].split('.')[0]
-        valid_data_rows[dataset_name] = 0
-
-        target_df = data_object[0]
-
-        _, relevant_weights, _ = search_process_dataset(
-            target_df = target_df,
-            group_columns = ranking_parameters['group-columns'],
-            value_column = ranking_parameters['value-column'],
-            relevance_column = ranking_parameters['relevance-column'],
-            query_column = ranking_parameters['query-column']
-        )
-
-        for row_idx, (_, row) in enumerate(target_df.iterrows()):
-            if row['chapter'] == 0:
-                continue
-            valid_data_rows[dataset_name] += 1  
-            
-            replacer_dict = {
-                'CONTENT': row['content']
-            }
-            for data_type, wanted_amount in data_ratio.items():
-                if not data_type in question_type_idx:
-                    question_type_idx[data_type] = 0
-                
-                system_prompt = prompt_parameters[data_type]['system-prompt']
-                user_template = prompt_parameters[data_type]['user-template']
-
-                temperature = prompt_parameters[data_type]['temperature'][target_model]
-                top_p = prompt_parameters[data_type]['top-p'][target_model]
-                max_tokens = prompt_parameters[data_type]['max-tokens'][target_model]
-
-                pattern = r'\[([A-Z_1-9]+)\]'
-                user_prompt = re.sub(
-                    pattern, 
-                    lambda m: str(replacer_dict.get(m.group(1), m.group(0))), 
-                    user_template
-                )
-                sent_messages = []
-                system_prompt_length = 0
-                user_prompt_length = 0
-                if join_prompts:
-                    joined_prompt = f'{system_prompt}\n{user_prompt}'
-                    user_prompt_length = len(joined_prompt)
-                    sent_messages.append({
-                        "role": "user", 
-                        "content": joined_prompt
-                    })
-                else:
-                    system_prompt_length = len(system_prompt)
-                    sent_messages.append({
-                        "role": "system", 
-                        "content": system_prompt
-                    })
-                    user_prompt_length = len(user_prompt)
-                    sent_messages.append({
-                        "role": "user", 
-                        "content": user_prompt
-                    })
-                
-                for i in range(0, wanted_amount):
-                    inference_requests.append({
-                        'dataset-name': dataset_name,
-                        'chunk-part': row['part'],
-                        'chunk-chapter': row['chapter'],
-                        'chunk-idx': row['idx'],
-                        'chunk-characters': row['characters'],
-                        'chunk-relevance': row['relevance'],
-                        'chunk-topic': row['topic'],
-                        'chunk-relevant-weights': relevant_weights[row_idx],
-                        'request-index': request_index,
-                        'question-type': data_type,
-                        'question-index': question_type_idx[data_type],
-                        'messages': sent_messages,
-                        'system-prompt-length': system_prompt_length,
-                        'user-prompt-length': user_prompt_length,
-                        'target-model': target_model,
-                        'temperature': temperature,
-                        'top-p': top_p,
-                        'max-tokens': max_tokens
-                    })
-                    question_type_idx[data_type] += 1
-            request_index += 1
-    print('')
-    print('Valid cases per dataset')
-    for key, value in valid_data_rows.items():
-        print(f'{key}|{value}')
-    print(f'Amount of requests: {len(inference_requests)}')
-    return inference_requests
-
+'''
 def generator_create_answers(
     dataset_inference_requests: list,
     request_keys: dict,
@@ -281,6 +149,7 @@ def generator_create_answers(
     run_data['stats']['process-total-time'] = process_total_time
     
     return run_data
+'''
 
 def generator_print_answers(
     run_data: dict
@@ -356,6 +225,7 @@ def generator_produce_answers(
     inference_parameters: any,
     debug_prints: bool
 ):
+    '''
     generator_requests = generator_create_requests(
         swift_client = swift_client,
         storage_parameters = storage_parameters,
@@ -366,6 +236,7 @@ def generator_produce_answers(
         data_ratio = data_ratio,
         join_prompts = join_prompts
     )
+    '''
 
     if 0 < request_end:
         generator_requests = generator_requests[request_start:request_end]

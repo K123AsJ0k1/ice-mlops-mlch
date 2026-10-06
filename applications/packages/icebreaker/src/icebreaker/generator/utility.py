@@ -141,7 +141,7 @@ def generator_extract_output(
                     output_dict[key] = value
     return output_dict
 
-def generate_process_data(
+def generator_process_data(
     run_data: any
 ) -> any:
     try:
@@ -168,4 +168,59 @@ def generate_process_data(
     preprocess_df = preprocess_df.convert_dtypes()
 
     return preprocess_df
-    
+
+def generator_create_requests(
+    mlflow_client: any,
+    dataset_ids: list,
+    prompts: dict
+):
+    from ..mlflow.use import mlflow_get_dataset, mlflow_get_prompt
+
+    request_index = 0
+    question_type_index = {}
+    inference_requests = []
+    for dataset_id in dataset_ids:
+        dataset_df = mlflow_get_dataset(
+            mlflow_client = mlflow_client,
+            dataset_id = dataset_id
+        )  
+        
+        for row in dataset_df.to_dict(orient = 'records'):
+            for name, metadata in prompts.items():
+                expectations_data = row['expectations']
+                filled_prompt = mlflow_get_prompt(
+                    mlflow_client = mlflow_client,
+                    prompt_name = name,
+                    prompt_version = metadata['version'],
+                    prompt_replacements = {
+                        'content': expectations_data['ground_truth']
+                    }
+                )
+
+                for i in range(0, metadata['amount']):
+                    data_type = name.split('-')[1]
+                    filled_prompt['metadata'] = {
+                        'part': expectations_data['part'],
+                        'chapter': expectations_data['chapter'],
+                        'idx': expectations_data['idx'],
+                        'characters': expectations_data['characters'],
+                        'relevance': expectations_data['relevance'],
+                        'weights': expectations_data['weights'],
+                        'data-type': data_type,
+                        'request-index': request_index,
+                        'question-index': question_type_index[data_type]
+                    }
+
+                    for prompt in filled_prompt['prompt']:
+                        key_name = f'{prompt['role']}-prompt-length'
+                        filled_prompt['metadata'][key_name] = len(prompt['content'])
+                    question_type_index[data_type] += 1
+                    inference_requests.append(filled_prompt)
+                    request_index += 1
+    return inference_requests
+
+def generator_send_requests(
+    inference_requests: list,
+    length_limit: int
+):
+
