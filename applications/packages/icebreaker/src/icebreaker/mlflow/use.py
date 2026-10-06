@@ -83,19 +83,27 @@ def mlflow_log_model(
             registered_model_name = registered_name
         )
 
-def mlflow_change_run_status(
+def mlflow_end_run(
     mlflow_client: any, 
     run_id: str, 
-    status: str
+    status: str,
+    end_time: int
 ) -> None:
     sanitized_status = status.upper()
 
     valid_statuses = ["FINISHED", "FAILED", "KILLED", "RUNNING"]
     if sanitized_status in valid_statuses:
-        mlflow_client.update_run(
-            run_id = run_id, 
-            status = sanitized_status
-        )
+        if not end_time is None:
+            mlflow_client.set_terminated(
+                run_id = run_id, 
+                status = sanitized_status,
+                end_time = end_time
+            )
+        else:
+            mlflow_client.set_terminated(
+                run_id = run_id, 
+                status = sanitized_status,
+            )
 
 def mlflow_create_trace(
     mlflow_client: any,  

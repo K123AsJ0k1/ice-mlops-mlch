@@ -23,7 +23,7 @@ def evalution_rag_pipe(
 ) -> dict:
     try:
         from icebreaker.rag.use import rag_evalute_retrieval
-        from icebreaker.mlflow.use import mlflow_get_or_create_experiment, mlflow_start_run, mlflow_add_logs, mlflow_change_run_status
+        from icebreaker.mlflow.use import mlflow_get_or_create_experiment, mlflow_start_run, mlflow_add_logs, mlflow_end_run
     except ImportError as e:
         raise ImportError("evaluation/pipe failed to import", e)
     
@@ -77,10 +77,20 @@ def evalution_rag_pipe(
             table_name = 'ideal_rag_QA'
         )
 
-    mlflow_change_run_status(
+    mlflow_end_run(
         mlflow_client = mlflow_client, 
         run_id = run_id, 
-        status = 'FINISHED'
+        status = 'FINISHED',
+        end_time = None
     )
 
     return formatted_rag_data
+
+def evalution_generator_pipe():
+
+    experiment_id = mlflow_get_or_create_experiment(
+        mlflow_client = mlflow_client,
+        name = 'mlch-code-assistant-rag-pipeline'
+    ) 
+
+    mlflow.set_experiment(experiment_id = experiment_id)

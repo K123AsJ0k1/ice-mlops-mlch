@@ -327,3 +327,82 @@ def evalute_evalute_rag(
         'data': collected_df,
         'stats': data_summaries
     }
+
+def evalute_add_datasets(
+    swift_client: any,
+    mlflow_client: any,
+    storage_parameters: any,
+    experiment_name: str,
+    dataset_type: str,
+    dataset_paths: list,
+    dataset_tags: dict
+):
+    try:
+        from ..objects.use import objects_get_data
+        from ..mlflow.use import mlflow_create_dataset, mlflow_get_or_create_experiment
+    except ImportError as e:
+        raise ImportError("embeddings/use failed to import", e)
+
+    experiment_id = mlflow_get_or_create_experiment(
+        mlflow_client = mlflow_client,
+        name = experiment_name
+    ) 
+    
+    dataset_ids = []
+    for dataset_path in dataset_paths:
+        data_object = objects_get_data(
+            swift_client = swift_client,
+            storage_parameters = {
+                'bucket-target': storage_parameters['bucket-target'],
+                'bucket-prefix': storage_parameters['bucket-prefix'],
+                'bucket-user': storage_parameters['bucket-user'],
+                'object-name': 'root',
+                'object-serialization': storage_parameters['object-serialization'],
+                'path-replacers': {
+                    'name': dataset_path
+                },
+                'path-names': [],
+                'debug-prints': True,
+                'lock-parameters': {},
+                'lock-location': None,
+                'overwrite': True
+            },
+            dict_format = False
+        )    
+        dataset_name = dataset_path.split('/')[-1].split('.')[0]
+        target_df = data_object[0]
+
+        name_split = dataset_name.split('-')
+        data_name = f'{name_split[0]}_{name_split[1]}'
+        data_part = name_split[-1] 
+        formatted_records = []
+        if dataset_type == 'validation':
+            for _, row in target_df.iterrows():
+                if not row['chapter'] == 0:
+                    formatted_records.append({
+                        'inputs': {
+                            'question': row['topic']
+                        },
+                        'expectations': {
+                            'ground_truth': row['content'],
+                            'relevance': row['relevance'],
+                            'weights': row['ranking-weights']
+                        },
+                        'source': {
+                            'source_type': 'HUMAN'
+                        },
+                        'tags': {
+                            'name': data_name,
+                            'part': data_part
+                        }
+                    })
+        used_dataset_name = f'{data_name}_{dataset_type}_{data_part}' 
+        dataset_id = mlflow_create_dataset(
+            mlflow_client = mlflow_client,
+            dataset_name = used_dataset_name,
+            experiment_id = experiment_id,
+            dataset_tags = dataset_tags,
+            dataset_records = formatted_records
+        )
+        dataset_ids.append(dataset_id)
+    return dataset_ids
