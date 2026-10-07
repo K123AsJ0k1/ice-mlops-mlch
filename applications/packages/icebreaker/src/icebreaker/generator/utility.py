@@ -1,41 +1,4 @@
 
-def generator_parse_output(
-    text: str
-) -> any:
-    try:
-        import re
-    except ImportError as e:
-        raise ImportError("generator/use failed to import", e)
-    
-    if '</think>' in text:
-        parts = text.split('</think>', 1)
-        thinking_text = parts[0].strip()
-        main_content = parts[1].strip()
-    else:
-        thinking_text = ""
-        main_content = text
-
-    sections = re.split(r'\n(?=###\s+)', main_content)
-
-    parsed_sections = {}
-    for sec in sections:
-        sec = sec.strip()
-        if not sec:
-            continue
-        
-        # Match '### HEADER_NAME\n Header Content'
-        header_match = re.match(r'^###\s+([^\n]+)\n?(.*)', sec, flags=re.DOTALL)
-        if header_match:
-            header_title = header_match.group(1).strip().lower().replace("_", "-")
-            header_content = header_match.group(2).strip()
-            parsed_sections[header_title] = header_content
-
-    return {
-        'thinking-text': thinking_text,
-        'main-content': main_content,
-        **parsed_sections
-    }
-
 def generator_process_references(
     used_references: str,
 ) -> any:
@@ -112,6 +75,45 @@ def generator_process_category(
         'ground-truth-answer': answer.strip()
     }
 
+def generator_parse_output(
+    text: str
+) -> any:
+    try:
+        import re
+    except ImportError as e:
+        raise ImportError("generator/use failed to import", e)
+    
+    if '</think>' in text:
+        parts = text.split('</think>', 1)
+        thinking_text = parts[0].strip()
+        main_content = parts[1].strip()
+    else:
+        thinking_text = ""
+        main_content = text
+
+    sections = re.split(r'\n(?=###\s+)', main_content)
+
+    parsed_sections = {}
+    for sec in sections:
+        sec = sec.strip()
+        if not sec:
+            continue
+        
+        # Match '### HEADER_NAME\n Header Content'
+        header_match = re.match(r'^###\s+([^\n]+)\n?(.*)', sec, flags=re.DOTALL)
+        if header_match:
+            header_title = header_match.group(1).strip().lower().replace("_", "-")
+            header_content = header_match.group(2).strip()
+            parsed_sections[header_title] = header_content
+    
+    return {
+        'reasoning': {
+            'thinking_process': thinking_text
+        },
+        'response': main_content,
+        **parsed_sections
+    }
+
 def generator_extract_output(
     output: str
 ):
@@ -122,17 +124,21 @@ def generator_extract_output(
     if 'type' in output_dict:
         if output_dict['type'] == 'factual' or output_dict['type'] == 'synthesis':
             if 'relevant-used-references' in output_dict and 'relevant-used-paths' in output_dict:
+                
                 checked_references = generator_process_references(
                     used_references = output_dict['relevant-used-references']
                 )
+                
                 output_dict['relevant-used-references'] = checked_references
                 checked_paths = generator_process_paths(
                     used_paths = output_dict['relevant-used-paths']
                 )
+                
                 output_dict['relevant-used-paths'] = checked_paths
 
         if output_dict['type'] == 'negative':
             if 'ground-truth-answer' in output_dict:
+                
                 category_data = generator_process_category(
                     answer = output_dict['ground-truth-answer']
                 )
@@ -177,7 +183,7 @@ def generator_create_requests(
     from ..mlflow.use import mlflow_get_dataset, mlflow_get_prompt
 
     request_index = 0
-    question_type_index = {}
+    prompt_variant_index = {}
     inference_requests = []
     for dataset_id in dataset_ids:
         dataset_df = mlflow_get_dataset(
@@ -197,8 +203,11 @@ def generator_create_requests(
                     }
                 )
 
+                prompt_variant = name.split('-')[1]
+                if not prompt_variant in prompt_variant_index:
+                    prompt_variant_index[prompt_variant] = 1
+
                 for i in range(0, metadata['amount']):
-                    data_type = name.split('-')[1]
                     filled_prompt['metadata'] = {
                         'part': expectations_data['part'],
                         'chapter': expectations_data['chapter'],
@@ -206,21 +215,133 @@ def generator_create_requests(
                         'characters': expectations_data['characters'],
                         'relevance': expectations_data['relevance'],
                         'weights': expectations_data['weights'],
-                        'data-type': data_type,
+                        'prompt-variant': prompt_variant,
                         'request-index': request_index,
-                        'question-index': question_type_index[data_type]
+                        'variant-index': prompt_variant_index[prompt_variant]
                     }
 
                     for prompt in filled_prompt['prompt']:
                         key_name = f'{prompt['role']}-prompt-length'
                         filled_prompt['metadata'][key_name] = len(prompt['content'])
-                    question_type_index[data_type] += 1
+                    
+                    prompt_variant_index[prompt_variant] += 1
                     inference_requests.append(filled_prompt)
                     request_index += 1
     return inference_requests
 
 def generator_send_requests(
+    mlflow_client: any,
+    experiment_id: str,
     inference_requests: list,
-    length_limit: int
+    length_limit: int,
+    trace_name: str,
+    trace_attributes: dict,
+    trace_tags: dict,
+    request_limit: int,
+    inference_parameters: dict
 ):
+    try:
+        import mlflow
+        from ..mlflow.use import mlflow_create_trace, mlflow_end_trace
+        from ..mlflow.utility import mlflow_token_usage, mlflow_llm_cost, mlflow_llm_effiency
+        from ..ray.utility import ray_run_inference
+        from ..generator.utility import generator_extract_output
+    except ImportError as e:
+        raise ImportError("evaluation/pipe failed to import", e)
 
+    mlflow.set_experiment(
+        experiment_id = experiment_id
+    )
+
+    run_data = {}
+    sent_requests = 0
+    for request in inference_requests:
+        if request_limit <= sent_requests:
+            break
+
+        used_context = 0
+        for key, value in request['metadata'].items():
+            if 'prompt-length' in key:
+                used_context += value
+
+        if used_context < length_limit:
+            sent_prompt = request['prompt']
+            used_config = request['config']
+            prompt_metadata = request['metadata']
+
+            trace_input = {
+                'messages': sent_prompt
+            }
+
+            root_span = mlflow_create_trace(
+                mlflow_client = mlflow_client,  
+                trace_name = trace_name,
+                experiment_id = experiment_id,
+                trace_attributes = trace_attributes,
+                trace_tags = trace_tags,
+                trace_input = trace_input
+            )
+            
+            root_span.set_attributes({f'request.{k}': v for k, v in used_config.items()})
+
+            generator_request = trace_input | used_config
+            
+            generator_payload = ray_run_inference(
+                inference_address = inference_parameters['generator']['address'],
+                inference_path = inference_parameters['generator']['path'],
+                sent_request = generator_request
+            )
+            
+            generator_metrics = generator_payload['metrics']
+            generator_output = generator_payload ['response']
+
+            root_span.set_attributes(
+                mlflow_token_usage(
+                    input_tokens = generator_metrics['prompt-tokens'], 
+                    output_tokens = generator_metrics['completion-tokens']
+                )
+            )
+            input_cost = trace_attributes['ice.utilization_cost_sec'] * generator_metrics['prompt-processing-time-sec']
+            output_cost = trace_attributes['ice.utilization_cost_sec'] * generator_metrics['generation-time-sec']
+            
+            model_name = f'{trace_attributes['llm.model_repository']}-{trace_attributes['llm.model_quantization']}'
+            root_span.set_attributes(
+                mlflow_llm_cost(
+                    model_provider = trace_attributes['llm.inference_framework'], 
+                    model_name = model_name, 
+                    input_cost = input_cost, 
+                    output_cost = output_cost
+                )
+            )
+            
+            root_span.set_attributes(
+                mlflow_llm_effiency(
+                    prompt_tokens = generator_metrics['prompt-tokens'],
+                    completion_tokens = generator_metrics['completion-tokens'],
+                    total_tokens = generator_metrics['total-tokens'],
+                    prompt_processing_time = generator_metrics['prompt-processing-time-sec'],
+                    generation_time = generator_metrics['generation-time-sec'],
+                    input_tokens_per_sec = generator_metrics['input-tokens-per-sec'],
+                    output_tokens_per_sec = generator_metrics['output-tokens-per-sec'],
+                    total_latency = generator_metrics['total-latency-sec'],
+                    time_to_first_token = generator_metrics['time-to-first-token-sec'],
+                    tokens_per_second = generator_metrics['tokens-per-second'],
+                    time_per_output_token = generator_metrics['time-per-output-token-sec'],
+                    input_to_output_ratio = generator_metrics['input-to-output-ratio'],
+                    context_window_utilization = generator_metrics['context-window-utilization-pct'],
+                )
+            )
+            
+            generator_data = generator_extract_output(
+                output = generator_output
+            )
+
+            trace_output = generator_data | prompt_metadata
+            
+            mlflow_end_trace(
+                mlflow_client = mlflow_client,
+                trace_id = root_span.trace_id,
+                trace_output = trace_output
+            )
+            sent_requests += 1
+    return run_data

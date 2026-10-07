@@ -110,13 +110,15 @@ def mlflow_create_trace(
     trace_name: str,
     experiment_id: str,
     trace_attributes: dict,
-    trace_tags: dict
+    trace_tags: dict,
+    trace_input: dict
 ) -> any:
     return mlflow_client.start_trace(
         name = trace_name, 
         attributes = trace_attributes, 
         tags = trace_tags, 
-        experiment_id = experiment_id
+        experiment_id = experiment_id,
+        inputs = trace_input
     )
 
 def mlflow_start_span(
@@ -144,10 +146,12 @@ def mlflow_end_span(
 
 def mlflow_end_trace(
     mlflow_client: any,
-    trace_id: any
+    trace_id: any,
+    trace_output: dict
 ):
     mlflow_client.end_trace(
         trace_id = trace_id,
+        outputs =  trace_output,
         status = "OK"
     )
 

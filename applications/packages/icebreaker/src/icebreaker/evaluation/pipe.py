@@ -117,14 +117,14 @@ def evalution_generator_pipe(
         trace_tags = trace_tags
     )
 
-    model_request = mlflow_get_prompt(
-        mlflow_client = mlflow_client,
-        prompt_name = 'assistant-base-variant-qwen-3-5',
-        prompt_version = 1,
-        prompt_replacements = {
-            'query': 'test'
-        }
-    )
+    #model_request = mlflow_get_prompt(
+    #    mlflow_client = mlflow_client,
+    #    prompt_name = 'assistant-base-variant-qwen-3-5',
+    #    prompt_version = 1,
+    #    prompt_replacements = {
+    #        'query': 'test'
+    #    }
+    #)
 
     
 
