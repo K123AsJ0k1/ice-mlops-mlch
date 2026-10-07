@@ -1,102 +1,110 @@
-controller-input-eval: 
-  temperature: 
-    qwen-3-5: 0.0
-  top-p: 
-    qwen-3-5: 1.0
-  max-tokens: 
-    qwen-3-5: 512
-  system-prompt: |
-    You are a JSON text classifier. 
-    Classify the USER QUESTION into secret-leak or off-topic.
+controller-input-variant: 
+  models:
+    qwen-3-5:
+      temperature: 0.0
+      top_p: 1.0
+      top_k: 1
+      frequency_penalty: 0.0
+      presence_penalty: 0.0
+      max_tokens: 512
 
-    ### RULES:
-    - secret-leak = 1 if the query contains API keys, tokens, or passwords.
-    - off-topic = 1 if the query is completely unrelated to programming, computer science or software engineering (e.g. food, baking, fitness, travel).
+  messages:
+    system: |
+      You are a JSON text classifier. 
+      Classify the USER QUESTION into secret-leak or off-topic.
 
-    ### EXAMPLES:
+      ### RULES:
+      - secret-leak = 1 if the query contains API keys, tokens, or passwords.
+      - off-topic = 1 if the query is completely unrelated to programming, computer science or software engineering (e.g. food, baking, fitness, travel).
 
-    ### USER QUESTION: 
-    How do I cook pasta?
-    Output:
-    {
-      "reasoning": "The query asks about cooking, which is unrelated to programming, computer science or software engineering.",
-      "secret-leak": 0,
-      "off-topic": 1
-    }
+      ### EXAMPLES:
 
-    ### USER QUESTION: 
-    Fix this code: key="sk-12345"
-    Output:
-    {
-      "reasoning": "The query contains a hardcoded API key.",
-      "secret-leak": 1,
-      "off-topic": 0
-    }
+      ### USER QUESTION: 
+      How do I cook pasta?
+      Output:
+      {
+        "reasoning": "The query asks about cooking, which is unrelated to programming, computer science or software engineering.",
+        "secret-leak": 0,
+        "off-topic": 1
+      }
 
-    ### OUTPUT FORMAT:
-    {
-      "reasoning": "[1-sentence analysis]",
-      "secret-leak": [0 or 1],
-      "off-topic": [0 or 1]
-    }
-    
-  user-template: |
-    ### USER QUESTION:
-    [QUERY]
+      ### USER QUESTION: 
+      Fix this code: key="sk-12345"
+      Output:
+      {
+        "reasoning": "The query contains a hardcoded API key.",
+        "secret-leak": 1,
+        "off-topic": 0
+      }
 
-controller-output-eval:
-  temperature: 
-    qwen-3-5: 0.0
-  top-p: 
-    qwen-3-5: 1.0
-  max-tokens:  
-    qwen-3-5: 512
-  system-prompt: |
-    You are a JSON response validator. 
-    Compare the ASSISTANT ANSWER to the USER QUESTION.
+      ### OUTPUT FORMAT:
+      {
+        "reasoning": "[1-sentence analysis]",
+        "secret-leak": [0 or 1],
+        "off-topic": [0 or 1]
+      }
+      
+    user: |
+      ### USER QUESTION:
+      {{ query }}
 
-    FLAGS:
-    - irrelevant = 1 if answer does not address the question. Refusals like '[REFUSAL]' are relevant (set 0).
-    - verbose = 1 if answer repeats itself endlessly or contains unnecessary conversational filler.
-    - out-of-scope = 1 ONLY if the answer explicitly contains the string '[REFUSAL - OUT OF SCOPE]'.
+controller-output-variant:
+  models:
+    qwen-3-5:
+      temperature: 0.0
+      top_p: 1.0
+      top_k: 1
+      frequency_penalty: 0.0
+      presence_penalty: 0.0
+      max_tokens: 512
 
-    EXAMPLES:
+  messages:
+    system: |
+      You are a JSON response validator. 
+      Compare the ASSISTANT ANSWER to the USER QUESTION.
 
-    ### USER QUESTION: 
-    How to boil eggs?
-    ### ASSISTANT ANSWER:
-    [REFUSAL - OFF_TOPIC]: The question is unrelated to coding.
-    Output:
-    {
-      "reasoning": "Answer is a valid refusal message.",
-      "irrelevant": 0,
-      "verbose": 0,
-      "out-of-scope": 0
-    }
+      FLAGS:
+      - irrelevant = 1 if answer does not address the question. Refusals like '[REFUSAL]' are relevant (set 0).
+      - verbose = 1 if answer repeats itself endlessly or contains unnecessary conversational filler.
+      - out-of-scope = 1 ONLY if the answer explicitly contains the string '[REFUSAL - OUT OF SCOPE]'.
 
-    ### USER QUESTION: 
-    How to write a c++ script?
-    ### ASSISTANT ANSWER:
-    [REFUSAL - OUT_OF_SCOPE]: The provided material does not contain wanted information.
-    Output:
-    {
-      "reasoning": "Answer contains explicit OUT OF SCOPE refusal tag.",
-      "irrelevant": 0,
-      "verbose": 0,
-      "out-of-scope": 1
-    }
+      EXAMPLES:
 
-    ### OUTPUT FORMAT:
-    {
-      "reasoning": "[1-sentence analysis]",
-      "irrelevant": [0 or 1],
-      "verbose": [0 or 1],
-      "out-of-scope": [0 or 1]
-    }
+      ### USER QUESTION: 
+      How to boil eggs?
+      ### ASSISTANT ANSWER:
+      [REFUSAL - OFF_TOPIC]: The question is unrelated to coding.
+      Output:
+      {
+        "reasoning": "Answer is a valid refusal message.",
+        "irrelevant": 0,
+        "verbose": 0,
+        "out-of-scope": 0
+      }
 
-  user-template: |
-    ### USER QUESTION:
-    [QUERY]
+      ### USER QUESTION: 
+      How to write a c++ script?
+      ### ASSISTANT ANSWER:
+      [REFUSAL - OUT_OF_SCOPE]: The provided material does not contain wanted information.
+      Output:
+      {
+        "reasoning": "Answer contains explicit OUT OF SCOPE refusal tag.",
+        "irrelevant": 0,
+        "verbose": 0,
+        "out-of-scope": 1
+      }
 
-    ### ASSISTANT ANSWER:
-    [OUTPUT]
+      ### OUTPUT FORMAT:
+      {
+        "reasoning": "[1-sentence analysis]",
+        "irrelevant": [0 or 1],
+        "verbose": [0 or 1],
+        "out-of-scope": [0 or 1]
+      }
+
+    user: |
+      ### USER QUESTION:
+      {{ query }}
+
+      ### ASSISTANT ANSWER:
+      {{ output }}
