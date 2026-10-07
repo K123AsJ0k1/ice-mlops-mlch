@@ -7,7 +7,7 @@ import json
 from importlib.metadata import version
 from ray import serve
 
-def llama_test(
+def llama_cpp_server(
     job_parameters: dict
 ):
     try:
@@ -17,31 +17,33 @@ def llama_test(
         serve_port = serve_parameters['port']
         serve_shutdown = serve_parameters['shutdown']
         serve_time = serve_parameters['time']
+        serve_instance_name = serve_parameters['name']
+        serve_route_prefix = serve_parameters['prefix']
 
         model_parameters = job_parameters['model']
         generator_model_parmaters = model_parameters['generator-model-parameters']
         generator_model_parmaters['serve-id'] = serve_id
-
+        
         if generator_model_parmaters['inference'] == 'llama':
             print('Setting up LLAMA inference')
             try:
-                from servers.llama_generator import LLAMA_Generator
+                from servers.llama_generator import LLAMA_CPP_GENERATOR
             except ImportError as e:
-                raise ImportError("generator/ failed to import", e)
+                raise ImportError("Failed to import LLAMA_CPP_GENERATOR", e)
  
             serve.start(
                 http_options = {
                     'host': serve_host,
                     'port': serve_port
                 }
-            )
-
-            serve.run( 
-                LLAMA_Generator.bind(
+            ) 
+ 
+            serve.run(
+                LLAMA_CPP_GENERATOR.bind(
                     model_parameters = generator_model_parmaters
                 ), 
-                name = 'data_generator_server', 
-                route_prefix='/generator'
+                name = serve_instance_name, 
+                route_prefix = serve_route_prefix
             )   
         
         if serve_shutdown:
@@ -49,7 +51,7 @@ def llama_test(
             serve.shutdown()  
         return True
     except Exception as e:
-        print(f'llama error {e}')
+        print(f'llama cpp server error: {e}')
         return False 
 
 if __name__ == "__main__":
@@ -72,10 +74,10 @@ if __name__ == "__main__":
     print('Getting input')
     job_parameters = json.loads(sys.argv[1])
 
-    print('Running llama test')
-    testing_data_output = llama_test(
+    print('Running llama.cpp server')
+    output = llama_cpp_server(
         job_parameters = job_parameters
     )
-    print('Testing success:' + str(testing_data_output))
+    print('Setup success:' + str(output))
 
     print('Ray job Complete')
