@@ -11,3 +11,21 @@ def pandas_modify_dataframe(
                 df[name] = df[name].fillna(0)
     df = df.astype(column_types)
     return df
+
+def pandas_get_p95(x): 
+    try:
+        import numpy as np
+    except ImportError as e:
+        raise ImportError("evaluation/use failed to import", e)
+        
+    clean_x = x.dropna()
+    return np.percentile(clean_x, 95) if len(clean_x) > 0 else np.nan
+
+def pandas_get_p99(x): 
+    try:
+        import numpy as np
+    except ImportError as e:
+        raise ImportError("evaluation/use failed to import", e)
+
+    clean_x = x.dropna()
+    return np.percentile(clean_x, 99) if len(clean_x) > 0 else np.nan

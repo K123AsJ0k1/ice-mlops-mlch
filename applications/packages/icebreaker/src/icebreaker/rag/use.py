@@ -130,7 +130,7 @@ def rag_evalute_retrieval(
         retrieval_outputs['parameters']['sparse-model'] = sparse_model_name
     
     for dataset_path in dataset_paths:
-        data_object = objects_get_data(
+        data_object = objects_get_data( 
             swift_client = swift_client,
             storage_parameters = {
                 'bucket-target': storage_parameters['bucket-target'],

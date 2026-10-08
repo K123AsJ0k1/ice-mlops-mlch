@@ -209,6 +209,7 @@ def generator_create_requests(
 
                 for i in range(0, metadata['amount']):
                     filled_prompt['metadata'] = {
+                        'dataset-id': dataset_id,
                         'part': expectations_data['part'],
                         'chapter': expectations_data['chapter'],
                         'idx': expectations_data['idx'],
@@ -238,7 +239,8 @@ def generator_send_requests(
     trace_attributes: dict,
     trace_tags: dict,
     request_limit: int,
-    inference_parameters: dict
+    inference_parameters: dict,
+    debug_prints: bool
 ):
     try:
         import mlflow
@@ -253,7 +255,12 @@ def generator_send_requests(
         experiment_id = experiment_id
     )
 
-    run_data = {}
+    generator_data = {
+        'parameters': trace_attributes,
+        'inputs': [],
+        'metrics': [],
+        'outputs': []
+    }
     sent_requests = 0
     for request in inference_requests:
         if request_limit <= sent_requests:
@@ -268,11 +275,15 @@ def generator_send_requests(
             sent_prompt = request['prompt']
             used_config = request['config']
             prompt_metadata = request['metadata']
+            prompt_metadata = prompt_metadata | used_config
+            prompt_metadata['request-limit'] = request_limit
 
             trace_input = {
                 'messages': sent_prompt
             }
 
+            generator_data['inputs'].append(trace_input)
+        
             root_span = mlflow_create_trace(
                 mlflow_client = mlflow_client,  
                 trace_name = trace_name,
@@ -291,19 +302,31 @@ def generator_send_requests(
                 inference_path = inference_parameters['generator']['path'],
                 sent_request = generator_request
             )
+            sent_requests += 1
             
             generator_metrics = generator_payload['metrics']
-            generator_output = generator_payload ['response']
+            generator_metadata = generator_payload['metadata']
+            generator_output = generator_payload['response']
 
+            prompt_metadata['inference-server'] = generator_metadata['inference_server']
+            prompt_metadata['model-name'] = generator_metadata['used_model']
+
+            generator_data['metrics'].append(generator_metrics)
+            
             root_span.set_attributes(
                 mlflow_token_usage(
                     input_tokens = generator_metrics['prompt-tokens'], 
                     output_tokens = generator_metrics['completion-tokens']
                 )
             )
+
             input_cost = trace_attributes['ice.utilization_cost_sec'] * generator_metrics['prompt-processing-time-sec']
             output_cost = trace_attributes['ice.utilization_cost_sec'] * generator_metrics['generation-time-sec']
             
+            prompt_metadata['input-cost'] = input_cost
+            prompt_metadata['output-cost'] = output_cost
+            prompt_metadata['total-cost'] = input_cost + output_cost
+
             model_name = f'{trace_attributes['llm.model_repository']}-{trace_attributes['llm.model_quantization']}'
             root_span.set_attributes(
                 mlflow_llm_cost(
@@ -332,16 +355,119 @@ def generator_send_requests(
                 )
             )
             
-            generator_data = generator_extract_output(
+            extracted_output = generator_extract_output(
                 output = generator_output
             )
 
-            trace_output = generator_data | prompt_metadata
+            trace_output = extracted_output | prompt_metadata
+
+            generator_data['outputs'].append(trace_output)
             
             mlflow_end_trace(
                 mlflow_client = mlflow_client,
                 trace_id = root_span.trace_id,
                 trace_output = trace_output
             )
-            sent_requests += 1
-    return run_data
+    generator_data['parameters']['requests'] = sent_requests
+    print('')
+    if debug_prints:
+        print('Data generator parameters:')
+        parameters = generator_data['parameters']
+
+        for name, value in parameters.items():
+            print(f'{name}|{value}')
+
+        print('==========')
+
+        for i, input, in enumerate(generator_data['inputs']):
+            metrics = generator_data['metrics'][i]
+            output = generator_data['outputs'][i]
+
+            print('Generator prompts:')
+            for message in input['messages']:
+                prompt_role = message['role']
+                prompt_content = message['content']
+    
+                print(f'Role|{prompt_role}')
+                print('Prompt:')
+                print(prompt_content)
+
+            print('==========')
+        
+            for name, value in metrics.items():
+                print(f'{name}|{value}')
+
+            print('==========')
+
+            filtered_keys = [
+                'reasoning',
+                'response',
+                'question',
+                'ground-truth-answer'
+            ]
+
+            for name, value in output.items():
+                if name in filtered_keys:
+                    continue
+                print(f'{name}|{value}')
+
+            print('==========')
+            print('Reasoning:')
+            print(output['reasoning']['thinking_process'])
+            print('==========')
+            print('Answer:')
+            print(output['response'])
+            print('==========')
+        
+    return generator_data
+
+def generator_format_data(
+    generator_data: any,
+    metric_columns: list
+) -> any:
+    try:
+        import pandas as pd
+        from ..misc.dict import flatten_nested_dict
+        from ..pd_stats.utility import pandas_get_p95, pandas_get_p99
+    except ImportError as e:
+        raise ImportError("evaluation/use failed to import", e)
+    
+    formatted_table = {}
+    formatted_metrics = {}
+    
+    for name, data in generator_data.items():
+        if not name == 'parameters':
+            for data_dict in data:
+                for key, value in data_dict.items():
+                    if not key in formatted_table:
+                        formatted_table[key] = []
+                    formatted_table[key].append(value)
+         
+    created_dataframe = pd.DataFrame(formatted_table)   
+
+    metric_dict = created_dataframe[metric_columns].agg([
+        'mean', 
+        'std', 
+        'median', 
+        pandas_get_p95, 
+        pandas_get_p99, 
+        'min', 
+        'max'
+    ]).to_dict()
+    
+    formatted_metrics = flatten_nested_dict(
+        target_dict = metric_dict,
+        parent_key = '',
+        seperator = '-'
+    )
+
+    formatted_parametes = {}
+    for key, value in generator_data['parameters'].items():
+        fixed_name = key.split('.')[-1]
+        formatted_parametes[fixed_name] = value
+    
+    return {
+        'parameters': formatted_parametes,
+        'tables': created_dataframe,
+        'metrics': formatted_metrics
+    }

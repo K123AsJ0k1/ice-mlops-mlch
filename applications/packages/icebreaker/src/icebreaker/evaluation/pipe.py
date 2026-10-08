@@ -22,8 +22,8 @@ def evalution_rag_pipe(
     debug_prints: bool
 ) -> dict:
     try:
-        from icebreaker.rag.use import rag_evalute_retrieval
-        from icebreaker.mlflow.use import mlflow_get_or_create_experiment, mlflow_start_run, mlflow_add_logs, mlflow_end_run
+        from ..rag.use import rag_evalute_retrieval
+        from ..mlflow.use import mlflow_get_or_create_experiment, mlflow_start_run, mlflow_add_logs, mlflow_end_run
     except ImportError as e:
         raise ImportError("evaluation/pipe failed to import", e)
     
@@ -89,14 +89,20 @@ def evalution_rag_pipe(
 def evalution_generator_pipe(
     mlflow_client: any,
     experiment_name: str,
+    run_name: str,
+    run_tags: dict,
+    dataset_ids: list,
+    prompts: dict,
     trace_name: str,
     trace_attributes: dict,
     trace_tags: dict,
-    span_names: list
+    dataset_limit: int,
+    inference_parameters: dict,
+    debug_prints: bool
 ):
     try:
-        import mlflow
-        from ..mlflow.use import mlflow_get_or_create_experiment, mlflow_get_prompt, mlflow_create_trace, mlflow_start_span
+        from ..generator.use import generator_produce_dataset
+        from ..mlflow.use import mlflow_get_or_create_experiment, mlflow_start_run, mlflow_add_logs, mlflow_end_run
     except ImportError as e:
         raise ImportError("evaluation/pipe failed to import", e)
     
@@ -105,39 +111,47 @@ def evalution_generator_pipe(
         name = experiment_name
     ) 
 
-    mlflow.set_experiment(experiment_id = experiment_id)
+    run_id = mlflow_start_run(
+        mlflow_client = mlflow_client,
+        experiment_id = experiment_id, 
+        run_name = run_name, 
+        tags = run_tags
+    ) 
 
-    # each trace has input and output
-
-    request_trace = mlflow_create_trace(
-        mlflow_client = mlflow_client,  
-        trace_name = trace_name,
+    formatted_generator_dataset = generator_produce_dataset(
+        mlflow_client = mlflow_client,
+        dataset_ids = dataset_ids,
+        prompts = prompts,
         experiment_id = experiment_id,
+        trace_name = trace_name,
         trace_attributes = trace_attributes,
-        trace_tags = trace_tags
+        trace_tags = trace_tags,
+        dataset_limit = dataset_limit,
+        inference_parameters = inference_parameters,
+        debug_prints = debug_prints
     )
 
-    #model_request = mlflow_get_prompt(
-    #    mlflow_client = mlflow_client,
-    #    prompt_name = 'assistant-base-variant-qwen-3-5',
-    #    prompt_version = 1,
-    #    prompt_replacements = {
-    #        'query': 'test'
-    #    }
-    #)
+    parameters = formatted_generator_dataset['parameters']
+    metrics = formatted_generator_dataset['metrics']
+    table = formatted_generator_dataset['tables']
+   
+    mlflow_add_logs(
+        mlflow_client = mlflow_client,
+        run_id = run_id, 
+        parameters = parameters,
+        metrics = metrics,
+        metrics_prefix = 'generator',
+        metrics_step = 1,
+        table = table,
+        table_folder = 'generator',
+        table_name = 'synthetic_QA_dataset'
+    )
 
-    
+    mlflow_end_run(
+        mlflow_client = mlflow_client, 
+        run_id = run_id, 
+        status = 'FINISHED',
+        end_time = None
+    )
 
-    #child_span = mlflow_start_span(
-    #    mlflow_client = mlflow_client, 
-    #    span_name = 'model-span',
-    #    trace_id = test_trace.trace_id,
-    #    span_id = test_trace.span_id
-    #)
-
-    #from icebreaker.mlflow.utility import mlflow_token_usage, mlflow_llm_cost
-    #child_span.set_inputs({'messages': prompt_details['prompt']})
-    #child_span.set_attributes({f'request.{k}': v for k, v in prompt_details['config'].items()})
-    #child_span.set_attributes(mlflow_token_usage(input_tokens = 500, output_tokens = 500))
-    #child_span.set_attributes(mlflow_llm_cost(model_provider = 'llama.cpp', model_name = 'unsloth/Qwen3.5-9B-GGUF', input_cost = 0.00035, output_cost = 0.00035))
-    #child_span.set_outputs({'output': 'test'})
+    return formatted_generator_dataset

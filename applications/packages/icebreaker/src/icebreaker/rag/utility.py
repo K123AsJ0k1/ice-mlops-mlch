@@ -14,7 +14,7 @@ def rag_query_embeddings(
     except ImportError as e:
         raise ImportError("embeddings/use failed to import", e)
      
-    dense_vectors = {
+    dense_vectors = { 
         'data': None,
         'mean-time-ms': 0
     } 
@@ -252,16 +252,10 @@ def rag_format_data(
         import numpy as np
         import pandas as pd
         from ..misc.dict import flatten_nested_dict
+        from ..pd_stats.utility import pandas_get_p95, pandas_get_p99
     except ImportError as e:
         raise ImportError("evaluation/use failed to import", e)
     
-    def p95(x): 
-        clean_x = x.dropna()
-        return np.percentile(clean_x, 95) if len(clean_x) > 0 else np.nan
-    def p99(x): 
-        clean_x = x.dropna()
-        return np.percentile(clean_x, 99) if len(clean_x) > 0 else np.nan
-
     formatted_tables = {}
     formatted_metrics = {}
     for case, case_data in retrieval_outputs.items():
@@ -324,8 +318,8 @@ def rag_format_data(
                     'mean', 
                     'std', 
                     'median', 
-                    p95, 
-                    p99, 
+                    pandas_get_p95, 
+                    pandas_get_p99, 
                     'min', 
                     'max'
                 ]).to_dict()
