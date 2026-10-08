@@ -53,7 +53,7 @@ docker tag multi-local-cloud-hpc-integration:mlflow_v3.16.1 (your_dockerhub_user
 4. Push the image to the repository
 
 ```
-docker push t9k4b5ndjok1/multi-local-cloud-hpc-integration:mlflow_v3.16.1
+docker push (your_dockerhub_user)/multi-local-cloud-hpc-integration:mlflow_v3.16.1
 ```
 
 5. Change the image name in the MLflow deployment file (row 66)
@@ -236,7 +236,9 @@ added_dataset_ids = evalute_add_datasets(
         'DATA/SOURCE/ICEbreaker-tutorial-v09-formatted-part-3.pkl',
         'DATA/SOURCE/ICEbreaker-tutorial-v09-formatted-part-4.pkl',
         'DATA/SOURCE/ICEbreaker-tutorial-v09-formatted-part-5.pkl',
-        'DATA/SOURCE/ICEbreaker-tutorial-v09-formatted-part-6.pkl'
+        'DATA/SOURCE/ICEbreaker-tutorial-v09-formatted-part-6.pkl',
+        'DATA/SOURCE/ICEbreaker-tutorial-v09-formatted-part-7.pkl',
+        'DATA/SOURCE/ICEbreaker-tutorial-v09-formatted-part-8.pkl'
     ],
     dataset_tags = {
         'workflow-type': 'local-cloud',
