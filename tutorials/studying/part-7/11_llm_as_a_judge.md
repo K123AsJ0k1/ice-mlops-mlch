@@ -101,7 +101,7 @@ Using LLMs as evaluators (LLM-as-a-judge) addresses costly, hard-to-scale, and i
                 4. Using the fine-tuned model for the target object
                     - Be aware the limitations of their evalution capability
                     - Fine-tuning can also reduce the model's generalization 
-    - Post-processing method
+    - Post-processing method:
         - Definition: refining the probability distributions of the model to get accurate evaluations
         - Methods:
             - Extracting specific tokens:
@@ -207,7 +207,7 @@ Using LLMs as evaluators (LLM-as-a-judge) addresses costly, hard-to-scale, and i
                         - Definition: Converting the task into a pairwise comparison
                         - Removes the prompt variations and inherent randomness of numerical scores for stable and reliable relative assessments
                     - Enables enriching details of prompts and directly or indirectly enhancing the model, while addressing specific biases
-                - Standardizing LLms output format:
+                - Standardizing LLMs output format:
                     - Constraining outputs in structured formats:
                         - Definition: Constraining model output into a structured format using the prompt
                         - Enables increasing the robustness of responses to enable automated and accurate extraction of results
@@ -372,4 +372,43 @@ Using LLMs as evaluators (LLM-as-a-judge) addresses costly, hard-to-scale, and i
 
 This framework helps us list the design requirements for developing automated evaluation methods for LLM applications. We will use this to create the behavior controller and answer evaluator for the use-case demonstration.
 
-## How to do LLM-as-a-judge?
+## How to use LLM-as-a-judge?
+
+As we described in the [LLM application chapter](./04_llm_application_development.md) and [Prompt Engineering (PE) chapter](./07_prompt_engineering.md), we will use LLM-as-a-judge with PE methods to create a behavior controller model for input/ouput validation and answer judge models for scoring coding assistant answers to general, synthetic and validation datasets. The resulted prompts were created with the following intent:
+ 
+- [Behavior control prompts](./prompts/behavior-controller-prompts.yaml)
+    - Input variant intent: A filter that checks for accidentally leaked secrets and questions unrelated to programming
+    - Output variant intent: A filter that checks for irrelevant, verbose, and out-of-scope responses
+    - Design:
+        - In-context learning:
+            - Input design: Only text, individual input and end position
+            - Prompt design: True/false questions
+            - Improvements: 
+                - One-shot examples for criteria
+                - Constrained JSON output
+                - Asked 1 sentence reasoning for the scores
+        - Model selection:
+            - Open-source LLM with max 2B parameters that isn't fine-tuned and is from the same family as the coding assistant
+        - Post-processing:
+            - Providing output format to enable regex extraction
+    - Purpose: Extracted output is used to decide if input is given to the assistant or output is given to the user
+
+- [Answer judge prompts](./prompts/answer-judge-prompts.yaml):
+    - External variant intent: An evaluation that checks answers to external datasets for correctness and relevance
+    - Internal variant intent: An evaluation that checks answers to internal datasets for correctness, faithfulness, and relevance
+    - Design:
+        - In-context learning:
+            - Input design: Only text, individual input and end position
+            - Prompt design: True/false questions
+            - Improvements: 
+                - Constrained JSON output
+                - Asked for 1 sentence of reasoning for the scores
+            - Model selection:
+                - Separate open-source LLM families with max 9B parameters that aren't fine-tuned
+            - Post-processing:
+                - Providing output format to enable regex extraction
+    - Purpose: Extracted output is used to get the binary scoring average from both models to consider the ability of the coding assistant on a given dataset
+
+With these prompts, we can create scalable coding assistant guardrails based on use-case expectations and evaluate the assistant using external open-source data, as well as internal human-annotated and LLM-generated data. We will show later how to utilize these in practice. 
+
+---
