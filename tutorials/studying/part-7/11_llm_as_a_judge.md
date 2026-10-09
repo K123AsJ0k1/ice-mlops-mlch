@@ -1,0 +1,375 @@
+---
+technologies: "LLM-as-a-judge"
+category: "Explanation and use of concept"
+difficulty: "Intermediate"
+---
+
+# LLM-as-a-judge
+
+## Used material
+
+1. <span id="used-material-1"></span> [A survey on LLM-as-a-judge](https://www.sciencedirect.com/science/article/pii/S2666675825004564)
+
+## What is LLM-as-a-judge?
+
+Using LLMs as evaluators (LLM-as-a-judge) addresses costly, hard-to-scale, and inconsistent subjective evaluation methods used for integrated, holistic, and fine-grained contextual understanding by having the LLM mimic human-like reasoning and thinking processes to meet increased evaluation demands in a cost-effient way [(1)](#used-material-1). LLM-as-a-judge considerations are as follows:
+
+- Utilization:
+    - In-context learning
+        - Definition: Providing instructions and examples to guide the model's reasoning and judgment
+        - Aspects:
+            - Input design:
+                - Variable type:
+                    - Text
+                    - Image
+                    - Video
+                - Manner of input:
+                    - Individually
+                    - In pairs
+                    - Batches
+                - Position:
+                    - Beginning
+                    - Middle 
+                    - End
+            - Prompt design:
+                - Generating scores:
+                    - Definition: Using a representative score for evaluation
+                    - Nature and range:
+                        - Discrete ranges:
+                            - 1-3 
+                            - 1-5
+                            - 1-10
+                        - Continuous ranges:
+                            - 0 to 1
+                            - 0 to 100
+                    - Used way:
+                        1. Give context
+                        2. Set scoring range
+                        3. Set main scoring criteria
+                    - Additions:
+                        - LLM as examiner with Likert scale
+                            - Accuracy, coherence, factuality, and comprehensiveness dimensions
+                            - Each scores 1-3 range
+                            - Giving an overall score ranging from 1 to 5 based on the scores of the 4 dimensions 
+                - Solving true/false questions:
+                    - Definition: Yes or no judgment for a given statement
+                    - Fixed responses:
+                        - 1 or 0
+                        - Yes or no
+                        - True or false
+                    - No additional comparison or choices
+                    - Enables creating conditions for a feedback loop:
+                        - Self-optimization cycle
+                        - Self-improvement context 
+                        - Testing knowledge accuracy and statement alignment  
+                - Conducting pairwise comparisons:
+                    - Definition: Comparing two options and selecting the one that is more aligned with a specific standard
+                    - Deciding between two options:
+                        - Subjective or objective criteria
+                    - Relative evaluation:
+                        - Ranking multiple options or prioritizing them
+                        - LLMs and humans are more aligned with pairwise than score-based evaluation
+                        - Outperforms other methods in positional consistency
+                    - Can be extended to complex relation-based frameworks:
+                        - List-wise comparisons
+                        - Advanced ranking algorithms
+                        - Data filtering
+                    - Modes:
+                        - Two-option: Choosing the best from 2 options
+                        - Three-option: Allows indicating a tie if neither option is preferable
+                        - Four-option: Allows indicating a both good tie or a both bad tie
+                - Making multiple-choice selections:
+                    - Definition: Providing multiple options with the intent to choose the most appropriate or correct one
+                    - Allows a broader range of responses than true/false and assesses deeper understanding
+                    - Is rarer than the others
+    - Model selection:
+        - General LLM:
+            - Definition: Selecting an advanced enough LLM to achieve the desired accuracy
+            - Models such as GPT-4 have been shown to have superior consistency and stability compared to humans
+            - Limited instruction-following or reasoning abilities will have significant effects
+        - Fine-tuned LLM:
+            - Definition: Refining a model to a specific dataset
+            - Enables privacy and evaluation reproducibility
+            - Approach:
+                1. Collecting data with instructions, objects to be evaluated, and evaluations
+                    - Instructions come from instruction datasets
+                    - Evaluations come from LLMs or human annotation
+                2. Desingin suitable prompt
+                    - Varies based on the evaluation scheme
+                3. Fine-tuning the model with the designed prompts and collected data
+                    - Model is given instructions with one or more responses to generate an output with evaluation and explanation
+                4. Using the fine-tuned model for the target object
+                    - Be aware the limitations of their evalution capability
+                    - Fine-tuning can also reduce the model's generalization 
+    - Post-processing method
+        - Definition: refining the probability distributions of the model to get accurate evaluations
+        - Methods:
+            - Extracting specific tokens:
+                - Definition: Using rule-matching to extract the corresponding token from the response during probability distribution iteration
+                - Types:
+                    - Using instructions for a format
+                    - Providing few-shot examples
+                    - Constrained decoding to enforce structured output by restricting generation to a schema
+            - Normalizing the output logits:
+                - Definition: Using normalized output logits for a continuous score between 0 and 1
+                - Common in agent and prompt-based optimization methods
+                - Types:
+                    - Self-consistency and self-reflection score
+            - Selecting sentences with high returns:
+                - Definition: Using sentences or paragraphs to enable iterative reasoning steps
+    - Evalution pipeline:
+        - Scenarios:
+            - LLM-as-a-judge for models
+                - Definition: Using LLMs as automated proxy for assessing LLMs
+                - Reduces costly, time-consuming and laborious human annotation
+                - Cost factor exists with propertiary models
+                - Closed source LLM-as-a-judge leads to low reprodubility
+            - LLM-as-a-judge for data:
+                - Definition: Using LLMs to automate data annotation
+                - Reduces labor-intensive and costly human annotation
+                - Commonly used to evaluate model-generated or crawled data
+                - Judges are often fine-tuned and enhanced with RLHF 
+                - General LLMs are also used to check alignment with human preferences
+                - Lack of domain-specific training data is common
+                - LLM-as-judge is also used for generation and evaluation of domain data
+                - Value of data diminished with the rapid improvement of model performance
+                - Self-taught evaluators can remove the need for human annotation
+                    - Used synthetic training data 
+                    - Begins with unlabelled instructions
+                    - Generates contrasting outputs 
+                    - Outputs are used to train LLM-as-a-judge
+                    - Ensures that evaluators evolve with advancing models 
+                - In the case of multimodal data, there are persistent bias and hallucination issues
+                - Pair comparison tasks do align better, while scoring and batch ranking require improvements for reliability
+            - LLM-as-a-judge for agents:
+                - Definition: Using LLMs to evaluate agentic systems
+                - Types:
+                    - Evaluating the entire process of the intelligent agent
+                    - Evaluating the agent at a specific stage in the framework process
+                - LLMs themselves can be used to evaluate the agentic system to reduce human involvement and eliminate trade-offs between thoroughness and effort
+                - The agent's ability to interact with the environment using language can also be used to give feedback to enable decisions for the next action
+            - LLM-as-a-judge for reasoning:
+                - Definition: Using an LLM to enhance reasoning to ensure logical coherence, refined steps, and clear outcomes
+                - Types:
+                    - Scaling training time:
+                        - Using an LLM as a reward model or evaluator in RL training, such as self-refinement
+                    - Scaling test time:  
+                        - Using an LLM to evaluate and select the best reasoning paths, such as best-of-N scenarios
+    - Quick practice:
+        - Definition: Using relialbe testing, clear reliablity metrics, continous feedback loops and iteraitve refinemnet to find effective configurations
+        - Steps:
+            1. Thinking phase:
+                - Defining the evaluation objectives
+                    - What needs to be evaluated
+                    - Understanding typical human approaches
+                    - Identifying reliable evaluation examples
+                - Vital for preempting potential ambiguities and biases that compromise fairness and accuracy
+            2. Prompt design:
+                - The most efficient and generally effective approach requires:
+                    - Specifying scoring dimensions
+                    - Emphasizing relative comparisons 
+                    - Creating effective examples to guide the model
+                - Careful prompt engineering mitigates issues of output variability and inter-rater reliablity to ensure consistent interpretation and responses
+             3. Model selection:
+                - Choosing a large-scale model with strong reasoning and instruction-following abilities to ensure reliable evaluations
+                - Selecting a robust and well-understood backbone to minimize evaluation inconsistencies and unverified judgments
+            4. Standardized evaluation:
+                - Using specific formats:
+                    - Boxed{XX}
+                    - Numerical scores 
+                    - Binary responses
+                - Counteracts the fragility of token extraction methods and potential for stylistic biases 
+                - Enhances interpretability and validity of the final evaluation results
+        - The process requires iterative testing with cases and refinement through testing
+        - It is essential to compare models or prompts and verify improvements 
+
+- Improvements:
+    - Definition: Mitigating the inherent biases and improving the overall evaluation performance of a model
+    - Strategies:
+        - Prompt design:
+            - Definition: Using different prompt design strategies to improve task understanding and standardize output format
+            - Targets unstable results, inter-rater inconsistency, ambiguity in responses, and positional or length biases
+            - Methods:
+                - Improving task understanding:
+                    - Few-shot prompting:
+                        - Definition: Providing high-quality examples in the evaluation prompt
+                        - Enables the model to effectively grasp the objectives, general processes, and rough evaluation criteria of tasks
+                    - Evaluation step decomposition:
+                        - Definition: Breaking down the evaluation tasks into smaller steps with detailed definitions and constraints
+                        - Enables guiding the model through the whole evaluation pipeline
+                    - Evaluation criteria decomposition:
+                        - Definition: Breaking down the coarse evaluation criteria into finer-grained sub-criteria
+                        - Enables getting more specific scores for greater complexity 
+                    - Shuffling contents:
+                        - Definition: Randomly swapping evaluated contents to address specific biases
+                        - Can be used to get reliable and position-bias-free results
+                    - Conversion of evaluation tasks:
+                        - Definition: Converting the task into a pairwise comparison
+                        - Removes the prompt variations and inherent randomness of numerical scores for stable and reliable relative assessments
+                    - Enables enriching details of prompts and directly or indirectly enhancing the model, while addressing specific biases
+                - Standardizing LLms output format:
+                    - Constraining outputs in structured formats:
+                        - Definition: Constraining model output into a structured format using the prompt
+                        - Enables increasing the robustness of responses to enable automated and accurate extraction of results
+                    - Providing evaluations with explanations:
+                        - Definition: Asking the model to explain the scores
+                        - Enables interpreting the provided results
+        - Capability enhancement:
+            - Definition: Using different enhancement strategies to reduce conceptual confusion and increase evaluation capabilities
+            - Methods:
+                - Specialized fine-tuning:
+                    - Definition: Fine-tuning the model on a meta-evaluation dataset constructed for evaluation tasks
+                    - Required collection and construction of training data
+                        - Evaluation templates:
+                            - Puts raw data into preset templates
+                        - Deep transformation
+                            - Uses algorithms or models to transform raw data into a suitable style, content, and structure
+                    - Enables directly adjusting the model's knowledge and language abilities
+                - Feedback-driven iterative refinement:
+                    - Definition: Iteratively optimizing the model using feedback from stronger models or human evaluators
+                    - Approaches:
+                        - Offline training
+                        - Online RL training
+                        - Hybrid training 
+        - Final output optimization:
+            - Definition: Using optimization strategies to enable reliable and fair evalution results
+            - Methods:
+                - Integrating multi-source evaluation results:
+                    - Definition: Reducing impacts of accidental factors and random errors with multiple evaluation results
+                    - Approaches:
+                        - Multi-round:
+                            - Running evaluation on the same content with different hyperparameters and summarizing the results
+                        - Multi model:
+                            - Running evaluation on the same content with multiple models and integrating the results
+                        - Cascaded selective evaluation:
+                            - Moving from smaller to larger models based on confidence
+                        - Crowd-based comparative evaluation
+                            - Using multiple models to construct crowd responses based on candidate responses for comparison
+                - Direct output optimization
+                    - Definition: Processing the output further to make it more reliable 
+                    - Approaches:
+                        - Score smoothing:
+                            - Combining the implicit logits with the explicit output scores
+                        - Self-verification:
+                            - Asking the model for its certainty about the evaluation results
+
+- Evalution:
+    - Definition: How to reliabily handle the indepdende vriables of probability function, evaluted input and accompying context
+    - Evaluation dimensions:
+        - Agreement with human judgments:
+            - Definition: The percentage agreement representing the proportion of samples on which LLMs and human annotators agree on a dataset
+            - Cohen's k and Spearman's correlation are used to assess agreement
+            - Agreement can also be treated as a classification problem with human annotations being labels 
+            - Both cases assume there is a dataset with generated responses and human judgments
+        - Bias: 
+            - Definition: What kinds of biases can cause the model to give unfair results
+            - Task-agnostic biases:
+                - Definition: Fundamental issues of LLMs across general applications
+                - Typical types:
+                    - Diversity bias:
+                        - Higher score being given to responses that align with stereotypes of groups
+                    - Cultural bias:
+                        - Lower score given to unfamiliar responses from different cultures
+                    - Self-enhancement bias:
+                        - Higher score being given to responses generated by the model themself 
+            - Judgment-specific biases:
+                - Definition: Unique issues to the LLM-as-a-judge setting
+                - Typical types:
+                    - Position bias:
+                        - Favoring responses in a certain position in the prompt
+                    - Compassion-fade bias:
+                        - Favoring responses based on explicitly provided model names
+                    - Style bias:
+                        - Favoring certain text styles
+                    - Length bias:
+                        - Favoring responses of particular length
+                    - Concreteness bias: 
+                        - Favoring responses with specific details
+         - Adversarial robustness:
+            - Definition: Ability of the model to withstand deliberate attempts to manipulate scores with crafted inputs
+            - Usually done by inserting an attack phrase to enhance scores
+            - Insufficient robustenss alows trivial manipulations and undermines evalution of text quality
+
+- Applications:
+    - Machine learning:
+        - NLP:
+            - Sentiment analysis
+            - Machine translation
+            - Text summarization
+        - Text generation:
+            - Dialog response generation
+            - summarization
+            - Story creation
+            - Creative writing
+        - Reasoning:
+            - Sample-level reasoning path selection
+            - Step-level reasoning path selection
+        - Retrieval:
+            - Traditional document ranking
+            - Dynamic retrieval-augmented generation
+        - Social intelligence:
+            - Interpreting social contexts
+            - Adhering to ethical and cultural norms
+            - Understanding emotional cues
+            - Participating in multi-turn interactions with negotiation, persuasion, or empathy
+        - Multi-modal evaluation:
+            - Integrating text with visual, auditory, and other sensory inputs
+    - Other domains:
+        - Finance:
+            - Incorporating expert domain knowledge
+            - Robust benchmarks and evaluation frameworks
+            - Quantitative investment strategies, credit scoring and ESG scoring
+        - Law:
+            - Specialized evaluators that directly incorporate expert legal knowledge and practices
+            - Comprehensive benchmarks and evaluation datasets to systematically measure and improve legal reasoning
+        - AI4Sci:
+            - Specialized evaluators crafted for high-stage clinical reasoning
+            - Stepwise reward modeling to verify reasoning chains
+            - Comprehensive benchmarking frameworks to assess scientific LLM judges at scale
+        - Others:
+            - Evaluating bug report summarizations
+            - Automated essay scoring and revision
+            - Content moderation
+            - User preference assessment
+    
+- Challenges:
+    - Reliability:
+        - Definition: How the probabilistic nature and sensitivity to inputs impact consistency and fairness
+        - Areas:
+            - In-context learning sensitivity:
+                - Minor changes in wording or order of examples can lead to unstable and inconsistent results
+            - Overconfidence and self-enhancement:
+                - RLHF models may offer overly favorable scores to their own responses
+            - Model selection and generalization:
+                - The choice of a model significantly impacts evaluation
+    - Robustness:
+        - Definition: How well the model can resist adversarial attacks and inconsistent inputs
+        - Areas:
+            - Adversarial attacks:
+                - Subtle manipulation of input to change outcomes
+            - Input sensitivity and jailbreaking:
+                - Crafting an input that bypasses safety and fairness filters
+            - Brittleness of scoring mechanisms:
+                - Creating an input that confuses the model to provide outputs that break the automated scoring pipeline
+    - Limitations of backbone models:
+        - Definition: The bottleneck of LLM-as-a-judge is the lack of robust models
+        - This makes achieving reliable evaluations in a wide range of real-world scenarios difficult
+        - The current gap between models' superficial fluency and their reasoning depth reduces trust in evaluation
+    - Interpretability and transparency of judgments:
+        - Definition: The models are black boxes that limit user trust
+        - The model would need a method to make model reasoning traceable to enable validation by human experts 
+    - Meta-evalution and temporal consistency:
+        - Definition: The evaluator is rarely scrutinizes, so how to ensure reliablity of LLM-as-a-judge systems
+        - There is a lack of rigourous benchmarks to measure a judge's accuracy, stability and bias
+        - Models also experience evalution drift, which make LLM-as-a-judge not static
+    - Ethical and social implications:
+        - Bias amplification
+            - The model training data often contains societal biases that can reinforce these biases
+        - Lack of accountability and transparency
+            - The black box nature of proprietary models makes it difficult to understand how they arrived at an evaluation
+        - Impact of creative and diverse outputs
+            - Model favoring specific styles, formats, or tones can homogenize content, leading to evaluation-driven convergence
+
+This framework helps us list the design requirements for developing automated evaluation methods for LLM applications. We will use this to create the behavior controller and answer evaluator for the use-case demonstration.
+
+## How to do LLM-as-a-judge?
