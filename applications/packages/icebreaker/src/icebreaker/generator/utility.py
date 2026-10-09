@@ -432,20 +432,31 @@ def generator_format_data(
     except ImportError as e:
         raise ImportError("evaluation/use failed to import", e)
     
-    formatted_table = {}
-    formatted_metrics = {}
-    
-    for name, data in generator_data.items():
-        if not name == 'parameters':
-            for data_dict in data:
-                for key, value in data_dict.items():
-                    if not key in formatted_table:
-                        formatted_table[key] = []
-                    formatted_table[key].append(value)
-         
-    created_dataframe = pd.DataFrame(formatted_table)   
+    num_requests = len(generator_data.get('inputs', []))
+    records = []
 
-    metric_dict = created_dataframe[metric_columns].agg([
+    for i in range(num_requests):
+        row_dict = {}
+        
+        if i < len(generator_data['inputs']):
+            row_dict.update(generator_data['inputs'][i])
+            
+        if i < len(generator_data['metrics']):
+            row_dict.update(generator_data['metrics'][i])
+            
+        if i < len(generator_data['outputs']):
+            row_dict.update(generator_data['outputs'][i])
+
+        records.append(row_dict)
+         
+    # pandas automatically handles missing keys across records by filling them with NaN/None
+    created_dataframe = pd.DataFrame(records)   
+
+    # Filter metric_columns to only those present in the created DataFrame to avoid KeyError
+    valid_metric_cols = [c for c in metric_columns if c in created_dataframe.columns]
+
+    metric_dict = created_dataframe[valid_metric_cols].agg([
+        'sum',
         'mean', 
         'std', 
         'median', 
@@ -453,11 +464,16 @@ def generator_format_data(
         pandas_get_p99, 
         'min', 
         'max'
-    ]).to_dict()
+    ]).rename(
+        index = {
+            pandas_get_p95: 'p95',
+            pandas_get_p99: 'p99'
+        }
+    ).to_dict()
     
     formatted_metrics = flatten_nested_dict(
         target_dict = metric_dict,
-        parent_key = '',
+        parent_key = '', 
         seperator = '-'
     )
 
