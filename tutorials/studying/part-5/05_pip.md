@@ -154,7 +154,7 @@ icebreaker[all] @ git+https://github.com/K123AsJ0k1/ice-mlops-mlch.git@main#subd
 
 From these, we will mainly use 2 and 3 to use the package in various local, cloud, and HPC environments.
 
-## How to use locally updated Pip packages in JupyterLab
+## How to use locally updated Pip packages in JupyterLab?
 
 When you use a local package with the -e flag, you can make the notebook automatically update to the newest package code by running the following commands [(3)](#used-material-3):
 
