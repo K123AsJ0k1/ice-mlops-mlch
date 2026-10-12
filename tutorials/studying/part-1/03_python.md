@@ -59,9 +59,9 @@ pip install -r requirements.txt
 pip freeze >> packages.txt
 ```
 
-## Python package configuration
+## How to configure packages in Python?
 
-Configuring PIP packages requires identifying the current packages, listing the required packages, switching package versions, and confirming version compatibilities. 
+Configuring Pip packages requires identifying the current packages, listing the required packages, switching package versions, and confirming version compatibilities. 
 
 Package identification is done by checking the packages.txt. It shows a long list of all packages and their versions, which is useful for debugging, but usually too specific for installation. 
 

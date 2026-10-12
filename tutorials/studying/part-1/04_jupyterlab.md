@@ -42,11 +42,11 @@ CTRL + C
 Y
 ```
 
-## Python packages in JupyterLab
+## How to use Python packages in JupyterLab?
 
 JupyterLab uses the packages that the venv had at the time of activation, which means package installations require a restart to take effect. Shutting down can mean losing data, which is why you should be saving just in case before shutting down the server.
 
-## JupyterLab Magic commands
+## How to use JupyterLab Magic commands?
 
 Magic commands are shortcut commands we can use to control the notebook environment or the host system [(2)](#used-material-2). In our case, the most important ones are:
 
@@ -58,7 +58,7 @@ Magic commands are shortcut commands we can use to control the notebook environm
 !(command) = runs a terminal command
 ```
 
-## Function initialization in JupyterLab
+## How to use functions in JupyterLab?
 
 We can use functions defined outside the notebook by using %run in the following way:
 
