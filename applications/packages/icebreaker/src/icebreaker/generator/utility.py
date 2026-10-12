@@ -1,7 +1,7 @@
 
 def generator_process_references(
     used_references: str,
-) -> any:
+) -> any: 
     try:
         import pandas as pd
     except ImportError as e:
@@ -180,7 +180,10 @@ def generator_create_requests(
     dataset_ids: list,
     prompts: dict
 ):
-    from ..mlflow.use import mlflow_get_dataset, mlflow_get_prompt
+    try:
+        from ..mlflow.use import mlflow_get_dataset, mlflow_get_prompt
+    except ImportError as e:
+        raise ImportError("generator/utility failed to import", e)
 
     request_index = 0
     prompt_variant_index = {}

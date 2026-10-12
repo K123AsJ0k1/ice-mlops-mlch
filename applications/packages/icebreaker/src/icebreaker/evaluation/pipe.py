@@ -155,3 +155,121 @@ def evalution_generator_pipe(
     )
 
     return formatted_generator_dataset
+
+def evalution_assistant_pipe(
+    mlflow_client: any,
+    experiment_name: str,
+    run_name: str,
+    run_tags: dict,
+    dataset_ids: list,
+    prompts: dict,
+    trace_name: str,
+    trace_attributes: dict,
+    trace_tags: dict,
+    dataset_limit: int,
+    inference_parameters: dict,
+    debug_prints: bool
+):
+    try:
+        from ..generator.use import generator_produce_dataset
+        from ..mlflow.use import mlflow_get_or_create_experiment, mlflow_start_run, mlflow_add_logs, mlflow_end_run
+    except ImportError as e:
+        raise ImportError("evaluation/pipe failed to import", e)
+    
+    experiment_id = mlflow_get_or_create_experiment(
+        mlflow_client = mlflow_client,
+        name = experiment_name
+    ) 
+
+    run_id = mlflow_start_run(
+        mlflow_client = mlflow_client,
+        experiment_id = experiment_id, 
+        run_name = run_name, 
+        tags = run_tags
+    ) 
+
+    '''
+
+    parameters = formatted_generator_dataset['parameters']
+    metrics = formatted_generator_dataset['metrics']
+    table = formatted_generator_dataset['tables']
+    
+    mlflow_add_logs(
+        mlflow_client = mlflow_client,
+        run_id = run_id, 
+        parameters = parameters,
+        metrics = metrics,
+        metrics_prefix = 'generator',
+        metrics_step = 1,
+        table = table,
+        table_folder = 'generator',
+        table_name = 'synthetic_QA_dataset'
+    )
+    '''
+
+    mlflow_end_run(
+        mlflow_client = mlflow_client, 
+        run_id = run_id, 
+        status = 'FINISHED',
+        end_time = None
+    )
+    
+    return None
+
+def evaluation_judge_pipe(
+    mlflow_client: any,
+    experiment_name: str,
+    run_name: str,
+    run_tags: dict,
+    dataset_ids: list,
+    prompts: dict,
+    trace_name: str,
+    trace_attributes: dict,
+    trace_tags: dict,
+    dataset_limit: int,
+    inference_parameters: dict,
+    debug_prints: bool
+):
+    try:
+        from ..generator.use import generator_produce_dataset
+        from ..mlflow.use import mlflow_get_or_create_experiment, mlflow_start_run, mlflow_add_logs, mlflow_end_run
+    except ImportError as e:
+        raise ImportError("evaluation/pipe failed to import", e)
+    
+    experiment_id = mlflow_get_or_create_experiment(
+        mlflow_client = mlflow_client,
+        name = experiment_name
+    ) 
+
+    run_id = mlflow_start_run(
+        mlflow_client = mlflow_client,
+        experiment_id = experiment_id, 
+        run_name = run_name, 
+        tags = run_tags
+    ) 
+    '''
+    parameters = formatted_generator_dataset['parameters']
+    metrics = formatted_generator_dataset['metrics']
+    table = formatted_generator_dataset['tables']
+    
+    mlflow_add_logs(
+        mlflow_client = mlflow_client,
+        run_id = run_id, 
+        parameters = parameters,
+        metrics = metrics,
+        metrics_prefix = 'generator',
+        metrics_step = 1,
+        table = table,
+        table_folder = 'generator',
+        table_name = 'synthetic_QA_dataset'
+    )
+    '''
+
+    mlflow_end_run(
+        mlflow_client = mlflow_client, 
+        run_id = run_id, 
+        status = 'FINISHED',
+        end_time = None
+    )
+    
+    return None

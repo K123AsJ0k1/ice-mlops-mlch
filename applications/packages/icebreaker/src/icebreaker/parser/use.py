@@ -1,12 +1,12 @@
  
-def generator_repository_path(
+def parser_repository_path(
     repository_name: str,
     directory: str
 ) -> str:
     try:
         from pathlib import Path 
     except ImportError as e:
-        raise ImportError("parser/generator failed to import", e)
+        raise ImportError("parser/use failed to import", e)
 
     target_directory = Path.cwd() / directory
     path_split = str(target_directory).split('/')
@@ -18,13 +18,13 @@ def generator_repository_path(
     joined_path = '/'.join(path_split[index:])
     return joined_path
 
-def generator_chapter_number(
+def parser_chapter_number(
     file_name: str
 ) -> int:
     try:
         import re 
     except ImportError as e:
-        raise ImportError("parser/generator failed to import", e)
+        raise ImportError("parser/use failed to import", e)
 
     match = re.search(r'^(\d+)', file_name)
     chapter_number = None
@@ -32,7 +32,7 @@ def generator_chapter_number(
         chapter_number = int(match.group(1))
     return chapter_number
 
-def generator_save_material(
+def parser_save_material(
     data: dict,
     folder: str,
     name: str
@@ -41,7 +41,7 @@ def generator_save_material(
         from pathlib import Path 
         import json
     except ImportError as e:
-        raise ImportError("parser/generator failed to import", e)
+        raise ImportError("parser/use failed to import", e)
 
     if not folder[0] == '/':
         # Be aware that starting with /folder makes it absolute
@@ -52,11 +52,11 @@ def generator_save_material(
         with open(file_path, 'w', encoding='utf-8') as f:
             json.dump(data, f, indent=4)
 
-def generator_divide_material(
-    repository_name: str,
+def parser_process_material(
     directory: str,
     file_types: list,
     exclude_folders: list,
+    repository_name: str,
     save_material: bool,
     storage_folder: str,
     storage_name: str,
@@ -74,9 +74,9 @@ def generator_divide_material(
         from ..parser.env_parse import env_parse_file
         from ..parser.organizer import organizer_sort_material
     except ImportError as e:
-        raise ImportError("parser/generator failed to import", e)
+        raise ImportError("parser/use failed to import", e)
     
-    repository_path = generator_repository_path(
+    repository_path = parser_repository_path(
         repository_name = repository_name,
         directory = directory
     )
@@ -84,8 +84,11 @@ def generator_divide_material(
     divided_material = {}
     part_number = directory.split('-')[-1]
     for root, dirs, files in os.walk(directory):
-        dirs[:] = [d for d in dirs if d not in exclude_folders]
-
+        dirs[:] = [
+            d for d in dirs
+            if not any(exclude in d for exclude in exclude_folders)
+        ]
+        
         for file in files:
             file_path = os.path.join(root, file)
             path_split = str(file_path).split('/')
@@ -99,8 +102,10 @@ def generator_divide_material(
             absolute_path = f'{repository_path}{after}'
             file_type = file_name.split('.')[-1]
             if file_type in file_types:
+    
                 if debug_prints:
                     print('Parsing ', str(file_path))
+    
                 if file_type == 'md':
                     content = None
                     with open(file_path, 'r') as f:
@@ -112,7 +117,7 @@ def generator_divide_material(
                         content = content
                     )
 
-                    chapter_number = generator_chapter_number(
+                    chapter_number = parser_chapter_number(
                         file_name = file_name
                     )
                     parsing_strategy = 'Header division'
@@ -123,7 +128,7 @@ def generator_divide_material(
                         file_path = file_path
                     )
 
-                    chapter_number = generator_chapter_number(
+                    chapter_number = parser_chapter_number(
                         file_name = file_name
                     )
                     parsing_strategy = 'Header division'
@@ -202,7 +207,7 @@ def generator_divide_material(
 
     print('Amount of parsed files', len(sorted_material))
     if save_material:
-        generator_save_material(
+        parser_save_material(
             data = sorted_material,
             folder = storage_folder,
             name = storage_name

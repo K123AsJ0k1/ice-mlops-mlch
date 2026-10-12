@@ -72,9 +72,7 @@ def rag_batch_query(
     relevance_threshold: float,
     query_limit: int,
     fusion_limit: int,
-    dense_model_name: str,
     dense_model: any,
-    sparse_model_name: str,
     sparse_model: any,
     batch_size: int
 ) -> any:
@@ -149,10 +147,7 @@ def rag_batch_query(
                 true_relevant_weights = q_relevant_weights,
                 relevance_threshold = relevance_threshold
             ) 
-            #resulted_metrics['relevant-weights'] = q_relevant_weights
-
-        #resulted_metrics['dense-model'] = dense_model_name
-        #resulted_metrics['sparse-model'] = sparse_model_name
+            
         resulted_metrics['embedding-latency-ms'] = total_embed_total_ms
         resulted_metrics['search-latency-ms'] = search_latency_ms
         resulted_metrics['total-latency-ms'] = total_embed_total_ms + search_latency_ms
@@ -201,9 +196,7 @@ def rag_retrieval_output(
         query_limit = query_limit,
         fusion_limit = fusion_limit,
         dense_model = dense_model,
-        dense_model_name = dense_model_name,
         sparse_model = sparse_model,
-        sparse_model_name = sparse_model_name,
         batch_size = batch_size
     )
     
