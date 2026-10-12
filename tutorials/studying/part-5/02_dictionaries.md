@@ -131,7 +131,7 @@ with open('stored-file.pkl', 'rb') as f:
     scoring_rubric = pickle.load(f)
 ```
 
-## Dictionary Namespaced Mutating Chain of Responsiblity
+## How to implement a namespaced Chain of Responsibility in Dictionaries?
 
 When using object storage with object immutability, editing an existing object requires deleting the old object and creating a new object with the edited data, which can cause problems for communication dictionaries. For example, if two or more instances interact with the same dictionary object, they may create separate copies to replace the existing object, resulting in data desynchronization that can lead to errors.
 

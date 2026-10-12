@@ -148,7 +148,7 @@ swift_client = sc.Connection(
 
 10. Tokens expire in 8 hours, so run steps 8-9 to maintain connection
 
-## SWIFT Abstraction
+## How to implement abstraction for SWIFT commands?
 
 The Python SWIFT client uses PUT, CREATE, GET, DELETE, and LIST functions to manage bucket and object creation. The number of these commands and their different outputs with metadata formats make direct use of the client's high-level functions more complex and time-consuming in different scenarios, which is why our use case will abstract the functions, interactions and serialization. These form the following function structure:
 
