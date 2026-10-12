@@ -20,7 +20,7 @@ difficulty: "Easy"
 
 6. <span id="used-material-6"></span> [pickle - Python object serialization](https://docs.python.org/3/library/pickle.html)
 
-## Why use Dictionaries? 
+## Why use dictionaries? 
 
 Dictionaries are widely used as the main data type in object storage for the following reasons:
 
@@ -32,7 +32,7 @@ Dictionaries are widely used as the main data type in object storage for the fol
 
 This makes dictionaries the default data type that lets us provide details to automation, abstract them away, and interact with them in any system.  
 
-## How to use Dictionaries?
+## How to use dictionaries?
 
 In our use case, we almost always use the standard dictionary |[(1)](#used-material-1), [(2)](#used-material-2), [(3)](#used-material-3)| in the following ways:
 
@@ -131,7 +131,7 @@ with open('stored-file.pkl', 'rb') as f:
     scoring_rubric = pickle.load(f)
 ```
 
-## How to implement a namespaced Chain of Responsibility in Dictionaries?
+## How to implement a namespaced Chain of Responsibility in dictionaries?
 
 When using object storage with object immutability, editing an existing object requires deleting the old object and creating a new object with the edited data, which can cause problems for communication dictionaries. For example, if two or more instances interact with the same dictionary object, they may create separate copies to replace the existing object, resulting in data desynchronization that can lead to errors.
 

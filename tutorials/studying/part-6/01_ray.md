@@ -234,7 +234,7 @@ def main_function(job_parameters: any)
 
 This pattern can be repeated sequentially to have a longer pipeline in the Ray script. Still, since we have access to object storage and various computing infrastructures, it is much better to have a maximum of 1-2 parallel steps per Ray script to keep them short, enable easier distribution of tasks, and make the workflow using these Ray scripts more tolerant of failure. We will go more in depth later on how to create Ray-based workflows.
 
-## Local and cloud Compose Ray
+## How to setup local and cloud Compose Ray?
 
 Assuming you have installed Docker on your local computer or cloud virtual machine as described in the [Docker chapter](../part-1/07_docker.md), we can setup a local and cloud Ray cluster with the example [compose YAML](./deployments/ray/local-cloud-compose-ray-cluster.yaml). This can be done in the following steps:
 
@@ -287,7 +287,7 @@ The main resource you will always lack is RAM, which is why the shown compose YA
 
 For these reasons, unless you have proper local servers, the local side will be used to enable incremental development of your workflow and Ray scripts. It also provides a workflow speedup depending on input distribution, which we cover in more detail later.
 
-## Cloud Kubernetes Ray
+## How to setup cloud Kubernetes Ray?
 
 Assuming you have checked the KubeRay mentioned in the [Helm chapter](../part-4/07_helm.md), we can set it up using the example [YAML configuration](./deployments/ray/cloud-kubernetes-ray-cluster.yaml). This can be done in the following way:
 
