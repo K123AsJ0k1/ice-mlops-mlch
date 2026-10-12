@@ -173,7 +173,7 @@ When you check the files inside the storage folder, you notice the following str
 
 The purpose of this structure is again easier understandability and development enabled by Kustomize, where each software has its own Kubernetes resources that we can invoke with a kustomization file, which itself is invoked by a kustomization file handling the whole stack.
 
-## What are the important parts of Kustomize?
+## What are the important parts of Kustomize configurations?
 
 The most important parts to keep an eye on when trying to understand or develop Kustomize configurations are:
 
