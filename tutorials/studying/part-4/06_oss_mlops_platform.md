@@ -10,7 +10,7 @@ difficulty: "Easy"
 
 1. <span id="used-material-1"></span> [OSS MLOps Platform GitHub](https://github.com/OSS-MLOPS-PLATFORM/oss-mlops-platform)
 
-## Why use OSS MLOps platform?
+## Why use the OSS MLOps platform?
 
 The open-source software (OSS) MLOps was chosen for the following reasons:
 
@@ -22,7 +22,7 @@ The open-source software (OSS) MLOps was chosen for the following reasons:
 
 These enable us to use the OSS MLOps platform as a flexible environment for developing and maintaining MLOps that fits our use case. 
 
-## How to use OSS MLOps platform?
+## How to use the OSS MLOps platform?
 
 Assuming that you setup a VM with Docker Engine with the [cPouta chapter](./02_cpouta.md), we can setup the OSS MLOps platform to run in the following way [(1)](#used-material-1):
 
@@ -114,7 +114,7 @@ Server:
  Docker Root Dir: /media/volume/docker
 ```
 
-## Important parts of OSS MLOps platform
+## What are the important parts of the OSS MLOps platform?
 
 The most important parts to keep an eye on when developing and maintaining the OSS MLOps platform are:
 

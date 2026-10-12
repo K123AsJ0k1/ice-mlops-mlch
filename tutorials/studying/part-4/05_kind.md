@@ -44,7 +44,7 @@ We will interact with kind only through setup scripts such as the [GPU cluster](
 
 If the resulting kind cluster is missing something, it is caused by incorrect or missing lines in the config text. Be aware that you need to recreate the cluster for the changes to take effect, which is why you should plan ahead for the desired configuration and confirm that you have already backed up all the data you want from the cluster.
 
-## GPU configuration of Kubernetes in Docker
+## How to configure GPUs in Kubernetes in Docker?
 
 If we can use GPUs in Docker containers and we want to run GPU containers inside the kind cluster, we need to modify the extra mounts configuration [(2)](#used-material-2). This is done with the following steps |[(3)](#used-material-3), [(4)](#used-material-4), [(5)](#used-material-5), [(6)](#used-material-6)|:
 
@@ -210,7 +210,7 @@ sudo reboot
 
 4. When the cluster is running, add Nvshare back with step 6.
 
-## Port configuration of Kubernetes in Docker
+## How to configure ports in Kubernetes in Docker?
 
 If we want to interact directly with the containers running in the kind cluster, we need to modify extraPortMappings [(2)](#used-material-2). We can do this by adding more entries to extraPortMappings in the following way:
 

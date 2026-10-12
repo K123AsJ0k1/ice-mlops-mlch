@@ -76,11 +76,11 @@ Be aware that there is a limited number of GPUs on the cPouta platform, so you m
 
 If you ever have problems connecting to cPouta, it's likely due to security rules that prevent the client's IP address from connecting. The fix is to figure out the IP address and update the security rules. For example, this often happens when your local computer changes its IP address, which you can fix by checking your new IP address  [(10)](#used-material-10) and creating a new SSH rule for it.
 
-## cPouta Docker
+## How to setup Docker in cPouta?
 
 Please follow the provided materials to install Docker Engine with [(11)](#used-material-11) and remove sudo with [(12)](#used-material-12).
 
-## cPouta volumes
+## How to setup volumes in cPouta?
 
 The default storage for Docker is the 80 GB disk, which can become small if your use case includes LLMs. You might also want to save those files and, in the future, move the Docker files to other VMs. Both of these are solved with cPouta persistent volumes [(13)](#used-material-13). Use the provided materials to create a volume of at least 200 GB and attach it to your VM. We can configure it with the following steps:
 
@@ -176,7 +176,7 @@ sudo systemctl start docker
 docker info
 ```
 
-## cPouta GPUs
+## How to setup GPUs in cPouta?
 
 The cPouta Ubuntu images usually don’t include GPU drivers by default, so you might need to install NVIDIA drivers, CUDA, and the container toolkit. We used |[(15)](#used-material-15), [(16)](#used-material-16)| as the sources to get the following steps:
 

@@ -353,7 +353,7 @@ kubectl logs kiali-(id) -n istio-system
         - [Response](./networking/responses/neo4j-bolt.txt)
         - [Logs](./networking/logs/neo4j-bolt-istio.txt)
 
-## Important parts of Istio
+## What are the important parts of Istio?
 
 The most important parts to keep an eye on when trying to understand or configure Istio are:
 

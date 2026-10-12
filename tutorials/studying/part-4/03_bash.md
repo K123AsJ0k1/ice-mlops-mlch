@@ -68,7 +68,7 @@ Usually, configuration scripts simply run long terminal commands, such as those 
 
 From these steps 2, 5, 7, 8, and 9, the configuration scripts actually run, while others gather variables or execute terminal commands. For this reason, if more configuration scripts are needed, they can simply be listed in step 2 and appended after step 9 for use during setup.
 
-## Important parts of Bash
+## What are the important parts of Bash?
 
 The most important parts to keep an eye on when trying to understand or develop Bash scripts are:
 

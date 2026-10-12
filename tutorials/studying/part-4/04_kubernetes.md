@@ -98,7 +98,7 @@ kubectl delete pod (pod_name) -n (namespace)
 
 Be aware that there are many useful commands, and that any problems Kubernetes faces can be solved either by waiting, debugging the YAML files used to deploy pods, or deleting faulty Kubernetes resources.
 
-## Important parts of Kubernetes
+## What are the important parts of Kubernetes?
 
 The most important parts to keep an eye on when using Kubernetes to run containers are:
 

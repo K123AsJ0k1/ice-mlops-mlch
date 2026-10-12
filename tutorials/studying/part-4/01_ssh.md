@@ -56,7 +56,7 @@ ssh -L [CLIENT_HOST_ADDRESS]:[CLIENT_HOST_PORT] [SERVER_HOST_ADDRESS]:[SERVER_HO
 ssh -R [SERVER_HOST_ADDRESS]:[SERVER_HOST_PORT] [CLIENT_HOST_ADDRESS]:[CLIENT_HOST_PORT] [SERVER_USERNAME]@[SERVER_IP_ADDRESS]
 ```
 
-## SSH config
+## How to configure SSH?
 
 The main problem with manual SSH use via the terminal is the need to enter long exact commands. SSH can help with this via a config file, usually located in a .ssh folder within the personal folder [(6)](#used-material-6). We can create it in the following way:
 
