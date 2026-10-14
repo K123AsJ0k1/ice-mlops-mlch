@@ -20,12 +20,15 @@ def objects_store_data(
     if storage_parameters['object-serialization'] == 'parquet':
         print('Formatted to parquet')
         stored_data = pyarrow_serialize_dataframe(dataframe = object_data)
+    if storage_parameters['object-serialization'] == 'serialized':
+        stored_data = object_data
     stored_metadata = object_metadata
     if 0 == len(object_metadata):
         stored_metadata = {'version': 1}
 
     if stored_data is None:
         return False
+    
     storage_parameters['mode'] = 'send'
     object_stored = object_storage_interaction(
         storage_client = swift_client,

@@ -69,7 +69,7 @@ def object_storage_interaction(
         from ..interactions.concurrency import concurrency_get_client, concurrency_check_lock, concurrency_get_lock, concurrency_release_lock
     except ImportError as e:
         raise ImportError("storage/management failed to import", e)
-
+    # This might at some point require input validation with pydantic
     output = None 
     if swift_client_check(storage_client = storage_client):
         bucket_name = set_bucket_name(
