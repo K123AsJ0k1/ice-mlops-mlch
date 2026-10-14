@@ -68,6 +68,117 @@ def workflow_handle_internal_datasets(
 
     return total_time
 
+def workflow_format_internal_datasets(
+    swift_client: any,
+    storage_parameters: any,
+    dataset_paths: list,
+    ref_column: str,
+    path_column: str,
+    material_grades: dict,
+    insert_prefix: str,
+    format_prefix: str,
+    group_columns: list,
+    value_column: str,
+    weigth_column: str
+):
+    try: 
+        import time as t
+        import pandas as pd
+        from ..objects.use import objects_get_data, objects_store_data
+        from ..workflow.utility import workflow_set_weights, workflow_grade_row
+    except ImportError as e:
+        raise ImportError("workflow/use failed to import", e)
+
+    start_time = t.time()
+
+    checked_datasets = [] 
+    idx = 0
+    global_ref_paths = {}
+    for dataset_path in dataset_paths:
+        data_object = objects_get_data(
+            swift_client = swift_client,
+            storage_parameters = {
+                'bucket-target': storage_parameters['bucket-target'],
+                'bucket-prefix': storage_parameters['bucket-prefix'],
+                'bucket-user': storage_parameters['bucket-user'],
+                'object-name': 'root',
+                'object-serialization': storage_parameters['object-serialization'],
+                'path-replacers': {
+                    'name': dataset_path
+                },
+                'path-names': [],
+                'debug-prints': True,
+                'lock-parameters': {},
+                'lock-location': None,
+                'overwrite': True
+            },
+            dict_format = False
+        ) 
+
+        df_records = data_object[0].to_dict('records')
+        dataset_rows_1 = []
+        for row in df_records:
+            formatted_row = row.copy()
+            formatted_row['idx'] = idx
+            formatted_row['dataset-object'] = dataset_path
+            global_ref_paths.update(formatted_row[ref_column])
+            dataset_rows_1.append(formatted_row)
+            idx += 1
+        checked_datasets.append(dataset_rows_1)
+
+    dataset_idx = 0
+    for dataset_path in dataset_paths:
+        dataset_rows_2 = []
+        
+        for row in checked_datasets[dataset_idx]:
+            formatted_row = row.copy()
+            formatted_row['relevance'] = workflow_grade_row(
+                data_row = row,
+                path_column = path_column,
+                global_reference_paths = global_ref_paths,
+                material_grades = material_grades
+            )
+
+            dataset_rows_2.append(formatted_row)
+        
+        before, match, after = dataset_path.partition(insert_prefix)
+        modified_dataset_path = f'{before}{match}-{format_prefix}{after}'
+        dataset_df = pd.DataFrame(dataset_rows_2)
+        dataset_df['ranking-weights'] = workflow_set_weights(
+            target_df = dataset_df,
+            group_columns = group_columns,
+            value_column = value_column,
+            weight_column = weigth_column
+        )
+
+        status = objects_store_data(
+            swift_client = swift_client,
+            storage_parameters = {
+                'bucket-target': storage_parameters['bucket-target'],
+                'bucket-prefix': storage_parameters['bucket-prefix'],
+                'bucket-user': storage_parameters['bucket-user'],
+                'object-name': 'root',
+                'object-serialization': storage_parameters['object-serialization'],
+                'path-replacers': {
+                    'name': modified_dataset_path
+                },
+                'path-names': [],
+                'debug-prints': True,
+                'lock-parameters': {},
+                'lock-location': None,
+                'overwrite': True
+            },
+            object_data = dataset_df,
+            object_metadata = {}
+        )
+        dataset_idx += 1
+
+    end_time = t.time()
+    total_time = round(end_time-start_time,5)
+    print(f'Spent seconds: {total_time}')
+
+    return total_time
+
 def workflow_handle_external_datasets(
     swift_client: any,
     external_material_parameters: any
@@ -180,5 +291,3 @@ def workflow_handle_external_datasets(
 
     return total_time
 
-def workflow_store_datasets():
-    pass

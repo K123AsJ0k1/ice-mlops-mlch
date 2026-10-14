@@ -90,6 +90,46 @@ def workflow_format_material(
     
     return dataframe
 
+def workflow_grade_row(
+    data_row: any,
+    path_column: str,
+    global_reference_paths: dict,
+    material_grades: dict
+):
+    row_absolute_path = data_row[path_column]
+    file_type = row_absolute_path.split('.')[-1]
+
+    row_grade = None
+    if file_type in material_grades:
+        m_type, row_grade = material_grades[file_type]
+        if m_type == 'secondary':
+            for _, absolute_path in global_reference_paths.items():
+                if absolute_path == row_absolute_path:
+                    row_grade += 1
+                    break  
+    return row_grade
+
+def workflow_set_weights(
+    target_df: any,
+    group_columns: list,
+    value_column: str,
+    weight_column: str
+): 
+    weight_lookup = target_df.groupby(group_columns)[value_column].apply(list).to_dict()
+        
+    weights_batch = []
+    for _, row in target_df.iterrows():
+        group_key = tuple(row[column] for column in group_columns)
+        relevant_id_batch = weight_lookup[group_key]
+        relevant_weighed_ids = {}
+        for relevant_id in relevant_id_batch:
+            id_weight = target_df.loc[target_df[value_column] == relevant_id, weight_column].values[0]
+            relevant_weighed_ids[relevant_id] = int(id_weight)
+        
+        weights_batch.append(relevant_weighed_ids)
+    
+    return weights_batch
+
 def workflow_divide_external_data(
     dataset_repository: str,
     dataset_name: str,
@@ -246,3 +286,5 @@ def workflow_store_data(
     total_time = round(end_time-start_time,5)
     print('Spent seconds', total_time)
     return total_time
+
+

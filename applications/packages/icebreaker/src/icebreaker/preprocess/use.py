@@ -2,8 +2,7 @@ def preprocess_grade_row(
     data_row: any,
     path_column: str,
     global_reference_paths: dict,
-    material_grades: dict,
-    blacklist_prefixes: list
+    material_grades: dict
 ):
     row_absolute_path = data_row[path_column]
     file_type = row_absolute_path.split('.')[-1]
@@ -12,11 +11,6 @@ def preprocess_grade_row(
     if file_type in material_grades:
         m_type, row_grade = material_grades[file_type]
         if m_type == 'secondary':
-            for blacklist_prefix in blacklist_prefixes:
-                if blacklist_prefix in row_absolute_path:
-                    # Grade penaly of 0 can be added here
-                    break
-
             for _, absolute_path in global_reference_paths.items():
                 if absolute_path == row_absolute_path:
                     row_grade += 1
@@ -51,7 +45,6 @@ def preprocess_format_datasets(
     ref_column: str,
     path_column: str,
     material_grades: dict,
-    blacklist_prefixes: dict,
     insert_prefix: str,
     format_prefix: str,
     group_columns: list,
@@ -59,10 +52,13 @@ def preprocess_format_datasets(
     weigth_column: str
 ):
     try: 
+        import time as t
         import pandas as pd
         from ..objects.use import objects_get_data, objects_store_data
     except ImportError as e:
         raise ImportError("rag/use failed to import", e)
+
+    start_time = t.time()
 
     checked_datasets = [] 
     idx = 0
@@ -99,7 +95,7 @@ def preprocess_format_datasets(
             idx += 1
         checked_datasets.append(dataset_rows_1)
 
-    preprocessed_datasets = []
+    #preprocessed_datasets = []
     dataset_idx = 0
     for dataset_path in dataset_paths:
         dataset_rows_2 = []
@@ -110,8 +106,7 @@ def preprocess_format_datasets(
                 data_row = row,
                 path_column = path_column,
                 global_reference_paths = global_ref_paths,
-                material_grades = material_grades,
-                blacklist_prefixes = blacklist_prefixes
+                material_grades = material_grades
             )
 
             dataset_rows_2.append(preprocessed_row)
@@ -126,8 +121,6 @@ def preprocess_format_datasets(
             weight_column = weigth_column
         )
 
-        preprocessed_datasets.append(dataset_df)
-        
         status = objects_store_data(
             swift_client = swift_client,
             storage_parameters = {
@@ -150,4 +143,8 @@ def preprocess_format_datasets(
         )
         dataset_idx += 1
 
-    return preprocessed_datasets
+    end_time = t.time()
+    total_time = round(end_time-start_time,5)
+    print(f'Spent seconds: {total_time}')
+
+    return total_time
