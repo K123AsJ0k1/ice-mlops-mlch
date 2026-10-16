@@ -1,0 +1,31 @@
+* Host localhost:7009 was resolved.
+* IPv6: ::1
+* IPv4: 127.0.0.1
+*   Trying [::1]:7009...
+* connect to ::1 port 7009 from ::1 port 38002 failed: Connection refused
+*   Trying 127.0.0.1:7009...
+* Connected to localhost (127.0.0.1) port 7009
+> GET / HTTP/1.1
+> Host: localhost:7009
+> User-Agent: curl/8.5.0
+> Accept: */*
+> 
+< HTTP/1.1 403 Forbidden
+< Accept-Ranges: bytes
+< Content-Length: 254
+< Content-Type: application/xml
+< Server: Silo
+< Strict-Transport-Security: max-age=31536000; includeSubDomains
+< Vary: Origin
+< Vary: Accept-Encoding
+< X-Amz-Id-2: dd9025bab4ad464b049177c95eb6ebf374d3b3fd1af9251148b658df7ac2e3e8
+< X-Amz-Request-Id: 18DEF0B6D6AD6240
+< X-Content-Type-Options: nosniff
+< X-Ratelimit-Limit: 34106
+< X-Ratelimit-Remaining: 34106
+< X-Xss-Protection: 1; mode=block
+< Date: Fri, 16 Oct 2026 07:06:09 GMT
+< 
+<?xml version="1.0" encoding="UTF-8"?>
+* Connection #0 to host localhost left intact
+<Error><Code>AccessDenied</Code><Message>Access Denied.</Message><Resource>/</Resource><RequestId>18DEF0B6D6AD6240</RequestId><HostId>dd9025bab4ad464b049177c95eb6ebf374d3b3fd1af9251148b658

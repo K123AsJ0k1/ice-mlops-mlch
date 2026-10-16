@@ -30,7 +30,7 @@ These features make MLflow the default logging and lineage platform for our loca
 
 ## How to use MLflow?
 
-Assuming you've set up the platform with the [OSS chapter](../part-4/06_oss_mlops_platform.md) and the network with the [Istio chapter](../part-4/11_istio.md), we can start configuring MLflow for our use case. The MLflow version running on the OSS platform is likely a bit old, so we need to update its image to use the latest package [(1)](#used-material-1). Unlike other images, we need to build a new image with the following steps:
+Assuming you've set up the platform with the [OSS chapter](../part-4/06_oss_mlops_platform.md), we can start configuring MLflow for our use case. The MLflow version running on the OSS platform is likely a bit old, so we need to update its image to use the latest package [(1)](#used-material-1). Unlike other images, we need to build a new image with the following steps:
 
 1. Go to the repository MLflow images
 
@@ -76,7 +76,61 @@ kubectl get pods -n mlflow
 kubectl logs mlflow-558744b5d8-crdx2 -n mlflow
 ```
 
-Assuming everything is working, we can start using MLflow by opening http://mlflow.oss:7001. In the dashboard, click Model Training and Experiments to see a list of runs. This is most likely empty, which is why you should check the example picture below:
+Assuming everything is working, we now only need to configure the network using the [Istio chapter](../part-4/11_istio.md). The exisitng network already enables us to open the dashboard with http://mlflow.oss:7001, but it doesn't provide the MLflow MinIO connection to enable artifact uploads. This means we would do the following before using MLflow with code:
+
+```
+ssh -L 7008:localhost:9000 cpouta
+kubectl port-forward svc/mlflow-minio-service 9000:9000 --namespace mlflow
+```
+
+We can remove this need with the following steps:
+
+1. Modify Istio Ingress Gateway to have a port for MLFlow MinIO.
+
+```
+cd ice-mlops-mlch/tutorials/studying/part-7/deployments
+kubectl get svc istio-ingressgateway -n istio-system -o yaml > mlflow-minio-istio-ingressgateway.yaml
+nano mlflow-minio-istio-ingressgateway.yaml
+```
+
+Edit the YAML spec-ports to have the following:
+
+```
+- name: tcp-mlflow-minio
+  nodePort: 31009
+  port: 207
+  protocol: TCP
+  targetPort: 9509
+```
+
+Save it and apply it with:
+
+```
+CTRL + X 
+Y
+kubectl apply -f mlflow-minio-istio-ingressgateway.yaml
+```
+
+2. Create a MLflow MinIO gateway and virtual service. See the example [gateway](./deployments/istio-mlflow-minio/mlflow-minio-gateway.yaml) and [virtualservice](./deployments/istio-mlflow-minio/mlflow-minio-virtualservice.yaml).
+
+```
+cd ice-mlops-mlch/tutorials/studying/part-7/deployments
+kubectl apply -k istio-mlflow-minio
+```
+
+3. Add the following into your SSH config:
+
+```
+LocalForward 127.0.0.1:7009 [VM_FLOATING_IP]:7009
+```
+
+4. Test the connection to MLflow MinIO. See example [response](./deployments/responses/mlflow-minio-client-curl.txt).
+
+```
+curl -v http://localhost:7009
+```
+
+With this we can begin using MLflow. In the dashboard, click Model Training and Experiments to see a list of runs. This is most likely empty, which is why you should check the example picture below:
 
 ![Figure 1](./images/mlflow_dashboard_1.png)
 
