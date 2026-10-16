@@ -172,7 +172,7 @@ kubectl get gateways -A
 kubectl get virtualservices -A
 ```
 
-Compare the prints against given [gateways](./networking/gateways.txt) and [virtualservices](./networking/virtualservices.txt)
+Compare the prints against given [gateways](./networking/gateways.txt) and [virtualservices](./networking/virtualservices.txt).
 
 16. Modify your computers /etc/hosts 
 
