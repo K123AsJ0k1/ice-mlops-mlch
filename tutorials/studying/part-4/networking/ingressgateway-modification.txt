@@ -29,12 +29,12 @@ spec:
     nodePort: 31006
     port: 204
     protocol: TCP
-    targetPort: 9006
+    targetPort: 9506
   - name: tcp-neo4j
     nodePort: 31007
     port: 205
     protocol: TCP
-    targetPort: 9007
+    targetPort: 9507
   selector:
     app: istio-ingressgateway
     istio: ingressgateway
