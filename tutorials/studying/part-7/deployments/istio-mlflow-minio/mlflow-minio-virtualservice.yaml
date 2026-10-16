@@ -1,0 +1,17 @@
+apiVersion: networking.istio.io/v1beta1
+kind: VirtualService
+metadata:
+  name: mlflow-minio-server-virtualservice
+spec:
+  hosts:
+  - "*"
+  gateways:
+  - mlflow-minio-gateway
+  tcp:
+  - match:
+    - port: 207
+    route:
+    - destination:
+        host: mlflow-minio-service.mlflow.svc.cluster.local
+        port:
+          number: 9000

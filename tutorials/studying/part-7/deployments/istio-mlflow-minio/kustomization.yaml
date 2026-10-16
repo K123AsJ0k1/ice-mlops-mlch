@@ -1,0 +1,3 @@
+resources:
+- mlflow-minio-gateway.yaml
+- mlflow-minio-virtualservice.yaml
