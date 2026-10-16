@@ -119,7 +119,7 @@ kubectl create secret tls chisel-credential \
   -n istio-system
 ```
 
-7. Create a Chisel gateways, its virtual services and connect Ray virtual services into it. See the example chisel [gateway](./deployments/istio/chisel/chisel-gateway.yaml), chisel [virtualservice](./deployments/istio/chisel/chisel-virtualservice.yaml) and Ray [virtualservice](./deployments/istio/ray/dashboard/ray-cloud-2-virtualservice.yaml). 
+7. Create a Chisel gateways, its virtual service and connect Ray virtual services into it. See the example chisel [gateway](./deployments/istio/chisel/chisel-gateway.yaml), chisel [virtual service](./deployments/istio/chisel/chisel-virtualservice.yaml) and Ray [virtual service](./deployments/istio/ray/dashboard/ray-cloud-2-virtualservice.yaml). 
 
 ```
 cd ice-mlops-mlch/tutorials/studying/part-6/deployments
