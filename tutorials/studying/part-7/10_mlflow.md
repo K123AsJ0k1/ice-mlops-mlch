@@ -76,7 +76,7 @@ kubectl get pods -n mlflow
 kubectl logs mlflow-558744b5d8-crdx2 -n mlflow
 ```
 
-Assuming everything is working, we now only need to configure the network using the [Istio chapter](../part-4/11_istio.md). The exisitng network already enables us to open the dashboard with http://mlflow.oss:7001, but it doesn't provide the MLflow MinIO connection to enable artifact uploads. This means we would do the following before using MLflow with code:
+Assuming everything is working, we now only need to configure the network using the [Istio chapter](../part-4/11_istio.md). The existing network lets us open the dashboard at http://mlflow.oss:7001, but it doesn't provide the MLflow MinIO connection needed to upload artifacts. This means we would do the following before using MLflow with code:
 
 ```
 ssh -L 7008:localhost:9000 cpouta
@@ -85,7 +85,7 @@ kubectl port-forward svc/mlflow-minio-service 9000:9000 --namespace mlflow
 
 We can remove this need with the following steps:
 
-1. Modify Istio Ingress Gateway to have a port for MLFlow MinIO.
+1. Modify Istio Ingress Gateway to have a port for MLflow MinIO.
 
 ```
 cd ice-mlops-mlch/tutorials/studying/part-7/deployments
@@ -111,14 +111,14 @@ Y
 kubectl apply -f mlflow-minio-istio-ingressgateway.yaml
 ```
 
-2. Create a MLflow MinIO gateway and virtual service. See the example [gateway](./deployments/istio-mlflow-minio/mlflow-minio-gateway.yaml) and [virtualservice](./deployments/istio-mlflow-minio/mlflow-minio-virtualservice.yaml).
+2. Create an MLflow MinIO gateway and virtual service. See the example [gateway](./deployments/istio-mlflow-minio/mlflow-minio-gateway.yaml) and [virtualservice](./deployments/istio-mlflow-minio/mlflow-minio-virtualservice.yaml).
 
 ```
 cd ice-mlops-mlch/tutorials/studying/part-7/deployments
 kubectl apply -k istio-mlflow-minio
 ```
 
-3. Add the following into your SSH config:
+3. Add the following to your SSH config:
 
 ```
 LocalForward 127.0.0.1:7009 [VM_FLOATING_IP]:7009
@@ -130,7 +130,7 @@ LocalForward 127.0.0.1:7009 [VM_FLOATING_IP]:7009
 curl -v http://localhost:7009
 ```
 
-With this we can begin using MLflow. In the dashboard, click Model Training and Experiments to see a list of runs. This is most likely empty, which is why you should check the example picture below:
+With this, we can begin using MLflow. In the dashboard, click Model Training and Experiments to see a list of runs. This is most likely empty, which is why you should check the example picture below:
 
 ![Figure 1](./images/mlflow_dashboard_1.png)
 
