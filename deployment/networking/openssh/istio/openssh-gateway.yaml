@@ -9,7 +9,7 @@ spec:
     istio: ingressgateway 
   servers:
   - port:
-      number: 207
+      number: 208
       name: tcp-ssh
       protocol: TCP
     hosts:

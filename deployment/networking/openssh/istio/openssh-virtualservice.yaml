@@ -10,7 +10,7 @@ spec:
   - openssh-gateway
   tcp:
   - match:
-    - port: 207
+    - port: 208
     route:
     - destination:
         host: openssh-server-service.openssh.svc.cluster.local
