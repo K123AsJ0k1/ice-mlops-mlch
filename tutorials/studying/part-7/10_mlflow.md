@@ -147,8 +147,8 @@ from icebreaker.mlflow.use import mlflow_get_or_create_experiment, mlflow_start_
 from icebreaker.misc.dict import flatten_nested_dict
 
 mlflow_parameters = {
-    'tracking-uri': 'http://mlflow.mlflow.svc.cluster.local:5000'
-    's3-endpoint-url': 'http://mlflow-minio-service.mlflow.svc.cluster.local:9000'
+    'tracking-uri': 'http://mlflow.oss:7001'
+    's3-endpoint-url': 'http://localhost:7009'
     'aws-access-key-id': 'minioadmin',
     'aws-secret-access-key': 'minioadmin',
     'experiment-name': 'mlch-code-assistant-rag-pipeline'
@@ -238,8 +238,8 @@ from icebreaker.mlflow.use import mlflow_register_prompts
 from icebreaker.evaluation.pipe import evalution_generator_pipe
 
 mlflow_parameters = {
-    'tracking-uri': 'http://mlflow.mlflow.svc.cluster.local:5000'
-    's3-endpoint-url': 'http://mlflow-minio-service.mlflow.svc.cluster.local:9000'
+    'tracking-uri': 'http://mlflow.oss:7001'
+    's3-endpoint-url': 'http://localhost:7009'
     'aws-access-key-id': 'minioadmin',
     'aws-secret-access-key': 'minioadmin',
     'experiment-name': 'mlch-code-assistant-rag-pipeline'
