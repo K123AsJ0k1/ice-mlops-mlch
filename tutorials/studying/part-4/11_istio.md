@@ -180,7 +180,7 @@ Compare the prints against given [gateways](./networking/gateways.txt) and [virt
 sudo nano /etc/hosts
 ```
 
-It should have [hosts](./networking/etc-hosts.txt) lines
+It should have [hosts](./networking/etc-hosts.txt) lines.
 
 17. Save modification
 
@@ -196,7 +196,7 @@ cd .ssh
 nano config
 ```
 
-It should have [localforward](./networking/ssh-config.txt) lines
+It should have [localforward](./networking/ssh-config.txt) lines.
 
 19. Connect to your VM
 
