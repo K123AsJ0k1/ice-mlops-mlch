@@ -70,7 +70,7 @@ Edit the YAML spec-ports to have the following:
   nodePort: 31008
   port: 206 
   protocol: TCP
-  targetPort: 9007
+  targetPort: 9508
 ```
 
 Save it and apply it with:
@@ -119,16 +119,16 @@ kubectl create secret tls chisel-credential \
   -n istio-system
 ```
 
-7. Create a Chisel gateway and virtual service. See the example [gateway](./deployments/istio/chisel/chisel-gateway.yaml) and [virtualservice](./deployments/istio/chisel/chisel-virtualservice.yaml).
+7. Create a Chisel gateways, its virtual services and connect Ray virtual services into it. See the example chisel [gateway](./deployments/istio/chisel/chisel-gateway.yaml), chisel [virtualservice](./deployments/istio/chisel/chisel-virtualservice.yaml) and Ray [virtualservice](./deployments/istio/ray/dashboard/ray-cloud-2-virtualservice.yaml). 
 
 ```
 cd ice-mlops-mlch/tutorials/studying/part-6/deployments
 kubectl apply -k istio
 ```
 
-8. Modify the virtual machine firewalls to have TCP with port range 7008 and remote IP prefix 0.0.0.0
+8. Modify the virtual machine firewalls to have TCP with port range 7008 and remote IP prefix 0.0.0.0.
 
-9. Test the connection to Chisel from your development computer. See example [response](./deployments/responses/chisel-curl.txt)
+9. Test the connection to Chisel from your development computer. See example [response](./deployments/responses/chisel-curl.txt).
 
 ```
 curl -v --cacert oss_platform_ca.crt --resolve "chisel.oss:7008:[VM_PUBLIC_IP]" "https://chisel.oss:7008"
@@ -194,7 +194,7 @@ cd ice-mlops-mlch/tutorials/studying/part-6/deployments/ray
 docker compose -f local-cloud-compose-ray-cluster-with-chisel.yaml
 ```
 
-14. You can further confirm by checking server logs. See example [kubectl logs](./deployments/logs/kubectl-chisel-server-logs.txt)
+14. You can further confirm by checking server logs. See example [kubectl logs](./deployments/logs/kubectl-chisel-server-logs.txt).
 
 ```
 kubectl get pods -n chisle
