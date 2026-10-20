@@ -1,4 +1,4 @@
-
+'''
 def analysis_internal_statistics(
     model_path: str,
     internal_data_dfs: any,
@@ -125,7 +125,9 @@ def analysis_internal_statistics(
     total_time = round(end_time-start_time,5)
     print('Spent seconds', total_time)
     return internal_statistics
-
+'''
+    
+'''
 def analysis_external_statistics(
     model_path: str,
     external_data_df: any,
@@ -209,3 +211,4 @@ def analysis_external_statistics(
     total_time = round(end_time-start_time,5)
     print('Spent seconds', total_time)
     return external_statistics
+'''

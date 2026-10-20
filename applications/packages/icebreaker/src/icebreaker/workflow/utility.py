@@ -6,7 +6,7 @@ def workflow_setup_enviroment(
 ):
     try:
         from decouple import Config,RepositoryEnv
-        from icebreaker.swift.setup import swift_get_parameters, swift_setup_client, swift_renew_client
+        from ..swift.setup import swift_get_parameters, swift_setup_client, swift_renew_client
         import os
     except ImportError as e:
         raise ImportError("workflow/utility failed to import", e)
@@ -50,7 +50,7 @@ def workflow_format_material(
         import pandas as pd
         from ..misc.dict import flatten_nested_dict
     except ImportError as e:
-        raise ImportError("Failed to import", e)
+        raise ImportError("workflow/utility failed to import", e)
 
     dict_list = []
     document_index = 1
@@ -147,7 +147,7 @@ def workflow_divide_external_data(
         import dask.dataframe as dd
         from datasets import load_dataset
     except ImportError as e:
-        raise ImportError("Failed to import", e)
+        raise ImportError("workflow/utility failed to import", e)
 
     start_time = t.time()
     data_stream = load_dataset(
@@ -213,7 +213,7 @@ def workflow_store_data(
         from pathlib import Path
         from ..objects.use import objects_store_data
     except ImportError as e:
-        raise ImportError("Failed to import", e)
+        raise ImportError("workflow/utility failed to import", e)
 
     start_time = t.time()
     if data_type == 'internal':
@@ -287,4 +287,141 @@ def workflow_store_data(
     print('Spent seconds', total_time)
     return total_time
 
+def workflow_sample_datasets(
+    swift_client: any,
+    fasttext_model: any,
+    magika_model: any,
+    storage_parameters: dict,
+    sampling_details: dict
+):
+    try:
+        import time as t
+        import pandas as pd
+        from ..objects.use import objects_get_data
+        from ..fast_text.use import fasttext_get_languages
+        from ..mgka.use import magika_get_formats
+    except ImportError as e:
+        raise ImportError("workflow/utility failed to import", e)
+    
+    start_time = t.time()
 
+    name_prefix = sampling_details['prefix']
+    data_serialization = sampling_details['serialization']
+    dataset_parameters = sampling_details['parameters']
+    accepted_languages = sampling_details['accepted-languages']
+    accepted_formats = sampling_details['accepted-formats']
+    
+    sample_dfs = []
+    for name, parameters in dataset_parameters.items():
+        dataset_name = f'{name_prefix}-{name}'
+        path_name = f'{dataset_name}.{data_serialization}'
+        storage_parameters['path-names'] = [
+            path_name
+        ]
+
+        data_object = objects_get_data(
+            swift_client = swift_client,
+            storage_parameters = storage_parameters,
+            dict_format = False
+        )  
+
+        dataset_data = data_object[0]
+        max_samples = parameters['max-samples']
+        if parameters['type'] == 'complete':
+            for key, value in max_samples.items():
+                if key == parameters['format-default-label']:
+                    sample_df = dataset_data.head(value).copy()
+                    sample_df['language'] = parameters['language-default-label']
+                    sample_df['language-confidence'] = 1.0
+                    sample_df['format'] = key
+                    sample_df['format-confidence'] = 1.0
+                    sample_df['format-counts'] = {}
+                    sample_df['dataset'] = dataset_name
+                    sample_df['dataset-idx'] = list(range(value))
+                    sample_dfs.append(sample_df)
+
+        if parameters['type'] == 'mixed':
+            search_limit = parameters['search-limit']
+            print(f'Search limit: {search_limit}')
+            unfiltered_df = dataset_data.head(search_limit)
+
+            language_column = parameters['language-column']
+            language_default_label = parameters['language-default-label']
+            language_confidence_threshold = parameters['language-confidence-threshold']
+
+            predicted_languages = fasttext_get_languages(
+                model = fasttext_model,
+                texts = unfiltered_df[language_column].tolist(),
+                default_label = language_default_label,
+                confidence_threshold = language_confidence_threshold,
+                label_replacer = {}
+            )
+            
+            print(f'Language defaults: {predicted_languages['default-amount']}')
+
+            format_column = parameters['format-column']
+            format_default_label = parameters['format-default-label']
+            format_confidence_threshold = parameters['format-confidence-threshold']
+
+            predicted_formats = magika_get_formats(
+                model = magika_model,
+                texts = unfiltered_df[format_column].tolist(),
+                default_label = format_default_label,
+                confidence_threshold = format_confidence_threshold,
+                label_replacer = {}
+            )
+            
+            print(f'Format defaults: {predicted_formats['default-amount']}')
+            wanted_rows = []
+            selected_languages = []
+            selected_language_confidences = []
+            selected_formats = []
+            selected_format_confidences = []
+            selected_format_counts = []
+            
+            row_idx = 0
+            for language_tuple in predicted_languages['predictions']:
+                predicted_language = language_tuple[0]
+                prediction_confidence = language_tuple[1]
+                if predicted_language in accepted_languages:
+                    if len(wanted_rows) < max_samples['general']:
+                        format_tuple = predicted_formats['predictions'][row_idx]
+                        format_label = format_tuple[0]
+                        format_confidence = format_tuple[1]
+                        format_counts = format_tuple[2]
+
+                        #correct_formats = False
+                        #for format_type in parameters[]
+
+                        # Filter txt
+                        # Filter anything that isn't sh, bash or python
+
+                        #wanted_rows.append(row_idx)
+                        #selected_languages.append(predicted_language)
+                        #selected_language_confidences.append(prediction_confidence)
+                        #selected_formats.append(format_tuple[0])
+                        #selected_format_confidences.append(format_tuple[1])
+                        #selected_format_counts.append(format_tuple[2])
+                    else:
+                        break
+                row_idx += 1
+            
+            sample_df = unfiltered_df.iloc[wanted_rows].copy()
+            print(selected_languages)
+            print(selected_format_counts)
+            sample_df['language'] = selected_languages
+            sample_df['language-confidence'] = selected_language_confidences
+            sample_df['format'] = selected_formats
+            sample_df['format-confidence'] = selected_format_confidences
+            sample_df['format-counts'] = selected_format_counts
+            sample_df['dataset'] = dataset_name
+            sample_df['dataset-idx'] = wanted_rows 
+            sample_dfs.append(sample_df)           
+
+    end_time = t.time()
+    total_time = round(end_time-start_time,5)
+    print('Spent seconds', total_time)
+
+    complete_dataframe = pd.concat(sample_dfs, ignore_index = True)
+
+    return complete_dataframe

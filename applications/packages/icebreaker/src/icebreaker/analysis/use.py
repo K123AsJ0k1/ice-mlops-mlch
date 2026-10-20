@@ -1,89 +1,213 @@
 
-def anaysis_line_share(
-    code: str, 
-    pattern: any
-) -> float:
-    lines = [l for l in code.splitlines() if l.strip() and not l.strip().startswith("#")]
-    if not lines:
-        return 0.0
-    return sum(bool(pattern.match(l)) for l in lines) / len(lines)
-
-def analysis_guess_format(
-    code: str, 
-    min_share: float = 0.5
-) -> str | None:
-    import re
+def analysis_internal_dataset_stats(
+    dataset_df: any
+):
+    try: 
+        import time as t
+        from ..analysis.utility import analysis_pandas_format, analysis_pandas_material, analysis_pandas_paths
+    except ImportError as e:
+        raise ImportError("analysis/use failed to import", e)
+ 
+    internal_statistics = {}
     
-    if re.match(r"\s*#!/(usr/)?bin/(env )?(ba)?sh", code):
-        return "bash"
-
-    # Line-level heuristics for code that is NOT inside a tagged fence.
-    PYTHON_LINE_RE = re.compile(
-        r"^\s*(def \w+\(|class \w+[:(]|import \w|from [\w.]+ import |if __name__ ==|"
-        r"return\b|for \w+ in .+:|while .+:|@\w+|print\(|\w+\s*=\s*[\w\[{(\"'])"
-    )
-    BASH_LINE_RE = re.compile(
-        r"^\s*(#!/(usr/)?bin/(env )?(ba)?sh|\$ |sudo |apt(-get)? |pip3? install |"
-        r"cd |ls\b|echo |export \w+=|chmod |chown |grep |curl |wget |mkdir |rm |"
-        r"systemctl |docker |git |for \w+ in .*; do|if \[)"
-    )
-    # bare "- item" lines are left out on purpose: they are also markdown bullets
-    YAML_LINE_RE = re.compile(r"^\s*(-\s+)?[\w.\"'-]+:(\s+\S.*)?\s*$|^---\s*$")
-    
-    shares = {
-        "python": anaysis_line_share(code, PYTHON_LINE_RE),
-        "bash": anaysis_line_share(code, BASH_LINE_RE),
-        "yaml": anaysis_line_share(code, YAML_LINE_RE),
+    format_replacer = {
+        'py': 'python',
+        'sh': 'bash',
+        'md': 'markdown',
+        'ipynb': 'jupyter',
+        'txt': 'text',
+        'png': 'image'
     }
-    fmt, share = max(shares.items(), key=lambda kv: kv[1])
-    return fmt if share >= min_share else None
-
-def analysis_classify_output(
-    answer: str
-) -> str:
-    import re
     
-    FENCE_RE = re.compile(r"```[ \t]*([\w+.-]*)[^\n]*\n(.*?)```", re.DOTALL)
-
-    LANG_ALIASES = {
-        "python": {"python", "py", "python3", "ipython", "pycon"},
-        "yaml": {"yaml", "yml"},
-        "bash": {"bash", "sh", "shell", "zsh", "console", "shell-session", "shellsession"},
-    }
-
-    MARKDOWN_RE = re.compile(
-        r"^\s{0,3}#{1,6}\s"              # headings
-        r"|^\s*[-*+]\s+\S"                # bullet lists
-        r"|^\s*\d+[.)]\s+\S"              # numbered lists
-        r"|^\s*\|.*\|\s*$"                # table rows
-        r"|^\s*>\s"                       # block quotes
-        r"|\*\*[^*\n]+\*\*"               # bold
-        r"|\[[^\]\n]+\]\([^)\s]+\)",      # links
-        re.MULTILINE,
+    # format-(type)-count
+    analysis_pandas_format(
+        df = dataset_df,
+        target_column = 'absolute-path',
+        format_replacer = format_replacer,
+        column_prefix = 'format',
+        collected_statistics = internal_statistics
     )
+    
+    # material-(method)
+    analysis_pandas_material(
+        df = dataset_df,
+        group_column = 'chapter',
+        target_column = 'ref-material',
+        column_prefix = 'material',
+        collected_statistics = internal_statistics
+    )
+    # paths-(method)
+    analysis_pandas_paths(
+        df = dataset_df,
+        group_column = 'chapter',
+        target_column = 'ref-paths',
+        format_replacer = format_replacer,
+        column_prefix = 'paths',
+        collected_statistics = internal_statistics
+    )
+    
+    return internal_statistics
 
-    blocks = FENCE_RE.findall(answer)
+def analysis_internal_data_analysis(
+    swift_client: any,
+    run_parameters: dict,
+    dataset_paths: list,
+    storage_parameters: dict,
+    group_columns: list,
+    target_columns: list
+):
+    try: 
+        import pandas as pd
+        from ..objects.use import objects_get_data
+    except ImportError as e:
+        raise ImportError("workflow/use failed to import", e)
 
-    if blocks:
-        sizes: dict[str, int] = {}
-        snippets: dict[str, list[str]] = {}
-        for tag, code in blocks:
-            tag = tag.lower()
-            fmt = next((f for f, al in LANG_ALIASES.items() if tag in al), None)
-            if fmt is None and tag in ("", "text", "plaintext"):
-                fmt = analysis_guess_format(code)          # untagged fence
-            if fmt is None:
-                continue                                # e.g. ```json, ```sql
-            sizes[fmt] = sizes.get(fmt, 0) + len(code)
-            snippets.setdefault(fmt, []).append(code)
+    df_list = []
+    formatted_metrics = {}
+    dataset_names = {}
+    for dataset_path in dataset_paths:
+        data_object = objects_get_data(
+            swift_client = swift_client,
+            storage_parameters = {
+                'bucket-target': storage_parameters['bucket-target'],
+                'bucket-prefix': storage_parameters['bucket-prefix'],
+                'bucket-user': storage_parameters['bucket-user'],
+                'object-name': 'root',
+                'object-serialization': storage_parameters['object-serialization'],
+                'path-replacers': {
+                    'name': dataset_path
+                },
+                'path-names': [],
+                'debug-prints': True,
+                'lock-parameters': {},
+                'lock-location': None,
+                'overwrite': True
+            },
+            dict_format = False
+        ) 
 
-        if len(sizes) > 1:
-            return "mixed"
-        if len(sizes) == 1:
-            fmt = next(iter(sizes))
-            return fmt
-        return "other"                                  # only unsupported languages
+        object_df = data_object[0]
+        #dataset_name = dataset_path.split('/')[-1].split('.')[0].split('-')[-1]
+        dataset_name = dataset_path.split('/')[-1].split('.')[0]
+        dataset_key = dataset_name.split('-')[-1]
+        dataset_names[str(dataset_key)] = dataset_name
 
-    if len(MARKDOWN_RE.findall(answer)) >= 2:
-        return "markdown"
-    return "other"
+        formatted_metrics[dataset_name] = analysis_internal_dataset_stats(
+            dataset_df = object_df
+        )
+
+        df_list.append(data_object[0])
+
+    unified_tutorial_df = pd.concat(df_list, ignore_index = True)
+    wanted_stats = [
+        'size',
+        'mean', 
+        'std', 
+        'median', 
+        'min', 
+        'max'
+    ]
+    for single_group in group_columns:
+        df_stats = unified_tutorial_df.groupby(single_group)[target_columns].agg(wanted_stats).to_dict()
+        for tuple, values in df_stats.items():
+            for group_case, stat_value in values.items():
+                flattened_key = f'{tuple[0]}-{tuple[1]}'
+                dataset_name = dataset_names[str(group_case)]
+                formatted_metrics[dataset_name][flattened_key] = stat_value
+    
+    df_group_stats = unified_tutorial_df.groupby(group_columns)[target_columns].agg(wanted_stats).to_dict()
+    for tuple, values in df_group_stats.items():
+        for group_tuple, stat_value in values.items():
+            flattened_key = f'{tuple[0]}-{group_columns[1]}-{group_tuple[1]}-{tuple[1]}'
+            dataset_name = dataset_names[str(group_tuple[0])]
+            formatted_metrics[dataset_name][flattened_key] = stat_value
+
+    return {
+        'parameters': run_parameters,
+        'metrics': formatted_metrics
+    }
+'''
+def analysis_external_statistics(
+    model_path: str,
+    external_data_df: any,
+    analysis_parameters: any
+):
+    try:
+        import time as t
+        import fasttext
+        from ..pd_stats.use import (
+            stats_pandas_amount, 
+            stats_pandas_max, 
+            stats_pandas_groupby_max,
+            stats_pandas_basic, 
+            stats_pandas_format, 
+            stats_pandas_material, 
+            stats_pandas_paths, 
+            stats_pandas_content
+        )
+        from ..mgka.use import  magika_get_stats
+        from ..fast_text.use import fasttext_get_stats
+        from magika import Magika, PredictionMode
+    except ImportError as e:
+        raise ImportError("Failed to import", e)
+
+    start_time = t.time()
+    fasttext_model = fasttext.load_model(model_path)
+    magika_model = Magika(prediction_mode = PredictionMode.MEDIUM_CONFIDENCE)
+    external_statistics = {}
+    
+    #dataset_type = analysis_parameters['dataset-type']
+
+    language_default = analysis_parameters['language-default']
+    language_column = analysis_parameters['language-column']
+    language_threshold = analysis_parameters['language-threshold']
+    language_replacer = analysis_parameters['language-replacer']
+    
+    format_default = analysis_parameters['format-default']
+    format_column = analysis_parameters['format-column']
+    format_threshold = analysis_parameters['format-threshold']
+    format_replacer = analysis_parameters['format-replacer']
+
+    amount = external_data_df.shape[0]
+    external_statistics['amount'] = amount
+
+    # question-(type)-(method)
+    stats_pandas_content(
+        df = external_data_df,
+        target_column = 'question',
+        column_prefix = 'question',
+        collected_statistics = external_statistics
+    )
+    # answer-(type)-(method)
+    stats_pandas_content(
+        df = external_data_df,
+        target_column = 'answer',
+        column_prefix = 'answer',
+        collected_statistics = external_statistics
+    )
+    # language-(type)-(method)
+    language_stats = fasttext_get_stats(
+        model = fasttext_model,
+        texts = external_data_df[language_column],
+        default_value = language_default,
+        default_threshold = language_threshold,
+        label_replacer = language_replacer
+    )
+    for stat_name, value in language_stats.items():
+        external_statistics[stat_name] = value
+    # format-(type)-amount
+    format_stats = magika_get_stats(
+        model = magika_model,
+        texts = external_data_df[format_column],
+        default_value = format_default,
+        default_threshold = format_threshold,
+        label_replacer = format_replacer
+    )
+    for stat_name, value in format_stats.items():
+        external_statistics[stat_name] = value
+
+    end_time = t.time()
+    total_time = round(end_time-start_time,5)
+    print('Spent seconds', total_time)
+    return external_statistics
+'''

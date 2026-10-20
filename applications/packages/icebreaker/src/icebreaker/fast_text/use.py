@@ -77,32 +77,54 @@ def fasttext_get_stats(
             collected_statistics[confidence_median_column] = confidence_median
     return collected_statistics
 
+def fasttext_chinese_check(
+    text: str
+) -> bool:
+    try:
+        import re
+    except ImportError as e:
+        raise ImportError("workflow/utility failed to import", e)
+
+    pattern = r'[\u4e00-\u9fff]'
+    return bool(re.search(pattern, text))
+
 def fasttext_get_languages(
     model: any,
     texts: list,
-    default_value: str,
-    default_threshold: str,
+    default_label: str,
+    confidence_threshold: float,
     label_replacer: any 
 ): 
-    detected_languages = []
-    language_default_amount = 0
-    for content in texts:
-        cleaned_text = content.replace('\n', ' ')
-        
-        labels, confidences = model.predict(cleaned_text, k=1)  
-        language_label = labels[0].replace('__label__', '')
-        label_confidence = float(confidences[0])
-
-        if 0 < len(label_replacer):
-            if language_label in label_replacer:
-                language_label = label_replacer[language_label]
-
-        if not language_label == default_value:
-            if label_confidence < default_threshold:
-                language_label = default_value
-                label_confidence = 0.0
-                language_default_amount += 1
-        
-        detected_languages.append((language_label, label_confidence))
+    results = {
+        'predictions': [],
+        'default-amount': 0
+    }
     
-    return detected_languages, language_default_amount
+    for content in texts:
+        chinese_check = fasttext_chinese_check(
+            text = content
+        )
+
+        if not chinese_check:
+            cleaned_text = content.replace('\n', ' ')
+            
+            labels, confidences = model.predict(cleaned_text, k=1)  
+            language_label = labels[0].replace('__label__', '')
+            label_confidence = float(confidences[0])
+
+            if 0 < len(label_replacer):
+                if language_label in label_replacer:
+                    language_label = label_replacer[language_label]
+
+            if not language_label == default_label:
+                if label_confidence < confidence_threshold:
+                    language_label = default_label
+                    label_confidence = 0.0
+                    results['default-amount'] += 1
+        else:
+            language_label = 'zh'
+            label_confidence = 1.0
+        
+        results['predictions'].append((language_label, label_confidence))
+    
+    return results

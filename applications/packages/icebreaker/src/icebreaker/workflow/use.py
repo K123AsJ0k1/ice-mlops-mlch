@@ -1,7 +1,7 @@
 
 def workflow_handle_internal_datasets(
     swift_client: any,
-    internal_material_parameters: str
+    internal_material_parameters: dict
 ):
     try:
         import os
@@ -291,3 +291,76 @@ def workflow_handle_external_datasets(
 
     return total_time
 
+def workflow_internal_data_analysis(
+    swift_client: any,
+    internal_material_parameters: dict
+):
+    try: 
+        import time as t
+        import pandas as pd
+        from ..objects.use import objects_get_data
+    except ImportError as e:
+        raise ImportError("workflow/use failed to import", e)
+
+    start_time = t.time()
+
+    dataset_paths = internal_material_parameters['dataset-paths']
+    storage_parameters = internal_material_parameters['storage-parameters']
+    group_columns = internal_material_parameters['group-columns']
+    target_columns = internal_material_parameters['target-columns']
+    wanted_stats = internal_material_parameters['wanted-stats']
+
+    list_of_objects = []
+    for dataset_path in dataset_paths:
+        data_object = objects_get_data(
+            swift_client = swift_client,
+            storage_parameters = {
+                'bucket-target': storage_parameters['bucket-target'],
+                'bucket-prefix': storage_parameters['bucket-prefix'],
+                'bucket-user': storage_parameters['bucket-user'],
+                'object-name': 'root',
+                'object-serialization': storage_parameters['object-serialization'],
+                'path-replacers': {
+                    'name': dataset_path
+                },
+                'path-names': [],
+                'debug-prints': True,
+                'lock-parameters': {},
+                'lock-location': None,
+                'overwrite': True
+            },
+            dict_format = False
+        ) 
+        list_of_objects.append(data_object[0])
+
+    unified_tutorial_df = pd.concat(list_of_objects, ignore_index = True)
+    
+    statistics = []
+
+    analysis_internal_dataset_stats(
+        internal_data_dfs = list_of_objects,
+        analysis_parameters = {
+            'format-column': 'absolute-path',
+            'format-replacer': {}
+        }
+    )
+    
+    for single_group in group_columns:
+        df_stats = unified_tutorial_df.groupby(single_group)[target_columns].agg(wanted_stats)
+        
+        
+        #custom_dict = {f"{batch}-{fmt}": count for (batch, fmt), count in df_stats.items()}
+        #statistics.append(df_stats)
+
+    df_group_stats = unified_tutorial_df.groupby(group_columns)[target_columns].agg(wanted_stats)
+
+    #statistics.append(df_group_stats)
+
+    end_time = t.time()
+    total_time = round(end_time-start_time,5)
+    print(f'Spent seconds: {total_time}')
+
+    return statistics
+
+def workflow_external_data_analysis():
+    pass
