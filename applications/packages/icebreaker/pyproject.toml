@@ -65,7 +65,9 @@ pararellism = [
 ]
 
 logging = [
-    "mlflow==3.17.1"
+    "mlflow==3.17.1",
+    "boto3==1.43.116",
+    "botocore==1.43.116"
 ]
 
 qdrant = [
