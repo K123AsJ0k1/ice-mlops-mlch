@@ -59,7 +59,7 @@ def magika_get_formats(
     
     return results
 
-def magika_get_stats(
+def magika_get_data(
     model: any,
     texts: any,
     default_label: str,

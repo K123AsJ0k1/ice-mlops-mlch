@@ -5,7 +5,7 @@ def analysis_pandas_format(
     format_replacer: any,
     column_prefix: str,
     collected_statistics: any
-):
+): 
     try:
         from pathlib import Path
     except ImportError as e:

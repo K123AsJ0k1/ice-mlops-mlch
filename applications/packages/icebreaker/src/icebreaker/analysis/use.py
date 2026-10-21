@@ -1,7 +1,7 @@
 
 def analysis_internal_dataset_stats(
     dataset_df: any
-):
+) -> dict: 
     try: 
         import time as t
         from ..analysis.utility import analysis_pandas_format, analysis_pandas_material, analysis_pandas_paths
@@ -53,7 +53,7 @@ def analysis_internal_data_analysis(
     run_parameters: dict,
     dataset_paths: list,
     storage_parameters: dict
-):
+) -> dict:
     try: 
         import pandas as pd
         from ..objects.use import objects_get_data
@@ -105,7 +105,7 @@ def analysis_internal_data_analysis(
         'relevance'
     ]
 
-    target_columns =[
+    target_columns = [
         'rows',
         'characters'
     ]
@@ -143,7 +143,7 @@ def analysis_external_dataset_stats(
     dataset_df: any,
     language_default: str,
     format_default: str
-):
+) -> dict:
     try: 
         import time as t
         from ..analysis.utility import analysis_pandas_content
@@ -182,7 +182,7 @@ def analysis_external_data_analysis(
     dataset_paths: list,
     storage_parameters: dict,
     dataset_defaults: dict
-):
+) -> dict:
     try: 
         import pandas as pd
         from ..objects.use import objects_get_data
@@ -194,6 +194,22 @@ def analysis_external_data_analysis(
         'external-general': {}
     }
     collected_tables = {}
+
+    target_columns =[
+        'question-rows',
+        'question-characters',
+        'answer-rows',
+        'answer-characters'
+    ]
+
+    wanted_stats = [
+        'size',
+        'mean', 
+        'std', 
+        'median', 
+        'min', 
+        'max'
+    ]
 
     for dataset_path in dataset_paths:
         data_object = objects_get_data(
@@ -233,33 +249,15 @@ def analysis_external_data_analysis(
         object_df['answer-rows'] = analysis_results['answer-results']['rows']
         object_df['answer-characters'] = analysis_results['answer-results']['chars']
 
+        df_stats = object_df[target_columns].agg(wanted_stats).to_dict()
+        for name, values in df_stats.items():
+            for key, value in values.items():
+                flattened_key = f'{name}-{key}'
+                formatted_metrics[dataset_name][flattened_key] = value
+
         collected_tables[dataset_name] = object_df
         df_list.append(object_df)
-        
-    unified_tutorial_df = pd.concat(df_list, ignore_index = True)
-
-    target_columns =[
-        'question-rows',
-        'question-characters',
-        'answer-rows',
-        'answer-characters'
-    ]
     
-    wanted_stats = [
-        'size',
-        'mean', 
-        'std', 
-        'median', 
-        'min', 
-        'max'
-    ]
-    
-    df_stats = unified_tutorial_df[target_columns].agg(wanted_stats).to_dict()
-    for name, values in df_stats.items():
-        for key, value in values.items():
-            flattened_key = f'{name}-{key}'
-            formatted_metrics['external-general'][flattened_key] = value
-        
     return {
         'parameters': run_parameters,
         'metrics': formatted_metrics,
