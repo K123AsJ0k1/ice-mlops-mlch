@@ -3,7 +3,7 @@ import time as t
 import pandas as pd
 from icebreaker.swift.setup import swift_setup_client
 from icebreaker.objects.use import objects_get_data
-from icebreaker.analysis.utility import analysis_pandas_content
+from icebreaker.analysis.utility import analysis_get_rows_chars
 
 @ray.remote( 
     num_cpus = 1,
@@ -71,16 +71,14 @@ def data_collector(
         formatted_metrics[key_name]['dataset-size'] = total_rows
 
         # question-(type)-(method)
-        question_results = analysis_pandas_content(
+        question_results = analysis_get_rows_chars(
             df = object_df,
-            target_column = language_column,
-            collected_statistics = formatted_metrics[key_name]
+            target_column = language_column
         )
         # answer-(type)-(method)
-        answer_results = analysis_pandas_content(
+        answer_results = analysis_get_rows_chars(
             df = object_df,
-            target_column = format_column,
-            collected_statistics = formatted_metrics[key_name]
+            target_column = format_column
         )
 
         analysis_results[key_name] = {
@@ -109,7 +107,7 @@ def data_collector(
             
         batch_index += 1
 
-    joined_tables = {}
+    joined_tables_list = {}
     while len(provider_actor_refs):
         done_actor_refs, provider_actor_refs = ray.wait(provider_actor_refs)
         for output_ref in done_actor_refs: 
@@ -120,17 +118,16 @@ def data_collector(
             language_table = result['language-data']['table']
             format_table = result['format-data']['table']
 
-            if not key_name in joined_tables:
-                joined_tables[key_name] = pd.DataFrame()
+            merged_df = pd.concat([language_table, format_table], axis=1)
 
-            merged_df = pd.concat(
-                [language_table, format_table],
-                axis = 1
-            )
+            if key_name not in joined_tables_list:
+                joined_tables_list[key_name] = []
 
-            joined_tables[key_name] = pd.concat(
-                [joined_tables[key_name], merged_df]
-            )
+            joined_tables_list[key_name].append(merged_df)
+
+    joined_tables = {}
+    for key_name, dfs in joined_tables_list.items():
+        joined_tables[key_name] = pd.concat(dfs, ignore_index=True)
 
     formatted_tables = {}
     for dataset_name, table in original_tables.items():
@@ -154,6 +151,11 @@ def data_collector(
         'answer-characters'
     ]
 
+    language_columns = [
+        'language',
+        'language-confidence'
+    ]
+
     format_columns = [
         'format',
         'format-confidence',
@@ -175,11 +177,25 @@ def data_collector(
             for key, value in values.items():
                 flattened_key = f'{name}-{key}'
                 formatted_metrics[dataset_name][flattened_key] = value
+
+        df_language_stats = table.groupby(language_columns[0])[language_columns[1]].agg(wanted_stats).to_dict()
+        for name, values in df_language_stats.items():
+            for key, value in values.items():
+                flattened_key = f'language-{key}-'
+                if not 'size' == name:
+                    flattened_key += 'confidence-'
+                flattened_key += name
+
+                formatted_metrics[dataset_name][flattened_key] = value
+
         df_format_stats = table.groupby(format_columns[0])[format_columns[1]].agg(wanted_stats).to_dict()
         for name, values in df_format_stats.items():
             for key, value in values.items():
-                flattened_key = f'language-{key}-{name}'
-                formatted_metrics[flattened_key] = value
+                flattened_key = f'format-{key}-'
+                if not 'size' == name:
+                    flattened_key += 'confidence-'
+                flattened_key += name
+                formatted_metrics[dataset_name][flattened_key] = value
         
     end_time = t.time()
     total_time = round(end_time-start_time,5)
