@@ -1,65 +1,4 @@
 
-'''
-def analysis_pandas_amount(
-    df: any,
-    collection_key: str,
-    stat_key: str,
-    collected_statistics: any
-):
-    amount = df.shape[0]
-    collected_statistics[collection_key][stat_key] = amount
-
-def analysis_pandas_max(
-    df: any,
-    column: str,
-    collection_key: str,
-    stat_key: str,
-    collected_statistics: any
-) -> int:
-    max_value = int(df[column].max())
-    collected_statistics[collection_key][stat_key] = max_value
-
-def analysis_pandas_groupby_max(
-    df: any,
-    group_column: str,
-    target_column: str,
-    collection_key: str,
-    column_prefix: str,
-    collected_statistics: any
-):
-    group_targets = df.groupby(group_column)[target_column].max()
-    for key, value in group_targets.items():
-        if key == 0:
-            continue
-        column_name = column_prefix + '-' + str(key) + '-max-index'
-        collected_statistics[collection_key][column_name] = value
-
-def analysis_pandas_basic(
-    df: any,
-    column: str,
-    collection_key: str,
-    collected_statistics: any
-):
-    min_name = column + '-mix'
-    max_name = column + '-max'
-    mean_name = column + '-mean'
-    median_name = column + '-median'
-    
-    min_value = int(df[column].min())
-    mean_value = float(df[column].mean())
-    median_value = float(df[column].median())
-
-    collected_statistics[collection_key][min_name] = min_value
-    stats_pandas_max(
-        df = df, 
-        column = column, 
-        collection_key = collection_key,
-        stat_key = max_name,
-        collected_statistics = collected_statistics
-    ) 
-    collected_statistics[collection_key][mean_name] = mean_value
-    collected_statistics[collection_key][median_name] = median_value
-'''
 def analysis_pandas_format(
     df: any,
     target_column: str,
@@ -118,7 +57,7 @@ def analysis_pandas_material(
         collected_statistics[column_name] = refs
     
     amount_name = column_prefix + '-size'
-    min_name = column_prefix + '-mix'
+    min_name = column_prefix + '-min'
     max_name = column_prefix + '-max'
     mean_name = column_prefix + '-mean'
     median_name = column_prefix + '-median'
@@ -185,7 +124,7 @@ def analysis_pandas_paths(
         ref_amounts.append(amount)
 
     amount_name = column_prefix + '-amount'
-    min_name = column_prefix + '-mix'
+    min_name = column_prefix + '-min'
     max_name = column_prefix + '-max'
     mean_name = column_prefix + '-mean'
     median_name = column_prefix + '-median'
@@ -204,3 +143,62 @@ def analysis_pandas_paths(
     collected_statistics[mean_name] = target_mean
     collected_statistics[median_name] = target_median
     collected_statistics[std_name] = target_std
+
+def analysis_pandas_content(
+    df: any,
+    target_column: str,
+    collected_statistics: any
+):
+    try:
+        import statistics
+    except ImportError as e:
+        raise ImportError("analysis/utility failed to import", e)
+
+    rows = []
+    chars = []
+    for content in df[target_column]:
+        content_rows = len(content.splitlines())
+        content_chars = len(content)
+        rows.append(content_rows)
+        chars.append(content_chars)
+
+    min_rows_name = f'rows-{target_column}-min'
+    max_rows_name = f'rows-{target_column}-max'
+    mean_rows_name = f'rows-{target_column}-mean'
+    median_rows_name = f'rows-{target_column}-median'
+    std_rows_name = f'rows-{target_column}-std'
+        
+    rows_min = min(rows)
+    rows_max = max(rows)
+    rows_mean = statistics.mean(rows)
+    rows_median = statistics.median(rows)
+    rows_std = statistics.stdev(rows)
+
+    collected_statistics[min_rows_name] = rows_min
+    collected_statistics[max_rows_name] = rows_max
+    collected_statistics[mean_rows_name] = rows_mean
+    collected_statistics[median_rows_name] = rows_median
+    collected_statistics[std_rows_name] = rows_std
+
+    min_chars_name = f'characters-{target_column}-min'
+    max_chars_name = f'characters-{target_column}-max'
+    mean_chars_name = f'characters-{target_column}-mean'
+    median_chars_name = f'characters-{target_column}-median'
+    std_rows_name = f'characters-{target_column}-std'
+
+    chars_min = min(chars)
+    chars_max = max(chars)
+    chars_mean = statistics.mean(chars)
+    chars_median = statistics.median(chars)
+    chars_std = statistics.stdev(chars)
+
+    collected_statistics[min_chars_name] = chars_min
+    collected_statistics[max_chars_name] = chars_max
+    collected_statistics[mean_chars_name] = chars_mean
+    collected_statistics[median_chars_name] = chars_median
+    collected_statistics[std_rows_name] = chars_std
+
+    return {
+        'rows': rows,
+        'chars': chars
+    }

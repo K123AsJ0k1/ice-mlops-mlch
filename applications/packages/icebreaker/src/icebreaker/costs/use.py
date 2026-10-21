@@ -5,7 +5,7 @@ def costs_local_spending_per_second(
 ):
     expected_years_in_seconds = expected_years * 365 * 24 * 60 * 60
     spend_euros_per_second = hardware_cost/expected_years_in_seconds
-    return spend_euros_per_second
+    return round(spend_euros_per_second, 8)
 
 def costs_csc_euros_per_billing_unit(
     package_billing_units: int,
@@ -25,7 +25,7 @@ def costs_csc_cloud_spending_per_second(
     )
     spent_units_per_second = spent_units_per_hour/(60*60)
     spent_euros_per_second = euros_per_billing_unit * spent_units_per_second
-    return spent_euros_per_second
+    return round(spent_euros_per_second, 8)
     
 def costs_lumi_hpc_spending_per_second(
     euroes_per_cpu_node_hour: float,

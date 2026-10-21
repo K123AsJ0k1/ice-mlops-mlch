@@ -1,7 +1,8 @@
 
 def get_validated_yamls(
     relative_paths: list,
-    yaml_validator: any
+    yaml_validator: any,
+    key_replacer: dict
 ) -> dict:
     try:
         import yaml
@@ -19,5 +20,8 @@ def get_validated_yamls(
         file_name = str(file_path).split('/')[-1].split('.')[0]
         if not yaml_validator is None:
             pydantic_validation = yaml_validator.model_validate(yaml_dict)
-        yaml_dicts[file_name] = yaml_dict
+        used_key = file_name
+        if 0 < len(key_replacer):
+            used_key = key_replacer[used_key]    
+        yaml_dicts[used_key] = yaml_dict
     return yaml_dicts

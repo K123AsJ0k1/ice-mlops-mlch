@@ -17,7 +17,7 @@ def workflow_setup_enviroment(
     swift_project_name = env_dict.get('CSC_PROJECT_1')
     swift_domain_name = env_dict.get('CSC_USER_DOMAIN_NAME')
 
-    setup_swift_parameters = swift_get_parameters(
+    swift_parameters = swift_get_parameters(
         secret_parameters = {
             'auth-url': swift_auth_url,
             'credential-id': swift_credential_id,
@@ -31,13 +31,26 @@ def workflow_setup_enviroment(
     )
 
     swift_client = swift_setup_client(
-        swift_parameters = setup_swift_parameters
+        swift_parameters = swift_parameters
     )
+
+    required_keys = [
+        'pre-auth-url',
+        'pre-auth-token',
+        'user-domain-name',
+        'project-domain-name',
+        'project-name',
+        'auth-version'
+    ]
+    reduced_swift_parameters = {
+        k: swift_parameters[k] for k in required_keys
+    }
 
     hf_token = env_dict.get('HF_TOKEN')
     os.environ['HF_TOKEN'] = hf_token
 
     return {
+        'swift-parameters': reduced_swift_parameters,
         'swift-client': swift_client,
         'hf-token': hf_token
     }

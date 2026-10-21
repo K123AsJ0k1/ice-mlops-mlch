@@ -7,10 +7,8 @@ def analysis_internal_pipe(
     run_tags: dict,
     run_parameters: dict,
     dataset_paths: list,
-    storage_parameters: dict,
-    group_columns: list,
-    target_columns: list
-):
+    storage_parameters: dict
+) -> dict: 
     try:
         from ..analysis.use import analysis_internal_data_analysis
         from ..mlflow.use import mlflow_get_or_create_experiment, mlflow_start_run, mlflow_add_logs, mlflow_end_run
@@ -33,14 +31,13 @@ def analysis_internal_pipe(
         swift_client = swift_client,
         run_parameters = run_parameters,
         dataset_paths = dataset_paths,
-        storage_parameters = storage_parameters,
-        group_columns = group_columns,
-        target_columns = target_columns
+        storage_parameters = storage_parameters
     )
     
     for dataset_name in formatted_internal_data['metrics'].keys():
         parameters = formatted_internal_data['parameters']
         metrics = formatted_internal_data['metrics'][dataset_name]
+        table = formatted_internal_data['tables'][dataset_name]
         used_identity = dataset_name.split('formatted')[1][1:]
         
         mlflow_add_logs(
@@ -50,9 +47,9 @@ def analysis_internal_pipe(
             metrics = metrics,
             metrics_prefix = used_identity,
             metrics_step = 1,
-            table = {},
-            table_folder = '',
-            table_name = ''
+            table = table,
+            table_folder = used_identity,
+            table_name = 'internal_validation_material'
         )
         
     mlflow_end_run(
@@ -73,11 +70,10 @@ def analysis_external_pipe(
     run_parameters: dict,
     dataset_paths: list,
     storage_parameters: dict,
-    group_columns: list,
-    target_columns: list
-):
+    dataset_defaults: dict
+) -> dict:
     try:
-        from ..analysis.use import analysis_internal_data_analysis
+        from ..analysis.use import analysis_external_data_analysis
         from ..mlflow.use import mlflow_get_or_create_experiment, mlflow_start_run, mlflow_add_logs, mlflow_end_run
     except ImportError as e:
         raise ImportError("evaluation/pipe failed to import", e)
@@ -93,13 +89,26 @@ def analysis_external_pipe(
         run_name = run_name, 
         tags = run_tags
     ) 
-
-    formatted_internal_data = {}
+    
+    formatted_internal_data = analysis_external_data_analysis(
+        swift_client = swift_client,
+        run_parameters = run_parameters,
+        dataset_paths = dataset_paths,
+        storage_parameters = storage_parameters,
+        dataset_defaults = dataset_defaults
+    )
 
     for dataset_name in formatted_internal_data['metrics'].keys():
         parameters = formatted_internal_data['parameters']
         metrics = formatted_internal_data['metrics'][dataset_name]
-        used_identity = dataset_name.split('formatted')[1][1:]
+        used_identity = dataset_name.split('external')[1][1:]
+        used_table = {}
+        table_folder = ''
+        table_name = ''
+        if not dataset_name == 'external-general':
+            used_table = formatted_internal_data['tables'][dataset_name]
+            table_folder = used_identity
+            table_name = 'external_evalution_material'
         
         mlflow_add_logs(
             mlflow_client = mlflow_client,
@@ -108,11 +117,11 @@ def analysis_external_pipe(
             metrics = metrics,
             metrics_prefix = used_identity,
             metrics_step = 1,
-            table = {},
-            table_folder = '',
-            table_name = ''
+            table = used_table,
+            table_folder = table_folder,
+            table_name = table_name
         )
-        
+    
     mlflow_end_run(
         mlflow_client = mlflow_client, 
         run_id = run_id, 

@@ -1,89 +1,11 @@
 
-def fasttext_get_stats(
-    model: any,
-    texts: list,
-    default_value: str,
-    default_threshold: str,
-    label_replacer: any,
-    batch_mode: bool
-):  
-    try:
-        import statistics
-    except ImportError as e:
-        raise ImportError("Failed to import", e)
-
-    collected_statistics = {}
-    language_amounts = {}
-    language_default_amount = 0
-    for content in texts:
-        cleaned_text = content.replace('\n', ' ')
-        
-        labels, confidences = model.predict(cleaned_text, k=1)  
-        language_label = labels[0].replace('__label__', '')
-        label_confidence = float(confidences[0])
-
-        if 0 < len(label_replacer):
-            if language_label in label_replacer:
-                language_label = label_replacer[language_label]
-
-        if not language_label == default_value:
-            if label_confidence < default_threshold:
-                language_label = default_value
-                label_confidence = 0.0
-                language_default_amount += 1
-            
-        if not language_label in language_amounts:
-            confidence_starting_value = []
-            if not label_confidence == 0.0:
-                confidence_starting_value.append(label_confidence)
-            language_amounts[language_label] = {
-                'amount': 1,
-                'confidence': confidence_starting_value 
-            }
-        else:
-            language_amounts[language_label]['amount'] += 1
-            if not label_confidence == 0.0:
-                language_amounts[language_label]['confidence'].append(label_confidence)
-
-    collected_statistics['language-default-amount'] = language_default_amount
-    for label, data in language_amounts.items():
-        column_prefix = 'language-' + label
-        language_amount_column = column_prefix + '-amount'
-    
-        collected_statistics[language_amount_column] = data['amount']
-
-        if batch_mode:
-            format_confidence_column = column_prefix + '-confidence'
-            collected_statistics[format_confidence_column] = data['confidence'] 
-        else:
-            label_confidence = data['confidence']             
-            confidence_min_column = column_prefix + '-confidence-min'
-            confidence_min = 0
-            confidence_max_column = column_prefix + '-confidence-max'
-            confidence_max = 0
-            confidence_mean_column = column_prefix + '-confidence-mean'
-            confidence_mean = 0
-            confidence_median_column = column_prefix + '-confidence-median'
-            confidence_median = 0
-            if 0 < len(label_confidence):
-                confidence_min = min(label_confidence)
-                confidence_max = max(label_confidence)
-                confidence_mean = statistics.mean(label_confidence)
-                confidence_median = statistics.median(label_confidence)
-            
-            collected_statistics[confidence_min_column] = confidence_min
-            collected_statistics[confidence_max_column] = confidence_max
-            collected_statistics[confidence_mean_column] = confidence_mean
-            collected_statistics[confidence_median_column] = confidence_median
-    return collected_statistics
-
 def fasttext_chinese_check(
     text: str
 ) -> bool:
     try:
         import re
     except ImportError as e:
-        raise ImportError("workflow/utility failed to import", e)
+        raise ImportError("fast_text/utility failed to import", e)
 
     pattern = r'[\u4e00-\u9fff]'
     return bool(re.search(pattern, text))
@@ -128,3 +50,62 @@ def fasttext_get_languages(
         results['predictions'].append((language_label, label_confidence))
     
     return results
+
+def fasttext_get_data(
+    model: any,
+    texts: list,
+    default_label: str,
+    confidence_threshold: float,
+    label_replacer: any,
+    stat_mode: bool
+):  
+    try:
+        import pandas as pd
+    except ImportError as e:
+        raise ImportError("fast_text/utility failed to import", e)
+
+    results = fasttext_get_languages(
+        model = model,
+        texts = texts,
+        default_label = default_label,
+        confidence_threshold = confidence_threshold,
+        label_replacer = label_replacer
+    ) 
+
+    used_columns = [
+        'language',
+        'language-confidence'
+    ]
+    
+    prediction_df = pd.DataFrame(
+        results['predictions'],
+        columns = used_columns
+    )
+
+    if not stat_mode:
+        return {
+            'table': prediction_df
+        }
+
+    formatted_metrics = {}
+    wanted_stats = [
+        'size',
+        'mean', 
+        'std', 
+        'median', 
+        'min', 
+        'max'
+    ]
+
+    stats_df = prediction_df.groupby(used_columns[0])[used_columns[1]].agg(wanted_stats).to_dict()
+    for name, values in stats_df.items():
+        for key, value in values.items():
+            flattened_key = f'language-{key}-{name}'
+            formatted_metrics[flattened_key] = value
+    
+    formatted_metrics['language-default-size'] = results['default-amount']
+
+    return {
+        'metrics': formatted_metrics,
+        'table': prediction_df
+    }

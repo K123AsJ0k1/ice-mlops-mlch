@@ -52,9 +52,7 @@ def analysis_internal_data_analysis(
     swift_client: any,
     run_parameters: dict,
     dataset_paths: list,
-    storage_parameters: dict,
-    group_columns: list,
-    target_columns: list
+    storage_parameters: dict
 ):
     try: 
         import pandas as pd
@@ -64,6 +62,7 @@ def analysis_internal_data_analysis(
 
     df_list = []
     formatted_metrics = {}
+    collected_tables = {}
     dataset_names = {}
     for dataset_path in dataset_paths:
         data_object = objects_get_data(
@@ -87,7 +86,6 @@ def analysis_internal_data_analysis(
         ) 
 
         object_df = data_object[0]
-        #dataset_name = dataset_path.split('/')[-1].split('.')[0].split('-')[-1]
         dataset_name = dataset_path.split('/')[-1].split('.')[0]
         dataset_key = dataset_name.split('-')[-1]
         dataset_names[str(dataset_key)] = dataset_name
@@ -96,9 +94,22 @@ def analysis_internal_data_analysis(
             dataset_df = object_df
         )
 
-        df_list.append(data_object[0])
+        collected_tables[dataset_name] = object_df
+
+        df_list.append(object_df)
 
     unified_tutorial_df = pd.concat(df_list, ignore_index = True)
+
+    group_columns = [
+        'part',
+        'relevance'
+    ]
+
+    target_columns =[
+        'rows',
+        'characters'
+    ]
+    
     wanted_stats = [
         'size',
         'mean', 
@@ -124,90 +135,133 @@ def analysis_internal_data_analysis(
 
     return {
         'parameters': run_parameters,
-        'metrics': formatted_metrics
+        'metrics': formatted_metrics,
+        'tables': collected_tables
     }
-'''
-def analysis_external_statistics(
-    model_path: str,
-    external_data_df: any,
-    analysis_parameters: any
+
+def analysis_external_dataset_stats(
+    dataset_df: any,
+    language_default: str,
+    format_default: str
 ):
-    try:
+    try: 
         import time as t
-        import fasttext
-        from ..pd_stats.use import (
-            stats_pandas_amount, 
-            stats_pandas_max, 
-            stats_pandas_groupby_max,
-            stats_pandas_basic, 
-            stats_pandas_format, 
-            stats_pandas_material, 
-            stats_pandas_paths, 
-            stats_pandas_content
-        )
-        from ..mgka.use import  magika_get_stats
-        from ..fast_text.use import fasttext_get_stats
-        from magika import Magika, PredictionMode
+        from ..analysis.utility import analysis_pandas_content
     except ImportError as e:
-        raise ImportError("Failed to import", e)
+        raise ImportError("analysis/use failed to import", e)
 
-    start_time = t.time()
-    fasttext_model = fasttext.load_model(model_path)
-    magika_model = Magika(prediction_mode = PredictionMode.MEDIUM_CONFIDENCE)
-    external_statistics = {}
-    
-    #dataset_type = analysis_parameters['dataset-type']
+    internal_statistics = {}
 
-    language_default = analysis_parameters['language-default']
-    language_column = analysis_parameters['language-column']
-    language_threshold = analysis_parameters['language-threshold']
-    language_replacer = analysis_parameters['language-replacer']
-    
-    format_default = analysis_parameters['format-default']
-    format_column = analysis_parameters['format-column']
-    format_threshold = analysis_parameters['format-threshold']
-    format_replacer = analysis_parameters['format-replacer']
-
-    amount = external_data_df.shape[0]
-    external_statistics['amount'] = amount
-
-    # question-(type)-(method)
-    stats_pandas_content(
-        df = external_data_df,
+    question_results = analysis_pandas_content( 
+        df = dataset_df,
         target_column = 'question',
-        column_prefix = 'question',
-        collected_statistics = external_statistics
+        collected_statistics = internal_statistics
     )
-    # answer-(type)-(method)
-    stats_pandas_content(
-        df = external_data_df,
-        target_column = 'answer',
-        column_prefix = 'answer',
-        collected_statistics = external_statistics
-    )
-    # language-(type)-(method)
-    language_stats = fasttext_get_stats(
-        model = fasttext_model,
-        texts = external_data_df[language_column],
-        default_value = language_default,
-        default_threshold = language_threshold,
-        label_replacer = language_replacer
-    )
-    for stat_name, value in language_stats.items():
-        external_statistics[stat_name] = value
-    # format-(type)-amount
-    format_stats = magika_get_stats(
-        model = magika_model,
-        texts = external_data_df[format_column],
-        default_value = format_default,
-        default_threshold = format_threshold,
-        label_replacer = format_replacer
-    )
-    for stat_name, value in format_stats.items():
-        external_statistics[stat_name] = value
 
-    end_time = t.time()
-    total_time = round(end_time-start_time,5)
-    print('Spent seconds', total_time)
-    return external_statistics
-'''
+    answer_results = analysis_pandas_content(
+        df = dataset_df,
+        target_column = 'answer',
+        collected_statistics = internal_statistics
+    )
+
+    language_column = f'language-{language_default}-size'
+    format_column = f'format-{format_default}-size'
+
+    internal_statistics[language_column] = dataset_df.shape[0]
+    internal_statistics[format_column] = dataset_df.shape[0]
+
+    return {
+        'stats':internal_statistics,
+        'question-results': question_results,
+        'answer-results': answer_results
+    }
+
+def analysis_external_data_analysis(
+    swift_client: any,
+    run_parameters: dict,
+    dataset_paths: list,
+    storage_parameters: dict,
+    dataset_defaults: dict
+):
+    try: 
+        import pandas as pd
+        from ..objects.use import objects_get_data
+    except ImportError as e:
+        raise ImportError("workflow/use failed to import", e)
+
+    df_list = []
+    formatted_metrics = {
+        'external-general': {}
+    }
+    collected_tables = {}
+
+    for dataset_path in dataset_paths:
+        data_object = objects_get_data(
+            swift_client = swift_client,
+            storage_parameters = {
+                'bucket-target': storage_parameters['bucket-target'],
+                'bucket-prefix': storage_parameters['bucket-prefix'],
+                'bucket-user': storage_parameters['bucket-user'],
+                'object-name': 'root',
+                'object-serialization': storage_parameters['object-serialization'],
+                'path-replacers': {
+                    'name': dataset_path
+                },
+                'path-names': [],
+                'debug-prints': True,
+                'lock-parameters': {},
+                'lock-location': None,
+                'overwrite': True
+            },
+            dict_format = False
+        ) 
+
+        object_df = data_object[0]
+        dataset_name = dataset_path.split('/')[-1].split('.')[0]
+
+        analysis_results = analysis_external_dataset_stats(
+            dataset_df = object_df,
+            language_default = dataset_defaults[dataset_name]['language-default'],
+            format_default = dataset_defaults[dataset_name]['format-default']
+        )
+
+        formatted_metrics[dataset_name] = analysis_results['stats']
+
+        object_df['dataset'] = dataset_name
+        object_df['question-rows'] = analysis_results['question-results']['rows']
+        object_df['question-characters'] = analysis_results['question-results']['chars']
+        object_df['answer-rows'] = analysis_results['answer-results']['rows']
+        object_df['answer-characters'] = analysis_results['answer-results']['chars']
+
+        collected_tables[dataset_name] = object_df
+        df_list.append(object_df)
+        
+    unified_tutorial_df = pd.concat(df_list, ignore_index = True)
+
+    target_columns =[
+        'question-rows',
+        'question-characters',
+        'answer-rows',
+        'answer-characters'
+    ]
+    
+    wanted_stats = [
+        'size',
+        'mean', 
+        'std', 
+        'median', 
+        'min', 
+        'max'
+    ]
+    
+    df_stats = unified_tutorial_df[target_columns].agg(wanted_stats).to_dict()
+    for name, values in df_stats.items():
+        for key, value in values.items():
+            flattened_key = f'{name}-{key}'
+            formatted_metrics['external-general'][flattened_key] = value
+        
+    return {
+        'parameters': run_parameters,
+        'metrics': formatted_metrics,
+        'tables': collected_tables
+    }
