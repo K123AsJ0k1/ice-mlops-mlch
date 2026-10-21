@@ -144,16 +144,10 @@ def analysis_pandas_paths(
     collected_statistics[median_name] = target_median
     collected_statistics[std_name] = target_std
 
-def analysis_pandas_content(
+def analysis_get_rows_chars(
     df: any,
-    target_column: str,
-    collected_statistics: any
+    target_column: str
 ):
-    try:
-        import statistics
-    except ImportError as e:
-        raise ImportError("analysis/utility failed to import", e)
-
     rows = []
     chars = []
     for content in df[target_column]:
@@ -161,43 +155,7 @@ def analysis_pandas_content(
         content_chars = len(content)
         rows.append(content_rows)
         chars.append(content_chars)
-
-    min_rows_name = f'rows-{target_column}-min'
-    max_rows_name = f'rows-{target_column}-max'
-    mean_rows_name = f'rows-{target_column}-mean'
-    median_rows_name = f'rows-{target_column}-median'
-    std_rows_name = f'rows-{target_column}-std'
-        
-    rows_min = min(rows)
-    rows_max = max(rows)
-    rows_mean = statistics.mean(rows)
-    rows_median = statistics.median(rows)
-    rows_std = statistics.stdev(rows)
-
-    collected_statistics[min_rows_name] = rows_min
-    collected_statistics[max_rows_name] = rows_max
-    collected_statistics[mean_rows_name] = rows_mean
-    collected_statistics[median_rows_name] = rows_median
-    collected_statistics[std_rows_name] = rows_std
-
-    min_chars_name = f'characters-{target_column}-min'
-    max_chars_name = f'characters-{target_column}-max'
-    mean_chars_name = f'characters-{target_column}-mean'
-    median_chars_name = f'characters-{target_column}-median'
-    std_rows_name = f'characters-{target_column}-std'
-
-    chars_min = min(chars)
-    chars_max = max(chars)
-    chars_mean = statistics.mean(chars)
-    chars_median = statistics.median(chars)
-    chars_std = statistics.stdev(chars)
-
-    collected_statistics[min_chars_name] = chars_min
-    collected_statistics[max_chars_name] = chars_max
-    collected_statistics[mean_chars_name] = chars_mean
-    collected_statistics[median_chars_name] = chars_median
-    collected_statistics[std_rows_name] = chars_std
-
+    
     return {
         'rows': rows,
         'chars': chars

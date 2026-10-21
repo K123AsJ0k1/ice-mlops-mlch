@@ -145,27 +145,24 @@ def analysis_external_dataset_stats(
     format_default: str
 ) -> dict:
     try: 
-        import time as t
-        from ..analysis.utility import analysis_pandas_content
+        from ..analysis.utility import analysis_get_rows_chars
     except ImportError as e:
         raise ImportError("analysis/use failed to import", e)
 
-    internal_statistics = {}
-
-    question_results = analysis_pandas_content( 
+    question_results = analysis_get_rows_chars( 
         df = dataset_df,
-        target_column = 'question',
-        collected_statistics = internal_statistics
+        target_column = 'question'
     )
 
-    answer_results = analysis_pandas_content(
+    answer_results = analysis_get_rows_chars(
         df = dataset_df,
-        target_column = 'answer',
-        collected_statistics = internal_statistics
+        target_column = 'answer'
     )
 
     language_column = f'language-{language_default}-size'
     format_column = f'format-{format_default}-size'
+
+    internal_statistics = {}
 
     internal_statistics[language_column] = dataset_df.shape[0]
     internal_statistics[format_column] = dataset_df.shape[0]

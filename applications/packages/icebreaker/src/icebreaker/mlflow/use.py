@@ -198,6 +198,25 @@ def mlflow_get_prompt(
 
     return prompt_details
 
+def mlflow_get_artifact(
+    mlflow_client: any,
+    run_id: str,
+    artifact_path: str,
+):
+    from pathlib import Path
+    
+    directory_path = Path('./downloads/mlflow').resolve()
+
+    directory_path.mkdir(parents = True, exist_ok = True)
+
+    local_path = mlflow_client.download_artifacts(
+        run_id = run_id, 
+        path = artifact_path, 
+        dst_path = directory_path
+    )
+
+    return local_path
+
 def mlflow_create_dataset(
     mlflow_client: any,
     dataset_name: str,
