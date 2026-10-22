@@ -89,7 +89,7 @@ def object_storage_interaction(
         lock_expected = False
         lock_client = None
         lock_active = False
-        lock_name = ''
+        lock_name = '' 
 
         specified_lock_parameters = {}
         lock_parameters = parameters['lock-parameters']

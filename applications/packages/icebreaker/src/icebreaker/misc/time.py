@@ -56,7 +56,7 @@ def time_edit_list(
 
 def time_run_update(
     storage_client: any,
-    storage_parameters: any,
+    storage_parameters: any, 
     object_name: str,
     time_name: str,
     start_time: int,
@@ -84,8 +84,8 @@ def time_run_update(
             'path-names': [],
             'overwrite': True,
             'debug-prints': True,
-            'lock-parameters': {},
-            'lock-location': ''
+            'lock-parameters': storage_parameters['lock-parameters'],
+            'lock-location': storage_parameters['lock-location']
         }, 
         object_data = None,
         object_metadata = None
@@ -122,8 +122,8 @@ def time_run_update(
                 },
                 'path-names': [],
                 'debug-prints': True,
-                'lock-parameters': {},
-                'lock-location': None,
+                'lock-parameters': storage_parameters['lock-parameters'],
+                'lock-location': storage_parameters['lock-location'],
                 'overwrite': True
             },
             dict_format = False
@@ -147,9 +147,8 @@ def time_run_update(
         end_time = end_time,
         time_index = time_index
     )
-    #print(modified_dict_list)
+
     stored_data = pd.DataFrame(modified_dict_list)
-    #print(object_type, name_replacer)
     object_stored = objects_store_data(
         swift_client = storage_client,
         storage_parameters = {
@@ -163,8 +162,8 @@ def time_run_update(
             },
             'path-names': [],
             'debug-prints': True,
-            'lock-parameters': {},
-            'lock-location': None,
+            'lock-parameters': storage_parameters['lock-parameters'],
+            'lock-location': storage_parameters['lock-location'],
             'overwrite': True
         },
         object_data = stored_data,
