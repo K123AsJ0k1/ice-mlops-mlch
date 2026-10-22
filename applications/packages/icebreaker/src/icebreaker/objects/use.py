@@ -186,40 +186,7 @@ def objects_get_prefix_list(
     total_time = round(end_time-start_time,5)
     print('Spent seconds', total_time)
     return prefix_objects
-'''
-def objects_get_next_index(
-    storage_client: any,
-    storage_parameters: any,
-):
-    try:
-        import time as t
-        from ..storage.management import object_storage_interaction
-    except ImportError as e: 
-        raise ImportError("Failed to import", e)
 
-    start_time = t.time()
-
-    object_stored = object_storage_interaction(
-        storage_client = storage_client,
-        parameters = {
-            'mode': 'index',
-            'bucket-target': storage_parameters['bucket-target'],
-            'bucket-prefix': storage_parameters['bucket-prefix'],
-            'bucket-user': storage_parameters['bucket-user'],
-            'object-name': 'root',
-            'path-replacers': {
-                'name': 'key'
-            },
-            'path-names': [],
-            'overwrite': True,
-            'debug-prints': True,
-            'lock-parameters': {},
-            'lock-location': ''
-        }, 
-        object_data = None,
-        object_metadata = None
-    ) 
-'''
 def objects_get_listed_data(
     swift_client: any,
     storage_parameters: any,

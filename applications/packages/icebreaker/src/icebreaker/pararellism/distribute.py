@@ -6,7 +6,7 @@ def distribute_step_inputs(
 ):
     try:
         from ..ray.use import ray_get_clients
-        from ..data.use import data_list_objects
+        from ..objects.use import objects_get_prefix_list
         from ..pararellism.division import (
             division_formatted_clusters, 
             division_cluster_weights,
@@ -47,10 +47,10 @@ def distribute_step_inputs(
                 cluster_priority_percentages = cluster_priority,
                 hardware_influence = hardware_influence
             )
-            
+            # This will fail if there is changes in step general details
             object_prefix = processing[step_key]['general']['input-storage']['object-prefix']
             print(f'Used object prefix {object_prefix}')
-            dataset_tuple_list = data_list_objects(
+            dataset_tuple_list = objects_get_prefix_list(
                 storage_client = storage_client,
                 storage_parameters = data_storage,
                 object_prefix = object_prefix

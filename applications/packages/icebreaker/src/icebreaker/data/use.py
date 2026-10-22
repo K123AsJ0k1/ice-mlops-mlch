@@ -1,4 +1,4 @@
-
+'''
 def data_list_objects(
     storage_client: any,
     storage_parameters: any,
@@ -45,3 +45,4 @@ def data_list_objects(
     total_time = round(end_time-start_time,5)
     print('Spent seconds', total_time)
     return prefix_objects
+'''
