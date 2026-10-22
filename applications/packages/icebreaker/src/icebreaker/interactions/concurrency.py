@@ -35,12 +35,12 @@ def concurrency_check_lock(
         raise ImportError("interactions/concurrency failed to import", e)
 
     lock_active = False
-    lock_name = ''
+    lock_name = '' 
     if not lock_client is None:
         if redis_client_check(storage_client = lock_client):
             lock_name = redis_name_lock(
                 user = lock_parameters['user'],
-                target = lock_parameters['target'],
+                place = lock_parameters['place'],
                 group = lock_parameters['group'],
                 resource = lock_parameters['resource']
             )

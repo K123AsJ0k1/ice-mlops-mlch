@@ -4,7 +4,7 @@ def redis_store_nested_dict(
     dict_name: str,
     nested_dict: any
 ) -> bool:
-    try:
+    try: 
         import pickle
     except ImportError as e:
         raise ImportError("Failed to import", e)
