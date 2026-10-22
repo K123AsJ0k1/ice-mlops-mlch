@@ -63,7 +63,7 @@ def object_storage_interaction(
     object_metadata: any
 ) -> any: 
     try:
-        from .misc import create_object_index
+        from ..storage.misc import storage_create_object_index
         from ..swift.setup import swift_client_check
         from ..swift.use import swift_create_or_update_object, swift_check_object_metadata, swift_get_object_content, swift_get_bucket_info
         from ..interactions.concurrency import concurrency_get_client, concurrency_check_lock, concurrency_get_lock, concurrency_release_lock
@@ -162,7 +162,7 @@ def object_storage_interaction(
                         bucket_name = bucket_name
                     ) 
                     if parameters['mode'] == 'index':
-                        output = create_object_index(
+                        output = storage_create_object_index(
                             object_path = object_path,
                             bucket_objects = bucket_info['objects']
                         )

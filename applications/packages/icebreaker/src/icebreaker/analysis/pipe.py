@@ -70,10 +70,12 @@ def analysis_external_pipe(
     run_parameters: dict,
     dataset_paths: list,
     storage_parameters: dict,
-    dataset_defaults: dict
+    dataset_defaults: dict,
+    path_end_prefix: str
 ) -> dict:
     try:
         from ..analysis.use import analysis_external_data_analysis
+        from ..objects.use import objects_store_data, objects_get_prefix_list
         from ..mlflow.use import mlflow_get_or_create_experiment, mlflow_start_run, mlflow_add_logs, mlflow_end_run
     except ImportError as e:
         raise ImportError("evaluation/pipe failed to import", e)
@@ -97,18 +99,70 @@ def analysis_external_pipe(
         storage_parameters = storage_parameters,
         dataset_defaults = dataset_defaults
     )
-
+    
     for dataset_name in formatted_internal_data['metrics'].keys():
         parameters = formatted_internal_data['parameters']
         metrics = formatted_internal_data['metrics'][dataset_name]
         used_identity = dataset_name.split('external')[1][1:]
-        used_table = {}
-        table_folder = ''
-        table_name = ''
-        if not dataset_name == 'external-general':
-            used_table = formatted_internal_data['tables'][dataset_name]
-            table_folder = used_identity
-            table_name = 'external_evalution_material'
+        table = formatted_internal_data['tables'][dataset_name]
+
+        artifact = {
+            'parameters': parameters,
+            'metrics': metrics
+        }
+
+        artifact_path_name = f'{dataset_name}-{path_end_prefix}-metrics-'
+
+        artifact_list = objects_get_prefix_list(
+            storage_client = swift_client,
+            storage_parameters = storage_parameters,
+            object_prefix = artifact_path_name
+        )
+        next_index = len(artifact_list) + 1
+
+        artifact_path_name += f'{next_index}.pkl'
+         
+        storage_parameters['object-name'] = 'arti'
+        storage_parameters['object-serialization'] = 'pickle'
+        storage_parameters['path-replacers'] = {
+            'name': 'METRICS'
+        }
+        storage_parameters['path-names'] = [
+            artifact_path_name
+        ]
+        storage_parameters['debug-prints'] = True
+        storage_parameters['lock-parameters'] = {}
+        storage_parameters['lock-location'] = None
+        storage_parameters['overwrite'] = True
+        
+        artifact_stored = objects_store_data(
+            swift_client = swift_client,
+            storage_parameters = storage_parameters,
+            object_data = artifact,
+            object_metadata = {}
+        )
+        
+        table_path_name = f'{dataset_name}-{path_end_prefix}.parquet'
+    
+        storage_parameters['object-name'] = 'data'
+        storage_parameters['object-serialization'] = 'parquet'
+        storage_parameters['path-replacers'] = {
+            'name': 'SOURCE'
+        }
+        storage_parameters['path-names'] = [
+            table_path_name
+        ]
+        storage_parameters['debug-prints'] = True
+        storage_parameters['lock-parameters'] = {}
+        storage_parameters['lock-location'] = None
+        storage_parameters['overwrite'] = True
+        
+        table_stored = objects_store_data(
+            swift_client = swift_client,
+            storage_parameters = storage_parameters,
+            object_data = table,
+            object_metadata = {}
+        )
         
         mlflow_add_logs(
             mlflow_client = mlflow_client,
@@ -117,11 +171,11 @@ def analysis_external_pipe(
             metrics = metrics,
             metrics_prefix = used_identity,
             metrics_step = 1,
-            table = used_table,
-            table_folder = table_folder,
-            table_name = table_name
+            table = {},
+            table_folder = '',
+            table_name = ''
         )
-    
+        
     mlflow_end_run(
         mlflow_client = mlflow_client, 
         run_id = run_id, 

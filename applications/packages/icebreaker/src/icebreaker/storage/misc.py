@@ -1,4 +1,4 @@
-def create_object_index(
+def storage_create_object_index(
     object_path: str,
     bucket_objects: any
 ) -> str:

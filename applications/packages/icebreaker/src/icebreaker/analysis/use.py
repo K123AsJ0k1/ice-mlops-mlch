@@ -187,9 +187,7 @@ def analysis_external_data_analysis(
         raise ImportError("workflow/use failed to import", e)
 
     df_list = []
-    formatted_metrics = {
-        'external-general': {}
-    }
+    formatted_metrics = {}
     collected_tables = {}
 
     target_columns =[

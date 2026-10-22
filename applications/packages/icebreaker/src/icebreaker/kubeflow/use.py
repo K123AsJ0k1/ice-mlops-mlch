@@ -39,6 +39,7 @@ def kubeflow_manage_run(
     pipeline_arguments: any,
     cache_steps: bool,
     time_update_object: any,
+    time_name: str,
     loop_amount: int,
     loop_wait: int
 ):
@@ -57,7 +58,7 @@ def kubeflow_manage_run(
         storage_client = storage_client,
         storage_parameters = time_storage_parameters,
         object_name = time_object_name,
-        time_name = 'kubeflow-pipeline',
+        time_name = time_name,
         start_time = time_start,
         end_time = 0,
         time_index = -1
@@ -104,7 +105,7 @@ def kubeflow_manage_run(
         storage_client = storage_client,
         storage_parameters = time_storage_parameters,
         object_name = time_name_1,
-        time_name = 'kubeflow-pipeline',
+        time_name = time_name,
         start_time = 0,
         end_time = time_end,
         time_index = time_index_1

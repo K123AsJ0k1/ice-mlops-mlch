@@ -68,15 +68,15 @@ def workflow_handle_internal_datasets(
 
     return total_time
 
-def workflow_format_internal_datasets(
+def workflow_feature_extract_internal_datasets(
     swift_client: any,
     storage_parameters: any,
     dataset_paths: list,
     ref_column: str,
     path_column: str,
     material_grades: dict,
-    insert_prefix: str,
-    format_prefix: str,
+    path_middle_prefix: str,
+    path_end_prefix: str,
     group_columns: list,
     value_column: str,
     weigth_column: str
@@ -141,8 +141,8 @@ def workflow_format_internal_datasets(
 
             dataset_rows_2.append(formatted_row)
         
-        before, match, after = dataset_path.partition(insert_prefix)
-        modified_dataset_path = f'{before}{match}-{format_prefix}{after}'
+        before, match, after = dataset_path.partition(path_middle_prefix)
+        modified_dataset_path = f'{before}{match}-{path_end_prefix}{after}'
         dataset_df = pd.DataFrame(dataset_rows_2)
         dataset_df['ranking-weights'] = workflow_set_weights(
             target_df = dataset_df,
