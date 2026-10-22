@@ -209,12 +209,19 @@ def mlflow_get_artifact(
 
     directory_path.mkdir(parents = True, exist_ok = True)
 
+    path_split = artifact_path.split('/')
+
+    if 1 < len(path_split):
+        if path_split[0] == 'datasets':
+            directory_path = directory_path / path_split[1]
+            directory_path.mkdir(parents = True, exist_ok = True)
+            
     local_path = mlflow_client.download_artifacts(
         run_id = run_id, 
         path = artifact_path, 
         dst_path = directory_path
     )
-
+    
     return local_path
 
 def mlflow_create_dataset(
