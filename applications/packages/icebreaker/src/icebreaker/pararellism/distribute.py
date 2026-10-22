@@ -49,6 +49,7 @@ def distribute_step_inputs(
             )
             
             object_prefix = processing[step_key]['general']['data-storage']['object-prefix']
+            print(f'Used object prefix {object_prefix}')
             dataset_tuple_list = data_list_objects(
                 storage_client = storage_client,
                 storage_parameters = data_storage,
