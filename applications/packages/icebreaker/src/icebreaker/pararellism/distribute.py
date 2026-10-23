@@ -48,12 +48,12 @@ def distribute_step_inputs(
                 hardware_influence = hardware_influence
             )
             # This will fail if there is changes in step general details
-            object_prefix = processing[step_key]['general']['input-storage']['path-prefix']
-            print(f'Used object prefix {object_prefix}')
+            path_prefix = processing[step_key]['general']['input-storage']['path-prefix']
+            print(f'Used path prefix {path_prefix}')
             dataset_tuple_list = objects_get_prefix_list(
                 storage_client = storage_client,
                 storage_parameters = data_storage,
-                path_prefix = object_prefix
+                path_prefix = path_prefix
             )
 
             cluster_division = division_load_balanced_cluster_round_robin(
