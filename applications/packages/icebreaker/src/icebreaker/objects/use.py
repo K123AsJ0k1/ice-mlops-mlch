@@ -143,7 +143,7 @@ def objects_nested_update(
 def objects_get_prefix_list(
     storage_client: any,
     storage_parameters: any,
-    object_prefix: str
+    path_prefix: str
 ): 
     try:
         import time as t
@@ -177,7 +177,7 @@ def objects_get_prefix_list(
     prefix_objects = []
     if not object_stored is None:
         for object_path, values in object_stored.items():
-            if object_prefix in object_path:
+            if object_path.startswith(path_prefix):
                 used_bytes = values['used-bytes']
                 object_tuple = (object_path, used_bytes)
                 prefix_objects.append(object_tuple)

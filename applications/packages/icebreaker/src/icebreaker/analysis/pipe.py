@@ -7,11 +7,14 @@ def analysis_internal_pipe(
     run_tags: dict,
     run_parameters: dict,
     dataset_paths: list,
-    storage_parameters: dict
+    storage_parameters: dict,
+    name_start_prefix: str
 ) -> dict: 
     try:
         from ..analysis.use import analysis_internal_data_analysis
         from ..mlflow.use import mlflow_get_or_create_experiment, mlflow_start_run, mlflow_add_logs, mlflow_end_run
+        from ..storage.management import storage_set_object_path
+        from ..objects.use import objects_get_prefix_list, objects_store_data
     except ImportError as e:
         raise ImportError("evaluation/pipe failed to import", e)
     
@@ -38,7 +41,57 @@ def analysis_internal_pipe(
         parameters = formatted_internal_data['parameters']
         metrics = formatted_internal_data['metrics'][dataset_name]
         table = formatted_internal_data['tables'][dataset_name]
-        used_identity = dataset_name.split('formatted')[1][1:]
+        used_identity = dataset_name.split('extraction-data')[1][1:]
+
+        artifact = {
+            'parameters': parameters,
+            'metrics': metrics
+        }
+
+        artifact_object_name = 'arti'
+        artifact_path_replacers = {
+            'name': 'METRICS'
+        }
+
+        artifact_path_name = f'{name_start_prefix}-metrics-{used_identity}-'
+
+        artifact_temp_path_names = [
+            artifact_path_name
+        ]
+
+        artifact_path = storage_set_object_path(
+            object_name = artifact_object_name,
+            path_replacers = artifact_path_replacers,
+            path_names = artifact_temp_path_names,
+            debug_prints = False
+        )
+
+        object_list = objects_get_prefix_list(
+            storage_client = swift_client,
+            storage_parameters = storage_parameters,
+            path_prefix = artifact_path
+        )
+
+        next_index = len(object_list) + 1
+        
+        artifact_path_name += f'run-{next_index}.pkl'
+        storage_parameters['object-name'] = artifact_object_name
+        storage_parameters['object-serialization'] = 'pickle'
+        storage_parameters['path-replacers'] = artifact_path_replacers
+        storage_parameters['path-names'] = [
+            artifact_path_name
+        ]
+        storage_parameters['debug-prints'] = True
+        storage_parameters['lock-parameters'] = {}
+        storage_parameters['lock-location'] = None
+        storage_parameters['overwrite'] = True
+        
+        artifact_stored = objects_store_data(
+            swift_client = swift_client,
+            storage_parameters = storage_parameters,
+            object_data = artifact,
+            object_metadata = {}
+        )
         
         mlflow_add_logs(
             mlflow_client = mlflow_client,
@@ -49,7 +102,7 @@ def analysis_internal_pipe(
             metrics_step = 1,
             table = table,
             table_folder = used_identity,
-            table_name = 'internal_validation_material'
+            table_name = 'extraction_material'
         )
         
     mlflow_end_run(
@@ -71,12 +124,13 @@ def analysis_external_pipe(
     dataset_paths: list,
     storage_parameters: dict,
     dataset_defaults: dict,
-    path_end_prefix: str
+    name_start_prefix: str
 ) -> dict:
     try:
         from ..analysis.use import analysis_external_data_analysis
         from ..objects.use import objects_store_data, objects_get_prefix_list
         from ..mlflow.use import mlflow_get_or_create_experiment, mlflow_start_run, mlflow_add_logs, mlflow_end_run
+        from ..storage.management import storage_set_object_path
     except ImportError as e:
         raise ImportError("evaluation/pipe failed to import", e)
     
@@ -111,22 +165,37 @@ def analysis_external_pipe(
             'metrics': metrics
         }
 
-        artifact_path_name = f'{dataset_name}-{path_end_prefix}-metrics-'
-
-        artifact_list = objects_get_prefix_list(
-            storage_client = swift_client,
-            storage_parameters = storage_parameters,
-            object_prefix = artifact_path_name
-        )
-        next_index = len(artifact_list) + 1
-
-        artifact_path_name += f'{next_index}.pkl'
-         
-        storage_parameters['object-name'] = 'arti'
-        storage_parameters['object-serialization'] = 'pickle'
-        storage_parameters['path-replacers'] = {
+        artifact_object_name = 'arti'
+        artifact_path_replacers = {
             'name': 'METRICS'
         }
+
+        artifact_path_name = f'{name_start_prefix}-metrics-{used_identity}-'
+
+        artifact_temp_path_names = [
+            artifact_path_name
+        ]
+
+        artifact_path = storage_set_object_path(
+            object_name = artifact_object_name,
+            path_replacers = artifact_path_replacers,
+            path_names = artifact_temp_path_names,
+            debug_prints = False
+        )
+
+        object_list = objects_get_prefix_list(
+            storage_client = swift_client,
+            storage_parameters = storage_parameters,
+            path_prefix = artifact_path
+        )
+
+        next_index = len(object_list) + 1
+        
+        artifact_path_name += f'run-{next_index}.pkl'
+        
+        storage_parameters['object-name'] = artifact_object_name
+        storage_parameters['object-serialization'] = 'pickle'
+        storage_parameters['path-replacers'] = artifact_path_replacers
         storage_parameters['path-names'] = [
             artifact_path_name
         ]
@@ -142,12 +211,12 @@ def analysis_external_pipe(
             object_metadata = {}
         )
         
-        table_path_name = f'{dataset_name}-{path_end_prefix}.parquet'
-    
+        table_path_name = f'{name_start_prefix}-data-{dataset_name}.parquet'
+        
         storage_parameters['object-name'] = 'data'
         storage_parameters['object-serialization'] = 'parquet'
         storage_parameters['path-replacers'] = {
-            'name': 'SOURCE'
+            'name': 'EXTRACTED'
         }
         storage_parameters['path-names'] = [
             table_path_name
@@ -175,7 +244,7 @@ def analysis_external_pipe(
             table_folder = '',
             table_name = ''
         )
-        
+    
     mlflow_end_run(
         mlflow_client = mlflow_client, 
         run_id = run_id, 

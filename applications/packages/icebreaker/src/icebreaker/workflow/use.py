@@ -75,8 +75,7 @@ def workflow_feature_extract_internal_datasets(
     ref_column: str,
     path_column: str,
     material_grades: dict,
-    path_middle_prefix: str,
-    path_end_prefix: str,
+    path_start_prefix: str,
     group_columns: list,
     value_column: str,
     weigth_column: str
@@ -141,8 +140,8 @@ def workflow_feature_extract_internal_datasets(
 
             dataset_rows_2.append(formatted_row)
         
-        before, match, after = dataset_path.partition(path_middle_prefix)
-        modified_dataset_path = f'{before}{match}-{path_end_prefix}{after}'
+        dataset_name = dataset_path.split('/')[-1]
+        new_dataset_name = f'{path_start_prefix}-data-{dataset_name}'
         dataset_df = pd.DataFrame(dataset_rows_2)
         dataset_df['ranking-weights'] = workflow_set_weights(
             target_df = dataset_df,
@@ -150,19 +149,21 @@ def workflow_feature_extract_internal_datasets(
             value_column = value_column,
             weight_column = weigth_column
         )
-
+        
         status = objects_store_data(
             swift_client = swift_client,
             storage_parameters = {
                 'bucket-target': storage_parameters['bucket-target'],
                 'bucket-prefix': storage_parameters['bucket-prefix'],
                 'bucket-user': storage_parameters['bucket-user'],
-                'object-name': 'root',
+                'object-name': 'data',
                 'object-serialization': storage_parameters['object-serialization'],
                 'path-replacers': {
-                    'name': modified_dataset_path
+                    'name': 'EXTRACTED'
                 },
-                'path-names': [],
+                'path-names': [
+                    new_dataset_name
+                ],
                 'debug-prints': True,
                 'lock-parameters': {},
                 'lock-location': None,
@@ -171,6 +172,7 @@ def workflow_feature_extract_internal_datasets(
             object_data = dataset_df,
             object_metadata = {}
         )
+        
         dataset_idx += 1
 
     end_time = t.time()
@@ -343,7 +345,7 @@ def workflow_internal_data_analysis(
             'format-column': 'absolute-path',
             'format-replacer': {}
         }
-    )
+    ) 
     
     for single_group in group_columns:
         df_stats = unified_tutorial_df.groupby(single_group)[target_columns].agg(wanted_stats)

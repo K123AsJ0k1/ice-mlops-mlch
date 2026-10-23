@@ -1,4 +1,4 @@
-def set_bucket_name(
+def storage_set_bucket_name(
     bucket_target: str,
     bucket_prefix: str,
     bucket_user: str,
@@ -21,10 +21,10 @@ def set_bucket_name(
         print('User object bucket: ' + str(bucket_name))
     return bucket_name
 
-def set_object_path(
+def storage_set_object_path(
     object_name: str,
-    path_replacers: any,
-    path_names: any,
+    path_replacers: dict,
+    path_names: list,
     debug_prints: bool
 ):
     object_paths = {
@@ -72,13 +72,13 @@ def object_storage_interaction(
     # This might at some point require input validation with pydantic
     output = None 
     if swift_client_check(storage_client = storage_client):
-        bucket_name = set_bucket_name(
+        bucket_name = storage_set_bucket_name(
             bucket_target = parameters['bucket-target'],
             bucket_prefix = parameters['bucket-prefix'],
             bucket_user = parameters['bucket-user'],
             debug_prints = parameters['debug-prints']
         )
-        object_path = set_object_path(
+        object_path = storage_set_object_path(
             object_name = parameters['object-name'],
             path_replacers = parameters['path-replacers'],
             path_names = parameters['path-names'],

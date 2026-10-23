@@ -38,7 +38,6 @@ def kubeflow_manage_run(
     experiment_name: str,
     pipeline_arguments: any,
     cache_steps: bool,
-    time_update_object: any,
     time_name: str,
     loop_amount: int,
     loop_wait: int
@@ -46,7 +45,6 @@ def kubeflow_manage_run(
     try:
         import time as t
         from ..misc.time import time_run_update
-        from ..misc.dict import fill_all_nested_dict_values, update_nested_dict
     except ImportError as e:
         raise ImportError("kubeflow/user failed to import", e)
     
@@ -64,30 +62,12 @@ def kubeflow_manage_run(
         time_index = -1
     )
     
-    name_update = {
-        'time-storage': {
-            'object-name': time_name_1
-        }
-    }
-
-    updated_time_object = fill_all_nested_dict_values(
-        target_dict = time_update_object,
-        fill_values = {
-            'storage': name_update,
-            'general': name_update
-        }
-    )
-
-    updated_pipeline_arguments = update_nested_dict(
-        target_dict = pipeline_arguments,
-        update_dict = updated_time_object
-    )
     print('Submitting pipeline')
     run_details = kfp_client.create_run_from_pipeline_func(
         pipeline_func = pipeline_function,
         run_name = run_name,
         experiment_name = experiment_name,
-        arguments = updated_pipeline_arguments,
+        arguments = pipeline_arguments,
         enable_caching = cache_steps
     )
 
