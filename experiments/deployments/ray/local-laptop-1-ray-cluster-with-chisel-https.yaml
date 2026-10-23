@@ -73,4 +73,4 @@ services:
  
 secrets: 
   cpouta-oss-crt:
-    file: /home/sfniila/.ssh/oss_platform_ca.crt
+    file: ()/.ssh/oss_platform_ca.crt
