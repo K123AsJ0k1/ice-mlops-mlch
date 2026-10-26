@@ -201,6 +201,7 @@ def swift_define_object(
         )
         return upload_object
     except Exception as e:
+        print(e)
         return None
     
 def swift_upload_objects(
@@ -231,10 +232,10 @@ def swift_upload_objects(
                         else:
                             print('General error', error)
             except SwiftError as e:
-                print('SwiftService error', e)
+                print(f'SwiftService error: {e}')
         return True
     except Exception as e:
-        print('Swift upload object', e)
+        print(f'Swift upload object error: {e}')
         return False
     
 # Create download for large objects at some point

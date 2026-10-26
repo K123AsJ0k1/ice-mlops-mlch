@@ -300,6 +300,143 @@ def workflow_store_data(
     print('Spent seconds', total_time)
     return total_time
 
+def workflow_store_models(
+    storage_client: any,
+    storage_parameters: any,
+    file_parameters: any
+) -> int:
+    try:
+        import os
+        import time as t
+        from pathlib import Path
+        from ..storage.management import object_storage_interaction, storage_set_bucket_name, storage_set_object_path
+        from ..swift.use import swift_define_object, swift_upload_objects
+        from ..objects.use import objects_store_data
+    except ImportError as e:
+        raise ImportError("workflow/utility failed to import", e)
+
+    start_time = t.time()
+
+    object_stored = object_storage_interaction(
+        storage_client = storage_client,
+        parameters = {
+            'mode': 'list',
+            'bucket-target': storage_parameters['bucket-target'],
+            'bucket-prefix': storage_parameters['bucket-prefix'],
+            'bucket-user': storage_parameters['bucket-user'],
+            'object-name': 'root',
+            'path-replacers': {
+                'name': 'key'
+            },
+            'path-names': [],
+            'overwrite': True,
+            'debug-prints': True,
+            'lock-parameters': {},
+            'lock-location': ''
+        }, 
+        object_data = None,
+        object_metadata = None
+    ) 
+    upload_objects = []
+    for root, dirs, files in os.walk(file_parameters['model-directory']):
+        for file in files:
+            file_path = os.path.join(root, file)
+            if not '.cache' in file_path:
+                file_type = file_path.split('.')[-1]
+                model_name = file_path.split('/')[-2]  
+                object_name = file_path.split('/')[-1] 
+
+                file_exists = False
+                for existing_path in object_stored.keys():
+                    existing_object = existing_path.split('/')[-1]
+                    if object_name == existing_object:
+                        file_exists = True
+                file_exists = False
+                if not file_exists:
+                    if 'json' == file_type:
+                        model_name = file_path.split('/')[-2]  
+                        object_name = file_path.split('/')[-1] 
+                        if not 'download' == model_name:
+                            print('Storing JSON file:', file_path)
+                            with open(file_path, 'rb') as stored_data:
+                                storage_parameters['object-name'] = 'root'
+                                storage_parameters['object-serialization'] = 'serialized'
+                                storage_parameters['path-replacers'] = {
+                                    'name': 'MODELS'
+                                }
+                                storage_parameters['path-names'] = [
+                                    model_name,
+                                    object_name
+                                ]
+                                storage_parameters['debug-prints'] = True
+                                storage_parameters['lock-parameters'] = {}
+                                storage_parameters['lock-location'] = None
+                                storage_parameters['overwrite'] = True
+
+                                object_stored = objects_store_data(
+                                    swift_client = storage_client,
+                                    storage_parameters = storage_parameters,
+                                    object_data = stored_data,
+                                    object_metadata = {}
+                                )
+
+                        continue
+                    if 'safetensors' == file_type or 'bin' == file_type:
+                        print('Storing ', file_type, ' file:', file_path)
+                        
+                        object_path = storage_set_object_path(
+                            object_name = 'root',
+                            path_replacers = {
+                                'name': 'MODELS'
+                            },
+                            path_names = [
+                                model_name,
+                                object_name 
+                            ],
+                            debug_prints = True
+                        )
+
+                        absolute_local_path = str(Path(file_path).resolve())
+                        upload_objects.append(
+                            swift_define_object(
+                                local_path = absolute_local_path,
+                                object_path = object_path
+                            )
+                        )
+                        continue
+    
+    bucket_name = storage_set_bucket_name(
+        bucket_target = storage_parameters['bucket-target'],
+        bucket_prefix = storage_parameters['bucket-prefix'],
+        bucket_user = storage_parameters['bucket-user'],
+        debug_prints = True
+    )
+
+    if 0 < len(upload_objects):
+        swift_parameters = storage_parameters['swift-parameters']
+
+        swift_options = {
+            'auth_version': swift_parameters['auth-version'],
+            'preauthtoken': swift_parameters['pre-auth-token'],
+            'preauthurl': swift_parameters['pre-auth-url'],
+            'os_user_domain_name': swift_parameters['user-domain-name'],
+            'os_project_domain_name': swift_parameters['project-domain-name'],
+            'os_project_name': swift_parameters['project-name'],
+            'object_uu_threads': 4
+        }
+        #print(upload_objects)
+        
+        objects_uploaded = swift_upload_objects(
+            swift_options = swift_options,
+            bucket_name = bucket_name,
+            object_list = upload_objects
+        )
+        
+    end_time = t.time()
+    total_time = round(end_time-start_time,5)
+    print('Spent seconds', total_time)
+    return total_time
+
 def workflow_sample_datasets(
     swift_client: any,
     fasttext_model: any,

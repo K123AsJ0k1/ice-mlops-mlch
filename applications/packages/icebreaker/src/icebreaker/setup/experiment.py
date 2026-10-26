@@ -1,4 +1,4 @@
-
+'''
 def experiment_format_material(
     material_data: any
 ) -> any:
@@ -48,7 +48,8 @@ def experiment_format_material(
     stored_data = pickle.dumps(dataframe)
 
     return stored_data
-
+'''
+'''
 def experiment_store_data(
     storage_client: any,
     file_parameters: any,
@@ -139,7 +140,9 @@ def experiment_store_data(
     total_time = round(end_time-start_time,5)
     print('Spent seconds', total_time)
     return total_time
+'''
 
+'''
 def experiment_store_models(
     storage_client: any,
     storage_parameters: any,
@@ -265,3 +268,4 @@ def experiment_store_models(
     total_time = round(end_time-start_time,5)
     print('Spent seconds', total_time)
     return total_time
+'''
