@@ -341,10 +341,11 @@ def workflow_store_models(
     for root, dirs, files in os.walk(file_parameters['model-directory']):
         for file in files:
             file_path = os.path.join(root, file)
-            if not '.cache' in file_path:
-                file_type = file_path.split('.')[-1]
-                model_name = file_path.split('/')[-2]  
-                object_name = file_path.split('/')[-1] 
+            absolute_local_path = str(Path(file_path).resolve())
+            if not '.cache' in absolute_local_path:
+                file_type = absolute_local_path.split('.')[-1]
+                model_name = absolute_local_path.split('/')[-2]  
+                object_name = absolute_local_path.split('/')[-1] 
 
                 file_exists = False
                 for existing_path in object_stored.keys():
@@ -353,12 +354,12 @@ def workflow_store_models(
                         file_exists = True
                 file_exists = False
                 if not file_exists:
-                    if 'json' == file_type:
-                        model_name = file_path.split('/')[-2]  
-                        object_name = file_path.split('/')[-1] 
+                    if 'json' == file_type or 'bin' == file_type:
+                        model_name = absolute_local_path.split('/')[-2]  
+                        object_name = absolute_local_path.split('/')[-1] 
                         if not 'download' == model_name:
-                            print('Storing JSON file:', file_path)
-                            with open(file_path, 'rb') as stored_data:
+                            print(f'Storing {file_type} file: {absolute_local_path}')
+                            with open(absolute_local_path, 'rb') as stored_data:
                                 storage_parameters['object-name'] = 'root'
                                 storage_parameters['object-serialization'] = 'serialized'
                                 storage_parameters['path-replacers'] = {
@@ -372,16 +373,16 @@ def workflow_store_models(
                                 storage_parameters['lock-parameters'] = {}
                                 storage_parameters['lock-location'] = None
                                 storage_parameters['overwrite'] = True
-
+                                
                                 object_stored = objects_store_data(
                                     swift_client = storage_client,
                                     storage_parameters = storage_parameters,
                                     object_data = stored_data,
                                     object_metadata = {}
                                 )
-
+                                
                         continue
-                    if 'safetensors' == file_type or 'bin' == file_type:
+                    if 'safetensors' == file_type:
                         print('Storing ', file_type, ' file:', file_path)
                         
                         object_path = storage_set_object_path(
@@ -395,11 +396,10 @@ def workflow_store_models(
                             ],
                             debug_prints = True
                         )
-
-                        absolute_local_path = str(Path(file_path).resolve())
+                        # There is some kind of problem with fasttext
                         upload_objects.append(
                             swift_define_object(
-                                local_path = absolute_local_path,
+                                local_path = file_path,
                                 object_path = object_path
                             )
                         )
@@ -424,7 +424,8 @@ def workflow_store_models(
             'os_project_name': swift_parameters['project-name'],
             'object_uu_threads': 4
         }
-        #print(upload_objects)
+        # There is some kind of problem with fasttext
+        # This gets a bytes-like object is required, not 'str' for fasttext
         
         objects_uploaded = swift_upload_objects(
             swift_options = swift_options,
