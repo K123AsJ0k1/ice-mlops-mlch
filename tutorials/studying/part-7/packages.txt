@@ -1,0 +1,2 @@
+jupyterlab
+icebreaker[swift, data, redis, logging, workflow] @ git+https://github.com/K123AsJ0k1/ice-mlops-mlch.git@main#subdirectory=applications/packages/icebreaker
