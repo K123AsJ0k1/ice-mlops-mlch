@@ -2,7 +2,7 @@ import ray
  
 @ray.remote(
     num_cpus = 1,
-    memory = 0.2 * 1024 * 1024 * 1024
+    memory = 0.4 * 1024 * 1024 * 1024
 ) 
 class Detector:
     def __init__(
@@ -54,7 +54,7 @@ class Detector:
             'batch': batch_index,
             'key': used_key,
         }
-
+ 
         result['language-data'] = fasttext_get_data( 
             model = self.ft_model,
             texts = language_text_input,

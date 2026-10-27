@@ -7,14 +7,14 @@ from icebreaker.analysis.utility import analysis_get_rows_chars
 
 @ray.remote( 
     num_cpus = 1,
-    memory = 0.2 * 1024 * 1024 * 1024
+    memory = 0.4 * 1024 * 1024 * 1024
 ) 
 def data_collector(
     worker_index: int,
     actor_index: int,
     actor_ref: any,
     swift_parameters: any,
-    data_storage_parameters: any,
+    storage_parameters: any,
     config_parameters: any,
     task_batch: any 
 ) -> any:
@@ -48,11 +48,11 @@ def data_collector(
         data_object = objects_get_data(
             swift_client = swift_client,
             storage_parameters = {
-                'bucket-target': data_storage_parameters['bucket-target'],
-                'bucket-prefix': data_storage_parameters['bucket-prefix'],
-                'bucket-user': data_storage_parameters['bucket-user'],
+                'bucket-target': storage_parameters['bucket-target'],
+                'bucket-prefix': storage_parameters['bucket-prefix'],
+                'bucket-user': storage_parameters['bucket-user'],
                 'object-name': 'root',
-                'object-serialization': data_storage_parameters['object-serialization'],
+                'object-serialization': storage_parameters['object-serialization'],
                 'path-replacers': {
                     'name': object_path
                 },
@@ -105,7 +105,7 @@ def data_collector(
                 analysis_parameters = analysis_parameters
             ))
             
-        batch_index += 1
+        batch_index += 1 
 
     joined_tables_list = {}
     while len(provider_actor_refs):
