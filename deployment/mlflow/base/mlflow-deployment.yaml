@@ -70,8 +70,8 @@ spec:
               protocol: TCP
           resources:
             requests:
-              cpu: 300m
-              memory: 512Mi
+              cpu: 1000m
+              memory: 10Gi
           livenessProbe:
             failureThreshold: 30
             tcpSocket:

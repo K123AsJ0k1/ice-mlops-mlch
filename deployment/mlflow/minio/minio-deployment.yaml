@@ -47,3 +47,7 @@ spec:
           hostPort: 9000
         - containerPort: 9001
           hostPort: 9001
+        resources:
+          requests:
+            cpu: 500m
+            memory: 1Gi
