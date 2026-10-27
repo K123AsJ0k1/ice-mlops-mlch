@@ -191,7 +191,7 @@ def objects_get_listed_data(
     swift_client: any,
     storage_parameters: any,
     object_names: list
-):
+): 
     object_list = []
     for object_name in object_names:
         storage_parameters['path-names'] = [

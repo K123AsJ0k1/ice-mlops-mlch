@@ -8,17 +8,30 @@ def magika_block_format(
     except ImportError as e:
         raise ImportError("mgka/use failed to import", e)
 
+    if not isinstance(text, str):
+        return ('null', {})
+
     pattern = r'```([a-zA-Z0-9_-]+)'
     matches = re.findall(pattern, text, re.MULTILINE)
 
     if not matches:
         return ('null', {})
 
-    normalized_tags = [tag.lower() for tag in matches]
+    normalized_tags = [
+        tag.lower() for tag in matches 
+        if tag and isinstance(tag, str)
+    ]
 
     counts = Counter(normalized_tags)
+
+    clean_counts = {str(k): int(v) for k, v in counts.items() if k is not None}
+
+    if not clean_counts:
+        return ('null', {})
+
     dominant_lang, frequency = counts.most_common(1)[0]
-    return dominant_lang, dict(counts)
+
+    return dominant_lang, clean_counts 
 
 def magika_get_formats(
     model: any,
@@ -27,6 +40,11 @@ def magika_get_formats(
     confidence_threshold: float,
     label_replacer: any
 ):  
+    try:
+        import json
+    except ImportError as e:
+        raise ImportError("mgka/use failed to import", e)
+    
     results = {
         'predictions': [],
         'default-amount': 0
@@ -54,8 +72,10 @@ def magika_get_formats(
                     format_label = default_label
                     label_confidence = 0.0
                     results['default-amount'] += 1
-        
-        results['predictions'].append((format_label, label_confidence, counts))
+        # Be aware that ray serialization isn't able to handle dicts in dataframes
+        # which is why dictionary must be turned into json
+        counts_str = json.dumps(counts)
+        results['predictions'].append((format_label, label_confidence, counts_str))
     
     return results
 
