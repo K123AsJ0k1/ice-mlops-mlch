@@ -6,12 +6,12 @@ image:
 head:
   resources:
     limits:
-      cpu: "4"
-      memory: "52G"
+      cpu: "2"
+      memory: "27Gi"
       nvshare.com/gpu: "1"
     requests:
-      cpu: "4"
-      memory: "52G"
+      cpu: "2"
+      memory: "27Gi"
   volumes:
     - name: log-volume
       emptyDir: {}
@@ -26,12 +26,12 @@ worker:
   maxReplicas: 2
   resources:
     limits:
-      cpu: "4"
-      memory: "52G"
+      cpu: "2"
+      memory: "27Gi"
       nvshare.com/gpu: "1"
     requests:
-      cpu: "4"
-      memory: "52G"
+      cpu: "2"
+      memory: "27Gi"
   volumes:
     - name: log-volume
       emptyDir: {}
