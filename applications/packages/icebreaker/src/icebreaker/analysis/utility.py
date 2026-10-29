@@ -156,7 +156,7 @@ def analysis_get_rows_chars(
         rows.append(content_rows)
         chars.append(content_chars)
     
-    return {
+    return { 
         'rows': rows,
         'chars': chars
     }

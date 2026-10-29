@@ -6,7 +6,7 @@ def embeddings_batch_create_vectors(
     batch_size: int
 ):
     try: 
-        import time as t
+        import time as t 
         import torch
         from qdrant_client import models
         from ..dense.use import dense_create_vectors

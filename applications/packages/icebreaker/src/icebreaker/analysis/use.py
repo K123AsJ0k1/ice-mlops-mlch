@@ -20,13 +20,18 @@ def analysis_internal_dataset_stats(
     }
     
     # format-(type)-count
-    analysis_pandas_format(
+    analysis_pandas_format( 
         df = dataset_df,
         target_column = 'absolute-path',
         format_replacer = format_replacer,
         column_prefix = 'format',
         collected_statistics = internal_statistics
     )
+
+    internal_statistics['language-en-size'] = dataset_df.shape[0]
+    internal_statistics['relevance-1-size'] = int((dataset_df['relevance'] == 1).sum())
+    internal_statistics['relevance-2-size'] = int((dataset_df['relevance'] == 2).sum())
+    internal_statistics['relevance-3-size'] = int((dataset_df['relevance'] == 3).sum())
     
     # material-(method)
     analysis_pandas_material(
@@ -144,7 +149,7 @@ def analysis_external_dataset_stats(
     language_default: str,
     format_default: str
 ) -> dict:
-    try: 
+    try:  
         from ..analysis.utility import analysis_get_rows_chars
     except ImportError as e:
         raise ImportError("analysis/use failed to import", e)

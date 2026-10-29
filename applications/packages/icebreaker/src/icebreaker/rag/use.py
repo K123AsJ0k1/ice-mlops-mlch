@@ -63,7 +63,7 @@ def rag_setup_database(
             dense_model = dense_model,
             sparse_model = sparse_model,
             batch_size = batch_size
-        )
+        ) 
     
         dense_times[dataset_name] = results['dense-mean-time-ms']
         sparse_times[dataset_name] = results['sparse-mean-time-ms']

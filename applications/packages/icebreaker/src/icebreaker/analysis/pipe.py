@@ -10,7 +10,7 @@ def analysis_internal_pipe(
     storage_parameters: dict,
     name_start_prefix: str
 ) -> dict: 
-    try:
+    try: 
         from ..analysis.use import analysis_internal_data_analysis
         from ..mlflow.use import mlflow_get_or_create_experiment, mlflow_start_run, mlflow_add_logs, mlflow_end_run
         from ..storage.management import storage_set_object_path

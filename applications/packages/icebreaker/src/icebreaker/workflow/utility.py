@@ -438,6 +438,95 @@ def workflow_store_models(
     print('Spent seconds', total_time)
     return total_time
 
+def workflow_time_stats(
+    time_df: any,
+    cluster_yaml: dict
+) -> any:
+    try:
+        from ..misc.dict import get_dict_value
+    except ImportError as e:
+        raise ImportError("workflow/utility failed to import", e)
+    
+    # infra names are local-lt or cloud-vm
+    # step names are step or step-n with first one being step-0
+    
+    formatted_tables = []
+    formatted_df = time_df.copy()
+
+    formatted_df['infrastructure'] = formatted_df['name'].str.extract(r'(local-lt\d+|cloud-vm\d+)', expand=False)
+    formatted_df['stage'] = formatted_df['name'].str.extract(r'(step-\d+|step\b)', expand=False).fillna('step')
+
+    infra_cost = {}
+    for name in formatted_df['infrastructure'].unique():
+        name_split = name.split('-')
+        used_key = f'{name_split[0]}-clusters-{name_split[-1]}'
+        infra_cost[name] = get_dict_value(
+            target_dict = cluster_yaml,
+            key_path = used_key,
+            separator = '-'
+        )['utilization-cost-sec']
+
+    costs = []
+    total_times = formatted_df['total'].to_list()
+    index = 0
+    for name in formatted_df['infrastructure'].to_list():
+        total_cost = total_times[index] * infra_cost[name] 
+        costs.append(total_cost)
+        index += 1
+    formatted_df['cost'] = costs
+
+    formatted_tables.append(formatted_df)
+
+    group_columns = [
+        'infrastructure',
+        'stage'
+    ]
+
+    target_columns = [
+        'total',
+        'cost'
+    ]
+
+    wanted_stats = [
+        'sum',
+        'mean', 
+        'std', 
+        'median', 
+        'min', 
+        'max'
+    ]
+
+    formatted_metrics = {}
+    
+    for single_group in group_columns:
+        df_stats = formatted_df.groupby(single_group)[target_columns].agg(wanted_stats)
+        formatted_tables.append(df_stats)
+        for tuple, values in df_stats.to_dict().items():
+            for group_case, stat_value in values.items():
+                flattened_key = f'{group_case}-{tuple[0]}-{tuple[1]}'
+                formatted_metrics[flattened_key] = stat_value
+
+    df_stats = formatted_df.groupby(group_columns)[target_columns].agg(wanted_stats)
+    formatted_tables.append(df_stats)
+
+    local_runner_cost = formatted_df[formatted_df['infrastructure'].isin(['local-lt1'])]['cost'].max()
+
+    cloud_runner = formatted_df[formatted_df['infrastructure'].isin(['cloud-vm1'])]['cost']
+    cloud_runner_cost = cloud_runner.iloc[0] + cloud_runner.max()
+
+    remaining_df = formatted_df[~formatted_df['infrastructure'].isin(['local-lt1', 'cloud-vm1'])]
+
+    collective_cots = remaining_df['cost'].sum()
+    pipeline_cost = local_runner_cost + cloud_runner_cost + collective_cots
+
+    formatted_metrics['total-pipeline-cost-eur'] = float(pipeline_cost)
+
+    return {
+        'metrics': formatted_metrics,
+        'tables': formatted_tables
+    }
+
+
 def workflow_sample_datasets(
     swift_client: any,
     fasttext_model: any,
@@ -576,3 +665,5 @@ def workflow_sample_datasets(
     complete_dataframe = pd.concat(sample_dfs, ignore_index = True)
 
     return complete_dataframe
+
+
