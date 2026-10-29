@@ -1,0 +1,943 @@
+storage:
+  mlflow: 
+    tracking-uri: 'http://mlflow.mlflow.svc.cluster.local:5000'
+    s3-endpoint-url: 'http://mlflow-minio-service.mlflow.svc.cluster.local:9000'
+    aws-access-key-id: 'minioadmin'
+    aws-secret-access-key: 'minioadmin'
+    experiment-name: 'mlch-code-assistant-rag-pipeline'
+    run-name: 'ray-data-analysis-pipeline'
+    run-tags:
+      workflow-type: 'local-cloud'
+      pipeline-step: 'external-data-analysis'
+  data-storage: 
+    bucket-target: 'experiment'
+    bucket-prefix: 'mlch'
+    bucket-user: 'user@example.com'   
+  code-storage: 
+    bucket-target: 'pipeline'
+    bucket-prefix: 'mlch'
+    bucket-user: 'user@example.com' 
+  log-storage: 
+    bucket-target: 'pipeline'
+    bucket-prefix: 'mlch'
+    bucket-user: 'user@example.com' 
+  time-storage: 
+    bucket-target: 'pipeline'
+    bucket-prefix: 'mlch'
+    bucket-user: 'user@example.com' 
+    object-name: 'local-cloud-workflow'
+    lock-parameters: 
+      central: 
+        system: 'redis'
+        redis-endpoint: 'redis-service.storage.svc.cluster.local'
+        redis-port: '6379'
+        redis-db: '0'
+        user: 'workflow'
+        place: 'pipeline'
+      local: 
+        system: 'redis'
+        redis-endpoint: 'localhost'
+        redis-port: '7002'
+        redis-db: '0'
+        user: 'workflow'
+        place: 'pipeline'
+integration:
+  cluster-yamls: {}
+  cluster-name: 'local-cloud-cluster'
+  resource-weights:
+    cpu: 0.05 
+    ram: 0.95
+  cluster-priority:
+    cloud-vm1: 0.09
+    cloud-vm2: 0.56
+    local-lt1: 0.06
+    local-lt2: 0.13
+    local-lt3: 0.16
+  hardware-influence: 0.0
+  min-initial-inputs: 1
+  min-batch-size: 1
+  workflow-steps: []
+  multi-loop-amount: 20000
+  multi-loop-wait: 10
+  job-loop-amount: 2
+  job-loop-wait: 5
+processing:
+  step-1:
+    general:
+      swift: {}
+      input-storage: 
+        bucket-target: 'experiment'
+        bucket-prefix: 'mlch'
+        bucket-user: 'user@example.com'   
+        path-prefix: 'DATA/SOURCE/external-opc-sft-stage2-educational-instruct'  # 1
+        object-serialization: 'parquet'
+      output-storage: 
+        bucket-target: 'experiment'
+        bucket-prefix: 'mlch'
+        bucket-user: 'user@example.com'   
+        object-serialization: 'parquet'
+        name-start-prefix: 'extraction'
+      time-storage: 
+        bucket-target: 'pipeline'
+        bucket-prefix: 'mlch'
+        bucket-user: 'user@example.com' 
+        object-name: 'local-cloud-workflow'
+        lock-parameters: 
+          central: 
+            system: 'redis'
+            redis-endpoint: 'redis-service.storage.svc.cluster.local'
+            redis-port: '6379'
+            redis-db: '0'
+            user: 'workflow'
+            place: 'pipeline'
+          remote: 
+            system: 'redis'
+            redis-endpoint: 'chisel-client'
+            redis-port: '6379'
+            redis-db: '0'
+            user: 'workflow'
+            place: 'pipeline'
+      model:
+        bucket-name: 'mlch-exp-user-example-com'
+        object-path: 'MODELS/fasttext/lid.176.bin'
+      config:
+        analysis-parameters:
+          language-default-label: 'en'
+          language-confidence-threshold: 0.05
+          language-label-replacer: {}
+          format-default-label: 'python'
+          format-confidence-threshold: 0.05
+          format-label-replacer: {}
+    cluster:
+      cloud-vm2:
+        mlflow: 
+          tracking-uri: 'http://chisel-client:5000'
+          s3-endpoint-url: 'http://chisel-client:9000'
+          aws-access-key-id: 'minioadmin'
+          aws-secret-access-key: 'minioadmin'
+          experiment-name: 'mlch-code-assistant-rag-pipeline'
+          run-name: 'external-step-1-vm2-data-analysis'
+          run-tags:
+            workflow-type: 'local-cloud'
+            pipeline-step: 'external-data-analysis'
+        process:
+          workers: 10
+          actors: 2
+          utilization-cost-sec: 0
+          utilization-cost-currency: ''
+          lock-location: 'remote'
+        job:
+          main-file: 'main.py'
+          runtime:
+            working_dir: 'data_analysis_external_data'
+            pip: 'requirements.txt'
+  step-2:
+    general:
+      swift: {}
+      input-storage: 
+        bucket-target: 'experiment'
+        bucket-prefix: 'mlch'
+        bucket-user: 'user@example.com'   
+        path-prefix: 'DATA/SOURCE/external-opc-sft-stage2-mceval-instruct' # 1
+        object-serialization: 'parquet'
+      output-storage: 
+        bucket-target: 'experiment'
+        bucket-prefix: 'mlch'
+        bucket-user: 'user@example.com'   
+        object-serialization: 'parquet'
+        name-start-prefix: 'extraction'
+      time-storage: 
+        bucket-target: 'pipeline'
+        bucket-prefix: 'mlch'
+        bucket-user: 'user@example.com' 
+        object-name: 'local-cloud-workflow'
+        lock-parameters: 
+          central: 
+            system: 'redis'
+            redis-endpoint: 'redis-service.storage.svc.cluster.local'
+            redis-port: '6379'
+            redis-db: '0'
+            user: 'workflow'
+            place: 'pipeline'
+          remote: 
+            system: 'redis'
+            redis-endpoint: 'chisel-client'
+            redis-port: '6379'
+            redis-db: '0'
+            user: 'workflow'
+            place: 'pipeline'
+      model:
+        bucket-name: 'mlch-exp-user-example-com'
+        object-path: 'MODELS/fasttext/lid.176.bin'
+      config:
+        analysis-parameters:
+          language-default-label: 'en'
+          language-confidence-threshold: 0.05
+          language-label-replacer: {}
+          format-default-label: 'python'
+          format-confidence-threshold: 0.05
+          format-label-replacer: {}
+    cluster:
+      cloud-vm2:
+        mlflow: 
+          tracking-uri: 'http://chisel-client:5000'
+          s3-endpoint-url: 'http://chisel-client:9000'
+          aws-access-key-id: 'minioadmin'
+          aws-secret-access-key: 'minioadmin'
+          experiment-name: 'mlch-code-assistant-rag-pipeline'
+          run-name: 'external-step-2-vm2-data-analysis'
+          run-tags:
+            workflow-type: 'local-cloud'
+            pipeline-step: 'external-data-analysis'
+        process:
+          workers: 10
+          actors: 2
+          utilization-cost-sec: 0
+          utilization-cost-currency: ''
+          lock-location: 'remote'
+        job:
+          main-file: 'main.py'
+          runtime:
+            working_dir: 'data_analysis_external_data'
+            pip: 'requirements.txt'
+  step-3:
+    general:
+      swift: {}
+      input-storage: 
+        bucket-target: 'experiment'
+        bucket-prefix: 'mlch'
+        bucket-user: 'user@example.com'   
+        path-prefix: 'DATA/SOURCE/external-opc-sft-stage2-evol-instruct' # 3
+        object-serialization: 'parquet'
+      output-storage: 
+        bucket-target: 'experiment'
+        bucket-prefix: 'mlch'
+        bucket-user: 'user@example.com'   
+        object-serialization: 'parquet'
+        name-start-prefix: 'extraction'
+      time-storage: 
+        bucket-target: 'pipeline'
+        bucket-prefix: 'mlch'
+        bucket-user: 'user@example.com' 
+        object-name: 'local-cloud-workflow'
+        lock-parameters: 
+          central: 
+            system: 'redis'
+            redis-endpoint: 'redis-service.storage.svc.cluster.local'
+            redis-port: '6379'
+            redis-db: '0'
+            user: 'workflow'
+            place: 'pipeline'
+          remote: 
+            system: 'redis'
+            redis-endpoint: 'chisel-client'
+            redis-port: '6379'
+            redis-db: '0'
+            user: 'workflow'
+            place: 'pipeline'
+      model:
+        bucket-name: 'mlch-exp-user-example-com'
+        object-path: 'MODELS/fasttext/lid.176.bin'
+      config:
+        analysis-parameters:
+          language-default-label: 'en'
+          language-confidence-threshold: 0.05
+          language-label-replacer: {}
+          format-default-label: 'python'
+          format-confidence-threshold: 0.05
+          format-label-replacer: {}
+    cluster:
+      cloud-vm1:
+        mlflow: 
+          tracking-uri: 'http://mlflow.mlflow.svc.cluster.local:5000'
+          s3-endpoint-url: 'http://mlflow-minio-service.mlflow.svc.cluster.local:9000'
+          aws-access-key-id: 'minioadmin'
+          aws-secret-access-key: 'minioadmin'
+          experiment-name: 'mlch-code-assistant-rag-pipeline'
+          run-name: 'external-step-3-vm1-data-analysis'
+          run-tags:
+            workflow-type: 'local-cloud'
+            pipeline-step: 'external-data-analysis'
+        process:
+          workers: 2
+          actors: 2
+          utilization-cost-sec: 0
+          utilization-cost-currency: ''
+          lock-location: 'central'
+        job:
+          main-file: 'main.py'
+          runtime:
+            working_dir: 'data_analysis_external_data'
+            pip: 'requirements.txt'
+      cloud-vm2:
+        mlflow: 
+          tracking-uri: 'http://chisel-client:5000'
+          s3-endpoint-url: 'http://chisel-client:9000'
+          aws-access-key-id: 'minioadmin'
+          aws-secret-access-key: 'minioadmin'
+          experiment-name: 'mlch-code-assistant-rag-pipeline'
+          run-name: 'external-step-3-vm2-data-analysis'
+          run-tags:
+            workflow-type: 'local-cloud'
+            pipeline-step: 'external-data-analysis'
+        process:
+          workers: 10
+          actors: 2
+          utilization-cost-sec: 0
+          utilization-cost-currency: ''
+          lock-location: 'remote'
+        job:
+          main-file: 'main.py'
+          runtime:
+            working_dir: 'data_analysis_external_data'
+            pip: 'requirements.txt'
+      local-lt3:
+        mlflow: 
+          tracking-uri: 'http://chisel-client:5000'
+          s3-endpoint-url: 'http://chisel-client:9000'
+          aws-access-key-id: 'minioadmin'
+          aws-secret-access-key: 'minioadmin'
+          experiment-name: 'mlch-code-assistant-rag-pipeline'
+          run-name: 'external-step-3-lt3-data-analysis'
+          run-tags:
+            workflow-type: 'local-cloud'
+            pipeline-step: 'external-data-analysis'
+        process:
+          workers: 28
+          actors: 2
+          utilization-cost-sec: 0
+          utilization-cost-currency: ''
+          lock-location: 'remote'
+        job:
+          main-file: 'main.py'
+          runtime:
+            working_dir: 'data_analysis_external_data'
+            pip: 'requirements.txt'
+  step-4:
+    general:
+      swift: {}
+      input-storage: 
+        bucket-target: 'experiment'
+        bucket-prefix: 'mlch'
+        bucket-user: 'user@example.com'   
+        path-prefix: 'DATA/SOURCE/external-opc-sft-stage2-package-instruct' # 6
+        object-serialization: 'parquet'
+      output-storage: 
+        bucket-target: 'experiment'
+        bucket-prefix: 'mlch'
+        bucket-user: 'user@example.com'   
+        object-serialization: 'parquet'
+        name-start-prefix: 'extraction'
+      time-storage: 
+        bucket-target: 'pipeline'
+        bucket-prefix: 'mlch'
+        bucket-user: 'user@example.com' 
+        object-name: 'local-cloud-workflow'
+        lock-parameters: 
+          central: 
+            system: 'redis'
+            redis-endpoint: 'redis-service.storage.svc.cluster.local'
+            redis-port: '6379'
+            redis-db: '0'
+            user: 'workflow'
+            place: 'pipeline'
+          remote: 
+            system: 'redis'
+            redis-endpoint: 'chisel-client'
+            redis-port: '6379'
+            redis-db: '0'
+            user: 'workflow'
+            place: 'pipeline'
+      model:
+        bucket-name: 'mlch-exp-user-example-com'
+        object-path: 'MODELS/fasttext/lid.176.bin'
+      config:
+        analysis-parameters:
+          language-default-label: 'en'
+          language-confidence-threshold: 0.05
+          language-label-replacer: {}
+          format-default-label: 'python'
+          format-confidence-threshold: 0.05
+          format-label-replacer: {}
+    cluster:
+      cloud-vm1:
+        mlflow: 
+          tracking-uri: 'http://mlflow.mlflow.svc.cluster.local:5000'
+          s3-endpoint-url: 'http://mlflow-minio-service.mlflow.svc.cluster.local:9000'
+          aws-access-key-id: 'minioadmin'
+          aws-secret-access-key: 'minioadmin'
+          experiment-name: 'mlch-code-assistant-rag-pipeline'
+          run-name: 'external-step-4-vm1-data-analysis'
+          run-tags:
+            workflow-type: 'local-cloud'
+            pipeline-step: 'external-data-analysis'
+        process:
+          workers: 2
+          actors: 2
+          utilization-cost-sec: 0
+          utilization-cost-currency: ''
+          lock-location: 'central'
+        job:
+          main-file: 'main.py'
+          runtime:
+            working_dir: 'data_analysis_external_data'
+            pip: 'requirements.txt'
+      cloud-vm2:
+        mlflow: 
+          tracking-uri: 'http://chisel-client:5000'
+          s3-endpoint-url: 'http://chisel-client:9000'
+          aws-access-key-id: 'minioadmin'
+          aws-secret-access-key: 'minioadmin'
+          experiment-name: 'mlch-code-assistant-rag-pipeline'
+          run-name: 'external-step-4-vm2-data-analysis'
+          run-tags:
+            workflow-type: 'local-cloud'
+            pipeline-step: 'external-data-analysis'
+        process:
+          workers: 10
+          actors: 2
+          utilization-cost-sec: 0
+          utilization-cost-currency: ''
+          lock-location: 'remote'
+        job:
+          main-file: 'main.py'
+          runtime:
+            working_dir: 'data_analysis_external_data'
+            pip: 'requirements.txt'
+      local-lt1:
+        mlflow: 
+          tracking-uri: 'http://chisel-client:5000'
+          s3-endpoint-url: 'http://chisel-client:9000'
+          aws-access-key-id: 'minioadmin'
+          aws-secret-access-key: 'minioadmin'
+          experiment-name: 'mlch-code-assistant-rag-pipeline'
+          run-name: 'external-step-4-lt1-data-analysis'
+          run-tags:
+            workflow-type: 'local-cloud'
+            pipeline-step: 'external-data-analysis'
+        process:
+          workers: 10
+          actors: 2
+          utilization-cost-sec: 0
+          utilization-cost-currency: ''
+          lock-location: 'remote'
+        job:
+          main-file: 'main.py'
+          runtime:
+            working_dir: 'data_analysis_external_data'
+            pip: 'requirements.txt'
+      local-lt2:
+        mlflow: 
+          tracking-uri: 'http://chisel-client:5000'
+          s3-endpoint-url: 'http://chisel-client:9000'
+          aws-access-key-id: 'minioadmin'
+          aws-secret-access-key: 'minioadmin'
+          experiment-name: 'mlch-code-assistant-rag-pipeline'
+          run-name: 'external-step-4-lt2-data-analysis'
+          run-tags:
+            workflow-type: 'local-cloud'
+            pipeline-step: 'external-data-analysis'
+        process:
+          workers: 12
+          actors: 2
+          utilization-cost-sec: 0
+          utilization-cost-currency: ''
+          lock-location: 'remote'
+        job:
+          main-file: 'main.py'
+          runtime:
+            working_dir: 'data_analysis_external_data'
+            pip: 'requirements.txt'
+      local-lt3:
+        mlflow: 
+          tracking-uri: 'http://chisel-client:5000'
+          s3-endpoint-url: 'http://chisel-client:9000'
+          aws-access-key-id: 'minioadmin'
+          aws-secret-access-key: 'minioadmin'
+          experiment-name: 'mlch-code-assistant-rag-pipeline'
+          run-name: 'external-step-4-lt3-data-analysis'
+          run-tags:
+            workflow-type: 'local-cloud'
+            pipeline-step: 'external-data-analysis'
+        process:
+          workers: 28
+          actors: 2
+          utilization-cost-sec: 0
+          utilization-cost-currency: ''
+          lock-location: 'remote'
+        job:
+          main-file: 'main.py'
+          runtime:
+            working_dir: 'data_analysis_external_data'
+            pip: 'requirements.txt'
+  step-5:
+    general:
+      swift: {}
+      input-storage: 
+        bucket-target: 'experiment'
+        bucket-prefix: 'mlch'
+        bucket-user: 'user@example.com'   
+        path-prefix: 'DATA/SOURCE/external-opc-sft-stage1-filtered-infinity-instruct' # 21
+        object-serialization: 'parquet'
+      output-storage: 
+        bucket-target: 'experiment'
+        bucket-prefix: 'mlch'
+        bucket-user: 'user@example.com'   
+        object-serialization: 'parquet'
+        name-start-prefix: 'extraction'
+      time-storage: 
+        bucket-target: 'pipeline'
+        bucket-prefix: 'mlch'
+        bucket-user: 'user@example.com' 
+        object-name: 'local-cloud-workflow'
+        lock-parameters: 
+          central: 
+            system: 'redis'
+            redis-endpoint: 'redis-service.storage.svc.cluster.local'
+            redis-port: '6379'
+            redis-db: '0'
+            user: 'workflow'
+            place: 'pipeline'
+          remote: 
+            system: 'redis'
+            redis-endpoint: 'chisel-client'
+            redis-port: '6379'
+            redis-db: '0'
+            user: 'workflow'
+            place: 'pipeline'
+      model:
+        bucket-name: 'mlch-exp-user-example-com'
+        object-path: 'MODELS/fasttext/lid.176.bin'
+      config:
+        analysis-parameters:
+          language-default-label: 'en'
+          language-confidence-threshold: 0.05
+          language-label-replacer: {}
+          format-default-label: 'python'
+          format-confidence-threshold: 0.05
+          format-label-replacer: {}
+    cluster:
+      cloud-vm1:
+        mlflow: 
+          tracking-uri: 'http://mlflow.mlflow.svc.cluster.local:5000'
+          s3-endpoint-url: 'http://mlflow-minio-service.mlflow.svc.cluster.local:9000'
+          aws-access-key-id: 'minioadmin'
+          aws-secret-access-key: 'minioadmin'
+          experiment-name: 'mlch-code-assistant-rag-pipeline'
+          run-name: 'external-step-5-vm1-data-analysis'
+          run-tags:
+            workflow-type: 'local-cloud'
+            pipeline-step: 'external-data-analysis'
+        process:
+          workers: 2
+          actors: 2
+          utilization-cost-sec: 0
+          utilization-cost-currency: ''
+          lock-location: 'central'
+        job:
+          main-file: 'main.py'
+          runtime:
+            working_dir: 'data_analysis_external_data'
+            pip: 'requirements.txt'
+      cloud-vm2:
+        mlflow: 
+          tracking-uri: 'http://chisel-client:5000'
+          s3-endpoint-url: 'http://chisel-client:9000'
+          aws-access-key-id: 'minioadmin'
+          aws-secret-access-key: 'minioadmin'
+          experiment-name: 'mlch-code-assistant-rag-pipeline'
+          run-name: 'external-step-5-vm2-data-analysis'
+          run-tags:
+            workflow-type: 'local-cloud'
+            pipeline-step: 'external-data-analysis'
+        process:
+          workers: 10
+          actors: 2
+          utilization-cost-sec: 0
+          utilization-cost-currency: ''
+          lock-location: 'remote'
+        job:
+          main-file: 'main.py'
+          runtime:
+            working_dir: 'data_analysis_external_data'
+            pip: 'requirements.txt'
+      local-lt1:
+        mlflow: 
+          tracking-uri: 'http://chisel-client:5000'
+          s3-endpoint-url: 'http://chisel-client:9000'
+          aws-access-key-id: 'minioadmin'
+          aws-secret-access-key: 'minioadmin'
+          experiment-name: 'mlch-code-assistant-rag-pipeline'
+          run-name: 'external-step-5-lt1-data-analysis'
+          run-tags:
+            workflow-type: 'local-cloud'
+            pipeline-step: 'external-data-analysis'
+        process:
+          workers: 10
+          actors: 2
+          utilization-cost-sec: 0
+          utilization-cost-currency: ''
+          lock-location: 'remote'
+        job:
+          main-file: 'main.py'
+          runtime:
+            working_dir: 'data_analysis_external_data'
+            pip: 'requirements.txt'
+      local-lt2:
+        mlflow: 
+          tracking-uri: 'http://chisel-client:5000'
+          s3-endpoint-url: 'http://chisel-client:9000'
+          aws-access-key-id: 'minioadmin'
+          aws-secret-access-key: 'minioadmin'
+          experiment-name: 'mlch-code-assistant-rag-pipeline'
+          run-name: 'external-step-5-lt2-data-analysis'
+          run-tags:
+            workflow-type: 'local-cloud'
+            pipeline-step: 'external-data-analysis'
+        process:
+          workers: 12
+          actors: 2
+          utilization-cost-sec: 0
+          utilization-cost-currency: ''
+          lock-location: 'remote'
+        job:
+          main-file: 'main.py'
+          runtime:
+            working_dir: 'data_analysis_external_data'
+            pip: 'requirements.txt'
+      local-lt3:
+        mlflow: 
+          tracking-uri: 'http://chisel-client:5000'
+          s3-endpoint-url: 'http://chisel-client:9000'
+          aws-access-key-id: 'minioadmin'
+          aws-secret-access-key: 'minioadmin'
+          experiment-name: 'mlch-code-assistant-rag-pipeline'
+          run-name: 'external-step-5-lt3-data-analysis'
+          run-tags:
+            workflow-type: 'local-cloud'
+            pipeline-step: 'external-data-analysis'
+        process:
+          workers: 28
+          actors: 2
+          utilization-cost-sec: 0
+          utilization-cost-currency: ''
+          lock-location: 'remote'
+        job:
+          main-file: 'main.py'
+          runtime:
+            working_dir: 'data_analysis_external_data'
+            pip: 'requirements.txt'
+  step-6:
+    general:
+      swift: {}
+      input-storage: 
+        bucket-target: 'experiment'
+        bucket-prefix: 'mlch'
+        bucket-user: 'user@example.com'   
+        path-prefix: 'DATA/SOURCE/external-opc-sft-stage1-realuser-instruct' # 23
+        object-serialization: 'parquet'
+      output-storage: 
+        bucket-target: 'experiment'
+        bucket-prefix: 'mlch'
+        bucket-user: 'user@example.com'   
+        object-serialization: 'parquet'
+        name-start-prefix: 'extraction'
+      time-storage: 
+        bucket-target: 'pipeline'
+        bucket-prefix: 'mlch'
+        bucket-user: 'user@example.com' 
+        object-name: 'local-cloud-workflow'
+        lock-parameters: 
+          central: 
+            system: 'redis'
+            redis-endpoint: 'redis-service.storage.svc.cluster.local'
+            redis-port: '6379'
+            redis-db: '0'
+            user: 'workflow'
+            place: 'pipeline'
+          remote: 
+            system: 'redis'
+            redis-endpoint: 'chisel-client'
+            redis-port: '6379'
+            redis-db: '0'
+            user: 'workflow'
+            place: 'pipeline'
+      model:
+        bucket-name: 'mlch-exp-user-example-com'
+        object-path: 'MODELS/fasttext/lid.176.bin'
+      config:
+        analysis-parameters:
+          language-default-label: 'en'
+          language-confidence-threshold: 0.05
+          language-label-replacer: {}
+          format-default-label: 'python'
+          format-confidence-threshold: 0.05
+          format-label-replacer: {}
+    cluster:
+      cloud-vm1:
+        mlflow: 
+          tracking-uri: 'http://mlflow.mlflow.svc.cluster.local:5000'
+          s3-endpoint-url: 'http://mlflow-minio-service.mlflow.svc.cluster.local:9000'
+          aws-access-key-id: 'minioadmin'
+          aws-secret-access-key: 'minioadmin'
+          experiment-name: 'mlch-code-assistant-rag-pipeline'
+          run-name: 'external-step-6-vm1-data-analysis'
+          run-tags:
+            workflow-type: 'local-cloud'
+            pipeline-step: 'external-data-analysis'
+        process:
+          workers: 2
+          actors: 2
+          utilization-cost-sec: 0
+          utilization-cost-currency: ''
+          lock-location: 'central'
+        job:
+          main-file: 'main.py'
+          runtime:
+            working_dir: 'data_analysis_external_data'
+            pip: 'requirements.txt'
+      cloud-vm2:
+        mlflow: 
+          tracking-uri: 'http://chisel-client:5000'
+          s3-endpoint-url: 'http://chisel-client:9000'
+          aws-access-key-id: 'minioadmin'
+          aws-secret-access-key: 'minioadmin'
+          experiment-name: 'mlch-code-assistant-rag-pipeline'
+          run-name: 'external-step-6-vm2-data-analysis'
+          run-tags:
+            workflow-type: 'local-cloud'
+            pipeline-step: 'external-data-analysis'
+        process:
+          workers: 10
+          actors: 2
+          utilization-cost-sec: 0
+          utilization-cost-currency: ''
+          lock-location: 'remote'
+        job:
+          main-file: 'main.py'
+          runtime:
+            working_dir: 'data_analysis_external_data'
+            pip: 'requirements.txt'
+      local-lt1:
+        mlflow: 
+          tracking-uri: 'http://chisel-client:5000'
+          s3-endpoint-url: 'http://chisel-client:9000'
+          aws-access-key-id: 'minioadmin'
+          aws-secret-access-key: 'minioadmin'
+          experiment-name: 'mlch-code-assistant-rag-pipeline'
+          run-name: 'external-step-6-lt1-data-analysis'
+          run-tags:
+            workflow-type: 'local-cloud'
+            pipeline-step: 'external-data-analysis'
+        process:
+          workers: 10
+          actors: 2
+          utilization-cost-sec: 0
+          utilization-cost-currency: ''
+          lock-location: 'remote'
+        job:
+          main-file: 'main.py'
+          runtime:
+            working_dir: 'data_analysis_external_data'
+            pip: 'requirements.txt'
+      local-lt2:
+        mlflow: 
+          tracking-uri: 'http://chisel-client:5000'
+          s3-endpoint-url: 'http://chisel-client:9000'
+          aws-access-key-id: 'minioadmin'
+          aws-secret-access-key: 'minioadmin'
+          experiment-name: 'mlch-code-assistant-rag-pipeline'
+          run-name: 'external-step-6-lt2-data-analysis'
+          run-tags:
+            workflow-type: 'local-cloud'
+            pipeline-step: 'external-data-analysis'
+        process:
+          workers: 12
+          actors: 2
+          utilization-cost-sec: 0
+          utilization-cost-currency: ''
+          lock-location: 'remote'
+        job:
+          main-file: 'main.py'
+          runtime:
+            working_dir: 'data_analysis_external_data'
+            pip: 'requirements.txt'
+      local-lt3:
+        mlflow: 
+          tracking-uri: 'http://chisel-client:5000'
+          s3-endpoint-url: 'http://chisel-client:9000'
+          aws-access-key-id: 'minioadmin'
+          aws-secret-access-key: 'minioadmin'
+          experiment-name: 'mlch-code-assistant-rag-pipeline'
+          run-name: 'external-step-6-lt3-data-analysis'
+          run-tags:
+            workflow-type: 'local-cloud'
+            pipeline-step: 'external-data-analysis'
+        process:
+          workers: 28
+          actors: 2
+          utilization-cost-sec: 0
+          utilization-cost-currency: ''
+          lock-location: 'remote'
+        job:
+          main-file: 'main.py'
+          runtime:
+            working_dir: 'data_analysis_external_data'
+            pip: 'requirements.txt'
+  step-7:
+    general:
+      swift: {}
+      input-storage: 
+        bucket-target: 'experiment'
+        bucket-prefix: 'mlch'
+        bucket-user: 'user@example.com'   
+        path-prefix: 'DATA/SOURCE/external-opc-sft-stage1-largescale-diverse-instruct' # 63
+        object-serialization: 'parquet'
+      output-storage: 
+        bucket-target: 'experiment'
+        bucket-prefix: 'mlch'
+        bucket-user: 'user@example.com'   
+        object-serialization: 'parquet'
+        name-start-prefix: 'extraction'
+      time-storage: 
+        bucket-target: 'pipeline'
+        bucket-prefix: 'mlch'
+        bucket-user: 'user@example.com' 
+        object-name: 'local-cloud-workflow'
+        lock-parameters: 
+          central: 
+            system: 'redis'
+            redis-endpoint: 'redis-service.storage.svc.cluster.local'
+            redis-port: '6379'
+            redis-db: '0'
+            user: 'workflow'
+            place: 'pipeline'
+          remote: 
+            system: 'redis'
+            redis-endpoint: 'chisel-client'
+            redis-port: '6379'
+            redis-db: '0'
+            user: 'workflow'
+            place: 'pipeline'
+      model:
+        bucket-name: 'mlch-exp-user-example-com'
+        object-path: 'MODELS/fasttext/lid.176.bin'
+      config:
+        analysis-parameters:
+          language-default-label: 'en'
+          language-confidence-threshold: 0.05
+          language-label-replacer: {}
+          format-default-label: 'python'
+          format-confidence-threshold: 0.05
+          format-label-replacer: {}
+    cluster:
+      cloud-vm1:
+        mlflow: 
+          tracking-uri: 'http://mlflow.mlflow.svc.cluster.local:5000'
+          s3-endpoint-url: 'http://mlflow-minio-service.mlflow.svc.cluster.local:9000'
+          aws-access-key-id: 'minioadmin'
+          aws-secret-access-key: 'minioadmin'
+          experiment-name: 'mlch-code-assistant-rag-pipeline'
+          run-name: 'external-step-7-vm1-data-analysis'
+          run-tags:
+            workflow-type: 'local-cloud'
+            pipeline-step: 'external-data-analysis'
+        process:
+          workers: 2
+          actors: 2
+          utilization-cost-sec: 0
+          utilization-cost-currency: ''
+          lock-location: 'central'
+        job:
+          main-file: 'main.py'
+          runtime:
+            working_dir: 'data_analysis_external_data'
+            pip: 'requirements.txt'
+      cloud-vm2:
+        mlflow: 
+          tracking-uri: 'http://chisel-client:5000'
+          s3-endpoint-url: 'http://chisel-client:9000'
+          aws-access-key-id: 'minioadmin'
+          aws-secret-access-key: 'minioadmin'
+          experiment-name: 'mlch-code-assistant-rag-pipeline'
+          run-name: 'external-step-7-vm2-data-analysis'
+          run-tags:
+            workflow-type: 'local-cloud'
+            pipeline-step: 'external-data-analysis'
+        process:
+          workers: 10
+          actors: 2
+          utilization-cost-sec: 0
+          utilization-cost-currency: ''
+          lock-location: 'remote'
+        job:
+          main-file: 'main.py'
+          runtime:
+            working_dir: 'data_analysis_external_data'
+            pip: 'requirements.txt'
+      local-lt1:
+        mlflow: 
+          tracking-uri: 'http://chisel-client:5000'
+          s3-endpoint-url: 'http://chisel-client:9000'
+          aws-access-key-id: 'minioadmin'
+          aws-secret-access-key: 'minioadmin'
+          experiment-name: 'mlch-code-assistant-rag-pipeline'
+          run-name: 'external-step-7-lt1-data-analysis'
+          run-tags:
+            workflow-type: 'local-cloud'
+            pipeline-step: 'external-data-analysis'
+        process:
+          workers: 10
+          actors: 2
+          utilization-cost-sec: 0
+          utilization-cost-currency: ''
+          lock-location: 'remote'
+        job:
+          main-file: 'main.py'
+          runtime:
+            working_dir: 'data_analysis_external_data'
+            pip: 'requirements.txt'
+      local-lt2:
+        mlflow: 
+          tracking-uri: 'http://chisel-client:5000'
+          s3-endpoint-url: 'http://chisel-client:9000'
+          aws-access-key-id: 'minioadmin'
+          aws-secret-access-key: 'minioadmin'
+          experiment-name: 'mlch-code-assistant-rag-pipeline'
+          run-name: 'external-step-7-lt2-data-analysis'
+          run-tags:
+            workflow-type: 'local-cloud'
+            pipeline-step: 'external-data-analysis'
+        process:
+          workers: 12
+          actors: 2
+          utilization-cost-sec: 0
+          utilization-cost-currency: ''
+          lock-location: 'remote'
+        job:
+          main-file: 'main.py'
+          runtime:
+            working_dir: 'data_analysis_external_data'
+            pip: 'requirements.txt'
+      local-lt3:
+        mlflow: 
+          tracking-uri: 'http://chisel-client:5000'
+          s3-endpoint-url: 'http://chisel-client:9000'
+          aws-access-key-id: 'minioadmin'
+          aws-secret-access-key: 'minioadmin'
+          experiment-name: 'mlch-code-assistant-rag-pipeline'
+          run-name: 'external-step-7-lt3-data-analysis'
+          run-tags:
+            workflow-type: 'local-cloud'
+            pipeline-step: 'external-data-analysis'
+        process:
+          workers: 28
+          actors: 2
+          utilization-cost-sec: 0
+          utilization-cost-currency: ''
+          lock-location: 'remote'
+        job:
+          main-file: 'main.py'
+          runtime:
+            working_dir: 'data_analysis_external_data'
+            pip: 'requirements.txt'
