@@ -1,3 +1,4 @@
+'''
 def preprocess_grade_row(
     data_row: any,
     path_column: str,
@@ -148,3 +149,4 @@ def preprocess_format_datasets(
     print(f'Spent seconds: {total_time}')
 
     return total_time
+'''

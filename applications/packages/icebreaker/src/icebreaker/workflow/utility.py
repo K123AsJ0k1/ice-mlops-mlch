@@ -452,7 +452,7 @@ def workflow_time_stats(
     
     formatted_tables = []
     formatted_df = time_df.copy()
-
+    formatted_df = formatted_df.rename(columns = {'total':'time'})
     formatted_df['infrastructure'] = formatted_df['name'].str.extract(r'(local-lt\d+|cloud-vm\d+)', expand=False)
     formatted_df['stage'] = formatted_df['name'].str.extract(r'(step-\d+|step\b)', expand=False).fillna('step')
 
@@ -467,7 +467,7 @@ def workflow_time_stats(
         )['utilization-cost-sec']
 
     costs = []
-    total_times = formatted_df['total'].to_list()
+    total_times = formatted_df['time'].to_list()
     index = 0
     for name in formatted_df['infrastructure'].to_list():
         total_cost = total_times[index] * infra_cost[name] 
@@ -483,7 +483,7 @@ def workflow_time_stats(
     ]
 
     target_columns = [
-        'total',
+        'time',
         'cost'
     ]
 
@@ -526,6 +526,159 @@ def workflow_time_stats(
         'tables': formatted_tables
     }
 
+def workflow_create_validation_dataset(
+    swift_client: any,
+    mlflow_client: any,
+    dataset_paths: list,
+    storage_parameters: dict,
+    experiment_name: str,
+    dataset_tags: dict,
+    dataset_user: str
+):
+    try: 
+        import json
+        import pandas as pd
+        from ..objects.use import objects_get_data, objects_store_data
+        from ..mlflow.use import mlflow_create_dataset, mlflow_get_or_create_experiment
+    except ImportError as e:
+        raise ImportError("workflow/utility failed to import", e)
+
+    joined_dataframes = []
+    for dataset_path in dataset_paths:
+        data_object = objects_get_data(
+            swift_client = swift_client,
+            storage_parameters = {
+                'bucket-target': storage_parameters['bucket-target'],
+                'bucket-prefix': storage_parameters['bucket-prefix'],
+                'bucket-user': storage_parameters['bucket-user'],
+                'object-name': 'root',
+                'object-serialization': storage_parameters['object-serialization'],
+                'path-replacers': {
+                    'name': dataset_path
+                },
+                'path-names': [],
+                'debug-prints': True,
+                'lock-parameters': {},
+                'lock-location': None,
+                'overwrite': True
+            },
+            dict_format = False
+        ) 
+
+        object_df = data_object[0]
+        selected_dataframe = object_df[object_df['relevance'] == 3]
+        joined_dataframes.append(selected_dataframe)
+
+    validation_dataset = pd.concat(joined_dataframes)
+    validation_dataset['ranking-weights'] = validation_dataset['ranking-weights'].apply(json.dumps)
+
+    dataset_name = 'internal-validation-dataset'
+    path_name = f'{dataset_name}.parquet'
+    storage_parameters['object-name'] = 'data'
+    storage_parameters['object-serialization'] = 'parquet'
+    storage_parameters['path-replacers'] = {
+        'name': 'EVALUTION'
+    }
+    storage_parameters['path-names'] = [
+        path_name
+    ]
+    storage_parameters['debug-prints'] = True
+    storage_parameters['lock-parameters'] = {}
+    storage_parameters['lock-location'] = None
+    storage_parameters['overwrite'] = True
+
+    dataset_stored = objects_store_data(
+        swift_client = swift_client,
+        storage_parameters = storage_parameters,
+        object_data = validation_dataset,
+        object_metadata = {}
+    )
+
+    experiment_id = mlflow_get_or_create_experiment(
+        mlflow_client = mlflow_client,
+        name = experiment_name
+    ) 
+
+    formatted_records = []
+    for _, row in validation_dataset.iterrows():
+        formatted_records.append({
+            'inputs': {
+                'question': row['topic']
+            },
+            'expectations': {
+                'ground_truth': row['content'],
+                'part': row['part'],
+                'chapter': row['chapter'],
+                'idx': row['idx'],
+                'characters': row['characters'],
+                'relevance': row['relevance'],
+                'weights': row['ranking-weights']
+            },
+            'source': {
+                'source_type': 'HUMAN'
+            },
+            'tags': {
+                'mlflow.user': dataset_user
+            }
+        })
+    
+    dataset_tags['mlflow.user'] = dataset_user
+    dataset_id = mlflow_create_dataset(
+        mlflow_client = mlflow_client,
+        dataset_name = dataset_name,
+        experiment_id = experiment_id,
+        dataset_tags = dataset_tags,
+        dataset_records = formatted_records
+    )
+
+    return {
+        'dataset': validation_dataset,
+        'id': dataset_id
+    }
+
+def workflow_create_general_dataset(
+    swift_client: any,
+    mlflow_client: any,
+    dataset_paths: list,
+    storage_parameters: dict,
+    sampling_parameters: dict,
+    experiment_name: str,
+    dataset_tags: dict,
+    dataset_user: str
+):
+    try: 
+        import json
+        import pandas as pd
+        from ..objects.use import objects_get_data, objects_store_data
+        from ..mlflow.use import mlflow_create_dataset, mlflow_get_or_create_experiment
+    except ImportError as e:
+        raise ImportError("workflow/utility failed to import", e)
+
+    joined_dataframes = []
+    for dataset_path in dataset_paths:
+        data_object = objects_get_data(
+            swift_client = swift_client,
+            storage_parameters = {
+                'bucket-target': storage_parameters['bucket-target'],
+                'bucket-prefix': storage_parameters['bucket-prefix'],
+                'bucket-user': storage_parameters['bucket-user'],
+                'object-name': 'root',
+                'object-serialization': storage_parameters['object-serialization'],
+                'path-replacers': {
+                    'name': dataset_path
+                },
+                'path-names': [],
+                'debug-prints': True,
+                'lock-parameters': {},
+                'lock-location': None,
+                'overwrite': True
+            },
+            dict_format = False
+        ) 
+
+        object_df = data_object[0]
+
+    return {}
 
 def workflow_sample_datasets(
     swift_client: any,
