@@ -186,6 +186,7 @@ def analysis_external_data_analysis(
     dataset_defaults: dict
 ) -> dict:
     try: 
+        import json
         import pandas as pd
         from ..objects.use import objects_get_data
     except ImportError as e:
@@ -248,6 +249,11 @@ def analysis_external_data_analysis(
         object_df['question-characters'] = analysis_results['question-results']['chars']
         object_df['answer-rows'] = analysis_results['answer-results']['rows']
         object_df['answer-characters'] = analysis_results['answer-results']['chars']
+        object_df['language'] = dataset_defaults[dataset_name]['language-default']
+        object_df['language-confidence'] = 1.0
+        object_df['format'] = dataset_defaults[dataset_name]['format-default']
+        object_df['format-confidence'] = 1.0
+        object_df['format-counts'] = json.dumps({dataset_defaults[dataset_name]['format-default']: 1})
 
         df_stats = object_df[target_columns].agg(wanted_stats).to_dict()
         for name, values in df_stats.items():

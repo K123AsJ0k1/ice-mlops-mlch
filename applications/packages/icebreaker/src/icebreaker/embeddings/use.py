@@ -14,7 +14,7 @@ def embeddings_batch_create_vectors(
     except ImportError as e:
         raise ImportError("embeddings/use failed to import", e)
     
-    dense_vectors = {
+    dense_vectors = { 
         'data': None,
         'mean-time-ms': 0
     } 

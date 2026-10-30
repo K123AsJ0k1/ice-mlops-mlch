@@ -56,7 +56,7 @@ def rag_setup_database(
         df_records = data_object[0].to_dict('records')
 
         total_batch_start_time = t.perf_counter_ns()
-        results = embeddings_create_hybrid_points(
+        results = embeddings_create_hybrid_points( 
             dataset_name = dataset_name,
             dataset_records = df_records,
             text_column = text_column,

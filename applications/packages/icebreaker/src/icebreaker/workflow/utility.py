@@ -639,22 +639,56 @@ def workflow_create_validation_dataset(
 def workflow_create_general_dataset(
     swift_client: any,
     mlflow_client: any,
-    dataset_paths: list,
-    storage_parameters: dict,
     sampling_parameters: dict,
+    storage_parameters: dict,
+    dataset_paths: list,
     experiment_name: str,
     dataset_tags: dict,
     dataset_user: str
 ):
     try: 
         import json
+        import random
         import pandas as pd
         from ..objects.use import objects_get_data, objects_store_data
         from ..mlflow.use import mlflow_create_dataset, mlflow_get_or_create_experiment
     except ImportError as e:
         raise ImportError("workflow/utility failed to import", e)
 
-    joined_dataframes = []
+    used_parameters = sampling_parameters['sampling']
+
+    random.seed(used_parameters.get('seed', 42))
+    wanted_samples = used_parameters.get('wanted-samples', {})
+    datasets_meta = used_parameters.get('datasets', {})
+
+    # Step 1: Map each format to the list of datasets that support it
+    format_to_datasets = {}
+    for ds_name, meta in datasets_meta.items():
+        formats = meta.get("format-samples", [])
+        for fmt in formats:
+            if fmt not in format_to_datasets:
+                format_to_datasets[fmt] = []
+            format_to_datasets[fmt].append(ds_name)
+    
+    # Step 2: Calculate target sample quotas per dataset
+    dataset_quotas = {ds_name: {} for ds_name in datasets_meta.keys()}
+    for fmt, target_count in wanted_samples.items():
+        eligible_datasets = format_to_datasets.get(fmt, [])
+        if not eligible_datasets or target_count <= 0:
+            continue
+
+        # Distribute the format's wanted-samples evenly across eligible datasets
+        base = target_count // len(eligible_datasets)
+        remainder = target_count % len(eligible_datasets)
+
+        for i, ds_name in enumerate(eligible_datasets):
+            share = base + (1 if i < remainder else 0)
+            if not fmt in dataset_quotas[ds_name]:
+                dataset_quotas[ds_name][fmt] = 0
+            dataset_quotas[ds_name][fmt] += share
+    
+    accepted_language = used_parameters.get('accepted-language', 'en')
+    joined_rows = []
     for dataset_path in dataset_paths:
         data_object = objects_get_data(
             swift_client = swift_client,
@@ -677,8 +711,95 @@ def workflow_create_general_dataset(
         ) 
 
         object_df = data_object[0]
+        
+        dataset_name = dataset_path.split('external-')[-1].split('.')[0]
+        language_filter = object_df[object_df['language'] == accepted_language]
+        accepted_formats = dataset_quotas[dataset_name].keys()
+        for format, number in dataset_quotas[dataset_name].items():
+            #format_filter = language_filter[(language_filter['format'] == format) & (language_filter['format-confidence'] == 1.0)]
+            format_filter = language_filter[language_filter['format'] == format]
+            sampled = 0
+            for index, row in format_filter.iterrows():
+                format_counts = json.loads(row['format-counts'])
+                format_check = True
+                for found_format in format_counts.keys():
+                    if not found_format in accepted_formats:
+                        format_check = False
 
-    return {}
+                if format_check:
+                    modified_row = row.copy()
+                    modified_row['dataset-index'] = index 
+                    modified_row['dataset-path'] = dataset_path
+                    if sampled < number:
+                        joined_rows.append(modified_row)
+                        sampled += 1
+                        
+    general_dataset = pd.DataFrame(joined_rows)
+    general_dataset = general_dataset.reset_index(drop = True)
+
+    dataset_name = 'external-general-dataset'
+    path_name = f'{dataset_name}.parquet'
+    storage_parameters['object-name'] = 'data'
+    storage_parameters['object-serialization'] = 'parquet'
+    storage_parameters['path-replacers'] = {
+        'name': 'EVALUTION'
+    }
+    storage_parameters['path-names'] = [
+        path_name
+    ]
+    storage_parameters['debug-prints'] = True
+    storage_parameters['lock-parameters'] = {}
+    storage_parameters['lock-location'] = None
+    storage_parameters['overwrite'] = True
+
+    dataset_stored = objects_store_data(
+        swift_client = swift_client,
+        storage_parameters = storage_parameters,
+        object_data = general_dataset,
+        object_metadata = {}
+    )
+
+    experiment_id = mlflow_get_or_create_experiment(
+        mlflow_client = mlflow_client,
+        name = experiment_name
+    ) 
+
+    formatted_records = []
+    for _, row in general_dataset.iterrows():
+        formatted_records.append({
+            'inputs': {
+                'question': row['question']
+            },
+            'expectations': {
+                'ground_truth': row['answer'],
+                'format': row['format'],
+                'format_counts': row['format-counts'],
+                'question-characters': row['question-characters'],
+                'answer-characters': row['answer-characters'],
+                'dataset-path': row['dataset-path'],
+                'dataset-index': row['dataset-index']
+            },
+            'source': {
+                'source_type': 'UNSPECIFIED'
+            },
+            'tags': {
+                'mlflow.user': dataset_user
+            }
+        })
+    
+    dataset_tags['mlflow.user'] = dataset_user
+    dataset_id = mlflow_create_dataset(
+        mlflow_client = mlflow_client,
+        dataset_name = dataset_name,
+        experiment_id = experiment_id,
+        dataset_tags = dataset_tags,
+        dataset_records = formatted_records
+    )
+        
+    return {
+        'dataset': general_dataset,
+        'id': dataset_id
+    }
 
 def workflow_sample_datasets(
     swift_client: any,

@@ -77,6 +77,7 @@ def rag_batch_query(
     batch_size: int
 ) -> any:
     try:
+        import json
         import time
         from ..qdrant.use import qdrant_modifiable_query
         from ..evaluation.use import evalution_ranking_metrics
@@ -109,7 +110,10 @@ def rag_batch_query(
         
         if 0 < len(relevant_weights_batch):
             if isinstance(relevant_weights_batch, list):
-                q_relevant_weights = relevant_weights_batch[idx]
+                set_weight = relevant_weights_batch[idx]
+                if isinstance(set_weight, str):
+                    set_weight = json.loads(set_weight)
+                q_relevant_weights = set_weight
             if isinstance(relevant_weights_batch, dict):
                 q_relevant_weights = relevant_weights_batch
             q_relevant_weights = {int(k): v for k, v in q_relevant_weights.items()}
