@@ -4,6 +4,8 @@ import pandas as pd
 from icebreaker.swift.setup import swift_setup_client
 from icebreaker.objects.use import objects_get_data
 from icebreaker.analysis.utility import analysis_get_rows_chars
+from icebreaker.objects.use import objects_store_data, objects_get_prefix_list
+from icebreaker.storage.management import storage_set_object_path
 
 @ray.remote( 
     num_cpus = 1,
@@ -13,10 +15,12 @@ def data_collector(
     worker_index: int,
     actor_index: int,
     actor_ref: any,
-    swift_parameters: any,
-    storage_parameters: any,
-    config_parameters: any,
-    task_batch: any 
+    swift_parameters: dict,
+    input_storage_parameters: dict,
+    config_parameters: dict,
+    task_batch: list,
+    output_storage_parameters: dict,
+    log_parameters: dict
 ) -> any:
     start_time = t.time()
     print(f'Task {worker_index}, Actor {actor_index}')
@@ -48,11 +52,11 @@ def data_collector(
         data_object = objects_get_data(
             swift_client = swift_client,
             storage_parameters = {
-                'bucket-target': storage_parameters['bucket-target'],
-                'bucket-prefix': storage_parameters['bucket-prefix'],
-                'bucket-user': storage_parameters['bucket-user'],
+                'bucket-target': input_storage_parameters['bucket-target'],
+                'bucket-prefix': input_storage_parameters['bucket-prefix'],
+                'bucket-user': input_storage_parameters['bucket-user'],
                 'object-name': 'root',
-                'object-serialization': storage_parameters['object-serialization'],
+                'object-serialization': input_storage_parameters['object-serialization'],
                 'path-replacers': {
                     'name': object_path
                 },
@@ -196,11 +200,94 @@ def data_collector(
                     flattened_key += 'confidence-'
                 flattened_key += name
                 formatted_metrics[dataset_name][flattened_key] = value
+
+    name_start_prefix = output_storage_parameters['name-start-prefix']
+    output_storage_parameters['debug-prints'] = True
+    output_storage_parameters['lock-parameters'] = {}
+    output_storage_parameters['lock-location'] = None
+    output_storage_parameters['overwrite'] = True
+    
+    for dataset_name in formatted_metrics.keys():
+        metrics = formatted_metrics[dataset_name]
+        table = formatted_tables[dataset_name]
+        used_identity = dataset_name.split('external')[1][1:]
+
+        artifact = {
+            'parameters': log_parameters,
+            'metrics': metrics
+        }
+
+        artifact_object_name = 'arti'
+        artifact_path_replacers = {
+            'name': 'METRICS'
+        }
+
+        artifact_path_name = f'{name_start_prefix}-metrics-{used_identity}-'
+
+        artifact_temp_path_names = [
+            artifact_path_name
+        ]
+
+        artifact_path = storage_set_object_path(
+            object_name = artifact_object_name,
+            path_replacers = artifact_path_replacers,
+            path_names = artifact_temp_path_names,
+            debug_prints = False
+        )
+
+        object_list = objects_get_prefix_list(
+            storage_client = swift_client,
+            storage_parameters = output_storage_parameters,
+            path_prefix = artifact_path
+        )
+
+        next_index = len(object_list) + 1
+        
+        artifact_path_name += f'run-{next_index}.pkl'
+        
+        output_storage_parameters['object-name'] = artifact_object_name
+        output_storage_parameters['object-serialization'] = 'pickle'
+        output_storage_parameters['path-replacers'] = artifact_path_replacers
+        output_storage_parameters['path-names'] = [
+            artifact_path_name
+        ]
+        output_storage_parameters['debug-prints'] = True
+        output_storage_parameters['lock-parameters'] = {}
+        output_storage_parameters['lock-location'] = None
+        output_storage_parameters['overwrite'] = True
+        
+        artifact_stored = objects_store_data(
+            swift_client = swift_client,
+            storage_parameters = output_storage_parameters,
+            object_data = artifact,
+            object_metadata = {}
+        )
+        
+        table_path_name = f'{name_start_prefix}-data-{dataset_name}.parquet'
+        
+        output_storage_parameters['object-name'] = 'data'
+        output_storage_parameters['object-serialization'] = 'parquet'
+        output_storage_parameters['path-replacers'] = {
+            'name': 'EXTRACTED'
+        }
+        output_storage_parameters['path-names'] = [
+            table_path_name
+        ]
+        output_storage_parameters['debug-prints'] = True
+        output_storage_parameters['lock-parameters'] = {}
+        output_storage_parameters['lock-location'] = None
+        output_storage_parameters['overwrite'] = True
+        
+        table_stored = objects_store_data(
+            swift_client = swift_client,
+            storage_parameters = output_storage_parameters,
+            object_data = table,
+            object_metadata = {}
+        )
         
     end_time = t.time()
     total_time = round(end_time-start_time,5)
     print('Spent seconds', total_time)
     return {
-        'metrics': formatted_metrics,
-        'tables': formatted_tables
+        'metrics': formatted_metrics
     }

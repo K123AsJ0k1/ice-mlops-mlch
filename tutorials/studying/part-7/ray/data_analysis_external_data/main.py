@@ -13,8 +13,6 @@ from icebreaker.mlflow.setup import mlflow_setup_client
 from icebreaker.mlflow.use import mlflow_get_or_create_experiment, mlflow_start_run, mlflow_add_logs, mlflow_end_run
 from icebreaker.pararellism.division import division_split_input
 from icebreaker.misc.time import time_run_update
-from icebreaker.objects.use import objects_store_data, objects_get_prefix_list
-from icebreaker.storage.management import storage_set_object_path
 
 def external_data_analysis(
     job_parameters: any
@@ -45,8 +43,8 @@ def external_data_analysis(
             run_name = mlflow_parameters['run-name'], 
             tags = mlflow_parameters['run-tags']
         )
-        
         print('MLflow setup') 
+
         # This should be divided into batches based on worker number
         print('Dividing work')
         input_data = config_parameters['input']
@@ -81,6 +79,17 @@ def external_data_analysis(
             )) 
 
         print('Starting data collector tasks')
+
+        log_parameters = {
+            'used_enviroment': job_parameters['cluster'],
+            'utilization_cost_sec': process_parameters['utilization-cost-sec'],
+            'utilization_cost_currency': process_parameters['utilization-cost-currency'],
+            'input_amount': input_amount,
+            'used_workers': suitable_worker_number,
+            'used_actors': suitable_actor_number,
+            'batch_amount': amount_of_batches
+        }
+
         task_1_refs = [] 
         worker_index = 1
         actor_index = 0
@@ -91,9 +100,11 @@ def external_data_analysis(
                 actor_index = actor_index + 1,
                 actor_ref = actor_ref,
                 swift_parameters = swift_parameters,
-                storage_parameters = input_storage_parameters,
+                input_storage_parameters = input_storage_parameters,
                 config_parameters = config_parameters,
-                task_batch = worker_batch_ref
+                task_batch = worker_batch_ref,
+                output_storage_parameters = output_storage_parameters,
+                log_parameters = log_parameters
             ))
             worker_index += 1
             actor_index = (actor_index + 1) % suitable_actor_number
@@ -105,111 +116,15 @@ def external_data_analysis(
             for output_ref in done_task_1_refs:
                 formatted_data.append(ray.get(output_ref))
 
-        parameters = {
-            'used_enviroment': job_parameters['cluster'],
-            'utilization_cost_sec': process_parameters['utilization-cost-sec'],
-            'utilization_cost_currency': process_parameters['utilization-cost-currency'],
-            'input_amount': input_amount,
-            'used_workers': suitable_worker_number,
-            'used_actors': suitable_actor_number,
-            'batch_amount': amount_of_batches
-        }
-
-        print('Setting up swift client')
-        # If you expect the task to last over 8 hours, consider renewal
-        swift_client = swift_setup_client(
-            swift_parameters = swift_parameters
-        )
-        print('Swift client setup') 
-        # Maybe move this into collector
-        name_start_prefix = output_storage_parameters['name-start-prefix']
-        output_storage_parameters['debug-prints'] = True
-        output_storage_parameters['lock-parameters'] = {}
-        output_storage_parameters['lock-location'] = None
-        output_storage_parameters['overwrite'] = True
         for data in formatted_data:
             for dataset_name in data['metrics'].keys():
                 metrics = data['metrics'][dataset_name]
-                table = data['tables'][dataset_name]
                 used_identity = dataset_name.split('external')[1][1:]
 
-                artifact = {
-                    'parameters': parameters,
-                    'metrics': metrics
-                }
-
-                artifact_object_name = 'arti'
-                artifact_path_replacers = {
-                    'name': 'METRICS'
-                }
-
-                artifact_path_name = f'{name_start_prefix}-metrics-{used_identity}-'
-
-                artifact_temp_path_names = [
-                    artifact_path_name
-                ]
-
-                artifact_path = storage_set_object_path(
-                    object_name = artifact_object_name,
-                    path_replacers = artifact_path_replacers,
-                    path_names = artifact_temp_path_names,
-                    debug_prints = False
-                )
-
-                object_list = objects_get_prefix_list(
-                    storage_client = swift_client,
-                    storage_parameters = output_storage_parameters,
-                    path_prefix = artifact_path
-                )
-
-                next_index = len(object_list) + 1
-                
-                artifact_path_name += f'run-{next_index}.pkl'
-                
-                output_storage_parameters['object-name'] = artifact_object_name
-                output_storage_parameters['object-serialization'] = 'pickle'
-                output_storage_parameters['path-replacers'] = artifact_path_replacers
-                output_storage_parameters['path-names'] = [
-                    artifact_path_name
-                ]
-                output_storage_parameters['debug-prints'] = True
-                output_storage_parameters['lock-parameters'] = {}
-                output_storage_parameters['lock-location'] = None
-                output_storage_parameters['overwrite'] = True
-                
-                artifact_stored = objects_store_data(
-                    swift_client = swift_client,
-                    storage_parameters = output_storage_parameters,
-                    object_data = artifact,
-                    object_metadata = {}
-                )
-                
-                table_path_name = f'{name_start_prefix}-data-{dataset_name}.parquet'
-                
-                output_storage_parameters['object-name'] = 'data'
-                output_storage_parameters['object-serialization'] = 'parquet'
-                output_storage_parameters['path-replacers'] = {
-                    'name': 'EXTRACTED'
-                }
-                output_storage_parameters['path-names'] = [
-                    table_path_name
-                ]
-                output_storage_parameters['debug-prints'] = True
-                output_storage_parameters['lock-parameters'] = {}
-                output_storage_parameters['lock-location'] = None
-                output_storage_parameters['overwrite'] = True
-                
-                table_stored = objects_store_data(
-                    swift_client = swift_client,
-                    storage_parameters = output_storage_parameters,
-                    object_data = table,
-                    object_metadata = {}
-                )
-                
                 mlflow_add_logs(
                     mlflow_client = mlflow_client,
                     run_id = run_id, 
-                    parameters = parameters,
+                    parameters = log_parameters,
                     metrics = metrics,
                     metrics_prefix = used_identity,
                     metrics_step = 1,
@@ -217,7 +132,7 @@ def external_data_analysis(
                     table_folder = '',
                     table_name = ''
                 )
-
+        
         print('Completing MLflow run')
         mlflow_end_run(
             mlflow_client = mlflow_client, 

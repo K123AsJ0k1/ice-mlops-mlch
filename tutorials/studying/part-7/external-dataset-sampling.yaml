@@ -1,4 +1,5 @@
 sampling:
+  seed: 42
   accepted-language: 'en'
   wanted-samples:
     markdown: 35
