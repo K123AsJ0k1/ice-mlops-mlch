@@ -1,0 +1,125 @@
+sampling:
+  accepted-language: 'en'
+  wanted-samples:
+    markdown: 35
+    python: 25
+    yaml: 25
+    bash: 15
+  datasets:  
+    bash-command-data:
+      data-category: 'simple query bash'
+      format-samples: 
+        - bash
+    openai-humaneval:
+      data-category: 'simple query python'
+      format-samples: 
+        - python
+    mbpp:
+      data-category: 'simple query python'
+      format-samples: 
+        - python
+    opc-sft-stage2-educational-instruct-1: 
+      data-category: 'simple query python'
+      format-samples:  
+        - python
+    opc-sft-stage2-package-instruct-1:
+      data-category: 'explained query python'
+      format-samples: 
+        - python
+    opc-sft-stage2-package-instruct-2:
+      data-category: 'explained query python'
+      format-samples: 
+        - python
+    opc-sft-stage2-package-instruct-3:
+      data-category: 'explained query python'
+      format-samples:  
+        - python
+    opc-sft-stage2-mceval-instruct-1: 
+      data-category: 'limited query python'
+      format-samples: 
+        - python
+        - bash
+    opc-sft-stage1-largescale-diverse-instruct-1: 
+      data-category: 'limited query python'
+      format-samples: 
+        - python
+        - markdown
+        - bash 
+        - yaml
+    opc-sft-stage1-largescale-diverse-instruct-2: 
+      data-category: 'limited query python'
+      format-samples: 
+        - python
+        - markdown
+        - bash 
+        - yaml
+    opc-sft-stage1-largescale-diverse-instruct-3: 
+      data-category: 'limited query python'
+      format-samples: 
+        - python
+        - markdown
+        - bash 
+        - yaml
+    opc-sft-stage2-evol-instruct-1: 
+      data-category: 'user query python and bash'
+      format-samples: 
+        - python
+        - markdown
+        - bash 
+        - yaml
+    opc-sft-stage2-evol-instruct-2: 
+      data-category: 'user query python and bash'
+      format-samples: 
+        - python
+        - markdown
+        - bash 
+        - yaml
+    opc-sft-stage2-evol-instruct-3: 
+      data-category: 'user query python and bash'
+      format-samples: 
+        - python
+        - markdown
+        - bash 
+        - yaml
+    opc-sft-stage1-realuser-instruct-1: 
+      data-category: 'user query python and bash'
+      format-samples: 
+        - python
+        - markdown
+        - bash 
+        - yaml
+    opc-sft-stage1-realuser-instruct-2: 
+      data-category: 'user query python and bash'
+      format-samples: 
+        - python
+        - markdown
+        - bash 
+        - yaml
+    opc-sft-stage1-realuser-instruct-3: 
+      data-category: 'user query python and bash'
+      format-samples: 
+        - python
+        - markdown
+        - bash 
+        - yaml
+    opc-sft-stage1-filtered-infinity-instruct-1: 
+      data-category: 'user query python and bash'
+      format-samples: 
+        - python
+        - markdown
+        - bash 
+        - yaml
+    opc-sft-stage1-filtered-infinity-instruct-2: 
+      data-category: 'user query python and bash'
+      format-samples: 
+        - python
+        - markdown
+        - bash 
+        - yaml
+    opc-sft-stage1-filtered-infinity-instruct-3: 
+      data-category: 'user query python and bash'
+      format-samples: 
+        - python
+        - markdown
+        - bash 
+        - yaml
