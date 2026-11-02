@@ -3,9 +3,6 @@ import time as t
 
 from icebreaker.swift.setup import swift_setup_client
 from icebreaker.objects.use import objects_get_data
-from icebreaker.qdrant.setup import qdrant_setup_client
-from icebreaker.qdrant.use import qdrant_create_point, qdrant_upload_points
-from icebreaker.embeddings.utility import embeddings_generate_uuid
 from icebreaker.rag.utility import rag_format_data
 from icebreaker.objects.use import objects_store_data, objects_get_prefix_list
 from icebreaker.storage.management import storage_set_object_path
@@ -19,13 +16,11 @@ def database_evalution(
     actor_index: int,
     actor_ref: any,
     swift_parameters: dict,
-    qdrant_parameters: dict,
     collection_name: str,
     input_storage_parameters: dict,
     output_storage_parameters: dict,
     config_parameters: dict,
-    process_parameters: dict,
-    task_batch: list
+    task_batch: list 
 ) -> dict: 
     start_time = t.time()
     print(f'Task {worker_index}, Actor {actor_index}')
@@ -105,9 +100,7 @@ def database_evalution(
         done_refs, generator_actor_refs = ray.wait(generator_actor_refs)
         for output_ref in done_refs: 
             batch = ray.get(output_ref)
-
             key_name = batch['key_name']
-
             retrieval_outputs['tables'][key_name] = batch
             
     formatted_rag_data = rag_format_data(
@@ -147,8 +140,8 @@ def database_evalution(
         artifact_path_replacers = {
             'name': 'METRICS'
         }
-        print(artifact)
-        artifact_path_name = f'{name_start_prefix}-metrics-{used_identity}-'
+    
+        artifact_path_name = f'{name_start_prefix}-rag-metrics-{used_identity}-'
 
         artifact_temp_path_names = [
             artifact_path_name
@@ -181,17 +174,15 @@ def database_evalution(
         output_storage_parameters['lock-parameters'] = {}
         output_storage_parameters['lock-location'] = None
         output_storage_parameters['overwrite'] = True
-        print(output_storage_parameters)
-        '''
+        
         artifact_stored = objects_store_data(
             swift_client = swift_client,
             storage_parameters = output_storage_parameters,
             object_data = artifact,
             object_metadata = {}
         )
-        '''
         
-        table_path_name = f'{name_start_prefix}-data-{used_identity}.parquet'
+        table_path_name = f'{name_start_prefix}-rag-data-{used_identity}.parquet'
         
         output_storage_parameters['object-name'] = 'data'
         output_storage_parameters['object-serialization'] = 'parquet'
@@ -205,16 +196,14 @@ def database_evalution(
         output_storage_parameters['lock-parameters'] = {}
         output_storage_parameters['lock-location'] = None
         output_storage_parameters['overwrite'] = True
-        print(output_storage_parameters)
-        '''
+        
         table_stored = objects_store_data(
             swift_client = swift_client,
             storage_parameters = output_storage_parameters,
             object_data = table,
             object_metadata = {}
         ) 
-        '''
-
+        
     end_time = t.time()
     total_time = round(end_time-start_time,5)
     print('Spent seconds', total_time)

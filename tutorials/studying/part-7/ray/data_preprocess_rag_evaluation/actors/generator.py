@@ -9,13 +9,17 @@ class Generator:
     def __init__(
         self,
         device_mode: str,
+        qdrant_parameters: dict,
         dense_model_name: str,
-        sparse_model_name: str,
-        qdrant_parameters: dict
+        sparse_model_name: str
     ): 
+        from icebreaker.qdrant.setup import qdrant_setup_client
         from sentence_transformers import SentenceTransformer
         from sentence_transformers import SparseEncoder
-        from icebreaker.qdrant.setup import qdrant_setup_client
+        
+        self.qdrant_client = qdrant_setup_client(
+            qdrant_parameters = qdrant_parameters
+        )
 
         self.dense_model = SentenceTransformer(
             dense_model_name, 
@@ -28,10 +32,6 @@ class Generator:
             device = device_mode
         )
         self.sparse_model_name = sparse_model_name
-
-        self.qdrant_client = qdrant_setup_client(
-            qdrant_parameters = qdrant_parameters
-        )
 
     def batch_generate_queries(
         self,
@@ -47,7 +47,7 @@ class Generator:
     ) -> any:
         from icebreaker.rag.utility import rag_batch_query
 
-        result = {
+        result = { 
             'key_name': key_name
         }
         

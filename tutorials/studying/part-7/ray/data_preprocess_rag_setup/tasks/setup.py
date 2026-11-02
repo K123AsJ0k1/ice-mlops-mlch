@@ -149,4 +149,4 @@ def database_setup(
     end_time = t.time()
     total_time = round(end_time-start_time,5)
     print('Spent seconds', total_time)
-    return upload_status
+    return True

@@ -6,7 +6,7 @@ import time as t
 from importlib.metadata import version
 
 from actors.generator import Generator
-from tasks.setup import database_setup
+from tasks.evalution import database_evalution
 
 from icebreaker.swift.setup import swift_setup_client
 from icebreaker.pararellism.division import division_split_input
@@ -15,7 +15,7 @@ from icebreaker.qdrant.setup import qdrant_setup_client
 from icebreaker.mlflow.setup import mlflow_setup_client
 from icebreaker.mlflow.use import mlflow_get_or_create_experiment, mlflow_start_run, mlflow_add_logs, mlflow_end_run
 
-def internal_rag_setup(
+def internal_rag_evalution(
     job_parameters: any
 ):
     try:  
@@ -29,9 +29,10 @@ def internal_rag_setup(
         dense_model_name = rag_parameters['dense-model-name']
         sparse_model_name = rag_parameters['sparse-model-name']
         process_parameters = job_parameters['process']
+        device_mode = process_parameters['device-mode']
         qdrant_parameters = job_parameters['qdrant']
         qdrant_collection_name = rag_parameters['collection-name']
-        '''
+        
         print('Setup MLflow')  
         mlflow_client = mlflow_setup_client(
             mlflow_parameters = mlflow_parameters
@@ -49,13 +50,7 @@ def internal_rag_setup(
             tags = mlflow_parameters['run-tags']
         )
         print('MLflow setup') 
-        '''
-
-        work_qdrant_client = qdrant_setup_client(
-            qdrant_parameters = qdrant_parameters
-        )
-        print('Qdrant client setup') 
-
+        
         # This should be divided into batches based on worker number
         input_data = config_parameters['input']
         input_amount = len(input_data)
@@ -95,7 +90,7 @@ def internal_rag_setup(
         actor_refs = []
         for i in range(0, suitable_actor_number):
             actor_refs.append(Generator.remote(
-                device_mode = 'cuda',
+                device_mode = device_mode,
                 qdrant_parameters = qdrant_parameters,
                 dense_model_name = dense_model_name,
                 sparse_model_name = sparse_model_name
@@ -108,17 +103,15 @@ def internal_rag_setup(
         for worker_batch_ref in worker_batch_refs:
             actor_ref = actor_refs[actor_index]
         
-            task_1_refs.append(database_setup.remote( 
+            task_1_refs.append(database_evalution.remote( 
                 worker_index = worker_index,
                 actor_index = actor_index + 1,
                 actor_ref = actor_ref,
                 swift_parameters = swift_parameters,
-                qdrant_parameters = qdrant_parameters,
                 collection_name = qdrant_collection_name,
                 input_storage_parameters = input_storage_parameters,
                 output_storage_parameters = output_storage_parameters,
                 config_parameters = config_parameters,
-                process_parameters = process_parameters,
                 task_batch = worker_batch_ref
             ))
             worker_index += 1
@@ -132,27 +125,24 @@ def internal_rag_setup(
                 formatted_data.append(ray.get(output_ref))
         
         print('Adding logs into MLflow')
-        #name_start_prefix = config_parameters['name-start-prefix']
         for data in formatted_data:
             for dataset_name in data['metrics'].keys():
                 parameters = data['parameters']
                 metrics = data['metrics'][dataset_name]
                 used_identity = dataset_name.split('extraction-data')[1][1:]
             
-            '''
-            mlflow_add_logs(
-                mlflow_client = mlflow_client,
-                run_id = run_id, 
-                parameters = log_parameters,
-                metrics = metrics,
-                metrics_prefix = used_identity,
-                metrics_step = 1,
-                table = {},
-                table_folder = '',
-                table_name = ''
-            )
-            '''
-        '''
+                mlflow_add_logs(
+                    mlflow_client = mlflow_client,
+                    run_id = run_id, 
+                    parameters = parameters,
+                    metrics = metrics,
+                    metrics_prefix = used_identity,
+                    metrics_step = 1,
+                    table = {},
+                    table_folder = '',
+                    table_name = ''
+                )
+        
         print('Completing MLflow run')
         mlflow_end_run(
             mlflow_client = mlflow_client, 
@@ -160,11 +150,10 @@ def internal_rag_setup(
             status = 'FINISHED',
             end_time = None
         )
-        '''
-
+        
         return True
     except Exception as e:
-        print(f'Internal rag setup error {e}')
+        print(f'Internal rag evalution error {e}')
         return False
 
 if __name__ == "__main__":
@@ -196,7 +185,7 @@ if __name__ == "__main__":
     job_parameters = json.loads(sys.argv[1])
     
     print('Running internal rag setup')
-    task_status = internal_rag_setup(
+    task_status = internal_rag_evalution(
         job_parameters = job_parameters
     )
 

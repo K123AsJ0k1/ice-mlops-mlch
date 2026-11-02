@@ -113,6 +113,7 @@ def internal_rag_setup(
             done_task_1_refs, task_1_refs = ray.wait(task_1_refs)
             for output_ref in done_task_1_refs:
                 waiting_outputs.append(ray.get(output_ref))
+        # This for some reason gives none
         print(waiting_outputs)
         return True
     except Exception as e:
