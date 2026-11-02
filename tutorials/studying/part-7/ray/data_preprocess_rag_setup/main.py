@@ -183,8 +183,11 @@ if __name__ == "__main__":
         'pyarrow',
         'numpy',
         'torch',
+        'torchvision',
         'transformers',
-        'sentence-transformers'
+        'sentence-transformers',
+        'huggingface-hub',
+        'httpx'
     ]
 
     for pkg_name in check_packages:

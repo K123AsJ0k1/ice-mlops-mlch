@@ -20,14 +20,13 @@ class Generator:
             dense_model_name, 
             device = "cuda"
         )
-
         self.dense_model_name = dense_model_name
         
         self.sparse_model = SparseEncoder(
             sparse_model_name,
             device = "cuda"
         )
-        self.sparse_model_name = self.sparse_model
+        self.sparse_model_name = sparse_model_name
 
         self.qdrant_client = qdrant_setup_client(
             qdrant_parameters = qdrant_parameters
