@@ -175,6 +175,58 @@ def generator_process_data(
 
     return preprocess_df
 
+def generator_make_requests(
+    mlflow_client: any,
+    dataset_name: str,
+    dataset_df: any,
+    prompts: dict
+):
+    try:
+        from ..mlflow.use import mlflow_get_prompt
+    except ImportError as e:
+        raise ImportError("generator/utility failed to import", e)
+    request_index = 0
+    prompt_variant_index = {}
+    inference_requests = []
+    for row in dataset_df.to_dict(orient = 'records'):
+        for name, metadata in prompts.items():
+            expectations_data = row['expectations']
+            filled_prompt = mlflow_get_prompt(
+                mlflow_client = mlflow_client,
+                prompt_name = name,
+                prompt_version = metadata['version'],
+                prompt_replacements = {
+                    'content': expectations_data['ground_truth']
+                }
+            )
+
+            prompt_variant = name.split('-')[1]
+            if not prompt_variant in prompt_variant_index:
+                prompt_variant_index[prompt_variant] = 1
+
+            for i in range(0, metadata['amount']):
+                filled_prompt['metadata'] = {
+                    'dataset-name': dataset_name,
+                    'part': expectations_data['part'],
+                    'chapter': expectations_data['chapter'],
+                    'idx': expectations_data['idx'],
+                    'characters': expectations_data['characters'],
+                    'relevance': expectations_data['relevance'],
+                    'weights': expectations_data['weights'],
+                    'prompt-variant': prompt_variant,
+                    'request-index': request_index,
+                    'variant-index': prompt_variant_index[prompt_variant]
+                }
+
+                for prompt in filled_prompt['prompt']:
+                    key_name = f'{prompt['role']}-prompt-length'
+                    filled_prompt['metadata'][key_name] = len(prompt['content'])
+                
+                prompt_variant_index[prompt_variant] += 1
+                inference_requests.append(filled_prompt)
+                request_index += 1
+    return inference_requests
+
 def generator_create_requests(
     mlflow_client: any,
     dataset_ids: list,
