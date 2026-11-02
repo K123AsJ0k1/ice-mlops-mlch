@@ -1,5 +1,5 @@
-# cache-bust: c-vm1-v6
-icebreaker[swift, data, redis, pararellism, qdrant, logging] @ git+https://github.com/K123AsJ0k1/ice-mlops-mlch.git@main#subdirectory=applications/packages/icebreaker
+# cache-bust: c-vm1-v7
+icebreaker[swift, data, redis, pararellism, qdrant] @ git+https://github.com/K123AsJ0k1/ice-mlops-mlch.git@main#subdirectory=applications/packages/icebreaker
 
 --extra-index-url https://download.pytorch.org/whl/cu118
 torch==2.6.0+cu118

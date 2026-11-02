@@ -14,8 +14,6 @@ from icebreaker.misc.time import time_run_update
 from icebreaker.qdrant.setup import qdrant_setup_client
 from icebreaker.mlflow.setup import mlflow_setup_client
 from icebreaker.mlflow.use import mlflow_get_or_create_experiment, mlflow_start_run, mlflow_add_logs, mlflow_end_run
-from icebreaker.qdrant.use import qdrant_create_collection
-from icebreaker.qdrant.utility import qdrant_hybrid_config
 
 def internal_rag_setup(
     job_parameters: any
@@ -68,13 +66,6 @@ def internal_rag_setup(
 
         print(f'Used dense model {dense_model_name}')
         print(f'Used sparse model {sparse_model_name}')
-
-        print(f'Creating collection: {qdrant_collection_name}')
-        status = qdrant_create_collection(
-            qdrant_client = work_qdrant_client, 
-            collection_name = qdrant_collection_name,
-            configuration = qdrant_hybrid_config() 
-        ) 
 
         worker_number = process_parameters['workers']
         print(f'Suggested amount of workers {worker_number}')

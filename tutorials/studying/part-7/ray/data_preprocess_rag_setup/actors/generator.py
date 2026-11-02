@@ -10,12 +10,10 @@ class Generator:
         self,
         device_mode: str,
         dense_model_name: str,
-        sparse_model_name: str,
-        qdrant_parameters: dict
+        sparse_model_name: str
     ): 
         from sentence_transformers import SentenceTransformer
         from sentence_transformers import SparseEncoder
-        from icebreaker.qdrant.setup import qdrant_setup_client
 
         self.dense_model = SentenceTransformer(
             dense_model_name, 
@@ -28,10 +26,6 @@ class Generator:
             device = device_mode
         )
         self.sparse_model_name = sparse_model_name
-
-        self.qdrant_client = qdrant_setup_client(
-            qdrant_parameters = qdrant_parameters
-        )
 
     def batch_generate_vectors(
         self,
@@ -64,45 +58,4 @@ class Generator:
 
         result = result | vectors
         
-        return result
-
-    def batch_generate_queries(
-        self,
-        key_name: str,
-        query_type: str,
-        collection_name: str,
-        text_query_batch: list,
-        relevant_weights_batch: list,
-        relevance_threshold: float,
-        query_limit: int,
-        fusion_limit: int,
-        batch_size: int,
-    ) -> any:
-        import json
-        from icebreaker.rag.utility import rag_batch_query
-
-        result = {
-            'key_name': key_name
-        }
-        
-        #formatted_weights = []
-        #for weight in relevant_weights_batch:
-            #formatted_weights.append(json.loads(weight))
-
-        batch_outputs = rag_batch_query(
-            qdrant_client = self.qdrant_client,
-            query_type = query_type,
-            collection_name = collection_name,
-            text_query_batch = text_query_batch, 
-            relevant_weights_batch = relevant_weights_batch,
-            relevance_threshold = relevance_threshold,
-            query_limit = query_limit,
-            fusion_limit = fusion_limit,
-            dense_model = self.dense_model,
-            sparse_model = self.sparse_model,
-            batch_size = batch_size
-        )
-
-        result = result | batch_outputs
-
         return result

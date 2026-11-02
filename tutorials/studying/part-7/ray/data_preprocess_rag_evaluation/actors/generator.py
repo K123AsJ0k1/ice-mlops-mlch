@@ -33,39 +33,6 @@ class Generator:
             qdrant_parameters = qdrant_parameters
         )
 
-    def batch_generate_vectors(
-        self,
-        worker_index: int,
-        actor_index: int,
-        data_index: int,
-        batch_index: int,
-        key_name: str,
-        text_input_batch: list,
-        batch_size: int,
-        row_indices: list
-    ) -> any:
-        from icebreaker.embeddings.use import embeddings_batch_create_vectors
-        
-        result = {
-            'worker_idx': worker_index,
-            'actor_idx': actor_index,
-            'data_idx': data_index,
-            'batch_idx': batch_index,
-            'key_name': key_name,
-            'row_indices': row_indices 
-        }
-        
-        vectors = embeddings_batch_create_vectors(
-            text_input_batch = text_input_batch,
-            dense_model = self.dense_model,
-            sparse_model = self.sparse_model,
-            batch_size = batch_size
-        )
-
-        result = result | vectors
-        
-        return result
-
     def batch_generate_queries(
         self,
         key_name: str,
@@ -78,17 +45,12 @@ class Generator:
         fusion_limit: int,
         batch_size: int,
     ) -> any:
-        import json
         from icebreaker.rag.utility import rag_batch_query
 
         result = {
             'key_name': key_name
         }
         
-        #formatted_weights = []
-        #for weight in relevant_weights_batch:
-            #formatted_weights.append(json.loads(weight))
-
         batch_outputs = rag_batch_query(
             qdrant_client = self.qdrant_client,
             query_type = query_type,
