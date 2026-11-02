@@ -11,7 +11,6 @@ from tasks.evalution import database_evalution
 from icebreaker.swift.setup import swift_setup_client
 from icebreaker.pararellism.division import division_split_input
 from icebreaker.misc.time import time_run_update
-from icebreaker.qdrant.setup import qdrant_setup_client
 from icebreaker.mlflow.setup import mlflow_setup_client
 from icebreaker.mlflow.use import mlflow_get_or_create_experiment, mlflow_start_run, mlflow_add_logs, mlflow_end_run
 
@@ -124,7 +123,7 @@ def internal_rag_evalution(
             for output_ref in done_task_1_refs:
                 formatted_data.append(ray.get(output_ref))
         
-        print('Adding logs into MLflow')
+        print('Adding logs into MLflow') 
         for data in formatted_data:
             for dataset_name in data['metrics'].keys():
                 parameters = data['parameters']

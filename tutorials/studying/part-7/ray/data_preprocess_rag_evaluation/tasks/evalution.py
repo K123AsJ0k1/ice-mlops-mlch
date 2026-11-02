@@ -187,7 +187,7 @@ def database_evalution(
         output_storage_parameters['object-name'] = 'data'
         output_storage_parameters['object-serialization'] = 'parquet'
         output_storage_parameters['path-replacers'] = {
-            'name': 'EXTRACTED'
+            'name': 'EVALUATION'
         }
         output_storage_parameters['path-names'] = [
             table_path_name
