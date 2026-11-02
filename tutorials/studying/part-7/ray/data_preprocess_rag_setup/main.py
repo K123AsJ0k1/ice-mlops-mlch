@@ -139,25 +139,28 @@ def internal_rag_setup(
             done_task_1_refs, task_1_refs = ray.wait(task_1_refs)
             for output_ref in done_task_1_refs:
                 formatted_data.append(ray.get(output_ref))
-
+        
+        print('Adding logs into MLflow')
+        #name_start_prefix = config_parameters['name-start-prefix']
         for data in formatted_data:
             for dataset_name in data['metrics'].keys():
+                parameters = data['parameters']
                 metrics = data['metrics'][dataset_name]
-                used_identity = dataset_name.split('external')[1][1:]
-
-                '''
-                mlflow_add_logs(
-                    mlflow_client = mlflow_client,
-                    run_id = run_id, 
-                    parameters = log_parameters,
-                    metrics = metrics,
-                    metrics_prefix = used_identity,
-                    metrics_step = 1,
-                    table = {},
-                    table_folder = '',
-                    table_name = ''
-                )
-                '''
+                used_identity = dataset_name.split('extraction-data')[1][1:]
+            
+            '''
+            mlflow_add_logs(
+                mlflow_client = mlflow_client,
+                run_id = run_id, 
+                parameters = log_parameters,
+                metrics = metrics,
+                metrics_prefix = used_identity,
+                metrics_step = 1,
+                table = {},
+                table_folder = '',
+                table_name = ''
+            )
+            '''
         '''
         print('Completing MLflow run')
         mlflow_end_run(
@@ -170,7 +173,7 @@ def internal_rag_setup(
 
         return True
     except Exception as e:
-        print('rag database setup error', e)
+        print(f'Internal rag setup error {e}')
         return False
 
 if __name__ == "__main__":

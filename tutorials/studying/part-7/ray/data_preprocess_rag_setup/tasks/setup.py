@@ -7,6 +7,8 @@ from icebreaker.qdrant.setup import qdrant_setup_client
 from icebreaker.qdrant.use import qdrant_create_point, qdrant_upload_points
 from icebreaker.embeddings.utility import embeddings_generate_uuid
 from icebreaker.rag.utility import rag_format_data
+from icebreaker.objects.use import objects_store_data, objects_get_prefix_list
+from icebreaker.storage.management import storage_set_object_path
 
 @ray.remote(
     num_cpus = 1,
@@ -226,6 +228,95 @@ def database_setup(
             'total-characters'
         ]
     )
+
+    name_start_prefix = output_storage_parameters['name-start-prefix']
+    output_storage_parameters['debug-prints'] = True
+    output_storage_parameters['lock-parameters'] = {}
+    output_storage_parameters['lock-location'] = None
+    output_storage_parameters['overwrite'] = True
+
+    parameters = formatted_rag_data['parameters']
+    for dataset_name in formatted_rag_data['metrics'].keys():
+        metrics = formatted_rag_data['metrics'][dataset_name]
+        table = formatted_rag_data['tables'][dataset_name]
+        used_identity = dataset_name.split('extraction-data')[1][1:]
+
+        artifact = {
+            'parameters': parameters,
+            'metrics': metrics
+        }
+
+        artifact_object_name = 'arti'
+        artifact_path_replacers = {
+            'name': 'METRICS'
+        }
+        print(artifact)
+        artifact_path_name = f'{name_start_prefix}-metrics-{used_identity}-'
+
+        artifact_temp_path_names = [
+            artifact_path_name
+        ]
+
+        artifact_path = storage_set_object_path(
+            object_name = artifact_object_name,
+            path_replacers = artifact_path_replacers,
+            path_names = artifact_temp_path_names,
+            debug_prints = False
+        )
+
+        object_list = objects_get_prefix_list(
+            storage_client = swift_client,
+            storage_parameters = output_storage_parameters,
+            path_prefix = artifact_path
+        )
+
+        next_index = len(object_list) + 1
+        
+        artifact_path_name += f'run-{next_index}.pkl'
+        
+        output_storage_parameters['object-name'] = artifact_object_name
+        output_storage_parameters['object-serialization'] = 'pickle'
+        output_storage_parameters['path-replacers'] = artifact_path_replacers
+        output_storage_parameters['path-names'] = [
+            artifact_path_name
+        ]
+        output_storage_parameters['debug-prints'] = True
+        output_storage_parameters['lock-parameters'] = {}
+        output_storage_parameters['lock-location'] = None
+        output_storage_parameters['overwrite'] = True
+        print(output_storage_parameters)
+        '''
+        artifact_stored = objects_store_data(
+            swift_client = swift_client,
+            storage_parameters = output_storage_parameters,
+            object_data = artifact,
+            object_metadata = {}
+        )
+        '''
+        
+        table_path_name = f'{name_start_prefix}-data-{used_identity}.parquet'
+        
+        output_storage_parameters['object-name'] = 'data'
+        output_storage_parameters['object-serialization'] = 'parquet'
+        output_storage_parameters['path-replacers'] = {
+            'name': 'EXTRACTED'
+        }
+        output_storage_parameters['path-names'] = [
+            table_path_name
+        ]
+        output_storage_parameters['debug-prints'] = True
+        output_storage_parameters['lock-parameters'] = {}
+        output_storage_parameters['lock-location'] = None
+        output_storage_parameters['overwrite'] = True
+        print(output_storage_parameters)
+        '''
+        table_stored = objects_store_data(
+            swift_client = swift_client,
+            storage_parameters = output_storage_parameters,
+            object_data = table,
+            object_metadata = {}
+        ) 
+        '''
 
     end_time = t.time()
     total_time = round(end_time-start_time,5)

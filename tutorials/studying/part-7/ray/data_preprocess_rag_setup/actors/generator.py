@@ -85,16 +85,16 @@ class Generator:
             'key_name': key_name
         }
         
-        formatted_weights = []
-        for weight in relevant_weights_batch:
-            formatted_weights.append(json.loads(weight))
+        #formatted_weights = []
+        #for weight in relevant_weights_batch:
+            #formatted_weights.append(json.loads(weight))
 
         batch_outputs = rag_batch_query(
             qdrant_client = self.qdrant_client,
             query_type = query_type,
             collection_name = collection_name,
             text_query_batch = text_query_batch, 
-            relevant_weights_batch = formatted_weights,
+            relevant_weights_batch = relevant_weights_batch,
             relevance_threshold = relevance_threshold,
             query_limit = query_limit,
             fusion_limit = fusion_limit,
