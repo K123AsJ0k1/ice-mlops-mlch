@@ -8,6 +8,7 @@ import ray
 class Generator:
     def __init__(
         self,
+        device_mode: str,
         dense_model_name: str,
         sparse_model_name: str,
         qdrant_parameters: dict
@@ -18,13 +19,13 @@ class Generator:
 
         self.dense_model = SentenceTransformer(
             dense_model_name, 
-            device = "cuda"
+            device = device_mode
         )
         self.dense_model_name = dense_model_name
         
         self.sparse_model = SparseEncoder(
             sparse_model_name,
-            device = "cuda"
+            device = device_mode
         )
         self.sparse_model_name = sparse_model_name
 

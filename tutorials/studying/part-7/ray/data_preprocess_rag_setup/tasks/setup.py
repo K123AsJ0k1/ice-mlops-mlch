@@ -161,7 +161,7 @@ def database_setup(
 
         text_query_ref = ray.put(df_text_queries)
         relevant_weight_ref = ray.put(df_relevant_weights)
-        generator_actor_refs.append(actor_ref.batch_generate_vectors.remote(
+        generator_actor_refs.append(actor_ref.batch_generate_queries.remote(
             key_name = dataset_name,
             query_type = query_type,
             collection_name = collection_name,

@@ -104,6 +104,7 @@ def internal_rag_setup(
         actor_refs = []
         for i in range(0, suitable_actor_number):
             actor_refs.append(Generator.remote(
+                device_mode = 'cuda',
                 qdrant_parameters = qdrant_parameters,
                 dense_model_name = dense_model_name,
                 sparse_model_name = sparse_model_name
