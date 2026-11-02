@@ -12,7 +12,7 @@ def llama_generate_output(
     try:
         import time as t
     except ImportError as e:
-        raise ImportError("embeddings/use failed to import", e)
+        raise ImportError("llama/use failed to import", e)
 
     try:
         query_messages = request.pop('messages', [])
