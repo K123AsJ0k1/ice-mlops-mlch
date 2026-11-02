@@ -15,7 +15,7 @@ class Generator:
         from sentence_transformers import SentenceTransformer
         from sentence_transformers import SparseEncoder
         from icebreaker.qdrant.setup import qdrant_setup_client
-        
+
         self.dense_model = SentenceTransformer(
             dense_model_name, 
             device = "cuda"

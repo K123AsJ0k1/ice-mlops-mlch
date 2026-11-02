@@ -99,6 +99,8 @@ def internal_rag_setup(
         print(f'Suggested amount of actors {actor_number}')
         suitable_actor_number = min(actor_number, amount_of_batches)
         print(f'Selected amount of actors {suitable_actor_number}')
+        print(f'Using dense model: {dense_model_name}')
+        print(f'Using sparse model: {sparse_model_name}')
         actor_refs = []
         for i in range(0, suitable_actor_number):
             actor_refs.append(Generator.remote(

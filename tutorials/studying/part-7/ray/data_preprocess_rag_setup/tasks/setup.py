@@ -28,7 +28,7 @@ def database_setup(
     start_time = t.time()
     print(f'Task {worker_index}, Actor {actor_index}')
     
-    work_swift_client = swift_setup_client(
+    swift_client = swift_setup_client(
         swift_parameters = swift_parameters
     )
     print('Swift client setup') 
@@ -46,7 +46,7 @@ def database_setup(
         object_path = batch_data[0]
         
         data_object = objects_get_data(
-            swift_client = work_swift_client,
+            swift_client = swift_client,
             storage_parameters = {
                 'bucket-target': input_storage_parameters['bucket-target'],
                 'bucket-prefix': input_storage_parameters['bucket-prefix'],
@@ -62,7 +62,7 @@ def database_setup(
                 'lock-location': None,
                 'overwrite': True
             },
-            dict_format = False 
+            dict_format = False
         )  
         
         pandas_df = data_object[0]
