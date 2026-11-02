@@ -577,7 +577,7 @@ def workflow_create_validation_dataset(
     storage_parameters['object-name'] = 'data'
     storage_parameters['object-serialization'] = 'parquet'
     storage_parameters['path-replacers'] = {
-        'name': 'EVALUTION'
+        'name': 'EVALUATION'
     }
     storage_parameters['path-names'] = [
         path_name
@@ -742,7 +742,7 @@ def workflow_create_general_dataset(
     storage_parameters['object-name'] = 'data'
     storage_parameters['object-serialization'] = 'parquet'
     storage_parameters['path-replacers'] = {
-        'name': 'EVALUTION'
+        'name': 'EVALUATION'
     }
     storage_parameters['path-names'] = [
         path_name
