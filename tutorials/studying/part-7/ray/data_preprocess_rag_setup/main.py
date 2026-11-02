@@ -187,7 +187,8 @@ if __name__ == "__main__":
         'transformers',
         'sentence-transformers',
         'huggingface-hub',
-        'httpx'
+        'httpx',
+        'brotli'
     ]
 
     for pkg_name in check_packages:
