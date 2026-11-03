@@ -190,13 +190,12 @@ def generator_make_requests(
     inference_requests = []
     for row in dataset_df.to_dict(orient = 'records'):
         for name, metadata in prompts.items():
-            expectations_data = row['expectations']
             filled_prompt = mlflow_get_prompt(
                 mlflow_client = mlflow_client,
                 prompt_name = name,
                 prompt_version = metadata['version'],
                 prompt_replacements = {
-                    'content': expectations_data['ground_truth']
+                    'content': row['content']
                 }
             )
 
@@ -207,12 +206,12 @@ def generator_make_requests(
             for i in range(0, metadata['amount']):
                 filled_prompt['metadata'] = {
                     'dataset-name': dataset_name,
-                    'part': expectations_data['part'],
-                    'chapter': expectations_data['chapter'],
-                    'idx': expectations_data['idx'],
-                    'characters': expectations_data['characters'],
-                    'relevance': expectations_data['relevance'],
-                    'weights': expectations_data['weights'],
+                    'part': row['part'],
+                    'chapter': row['chapter'],
+                    'idx': row['idx'],
+                    'characters': row['characters'],
+                    'relevance': row['relevance'],
+                    'weights': row['ranking-weights'],
                     'prompt-variant': prompt_variant,
                     'request-index': request_index,
                     'variant-index': prompt_variant_index[prompt_variant]
