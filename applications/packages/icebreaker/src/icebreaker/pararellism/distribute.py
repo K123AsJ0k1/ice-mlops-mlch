@@ -23,7 +23,7 @@ def distribute_step_inputs(
     data_storage = storage['data-storage']
     min_initial_inputs = integration['min-initial-inputs']
     min_batch_size = integration['min-batch-size']
-    
+     
     cluster_tracks = {}
     if 0 < len(workflow_steps):
         for step_key in workflow_steps:
@@ -48,20 +48,27 @@ def distribute_step_inputs(
                 hardware_influence = hardware_influence
             )
             # This will fail if there is changes in step general details
-            path_prefix = processing[step_key]['general']['input-storage']['path-prefix']
-            print(f'Used path prefix {path_prefix}')
-            dataset_tuple_list = objects_get_prefix_list(
-                storage_client = storage_client,
-                storage_parameters = data_storage,
-                path_prefix = path_prefix
-            )
+            # This needs to be changed to allow table index range divsion
 
-            cluster_division = division_load_balanced_cluster_round_robin(
-                target_list = dataset_tuple_list,
-                cluster_weights = cluster_weights,
-                min_initial_inputs = min_initial_inputs,
-                min_batch_size = min_batch_size
-            )
+            input_storage = processing[step_key]['general']['input-storage']            
+            if 'path-prefix' in input_storage:
+                path_prefix = input_storage['path-prefix']
+                print(f'Used path prefix {path_prefix}')
+                dataset_tuple_list = objects_get_prefix_list(
+                    storage_client = storage_client,
+                    storage_parameters = data_storage,
+                    path_prefix = path_prefix
+                ) 
+
+                cluster_division = division_load_balanced_cluster_round_robin(
+                    target_list = dataset_tuple_list,
+                    cluster_weights = cluster_weights,
+                    min_initial_inputs = min_initial_inputs,
+                    min_batch_size = min_batch_size
+                )
+
+            if 'object-path' in input_storage:
+                pass
             
             for cluster_name, cluster_input in cluster_division.items():
                 print(f'{cluster_name} given batch input size {str(len(cluster_input))}')

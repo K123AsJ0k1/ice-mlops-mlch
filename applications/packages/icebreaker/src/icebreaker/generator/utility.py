@@ -484,7 +484,7 @@ def generator_format_data(
         from ..misc.dict import flatten_nested_dict
         from ..pd_stats.utility import pandas_get_p95, pandas_get_p99
     except ImportError as e:
-        raise ImportError("evaluation/use failed to import", e)
+        raise ImportError("generator/utility failed to import", e)
     
     num_requests = len(generator_data.get('inputs', []))
     records = []
