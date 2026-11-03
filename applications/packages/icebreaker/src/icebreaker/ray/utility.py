@@ -16,7 +16,7 @@ def ray_run_inference(
         route_path = inference_path,
         route_type = 'POST',
         route_input = sent_request,
-        timeout = 5
+        timeout = 5 
     )
     request_end_time = t.time()
     request_total_time = round(request_end_time-request_time_start,5)

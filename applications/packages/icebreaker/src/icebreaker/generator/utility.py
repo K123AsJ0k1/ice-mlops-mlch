@@ -355,7 +355,7 @@ def generator_send_requests(
             generator_payload = ray_run_inference(
                 inference_address = inference_parameters['generator']['address'],
                 inference_path = inference_parameters['generator']['path'],
-                sent_request = generator_request
+                sent_request = generator_request 
             )
             sent_requests += 1
             
