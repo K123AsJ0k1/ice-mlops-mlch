@@ -97,7 +97,7 @@ def create_dataset(
             if 'prompt-length' in key:
                 used_context += value
 
-        if used_context < 2.5*trace_attributes['n_ctx']:
+        if used_context < 2.5*trace_attributes['n-ctx']:
             sent_prompt = request['prompt']
             used_config = request['config']
             prompt_metadata = request['metadata']
@@ -130,6 +130,8 @@ def create_dataset(
             sent_requests += 1
             generator_payload = ray.get(generator_ref)
 
+            print(generator_payload)
+
             if generator_payload['status'] == 'success':
                 generator_metrics = generator_payload['metrics']
                 generator_metadata = generator_payload['metadata']
@@ -145,17 +147,18 @@ def create_dataset(
                     )
                 )
 
-                input_cost = trace_attributes['utilization_cost_sec'] * generator_metrics['prompt-processing-time-sec']
-                output_cost = trace_attributes['utilization_cost_sec'] * generator_metrics['generation-time-sec']
+                input_cost = trace_attributes['utilization-cost-sec'] * generator_metrics['prompt-processing-time-sec']
+                output_cost = trace_attributes['utilization-cost-sec'] * generator_metrics['generation-time-sec']
                 
                 prompt_metadata['input-cost'] = input_cost
                 prompt_metadata['output-cost'] = output_cost
                 prompt_metadata['total-cost'] = input_cost + output_cost
 
-                model_name = f'{trace_attributes['model_repository']}-{trace_attributes['model_quantization']}'
+                model_name = f'{trace_attributes['repo-id']}-{trace_attributes['file-name']}'
+                model_name = model_name.replace('*','')
                 root_span.set_attributes(
                     mlflow_llm_cost(
-                        model_provider = trace_attributes['inference_framework'], 
+                        model_provider = trace_attributes['inference-framework'], 
                         model_name = model_name, 
                         input_cost = input_cost, 
                         output_cost = output_cost

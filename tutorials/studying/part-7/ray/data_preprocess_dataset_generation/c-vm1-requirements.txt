@@ -1,4 +1,4 @@
-# cache-bust: v3
+# cache-bust: v6
 --extra-index-url https://abetlen.github.io/llama-cpp-python/whl/cu122
 llama-cpp-python>=0.3.1
 huggingface-hub>=0.25.0

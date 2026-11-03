@@ -1,9 +1,9 @@
 import ray
-import time as t
  
 @ray.remote(
     num_cpus = 1,
-    memory = 0.2 * 1024 * 1024 * 1024
+    num_gpus = 1,
+    memory = 0.8 * 1024 * 1024 * 1024
 ) 
 class Generator:
     def __init__(
@@ -13,21 +13,20 @@ class Generator:
     ):
         from icebreaker.llama.setup import llama_setup_model
         
-        self.model = llama_setup_model(
-            model_parameters = model_parameters
-        )
-
         self.server_name = server_name
         self.n_gpu_layers = model_parameters['n-gpu-layers']
-        self.serve_id = model_parameters['serve-id']
         self.n_ctx = model_parameters['n-ctx']
         self.type_k = model_parameters['type-k']
         self.type_v = model_parameters['type-v']
         self.flash_attention = model_parameters['flash-attention']
         model_repo_id = model_parameters['repo-id']
-        model_filename = model_parameters['filename']
-        self.model_name = f'{model_repo_id}|{model_filename}'
+        model_file_name = model_parameters['file-name']
+        self.model_name = f'{model_repo_id}|{model_file_name}'
         
+        self.model = llama_setup_model(
+            model_parameters = model_parameters
+        )
+
     def generate_output(
         self,
         request: dict
