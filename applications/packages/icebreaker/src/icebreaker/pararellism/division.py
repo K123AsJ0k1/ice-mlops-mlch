@@ -276,3 +276,62 @@ def division_split_input(
     
     # Slice the original list into sub-lists
     return [job_input[i : i + batch_size] for i in range(0, len(job_input), batch_size)]
+
+def division_load_balanced_cluster_dataframe_ranges(
+    cluster_weights: dict,
+    total_rows: int,
+    min_batch_size: int = 1
+) -> dict:
+    try:
+        import math
+    except ImportError as e:
+        raise ImportError("pararellism/division failed to import", e)
+
+    clusters = list(cluster_weights.keys())
+    assigned_ranges = {c: [] for c in clusters}
+
+    if not clusters or total_rows <= 0:
+        return assigned_ranges
+
+    # Sort clusters descending: Highest priority/percentage gets processed first
+    sorted_clusters = sorted(clusters, key=lambda c: cluster_weights[c], reverse=True)
+    
+    total_weight = sum(cluster_weights[c] for c in clusters)
+    if total_weight <= 0:
+        total_weight = len(clusters)
+        cluster_weights = {c: 1.0 for c in clusters}
+
+    start_str, end_str = (0, total_rows)
+    current_row_idx = 0
+
+    # Proportional allocation pass
+    for i, c in enumerate(sorted_clusters):
+        weight = cluster_weights[c]
+        proportion = weight / total_weight
+        
+        # Last cluster takes all remaining rows to avoid rounding gaps
+        if i == len(sorted_clusters) - 1:
+            cluster_rows = total_rows - current_row_idx
+        else:
+            cluster_rows = math.floor(total_rows * proportion)
+            # Enforce minimum batch size rule if work remains
+            if 0 < cluster_rows < min_batch_size and (total_rows - current_row_idx) >= min_batch_size:
+                cluster_rows = min_batch_size
+            cluster_rows = min(cluster_rows, total_rows - current_row_idx)
+
+        if cluster_rows <= 0:
+            continue
+
+        cluster_start_row = current_row_idx
+        cluster_end_row = current_row_idx + cluster_rows - 1
+        current_row_idx += cluster_rows
+
+        cluster_start_str = start_str if cluster_start_row == 0 else cluster_start_row
+        cluster_end_str = end_str if cluster_end_row >= total_rows - 1 else cluster_end_row
+        
+        assigned_ranges[c] = [
+            f'{cluster_start_str}-{cluster_end_str}',
+            cluster_rows
+        ]
+        
+    return assigned_ranges
