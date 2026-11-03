@@ -21,6 +21,7 @@ def internal_dataset_creation(
         swift_parameters = job_parameters['swift']
         mlflow_parameters = job_parameters['mlflow']
         input_storage_parameters = job_parameters['input-storage']
+        output_storage_parameters = job_parameters['output-storage']
         config_parameters = job_parameters['config']
         model_parameters = job_parameters['model']
         prompt_parameters = config_parameters['prompts']
@@ -71,6 +72,7 @@ def internal_dataset_creation(
             model_parameters = model_parameters,
             experiment_id = experiment_id,
             input_storage_parameters = input_storage_parameters,
+            output_storage_parameters = output_storage_parameters,
             worker_input = worker_input_ref,
             used_prompts = prompt_parameters
         ))
@@ -81,26 +83,23 @@ def internal_dataset_creation(
             done_task_1_refs, task_1_refs = ray.wait(task_1_refs)
             for output_ref in done_task_1_refs:
                 formatted_data.append(ray.get(output_ref))
-        '''
-        print('Adding logs into MLflow') 
+
         for data in formatted_data:
-            for dataset_name in data['metrics'].keys():
-                parameters = data['parameters']
-                metrics = data['metrics'][dataset_name]
-                used_identity = dataset_name.split('extraction-data')[1][1:]
-            
-                mlflow_add_logs(
-                    mlflow_client = mlflow_client,
-                    run_id = run_id, 
-                    parameters = parameters,
-                    metrics = metrics,
-                    metrics_prefix = used_identity,
-                    metrics_step = 1,
-                    table = {},
-                    table_folder = '',
-                    table_name = ''
-                )
-        '''
+            parameters = data['parameters']
+            metrics = data['metrics']
+            used_identity = data['identity']
+
+            mlflow_add_logs(
+                mlflow_client = mlflow_client,
+                run_id = run_id, 
+                parameters = parameters,
+                metrics = metrics,
+                metrics_prefix = used_identity,
+                metrics_step = 1,
+                table = {},
+                table_folder = '',
+                table_name = ''
+            )
 
         print('Completing MLflow run')
         mlflow_end_run(
