@@ -27,7 +27,7 @@ def llama_generate_output(
             inference_start = t.time()
             first_token_time = None
 
-            stream = model.llm.create_chat_completion(
+            stream = model.create_chat_completion(
                 messages = query_messages,
                 temperature = query_temperature,
                 max_tokens = query_max_tokens,
