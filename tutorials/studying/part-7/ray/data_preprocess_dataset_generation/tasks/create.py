@@ -5,10 +5,9 @@ from icebreaker.swift.setup import swift_setup_client
 from icebreaker.objects.use import objects_get_data
 from icebreaker.generator.utility import generator_make_requests
 from icebreaker.mlflow.setup import mlflow_setup_client
-from ..mlflow.use import mlflow_create_trace, mlflow_end_trace
-from ..mlflow.utility import mlflow_token_usage, mlflow_llm_cost, mlflow_llm_effiency
-from ..ray.utility import ray_run_inference
-from ..generator.utility import generator_extract_output
+from icebreaker.mlflow.use import mlflow_create_trace, mlflow_end_trace
+from icebreaker.mlflow.utility import mlflow_token_usage, mlflow_llm_cost, mlflow_llm_effiency
+from icebreaker.generator.utility import generator_extract_output
 
 @ray.remote(
     num_cpus = 1,
@@ -18,11 +17,12 @@ def create_dataset(
     worker_index: int,
     actor_index: int,
     actor_ref: any,
-    swift_parameters: any,
-    mlflow_parameters: any,
+    swift_parameters: dict,
+    mlflow_parameters: dict,
+    model_parameters: dict,
     experiment_id: str,
     input_storage_parameters: dict,
-    index_range: dict,
+    worker_input: list,
     used_prompts: dict
 ) -> any:
     start_time = t.time()
@@ -60,7 +60,8 @@ def create_dataset(
     )  
     
     pandas_df = data_object[0]
-    range_split = index_range.split('-')
+    print(worker_input)
+    range_split = worker_input[0].split('-')
     start_index = int(range_split[0])
     end_index = int(range_split[-1])
     dataset_name = input_storage_parameters['object-path'].split('/')[-1].split('.')[0]
@@ -78,6 +79,8 @@ def create_dataset(
     )
 
     trace_attributes = mlflow_parameters['trace-attributes']
+    trace_attributes = trace_attributes | model_parameters
+
     trace_name = mlflow_parameters['trace-name']
     trace_tags = mlflow_parameters['trace-tags']
 
@@ -94,7 +97,7 @@ def create_dataset(
             if 'prompt-length' in key:
                 used_context += value
 
-        if used_context < 2.5*trace_attributes['llm.n_ctx']:
+        if used_context < 2.5*trace_attributes['n_ctx']:
             sent_prompt = request['prompt']
             used_config = request['config']
             prompt_metadata = request['metadata']
@@ -135,8 +138,6 @@ def create_dataset(
                 prompt_metadata['inference-server'] = generator_metadata['inference_server']
                 prompt_metadata['model-name'] = generator_metadata['used_model']
 
-                generator_data['metrics'].append(generator_metrics)
-                
                 root_span.set_attributes(
                     mlflow_token_usage(
                         input_tokens = generator_metrics['prompt-tokens'], 
@@ -144,22 +145,27 @@ def create_dataset(
                     )
                 )
 
-                input_cost = trace_attributes['ice.utilization_cost_sec'] * generator_metrics['prompt-processing-time-sec']
-                output_cost = trace_attributes['ice.utilization_cost_sec'] * generator_metrics['generation-time-sec']
+                input_cost = trace_attributes['utilization_cost_sec'] * generator_metrics['prompt-processing-time-sec']
+                output_cost = trace_attributes['utilization_cost_sec'] * generator_metrics['generation-time-sec']
                 
                 prompt_metadata['input-cost'] = input_cost
                 prompt_metadata['output-cost'] = output_cost
                 prompt_metadata['total-cost'] = input_cost + output_cost
 
-                model_name = f'{trace_attributes['llm.model_repository']}-{trace_attributes['llm.model_quantization']}'
+                model_name = f'{trace_attributes['model_repository']}-{trace_attributes['model_quantization']}'
                 root_span.set_attributes(
                     mlflow_llm_cost(
-                        model_provider = trace_attributes['llm.inference_framework'], 
+                        model_provider = trace_attributes['inference_framework'], 
                         model_name = model_name, 
                         input_cost = input_cost, 
                         output_cost = output_cost
                     )
                 )
+
+                generator_metrics['input-cost'] = input_cost
+                generator_metrics['output-cost'] = output_cost
+                generator_metrics['total-cost'] = input_cost + output_cost
+                generator_data['metrics'].append(generator_metrics)
                 
                 root_span.set_attributes(
                     mlflow_llm_effiency(

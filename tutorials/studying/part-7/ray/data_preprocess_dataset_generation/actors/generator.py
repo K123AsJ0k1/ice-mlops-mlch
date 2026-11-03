@@ -5,7 +5,7 @@ import time as t
     num_cpus = 1,
     memory = 0.2 * 1024 * 1024 * 1024
 ) 
-class LLAMA_Generator:
+class Generator:
     def __init__(
         self,
         server_name: str,

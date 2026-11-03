@@ -5,13 +5,10 @@ import time as t
 
 from importlib.metadata import version
 
-from collections import defaultdict
-
 from actors.generator import Generator
 from tasks.create import create_dataset
 
 from icebreaker.swift.setup import swift_setup_client
-from icebreaker.pararellism.division import division_split_input
 from icebreaker.misc.time import time_run_update
 from icebreaker.mlflow.setup import mlflow_setup_client
 from icebreaker.mlflow.use import mlflow_get_or_create_experiment, mlflow_start_run, mlflow_add_logs, mlflow_end_run
@@ -26,11 +23,10 @@ def internal_dataset_creation(
         input_storage_parameters = job_parameters['input-storage']
         config_parameters = job_parameters['config']
         model_parameters = job_parameters['model']
+        prompt_parameters = config_parameters['prompts']
         process_parameters = job_parameters['process']
-        server_name = process_parameters['server-name:']
-          
+        server_name = process_parameters['server-name']  
         # This will be always single task and actor job
-        '''
         print('Setup MLflow')  
         mlflow_client = mlflow_setup_client(
             mlflow_parameters = mlflow_parameters
@@ -48,11 +44,11 @@ def internal_dataset_creation(
             tags = mlflow_parameters['run-tags']
         )
         print('MLflow setup') 
-        '''
+    
         # input gives a index range
-        input_data = config_parameters['input']
+        input_data = config_parameters['input'][0]
         input_amount = len(input_data)
-
+        print(input_data)
         if input_amount == 0:
             print("No input data provided.")
             return True
@@ -71,8 +67,12 @@ def internal_dataset_creation(
             actor_index = 1,
             actor_ref = actor_ref,
             swift_parameters = swift_parameters,
+            mlflow_parameters = mlflow_parameters,
+            model_parameters = model_parameters,
+            experiment_id = experiment_id,
             input_storage_parameters = input_storage_parameters,
-            index_range = worker_input_ref
+            worker_input = worker_input_ref,
+            used_prompts = prompt_parameters
         ))
 
         print('Waiting create dataset task')
@@ -100,7 +100,8 @@ def internal_dataset_creation(
                     table_folder = '',
                     table_name = ''
                 )
-        
+        '''
+
         print('Completing MLflow run')
         mlflow_end_run(
             mlflow_client = mlflow_client, 
@@ -108,7 +109,6 @@ def internal_dataset_creation(
             status = 'FINISHED',
             end_time = None
         )
-        '''
         
         return True
     except Exception as e:
@@ -122,6 +122,7 @@ if __name__ == "__main__":
     check_packages = [
         'ray',
         'python-swiftclient',
+        'llama-cpp-python',
         'pandas',
         'pyarrow',
         'numpy'
