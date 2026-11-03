@@ -52,8 +52,8 @@ def llama_generate_output(
             
             prompt_text = " ".join([m.get("content", "") for m in query_messages])
 
-            prompt_tokens = len(model.llm.tokenize(prompt_text.encode('utf-8')))
-            completion_tokens = len(model.llm.tokenize(content.encode('utf-8')))
+            prompt_tokens = len(model.tokenize(prompt_text.encode('utf-8')))
+            completion_tokens = len(model.tokenize(content.encode('utf-8')))
             
             total_tokens = prompt_tokens + completion_tokens
 
