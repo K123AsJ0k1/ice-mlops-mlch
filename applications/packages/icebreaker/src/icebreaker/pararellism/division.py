@@ -329,9 +329,6 @@ def division_load_balanced_cluster_dataframe_ranges(
         cluster_start_str = start_str if cluster_start_row == 0 else cluster_start_row
         cluster_end_str = end_str if cluster_end_row >= total_rows - 1 else cluster_end_row
         
-        assigned_ranges[c] = [
-            f'{cluster_start_str}-{cluster_end_str}',
-            cluster_rows
-        ]
+        assigned_ranges[c] = [(f'{cluster_start_str}-{cluster_end_str}',cluster_rows)]
         
     return assigned_ranges
