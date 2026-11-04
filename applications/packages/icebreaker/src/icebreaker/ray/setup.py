@@ -30,7 +30,7 @@ def ray_setup_client(
 def ray_store_job(
     storage_client: any,
     storage_parameters: any,
-    ray_runtime: any
+    working_directory_path: str
 ):
     try:
         import os
@@ -40,7 +40,6 @@ def ray_store_job(
         raise ImportError("Failed to import", e)
 
     start_time = t.time()
-    working_directory_path = ray_runtime['working_dir']
     directory_name = working_directory_path.split('/')[-1]
     for root, dirs, files in os.walk(working_directory_path):
         for file_name in files:

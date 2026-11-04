@@ -211,9 +211,7 @@ def ray_dry_submit_pipeline(
     storage_time = ray_store_job(
         storage_client = swift_client,
         storage_parameters = storage_parameters,
-        ray_runtime = {
-            'working_dir': local_working_directory
-        }
+        working_directory_path = local_working_directory
     )
     # Requires requirements.txt to work even if there is no packages
     runtime_directory_path, runtime_requirements_path = ray_download_job(

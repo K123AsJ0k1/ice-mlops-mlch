@@ -19,7 +19,7 @@ def llama_setup_model(
         type_v = model_parameters['type-v']
         flash_attention = model_parameters['flash-attention']
         model_name = f'{model_repo_id}|{model_file_name}'
-        print(f'Model configurations {n_gpu_layers}|{n_ctx}|{type_k}|{type_v}')
+        print(f'Model configurations: {n_gpu_layers}|{n_ctx}|{type_k}|{type_v}|{flash_attention}')
         print(f'Fetching and initializing {model_name} directly from Hugging Face Hub...')
         model = Llama.from_pretrained(
             repo_id = model_repo_id, 
