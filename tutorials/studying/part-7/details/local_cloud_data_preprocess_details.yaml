@@ -1,0 +1,423 @@
+storage:
+  data-storage: 
+    bucket-target: 'experiment'
+    bucket-prefix: 'mlch'
+    bucket-user: 'user@example.com' 
+  code-storage: 
+    bucket-target: 'pipeline'
+    bucket-prefix: 'mlch'
+    bucket-user: 'user@example.com' 
+  log-storage: 
+    bucket-target: 'pipeline'
+    bucket-prefix: 'mlch'
+    bucket-user: 'user@example.com' 
+  time-storage: 
+    bucket-target: 'pipeline'
+    bucket-prefix: 'mlch'
+    bucket-user: 'user@example.com' 
+    object-name: 'local-cloud-workflow'
+    lock-parameters: 
+      central: 
+        system: 'redis'
+        redis-endpoint: 'redis-service.storage.svc.cluster.local'
+        redis-port: '6379'
+        redis-db: '0'
+        user: 'workflow'
+        place: 'pipeline'
+      local: 
+        system: 'redis'
+        redis-endpoint: 'localhost'
+        redis-port: '7002'
+        redis-db: '0'
+        user: 'workflow'
+        place: 'pipeline'
+integration:
+  cluster-yamls: {}
+  cluster-name: 'local-cloud-cluster'
+  resource-weights:
+    cpu: 0.20
+    gpu: 0.40
+    vram: 0.30 
+    ram: 0.10
+  cluster-priority:
+    cloud-vm1: 0.05
+    local-lt2: 0.35
+    local-lt3: 0.60
+  hardware-influence: 0.0
+  min-initial-inputs: 1
+  min-batch-size: 1
+  workflow-steps: []
+  multi-loop-amount: 20000
+  multi-loop-wait: 10
+  job-loop-amount: 2
+  job-loop-wait: 5
+processing:
+  step-1:
+    general: 
+      swift: {}
+      rag:
+        collection-name: 'internal_material_local_cloud_database'
+        dense-model-name: 'Alibaba-NLP/gte-modernbert-base'
+        sparse-model-name: 'opensearch-project/opensearch-neural-sparse-encoding-doc-v3-distill'
+      input-storage: 
+        bucket-target: 'experiment'
+        bucket-prefix: 'mlch'
+        bucket-user: 'user@example.com'   
+        path-prefix: 'DATA/EXTRACTED/extraction-data-internal-tutorial-v095' 
+        object-serialization: 'pickle'
+      time-storage: 
+        bucket-target: 'pipeline'
+        bucket-prefix: 'mlch'
+        bucket-user: 'user@example.com' 
+        object-name: 'local-cloud-workflow'
+        lock-parameters: 
+          central: 
+            system: 'redis'
+            redis-endpoint: 'redis-service.storage.svc.cluster.local'
+            redis-port: '6379'
+            redis-db: '0'
+            user: 'workflow'
+            place: 'pipeline'
+          remote: 
+            system: 'redis'
+            redis-endpoint: 'chisel-client'
+            redis-port: '6379'
+            redis-db: '0'
+            user: 'workflow'
+            place: 'pipeline'
+      config:
+         text-column: 'content'
+         query-column: 'topic'
+         weight-column: 'ranking-weights'
+         query-type: 'hybrid-dbsf'
+         relevance-threshold: 1.0
+         query-limit: 5
+         fusion-limit: 40
+         batch-size: 32
+    cluster:
+      cloud-vm1:
+        mlflow: 
+          tracking-uri: 'http://mlflow.mlflow.svc.cluster.local:5000'
+          s3-endpoint-url: 'http://mlflow-minio-service.mlflow.svc.cluster.local:9000'
+          aws-access-key-id: 'minioadmin'
+          aws-secret-access-key: 'minioadmin'
+          experiment-name: 'mlch-code-assistant-rag-pipeline'
+          run-name: 'internal-step-1-vm1-data-preprocess'
+          run-tags:
+            workflow-type: 'local-cloud'
+            pipeline-step: 'internal-data-preprocess'
+        qdrant: 
+          address: 'qdrant-service.storage.svc.cluster.local'
+          port: '7201'
+          api-key: 'qdrant_key'
+        process:
+          workers: 2
+          actors: 2
+          device-mode: 'cuda'
+          lock-location: 'central'
+        job:
+          main-file: 'main.py'
+          runtime:
+            working_dir: 'data_preprocess_rag_setup'
+            pip: 'c-vm1-requirements.txt'
+            env_vars:
+              HF_TOKEN: 'fill'
+      local-lt2:
+        mlflow: 
+          tracking-uri: 'http://chisel-client:5000'
+          s3-endpoint-url: 'http://chisel-client:9000'
+          aws-access-key-id: 'minioadmin'
+          aws-secret-access-key: 'minioadmin'
+          experiment-name: 'mlch-code-assistant-rag-pipeline'
+          run-name: 'internal-step-1-lt2-data-preprocess'
+          run-tags:
+            workflow-type: 'local-cloud'
+            pipeline-step: 'internal-data-preprocess'
+        qdrant: 
+          address: 'chisel-client'
+          port: '7201'
+          api-key: 'qdrant_key'
+        process:
+          workers: 12
+          actors: 1
+          device-mode: 'cuda'
+          lock-location: 'remote'
+        job:
+          main-file: 'main.py'
+          runtime:
+            working_dir: 'data_preprocess_rag_setup'
+            pip: 'l-lt23-requirements.txt'
+            env_vars:
+              HF_TOKEN: 'fill'
+      local-lt3:
+        mlflow: 
+          tracking-uri: 'http://chisel-client:5000'
+          s3-endpoint-url: 'http://chisel-client:9000'
+          aws-access-key-id: 'minioadmin'
+          aws-secret-access-key: 'minioadmin'
+          experiment-name: 'mlch-code-assistant-rag-pipeline'
+          run-name: 'internal-step-1-lt3-data-preprocess'
+          run-tags:
+            workflow-type: 'local-cloud'
+            pipeline-step: 'internal-data-preprocess'
+        qdrant: 
+          address: 'chisel-client'
+          port: '7201'
+          api-key: 'qdrant_key'
+        process:
+          workers: 28
+          actors: 1
+          device-mode: 'cuda'
+          lock-location: 'remote'
+        job:
+          main-file: 'main.py'
+          runtime:
+            working_dir: 'data_preprocess_rag_setup'
+            pip: 'l-lt23-requirements.txt'
+            env_vars:
+              HF_TOKEN: 'fill'
+  step-2:
+    general:
+      swift: {}
+      input-storage: 
+        bucket-target: 'experiment'
+        bucket-prefix: 'mlch'
+        bucket-user: 'user@example.com'   
+        object-path: 'DATA/EVALUATION/internal-validation-dataset.parquet' 
+        object-serialization: 'parquet'
+      output-storage: 
+        bucket-target: 'experiment'
+        bucket-prefix: 'mlch'
+        bucket-user: 'user@example.com'   
+        object-serialization: 'parquet'
+        name-start-prefix: 'preprocess'
+      time-storage: 
+        bucket-target: 'pipeline'
+        bucket-prefix: 'mlch'
+        bucket-user: 'user@example.com' 
+        object-name: 'local-cloud-workflow'   
+        lock-parameters: 
+          central: 
+            system: 'redis'
+            redis-endpoint: 'redis-service.storage.svc.cluster.local'
+            redis-port: '6379'
+            redis-db: '0'
+            user: 'workflow'
+            place: 'pipeline'
+          remote: 
+            system: 'redis'
+            redis-endpoint: 'chisel-client'
+            redis-port: '6379'
+            redis-db: '0'
+            user: 'workflow'
+            place: 'pipeline' 
+      config:
+        prompts:
+          generator-factual-variant-deepseek-r1:
+            version: 2
+            amount: 1
+          generator-synthesis-variant-deepseek-r1:
+            version: 2
+            amount: 1
+          generator-negative-variant-deepseek-r1:
+            version: 2
+            amount: 1
+    cluster:
+      cloud-vm1:
+        mlflow: 
+          tracking-uri: 'http://mlflow.mlflow.svc.cluster.local:5000'
+          s3-endpoint-url: 'http://mlflow-minio-service.mlflow.svc.cluster.local:9000'
+          aws-access-key-id: 'minioadmin'
+          aws-secret-access-key: 'minioadmin'
+          experiment-name: 'mlch-code-assistant-rag-pipeline'
+          run-name: 'internal-step-2-vm1-data-preprocess' 
+          run-tags:
+            workflow-type: 'local-cloud'
+            pipeline-step: 'internal-data-preprocess'
+          trace-name: 'data-generator-chain'
+          trace-attributes: 
+            used-enviroment: 'cloud-vm1'
+            utilization-cost-sec: 0
+            utilization-cost-currency: ''
+            gpu-hardware-name: 'NVIDIA Tesla P100-PCIE-16GB'
+            gpu-vram-mib: 16384
+            inference-framework: 'llama-cpp'
+          trace-tags:
+            workflow-type: 'local-cloud'
+            pipeline-step: 'internal-data-preprocess'
+        model:
+          repo-id: 'unsloth/DeepSeek-R1-Distill-Llama-8B-GGUF'
+          file-name: '*Q4_K_M.gguf'
+          n-gpu-layers: -1 
+          n-ctx: 8192
+          type-k: 1
+          type-v: 1
+          flash-attention: False
+        process:
+          server-name: 'cloud-vm1'
+          lock-location: 'central'
+        job:
+          main-file: 'main.py'
+          runtime:
+            working_dir: 'data_preprocess_dataset_generation'
+            pip: 'c-vm1-requirements.txt'
+            env_vars:
+              HF_TOKEN: 'fill'
+      local-lt2:
+        mlflow: 
+          tracking-uri: 'http://chisel-client:5000'
+          s3-endpoint-url: 'http://chisel-client:9000'
+          aws-access-key-id: 'minioadmin'
+          aws-secret-access-key: 'minioadmin'
+          experiment-name: 'mlch-code-assistant-rag-pipeline'
+          run-name: 'internal-step-2-lt2-data-preprocess'
+          run-tags:
+            workflow-type: 'local-cloud'
+            pipeline-step: 'internal-data-preprocess'
+          trace-name: 'data-generator-chain'
+          trace-attributes: 
+            used-enviroment: 'local-lt2'
+            utilization-cost-sec: 0
+            utilization-cost-currency: ''
+            gpu-hardware-name: 'NVIDIA GeForce RTX 4070'
+            gpu-vram-mib: 8188
+            inference-framework: 'llama-cpp'
+          trace-tags:
+            workflow-type: 'local-cloud'
+            pipeline-step: 'internal-data-preprocess'
+        model:
+          repo-id: 'unsloth/DeepSeek-R1-Distill-Llama-8B-GGUF'
+          file-name: '*Q4_K_M.gguf'
+          n-gpu-layers: -1 
+          n-ctx: 8192
+          type-k: 1
+          type-v: 1
+          flash-attention: True
+        process:
+          server-name: 'local-lt2'
+          lock-location: 'remote'
+        job:
+          main-file: 'main.py'
+          runtime:
+            working_dir: 'data_preprocess_dataset_generation'
+            pip: 'l-lt23-requirements.txt'
+            env_vars:
+              HF_TOKEN: 'fill'
+      local-lt3:
+        mlflow: 
+          tracking-uri: 'http://chisel-client:5000'
+          s3-endpoint-url: 'http://chisel-client:9000'
+          aws-access-key-id: 'minioadmin'
+          aws-secret-access-key: 'minioadmin'
+          experiment-name: 'mlch-code-assistant-rag-pipeline'
+          run-name: 'internal-step-2-lt3-data-preprocess'
+          run-tags:
+            workflow-type: 'local-cloud'
+            pipeline-step: 'internal-data-preprocess'
+          trace-name: 'data-generator-chain'
+          trace-attributes: 
+            used-enviroment: 'local-lt3'
+            utilization-cost-sec: 0
+            utilization-cost-currency: ''
+            gpu-hardware-name: 'NVIDIA GeForce RTX 4090'
+            gpu-vram-mib: 16376
+            inference-framework: 'llama-cpp'
+          trace-tags:
+            workflow-type: 'local-cloud'
+            pipeline-step: 'internal-data-preprocess'
+        model:
+          repo-id: 'unsloth/DeepSeek-R1-Distill-Llama-8B-GGUF'
+          file-name: '*Q4_K_M.gguf'
+          n-gpu-layers: -1 
+          n-ctx: 8192
+          type-k: 1
+          type-v: 1
+          flash-attention: True
+        process:
+          server-name: 'local-lt3'
+          lock-location: 'remote'
+        job:
+          main-file: 'main.py'
+          runtime:
+            working_dir: 'data_preprocess_dataset_generation'
+            pip: 'l-lt23-requirements.txt'
+            env_vars:
+              HF_TOKEN: 'fill'
+  step-3:
+    general:
+      swift: {}
+      rag:
+        collection-name: 'internal_material_local_cloud_database'
+        dense-model-name: 'Alibaba-NLP/gte-modernbert-base'
+        sparse-model-name: 'opensearch-project/opensearch-neural-sparse-encoding-doc-v3-distill'
+      input-storage: 
+        bucket-target: 'experiment'
+        bucket-prefix: 'mlch'
+        bucket-user: 'user@example.com'   
+        path-prefix: 'DATA/EXTRACTED/extraction-data-internal-tutorial-v095' 
+        object-serialization: 'pickle'
+      output-storage: 
+        bucket-target: 'experiment'
+        bucket-prefix: 'mlch'
+        bucket-user: 'user@example.com'   
+        object-serialization: 'parquet'
+        name-start-prefix: 'preprocess'
+      time-storage: 
+        bucket-target: 'pipeline'
+        bucket-prefix: 'mlch'
+        bucket-user: 'user@example.com' 
+        object-name: 'local-cloud-workflow'
+        lock-parameters: 
+          central: 
+            system: 'redis'
+            redis-endpoint: 'redis-service.storage.svc.cluster.local'
+            redis-port: '6379'
+            redis-db: '0'
+            user: 'workflow'
+            place: 'pipeline'
+          remote: 
+            system: 'redis'
+            redis-endpoint: 'chisel-client'
+            redis-port: '6379'
+            redis-db: '0'
+            user: 'workflow'
+            place: 'pipeline'
+      config:
+         text-column: 'content'
+         query-column: 'topic'
+         weight-column: 'ranking-weights'
+         query-type: 'hybrid-dbsf'
+         relevance-threshold: 1.0
+         query-limit: 5
+         fusion-limit: 40
+         batch-size: 32
+    cluster:
+      cloud-vm1:
+        mlflow: 
+          tracking-uri: 'http://mlflow.mlflow.svc.cluster.local:5000'
+          s3-endpoint-url: 'http://mlflow-minio-service.mlflow.svc.cluster.local:9000'
+          aws-access-key-id: 'minioadmin'
+          aws-secret-access-key: 'minioadmin'
+          experiment-name: 'mlch-code-assistant-rag-pipeline'
+          run-name: 'internal-step-3-vm1-data-preprocess'
+          run-tags:
+            workflow-type: 'local-cloud'
+            pipeline-step: 'internal-data-preprocess'
+        qdrant: 
+          address: 'qdrant-service.storage.svc.cluster.local'
+          port: '7201'
+          api-key: 'qdrant_key'
+        process:
+          workers: 2
+          actors: 2
+          device-mode: 'cuda'
+          utilization-cost-sec: 0
+          utilization-cost-currency: ''
+          lock-location: 'central'
+        job:
+          main-file: 'main.py'
+          runtime:
+            working_dir: 'data_preprocess_rag_evaluation'
+            pip: 'c-vm1-requirements.txt'
+            env_vars:
+              HF_TOKEN: 'fill'
