@@ -99,7 +99,7 @@ def internal_dataset_creation(
                 table = {},
                 table_folder = '',
                 table_name = ''
-            )
+            ) 
 
         print('Completing MLflow run')
         mlflow_end_run(
@@ -152,12 +152,12 @@ if __name__ == "__main__":
     )
 
     time_storage_parameters = job_parameters['time-storage']
+    time_storage_parameters['lock-location'] = job_parameters['process']['lock-location']
     time_object_name = time_storage_parameters['object-name']
-
     cluster_name = job_parameters['cluster']
     step_name = job_parameters['step']
-    time_name = f'ray-evalution-dataset-creation-{cluster_name}-{step_name}'
-    '''
+    time_name = f'ray-internal-dataset-creation-{cluster_name}-{step_name}'
+    
     time_stored_1, time_index_1, time_name_1 = time_run_update(
         storage_client = work_swift_client,
         storage_parameters = time_storage_parameters,
@@ -167,7 +167,6 @@ if __name__ == "__main__":
         end_time = end_time,
         time_index = -1
     ) 
-    '''
-
+    
     total_time = round(end_time-start_time,5)
     print('Spent seconds', total_time)

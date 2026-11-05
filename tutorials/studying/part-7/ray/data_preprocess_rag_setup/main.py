@@ -13,6 +13,7 @@ from icebreaker.pararellism.division import division_split_input
 from icebreaker.qdrant.setup import qdrant_setup_client
 from icebreaker.qdrant.use import qdrant_create_collection
 from icebreaker.qdrant.utility import qdrant_hybrid_config
+from icebreaker.misc.time import time_run_update
 
 def internal_rag_setup(
     job_parameters: any
@@ -165,13 +166,12 @@ if __name__ == "__main__":
     )
 
     time_storage_parameters = job_parameters['time-storage']
+    time_storage_parameters['lock-location'] = job_parameters['process']['lock-location']
     time_object_name = time_storage_parameters['object-name']
-    '''
     cluster_name = job_parameters['cluster']
     step_name = job_parameters['step']
-    time_name = f'ray-rag-database-setup-{cluster_name}-{step_name}'
-    # This has race condition 
-    # You can use redis caching 
+    time_name = f'ray-internal-rag-setup-{cluster_name}-{step_name}'
+    
     time_stored_1, time_index_1, time_name_1 = time_run_update(
         storage_client = work_swift_client,
         storage_parameters = time_storage_parameters,
@@ -181,7 +181,6 @@ if __name__ == "__main__":
         end_time = end_time,
         time_index = -1
     ) 
-    '''
-
+    
     total_time = round(end_time-start_time,5)
     print('Spent seconds', total_time)

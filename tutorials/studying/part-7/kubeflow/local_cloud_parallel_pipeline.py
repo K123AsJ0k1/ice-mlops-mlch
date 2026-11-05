@@ -32,7 +32,6 @@ def global_distribution_step(
 
     track_inputs = distribute_step_inputs(
         storage_client = setup_swift_client,
-        storage = storage,
         integration = integration,
         processing = processing
     )

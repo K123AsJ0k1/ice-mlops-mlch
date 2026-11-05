@@ -63,8 +63,9 @@ def create_dataset(
     )  
     
     pandas_df = data_object[0]
-    print(worker_input)
+    #print(worker_input)
     range_split = worker_input[0].split('-')
+    #print(range_split)
     start_index = int(range_split[0])
     end_index = int(range_split[-1])
     dataset_name = input_storage_parameters['object-path'].split('/')[-1].split('.')[0]
@@ -235,14 +236,14 @@ def create_dataset(
 
     artifact_path_name = f'{name_start_prefix}-generator-metrics-{dataset_name}-'
 
-    artifact_temp_path_names = [
+    artifact_temp_path_name = [
         artifact_path_name
     ]
 
     artifact_path = storage_set_object_path(
         object_name = artifact_object_name,
         path_replacers = artifact_path_replacers,
-        path_names = artifact_temp_path_names,
+        path_names = artifact_temp_path_name,
         debug_prints = False
     )
 
@@ -273,14 +274,38 @@ def create_dataset(
         object_data = artifact,
         object_metadata = {}
     )
-    
-    table_path_name = f'{name_start_prefix}-generator-data-{trace_attributes['used-enviroment']}-{dataset_name}.parquet'
-    
-    output_storage_parameters['object-name'] = 'data'
-    output_storage_parameters['object-serialization'] = 'parquet'
-    output_storage_parameters['path-replacers'] = {
+
+    table_object_name = 'data'
+    table_path_replacers = {
         'name': 'GENERATED'
     }
+
+    table_path_name = f'{name_start_prefix}-generator-data-{trace_attributes['used-enviroment']}-{dataset_name}-'
+
+    table_temp_path_name = [
+        table_path_name
+    ]
+
+    artifact_path = storage_set_object_path(
+        object_name = table_object_name,
+        path_replacers = table_path_replacers,
+        path_names = table_temp_path_name,
+        debug_prints = False
+    )
+
+    object_list = objects_get_prefix_list(
+        storage_client = swift_client,
+        storage_parameters = output_storage_parameters,
+        path_prefix = artifact_path
+    )
+
+    next_index = len(object_list) + 1
+
+    table_path_name += f'run-{next_index}.parquet'
+        
+    output_storage_parameters['object-name'] = table_object_name
+    output_storage_parameters['object-serialization'] = 'parquet'
+    output_storage_parameters['path-replacers'] = table_path_replacers
     output_storage_parameters['path-names'] = [
         table_path_name
     ]
