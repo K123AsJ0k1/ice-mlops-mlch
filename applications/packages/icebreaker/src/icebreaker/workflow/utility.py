@@ -929,3 +929,143 @@ def workflow_create_synthetic_dataset(
         'dataset': synthetic_dataset,
         'id': dataset_id
     }
+
+def workflow_create_unified_dataset(
+    swift_client: any,
+    mlflow_client: any,
+    storage_parameters: dict,
+    dataset_paths: list,
+    dataset_details: dict,
+    experiment_name: str,
+    dataset_tags: dict,
+    dataset_user: str
+):
+    try: 
+        import json
+        import pandas as pd
+        from ..objects.use import objects_get_data, objects_store_data
+        from ..mlflow.use import mlflow_create_dataset, mlflow_get_or_create_experiment
+    except ImportError as e:
+        raise ImportError("workflow/utility failed to import", e)
+    
+    joined_rows = []
+    for dataset_path in dataset_paths:
+        data_object = objects_get_data(
+            swift_client = swift_client,
+            storage_parameters = {
+                'bucket-target': storage_parameters['bucket-target'],
+                'bucket-prefix': storage_parameters['bucket-prefix'],
+                'bucket-user': storage_parameters['bucket-user'],
+                'object-name': 'root',
+                'object-serialization': storage_parameters['object-serialization'],
+                'path-replacers': {
+                    'name': dataset_path
+                },
+                'path-names': [],
+                'debug-prints': True,
+                'lock-parameters': {},
+                'lock-location': None,
+                'overwrite': True
+            },
+            dict_format = False
+        ) 
+
+        object_df = data_object[0]
+        dataset_name = dataset_path.split('/')[-1].split('.')[0]
+        used_details = dataset_details[dataset_name]
+        wanted_columns = used_details['wanted-columns']
+        dataset_category = dataset_name.split('-')[1]
+        filtered_df = object_df[wanted_columns].copy()
+        renamed_columns = used_details['renamed-columns']
+        renamed_df = filtered_df.rename(columns = renamed_columns)
+        for index, row in renamed_df.iterrows():
+            modified_row = row.copy()
+            modified_row['category'] = dataset_category
+            if 'type-column' in used_details:
+                type_column = used_details['type-column']
+                type_value = 'empty'
+                if type_column == 'format':
+                    type_value = object_df[type_column].iloc[index]
+                if type_column == 'absolute-path':
+                    type_value = object_df[type_column].iloc[index].split('.')[-1]
+                    format_replacers = {
+                        'py': 'python',
+                        'sh': 'bash',
+                        'ipynb': 'markdown',
+                        'md': 'markdown',
+                        'txt': 'text'
+                    }
+                    if type_value in format_replacers:
+                        type_value = format_replacers[type_value] 
+                modified_row['type'] = type_value
+                if 'internal-material-ranks' in row:
+                    modified_row['internal-material-ranks'] = json.dumps(row['internal-material-ranks'])
+                if 'internal-material-references' in row:
+                    modified_row['internal-material-references'] = json.dumps(row['internal-material-references'])
+                if 'internal-material-paths' in row:
+                    modified_row['internal-material-paths'] = json.dumps(row['internal-material-paths'])
+            joined_rows.append(modified_row)
+
+    unified_dataset = pd.DataFrame(joined_rows)
+    unified_dataset = unified_dataset.reset_index(drop = True)
+    
+    dataset_name = 'unified-dataset'
+    path_name = f'{dataset_name}.parquet'
+    storage_parameters['object-name'] = 'data'
+    storage_parameters['object-serialization'] = 'parquet'
+    storage_parameters['path-replacers'] = {
+        'name': 'EVALUATION'
+    }
+    storage_parameters['path-names'] = [
+        path_name
+    ]
+    storage_parameters['debug-prints'] = True
+    storage_parameters['lock-parameters'] = {}
+    storage_parameters['lock-location'] = None
+    storage_parameters['overwrite'] = True
+
+    dataset_stored = objects_store_data(
+        swift_client = swift_client,
+        storage_parameters = storage_parameters,
+        object_data = unified_dataset,
+        object_metadata = {}
+    )
+
+    experiment_id = mlflow_get_or_create_experiment(
+        mlflow_client = mlflow_client,
+        name = experiment_name
+    ) 
+
+    formatted_records = []
+    for _, row in unified_dataset.iterrows():
+        formatted_records.append({
+            'inputs': {
+                'question': row['query']
+            },
+            'expectations': {
+                'ground-truth': row['solution'],
+                'source-path': row['source-path'],
+                'category': row['category'],
+                'type': row['type']
+            },
+            'source': {
+                'source_type': 'UNSPECIFIED'
+            },
+            'tags': {
+                'mlflow.user': dataset_user
+            }
+        })
+    
+    dataset_tags['mlflow.user'] = dataset_user
+    dataset_id = mlflow_create_dataset(
+        mlflow_client = mlflow_client,
+        dataset_name = dataset_name,
+        experiment_id = experiment_id,
+        dataset_tags = dataset_tags,
+        dataset_records = formatted_records
+    )
+
+    return {
+        'dataset': unified_dataset,
+        'id': dataset_id
+    }
