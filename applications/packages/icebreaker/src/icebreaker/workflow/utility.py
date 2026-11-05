@@ -801,143 +801,131 @@ def workflow_create_general_dataset(
         'id': dataset_id
     }
 
-def workflow_sample_datasets(
+def workflow_create_synthetic_dataset(
     swift_client: any,
-    fasttext_model: any,
-    magika_model: any,
+    mlflow_client: any,
     storage_parameters: dict,
-    sampling_details: dict
+    dataset_paths: list,
+    sample_amount: int,
+    experiment_name: str,
+    dataset_tags: dict,
+    dataset_user: str
 ):
-    try:
-        import time as t
+    try: 
         import pandas as pd
-        from ..objects.use import objects_get_data
-        from ..fast_text.use import fasttext_get_languages
-        from ..mgka.use import magika_get_formats
+        from ..objects.use import objects_get_data, objects_store_data
+        from ..mlflow.use import mlflow_create_dataset, mlflow_get_or_create_experiment
     except ImportError as e:
         raise ImportError("workflow/utility failed to import", e)
     
-    start_time = t.time()
-
-    name_prefix = sampling_details['prefix']
-    data_serialization = sampling_details['serialization']
-    dataset_parameters = sampling_details['parameters']
-    accepted_languages = sampling_details['accepted-languages']
-    accepted_formats = sampling_details['accepted-formats']
-    
-    sample_dfs = []
-    for name, parameters in dataset_parameters.items():
-        dataset_name = f'{name_prefix}-{name}'
-        path_name = f'{dataset_name}.{data_serialization}'
-        storage_parameters['path-names'] = [
-            path_name
-        ]
-
+    joined_rows = []
+    sampled = 0
+    for dataset_path in dataset_paths:
         data_object = objects_get_data(
             swift_client = swift_client,
-            storage_parameters = storage_parameters,
+            storage_parameters = {
+                'bucket-target': storage_parameters['bucket-target'],
+                'bucket-prefix': storage_parameters['bucket-prefix'],
+                'bucket-user': storage_parameters['bucket-user'],
+                'object-name': 'root',
+                'object-serialization': storage_parameters['object-serialization'],
+                'path-replacers': {
+                    'name': dataset_path
+                },
+                'path-names': [],
+                'debug-prints': True,
+                'lock-parameters': {},
+                'lock-location': None,
+                'overwrite': True
+            },
             dict_format = False
-        )  
+        ) 
 
-        dataset_data = data_object[0]
-        max_samples = parameters['max-samples']
-        if parameters['type'] == 'complete':
-            for key, value in max_samples.items():
-                if key == parameters['format-default-label']:
-                    sample_df = dataset_data.head(value).copy()
-                    sample_df['language'] = parameters['language-default-label']
-                    sample_df['language-confidence'] = 1.0
-                    sample_df['format'] = key
-                    sample_df['format-confidence'] = 1.0
-                    sample_df['format-counts'] = {}
-                    sample_df['dataset'] = dataset_name
-                    sample_df['dataset-idx'] = list(range(value))
-                    sample_dfs.append(sample_df)
+        object_df = data_object[0]
+        for index, row in object_df.iterrows():
+            if sampled < sample_amount:
+                modified_row = row.copy()
+                modified_row['source-index'] = index 
+                modified_row['source-path'] = dataset_path
+                joined_rows.append(modified_row)
+                sampled += 1
 
-        if parameters['type'] == 'mixed':
-            search_limit = parameters['search-limit']
-            print(f'Search limit: {search_limit}')
-            unfiltered_df = dataset_data.head(search_limit)
+    synthetic_dataset = pd.DataFrame(joined_rows)
+    synthetic_dataset = synthetic_dataset.reset_index(drop = True)
 
-            language_column = parameters['language-column']
-            language_default_label = parameters['language-default-label']
-            language_confidence_threshold = parameters['language-confidence-threshold']
+    dataset_name = 'internal-synthetic-dataset'
+    path_name = f'{dataset_name}.parquet'
+    storage_parameters['object-name'] = 'data'
+    storage_parameters['object-serialization'] = 'parquet'
+    storage_parameters['path-replacers'] = {
+        'name': 'EVALUATION'
+    }
+    storage_parameters['path-names'] = [
+        path_name
+    ]
+    storage_parameters['debug-prints'] = True
+    storage_parameters['lock-parameters'] = {}
+    storage_parameters['lock-location'] = None
+    storage_parameters['overwrite'] = True
 
-            predicted_languages = fasttext_get_languages(
-                model = fasttext_model,
-                texts = unfiltered_df[language_column].tolist(),
-                default_label = language_default_label,
-                confidence_threshold = language_confidence_threshold,
-                label_replacer = {}
-            )
-            
-            print(f'Language defaults: {predicted_languages['default-amount']}')
+    dataset_stored = objects_store_data(
+        swift_client = swift_client,
+        storage_parameters = storage_parameters,
+        object_data = synthetic_dataset,
+        object_metadata = {}
+    )
 
-            format_column = parameters['format-column']
-            format_default_label = parameters['format-default-label']
-            format_confidence_threshold = parameters['format-confidence-threshold']
+    experiment_id = mlflow_get_or_create_experiment(
+        mlflow_client = mlflow_client,
+        name = experiment_name
+    ) 
 
-            predicted_formats = magika_get_formats(
-                model = magika_model,
-                texts = unfiltered_df[format_column].tolist(),
-                default_label = format_default_label,
-                confidence_threshold = format_confidence_threshold,
-                label_replacer = {}
-            )
-            
-            print(f'Format defaults: {predicted_formats['default-amount']}')
-            wanted_rows = []
-            selected_languages = []
-            selected_language_confidences = []
-            selected_formats = []
-            selected_format_confidences = []
-            selected_format_counts = []
-            
-            row_idx = 0
-            for language_tuple in predicted_languages['predictions']:
-                predicted_language = language_tuple[0]
-                prediction_confidence = language_tuple[1]
-                if predicted_language in accepted_languages:
-                    if len(wanted_rows) < max_samples['general']:
-                        format_tuple = predicted_formats['predictions'][row_idx]
-                        format_label = format_tuple[0]
-                        format_confidence = format_tuple[1]
-                        format_counts = format_tuple[2]
+    formatted_records = []
+    for _, row in synthetic_dataset.iterrows():
+        formatted_records.append({
+            'inputs': {
+                'question': row['question']
+            },
+            'expectations': {
+                'reasoning': row['reasoning'],
+                'ground-truth': row['ground-truth-answer'],
+                'relevant-used-references': row['relevant-used-references'],
+                'relevant-used-paths': row['relevant-used-paths'],
+                'dataset-name': row['dataset-name'],
+                'total-latency-sec': row['total-latency-sec'],
+                'part': row['part'],
+                'chapter': row['chapter'],
+                'idx': row['idx'],
+                'characters': row['characters'],
+                'relevance': row['relevance'],
+                'weights': row['weights'],
+                'variant': row['prompt-variant'],
+                'prompt-tokens': row['prompt-tokens'],
+                'completion-tokens': row['completion-tokens'],
+                'model-name': row['completion-tokens'],
+                'action': row['action'],
+                'category': row['category'],
+                'source-path': row['source-path'],
+                'source-index': row['source-index']
+            },
+            'source': {
+                'source_type': 'UNSPECIFIED'
+            },
+            'tags': {
+                'mlflow.user': dataset_user
+            }
+        })
+    
+    dataset_tags['mlflow.user'] = dataset_user
+    dataset_id = mlflow_create_dataset(
+        mlflow_client = mlflow_client,
+        dataset_name = dataset_name,
+        experiment_id = experiment_id,
+        dataset_tags = dataset_tags,
+        dataset_records = formatted_records
+    )
 
-                        #correct_formats = False
-                        #for format_type in parameters[]
-
-                        # Filter txt
-                        # Filter anything that isn't sh, bash or python
-
-                        #wanted_rows.append(row_idx)
-                        #selected_languages.append(predicted_language)
-                        #selected_language_confidences.append(prediction_confidence)
-                        #selected_formats.append(format_tuple[0])
-                        #selected_format_confidences.append(format_tuple[1])
-                        #selected_format_counts.append(format_tuple[2])
-                    else:
-                        break
-                row_idx += 1
-            
-            sample_df = unfiltered_df.iloc[wanted_rows].copy()
-            print(selected_languages)
-            print(selected_format_counts)
-            sample_df['language'] = selected_languages
-            sample_df['language-confidence'] = selected_language_confidences
-            sample_df['format'] = selected_formats
-            sample_df['format-confidence'] = selected_format_confidences
-            sample_df['format-counts'] = selected_format_counts
-            sample_df['dataset'] = dataset_name
-            sample_df['dataset-idx'] = wanted_rows 
-            sample_dfs.append(sample_df)           
-
-    end_time = t.time()
-    total_time = round(end_time-start_time,5)
-    print('Spent seconds', total_time)
-
-    complete_dataframe = pd.concat(sample_dfs, ignore_index = True)
-
-    return complete_dataframe
-
-
+    return {
+        'dataset': synthetic_dataset,
+        'id': dataset_id
+    }
