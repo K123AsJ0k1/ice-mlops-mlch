@@ -1,7 +1,7 @@
 import ray
 
 @ray.remote(
-    num_cpus = 1,
+    num_cpus = 0.2,
     num_gpus = 0.1,
     memory = 0.2 * 1024 * 1024 * 1024
 )
@@ -19,15 +19,19 @@ class Retrieval:
             qdrant_parameters = qdrant_parameters
         )
         device_mode = retrieval_parameters['device-mode']
+
+        print(f'Using device mode: {device_mode}')
         
         dense_model_name = retrieval_parameters['dense-model-name']
+        print(f'Using dense model: {dense_model_name}')
         self.dense_model = SentenceTransformer(
             dense_model_name, 
             device = device_mode
         )
         self.dense_model_name = dense_model_name
 
-        sparse_model_name = retrieval_parameters['sparse-model-name:']
+        sparse_model_name = retrieval_parameters['sparse-model-name']
+        print(f'Using sparse model: {sparse_model_name}')
         self.sparse_model = SparseEncoder(
             sparse_model_name,
             device = device_mode

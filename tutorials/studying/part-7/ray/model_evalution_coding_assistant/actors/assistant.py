@@ -1,7 +1,7 @@
 import ray
  
 @ray.remote(
-    num_cpus = 1,
+    num_cpus = 0.4,
     num_gpus = 0.5,
     memory = 0.8 * 1024 * 1024 * 1024
 ) 

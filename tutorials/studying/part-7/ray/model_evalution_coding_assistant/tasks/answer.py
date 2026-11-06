@@ -14,7 +14,7 @@ from icebreaker.objects.use import objects_store_data, objects_get_prefix_list
 from icebreaker.storage.management import storage_set_object_path
 
 @ray.remote(
-    num_cpus = 1,
+    num_cpus = 0.4,
     memory = 0.2 * 1024 * 1024 * 1024
 ) 
 def answer_dataset(
@@ -84,10 +84,10 @@ def answer_dataset(
     
     for row in processed_subset.to_dict(orient = 'records'):
         for name, metadata in assistant_prompts.items():
-            inputs_data = row['inputs']
-            expectations_data = row['expectations']
-            query_text = inputs_data['question']
-            query_weights = json.loads(expectations_data['weights'])
+            #inputs_data = row['inputs']
+            #expectations_data = row['expectations']
+            query_text = row['query']
+            query_weights = json.loads(row['internal-material-ranks'])
 
             # Remember to put multiple spans for MLflow traces
             

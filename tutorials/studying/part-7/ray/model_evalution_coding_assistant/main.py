@@ -89,6 +89,7 @@ def coding_assistant_process(
             controller_ref = controller_ref,
             swift_parameters = swift_parameters,
             mlflow_parameters = mlflow_parameters,
+            retrieval_parameters = retrieval_parameters,
             experiment_id = experiment_id,
             input_storage_parameters = input_storage_parameters,
             output_storage_parameters = output_storage_parameters,
@@ -133,7 +134,7 @@ def coding_assistant_process(
         
         return True
     except Exception as e:
-        print(f'Internal dataset creation: {e}')
+        print(f'Coding assistant process: {e}')
         return False
 
 if __name__ == "__main__":
@@ -146,7 +147,14 @@ if __name__ == "__main__":
         'llama-cpp-python',
         'pandas',
         'pyarrow',
-        'numpy'
+        'numpy',
+        'torch',
+        'torchvision',
+        'transformers',
+        'sentence-transformers',
+        'huggingface-hub',
+        'httpx',
+        'brotli'
     ]
     for pkg_name in check_packages:
         try:
