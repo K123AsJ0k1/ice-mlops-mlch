@@ -981,6 +981,12 @@ def workflow_create_unified_dataset(
         for index, row in renamed_df.iterrows():
             modified_row = row.copy()
             modified_row['category'] = dataset_category
+            if not 'internal-material-ranks' in row:
+                modified_row['internal-material-ranks'] = json.dumps({})
+            if not 'internal-material-references' in row:
+                modified_row['internal-material-references'] = json.dumps({})
+            if not 'internal-material-paths' in row:
+                modified_row['internal-material-paths'] = json.dumps({})
             if 'type-column' in used_details:
                 type_column = used_details['type-column']
                 type_value = 'empty'
