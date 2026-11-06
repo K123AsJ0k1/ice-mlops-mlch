@@ -96,9 +96,10 @@ def answer_dataset(
 
     trace_name = mlflow_parameters['trace-name']
     trace_tags = mlflow_parameters['trace-tags']
-    
+    request_index = 0
     for row in processed_subset.to_dict(orient = 'records'):
         for name, metadata in assistant_prompts.items():
+            request_index += 1
             query_text = row['query']
             query_weights = json.loads(row['internal-material-ranks'])
             print('Starting trace')
@@ -130,68 +131,237 @@ def answer_dataset(
                 'verbose': 0, 
                 'out-of-scope': 0
             }
+            print(f'Request index: {request_index}')
             print(f'Prompt variant: {name}')
-            trace_output = {}
-            if 'pe-rag-bc' in name:
-                print('Checking the input with behavior controller')
-                print('Starting span')
-                input_bc_span = mlflow_start_span(
-                    mlflow_client = mlflow_client, 
-                    span_name = 'behavior-controller-input-check',
-                    trace_id = trace_id,
-                    span_id = root_span_id
-                )
+            trace_output = {
+                'response': 'failed'
+            }
+            try:
+                if 'pe-rag-bc' in name:
+                    print('Checking the input with behavior controller')
+                    print('Starting span')
+                    input_bc_span = mlflow_start_span(
+                        mlflow_client = mlflow_client, 
+                        span_name = 'behavior-controller-input-check',
+                        trace_id = trace_id,
+                        span_id = root_span_id
+                    )
 
-                input_bc_span_id = input_bc_span.span_id
+                    input_bc_span_id = input_bc_span.span_id
 
-                controller_prompt = mlflow_get_prompt(
-                    mlflow_client = mlflow_client,
-                    prompt_name = controller_prompts['input']['name'],
-                    prompt_version = controller_prompts['input']['version'],
-                    prompt_replacements = {
-                        'query': query_text
+                    controller_prompt = mlflow_get_prompt(
+                        mlflow_client = mlflow_client,
+                        prompt_name = controller_prompts['input']['name'],
+                        prompt_version = controller_prompts['input']['version'],
+                        prompt_replacements = {
+                            'query': query_text
+                        }
+                    )
+
+                    sent_prompt = controller_prompt['prompt']
+                    controller_config = controller_prompt['config']
+
+                    controller_input = {
+                        'messages': sent_prompt
                     }
-                )
 
-                sent_prompt = controller_prompt['prompt']
-                controller_config = controller_prompt['config']
+                    input_bc_span.set_attributes({f'request.{k}': v for k, v in controller_config.items()})
 
-                controller_input = {
-                    'messages': sent_prompt
-                }
+                    input_bc_span.set_inputs(controller_input)
 
-                input_bc_span.set_attributes({f'request.{k}': v for k, v in controller_config.items()})
+                    input_controller_request = controller_input | controller_config
 
-                input_bc_span.set_inputs(controller_input)
+                    controller_request_ref = ray.put(input_controller_request)
 
-                input_controller_request = controller_input | controller_config
+                    input_controller_ref = controller_ref.generate_output.remote(
+                        request = controller_request_ref
+                    )
 
-                controller_request_ref = ray.put(input_controller_request)
+                    input_controller_payload = ray.get(input_controller_ref)
+                    print(f'Input controller request status: {input_controller_payload['status']}')
+                    if input_controller_payload['status'] == 'success':
+                        try:
+                            input_controller_metrics = input_controller_payload['metrics']
+                            input_controller_output = input_controller_payload['response']
 
-                input_controller_ref = controller_ref.generate_output.remote(
-                    request = controller_request_ref
-                )
+                            input_bc_span.set_attributes(
+                                mlflow_token_usage(
+                                    input_tokens = input_controller_metrics['prompt-tokens'], 
+                                    output_tokens = input_controller_metrics['completion-tokens']
+                                )
+                            )
+                
+                            input_cost = trace_attributes['utilization-cost-sec'] * input_controller_metrics['prompt-processing-time-sec']
+                            output_cost = trace_attributes['utilization-cost-sec'] * input_controller_metrics['generation-time-sec']
+                            
+                            model_name = f'{trace_attributes['repo-id']}-{trace_attributes['file-name']}'
+                            model_name = model_name.replace('*','')
+                            input_bc_span.set_attributes(
+                                mlflow_llm_cost(
+                                    model_provider = trace_attributes['inference-framework'], 
+                                    model_name = model_name, 
+                                    input_cost = input_cost, 
+                                    output_cost = output_cost
+                                )
+                            )
+                
+                            input_bc_span.set_attributes(
+                                mlflow_llm_effiency(
+                                    prompt_tokens = input_controller_metrics['prompt-tokens'],
+                                    completion_tokens = input_controller_metrics['completion-tokens'],
+                                    total_tokens = input_controller_metrics['total-tokens'],
+                                    prompt_processing_time = input_controller_metrics['prompt-processing-time-sec'],
+                                    generation_time = input_controller_metrics['generation-time-sec'],
+                                    input_tokens_per_sec = input_controller_metrics['input-tokens-per-sec'],
+                                    output_tokens_per_sec = input_controller_metrics['output-tokens-per-sec'],
+                                    total_latency = input_controller_metrics['total-latency-sec'],
+                                    time_to_first_token = input_controller_metrics['time-to-first-token-sec'],
+                                    tokens_per_second = input_controller_metrics['tokens-per-second'],
+                                    time_per_output_token = input_controller_metrics['time-per-output-token-sec'],
+                                    input_to_output_ratio = input_controller_metrics['input-to-output-ratio'],
+                                    context_window_utilization = input_controller_metrics['context-window-utilization-pct'],
+                                )
+                            )
 
-                input_controller_payload = ray.get(input_controller_ref)
-                print(f'Request status: {input_controller_payload['status']}')
-                if input_controller_payload['status'] == 'success':
-                    try:
-                        input_controller_metrics = input_controller_payload['metrics']
-                        input_controller_output = input_controller_payload['response']
+                            input_behavior = controller_extract_output(
+                                output = input_controller_output
+                            )
+                            input_bc_span.set_outputs({
+                                'output': input_behavior
+                            })
 
-                        input_bc_span.set_attributes(
+                            mlflow_end_span(
+                                mlflow_client = mlflow_client,
+                                child_trace_id = trace_id,
+                                child_span_id = input_bc_span_id
+                            )
+                            print('Ending span')
+                        except Exception:
+                            input_behavior = {
+                                'reasoning': 'Malformed JSON returned by guardrail', 
+                                'secret-leak': 0, 
+                                'off-topic': 0
+                            }
+                print(f'Input behavior: {input_behavior}')
+                if input_behavior.get('secret-leak') == 0 or input_behavior.get('off-topic') == 0:
+                    if 'rag' in name:
+                        print('Using RAG')
+                        print('Starting span')
+                        retrieval_span = mlflow_start_span(
+                            mlflow_client = mlflow_client, 
+                            span_name = 'retrieval-augmented-generation-query',
+                            trace_id = trace_id,
+                            span_id = root_span_id
+                        )
+
+                        retrieval_span_id = retrieval_span.span_id
+
+                        retrieval_span.set_inputs({
+                            'query': query_text
+                        })
+
+                        retrieval_span.set_attributes({f'request.{k}': v for k, v in retrieval_parameters.items()})
+
+                        retrieval_query = [query_text]
+                        retrieval_query_ref = ray.put(retrieval_query)
+                        retrieval_payload_ref = retrieval_ref.batch_generate_queries.remote(
+                            key_name = dataset_name,
+                            query_type = query_type,
+                            collection_name = collection_name,
+                            text_query_batch = retrieval_query_ref,
+                            relevant_weights_batch = query_weights,
+                            relevance_threshold = relevance_threshold,
+                            query_limit = query_limit,
+                            fusion_limit = fusion_limit,
+                            batch_size = batch_size
+                        )
+                        retrieval_payload = ray.get(retrieval_payload_ref)
+                        
+                        created_context = assistant_format_context(
+                            query_results = retrieval_payload['results'],
+                            wrapper_tag = 'context',
+                            metadata_keys = [
+                                'part',
+                                'document',
+                                'chapter',
+                                'index',
+                                'absolute-path',
+                                'relevance'
+                            ],
+                            material_key = 'ref-material',
+                            path_key = 'ref-paths',
+                            content_key = 'content'
+                        )
+
+                        retrieval_span.set_outputs({
+                            'created-context': created_context
+                        })
+
+                        print('Ending span')
+                        mlflow_end_span(
+                            mlflow_client = mlflow_client,
+                            child_trace_id = trace_id,
+                            child_span_id = retrieval_span_id
+                        )
+
+                        assistant_prompt_replacements['content'] = created_context
+
+                    print('Sending question to coding assistant')
+                    print('Starting span')
+                    assistant_span = mlflow_start_span(
+                        mlflow_client = mlflow_client, 
+                        span_name = 'coding-assistant-request',
+                        trace_id = trace_id,
+                        span_id = root_span_id
+                    )
+
+                    assistant_span_id = assistant_span.span_id
+                
+                    assistant_prompt = mlflow_get_prompt(
+                        mlflow_client = mlflow_client,
+                        prompt_name = name,
+                        prompt_version = metadata['version'],
+                        prompt_replacements = assistant_prompt_replacements
+                    )
+
+                    sent_prompt = assistant_prompt['prompt']
+                    assistant_config = assistant_prompt['config']
+
+                    assistant_span_input = {
+                        'messages': sent_prompt
+                    }
+
+                    assistant_span.set_inputs(assistant_span_input)
+
+                    assistant_span.set_attributes({f'request.{k}': v for k, v in assistant_config.items()})
+
+                    coding_assistant_request = assistant_span_input | assistant_config
+
+                    coding_assistant_request_ref = ray.put(coding_assistant_request)
+                    
+                    coding_assistant_ref = assistant_ref.generate_output.remote(
+                        request = coding_assistant_request_ref 
+                    )
+
+                    coding_assistant_payload = ray.get(coding_assistant_ref)
+                    print(f'Coding assistant request status: {coding_assistant_payload['status']}')
+                    if coding_assistant_payload['status'] == 'success':
+                        coding_assistant_metrics = coding_assistant_payload['metrics']
+                        coding_assistant_output = coding_assistant_payload['response']
+
+                        assistant_span.set_attributes(
                             mlflow_token_usage(
-                                input_tokens = input_controller_metrics['prompt-tokens'], 
-                                output_tokens = input_controller_metrics['completion-tokens']
+                                input_tokens = coding_assistant_metrics['prompt-tokens'], 
+                                output_tokens = coding_assistant_metrics['completion-tokens']
                             )
                         )
             
-                        input_cost = trace_attributes['utilization-cost-sec'] * input_controller_metrics['prompt-processing-time-sec']
-                        output_cost = trace_attributes['utilization-cost-sec'] * input_controller_metrics['generation-time-sec']
+                        input_cost = trace_attributes['utilization-cost-sec'] * coding_assistant_metrics['prompt-processing-time-sec']
+                        output_cost = trace_attributes['utilization-cost-sec'] * coding_assistant_metrics['generation-time-sec']
                         
                         model_name = f'{trace_attributes['repo-id']}-{trace_attributes['file-name']}'
                         model_name = model_name.replace('*','')
-                        input_bc_span.set_attributes(
+                        assistant_span.set_attributes(
                             mlflow_llm_cost(
                                 model_provider = trace_attributes['inference-framework'], 
                                 model_name = model_name, 
@@ -200,337 +370,173 @@ def answer_dataset(
                             )
                         )
             
-                        input_bc_span.set_attributes(
+                        assistant_span.set_attributes(
                             mlflow_llm_effiency(
-                                prompt_tokens = input_controller_metrics['prompt-tokens'],
-                                completion_tokens = input_controller_metrics['completion-tokens'],
-                                total_tokens = input_controller_metrics['total-tokens'],
-                                prompt_processing_time = input_controller_metrics['prompt-processing-time-sec'],
-                                generation_time = input_controller_metrics['generation-time-sec'],
-                                input_tokens_per_sec = input_controller_metrics['input-tokens-per-sec'],
-                                output_tokens_per_sec = input_controller_metrics['output-tokens-per-sec'],
-                                total_latency = input_controller_metrics['total-latency-sec'],
-                                time_to_first_token = input_controller_metrics['time-to-first-token-sec'],
-                                tokens_per_second = input_controller_metrics['tokens-per-second'],
-                                time_per_output_token = input_controller_metrics['time-per-output-token-sec'],
-                                input_to_output_ratio = input_controller_metrics['input-to-output-ratio'],
-                                context_window_utilization = input_controller_metrics['context-window-utilization-pct'],
+                                prompt_tokens = coding_assistant_metrics['prompt-tokens'],
+                                completion_tokens = coding_assistant_metrics['completion-tokens'],
+                                total_tokens = coding_assistant_metrics['total-tokens'],
+                                prompt_processing_time = coding_assistant_metrics['prompt-processing-time-sec'],
+                                generation_time = coding_assistant_metrics['generation-time-sec'],
+                                input_tokens_per_sec = coding_assistant_metrics['input-tokens-per-sec'],
+                                output_tokens_per_sec = coding_assistant_metrics['output-tokens-per-sec'],
+                                total_latency = coding_assistant_metrics['total-latency-sec'],
+                                time_to_first_token = coding_assistant_metrics['time-to-first-token-sec'],
+                                tokens_per_second = coding_assistant_metrics['tokens-per-second'],
+                                time_per_output_token = coding_assistant_metrics['time-per-output-token-sec'],
+                                input_to_output_ratio = coding_assistant_metrics['input-to-output-ratio'],
+                                context_window_utilization = coding_assistant_metrics['context-window-utilization-pct'],
                             )
                         )
 
-                        input_behavior = controller_extract_output(
-                            output = input_controller_output
-                        )
-                        input_bc_span.set_outputs({
-                            'output': input_behavior
+                        assistant_span.set_outputs({
+                            'output': coding_assistant_output
                         })
 
+                        print('Ending span')
                         mlflow_end_span(
                             mlflow_client = mlflow_client,
                             child_trace_id = trace_id,
-                            child_span_id = input_bc_span_id
+                            child_span_id = assistant_span_id
                         )
-                        print('Ending span')
-                    except Exception:
-                        input_behavior = {
-                            'reasoning': 'Malformed JSON returned by guardrail', 
-                            'secret-leak': 0, 
-                            'off-topic': 0
+
+                        trace_output = {
+                            'response': coding_assistant_output
                         }
-            print(f'Input behavior: {input_behavior}')
-            if input_behavior.get('secret-leak') == 0 or input_behavior.get('off-topic') == 0:
-                if 'rag' in name:
-                    print('Using RAG')
-                    print('Starting span')
-                    retrieval_span = mlflow_start_span(
-                        mlflow_client = mlflow_client, 
-                        span_name = 'retrieval-augmented-generation-query',
-                        trace_id = trace_id,
-                        span_id = root_span_id
-                    )
 
-                    retrieval_span_id = retrieval_span.span_id
+                        if 'pe-rag-bc' in name:
+                            print('Checking output with behavior controller')
+                            print('Starting span')
+                            output_bc_span = mlflow_start_span(
+                                mlflow_client = mlflow_client, 
+                                span_name = 'behavior-controller-output-check',
+                                trace_id = trace_id,
+                                span_id = root_span_id
+                            )
 
-                    retrieval_span.set_inputs({
-                        'query': query_text
-                    })
+                            output_bc_span_id = output_bc_span.span_id
 
-                    retrieval_span.set_attributes({f'request.{k}': v for k, v in retrieval_parameters.items()})
+                            controller_prompt = mlflow_get_prompt(
+                                mlflow_client = mlflow_client,
+                                prompt_name = controller_prompts['output']['name'],
+                                prompt_version = controller_prompts['output']['version'],
+                                prompt_replacements = {
+                                    'query': query_text,
+                                    'output': coding_assistant_output
+                                }
+                            )
 
-                    retrieval_query = [query_text]
-                    retrieval_query_ref = ray.put(retrieval_query)
-                    retrieval_payload_ref = retrieval_ref.batch_generate_queries.remote(
-                        key_name = dataset_name,
-                        query_type = query_type,
-                        collection_name = collection_name,
-                        text_query_batch = retrieval_query_ref,
-                        relevant_weights_batch = query_weights,
-                        relevance_threshold = relevance_threshold,
-                        query_limit = query_limit,
-                        fusion_limit = fusion_limit,
-                        batch_size = batch_size
-                    )
-                    retrieval_payload = ray.get(retrieval_payload_ref)
-                    
-                    created_context = assistant_format_context(
-                        query_results = retrieval_payload['results'],
-                        wrapper_tag = 'context',
-                        metadata_keys = [
-                            'part',
-                            'document',
-                            'chapter',
-                            'index',
-                            'absolute-path',
-                            'relevance'
-                        ],
-                        material_key = 'ref-material',
-                        path_key = 'ref-paths',
-                        content_key = 'content'
-                    )
+                            sent_prompt = controller_prompt['prompt']
+                            controller_config = controller_prompt['config']
 
-                    retrieval_span.set_outputs({
-                        'created-context': created_context
-                    })
-
-                    print('Ending span')
-                    mlflow_end_span(
-                        mlflow_client = mlflow_client,
-                        child_trace_id = trace_id,
-                        child_span_id = retrieval_span_id
-                    )
-
-                    assistant_prompt_replacements['content'] = created_context
-
-                print('Sending question to coding assistant')
-                print('Starting span')
-                assistant_span = mlflow_start_span(
-                    mlflow_client = mlflow_client, 
-                    span_name = 'coding-assistant-request',
-                    trace_id = trace_id,
-                    span_id = root_span_id
-                )
-
-                assistant_span_id = assistant_span.span_id
+                            controller_input = {
+                                'messages': sent_prompt 
+                            }
             
-                assistant_prompt = mlflow_get_prompt(
-                    mlflow_client = mlflow_client,
-                    prompt_name = name,
-                    prompt_version = metadata['version'],
-                    prompt_replacements = assistant_prompt_replacements
-                )
+                            output_bc_span.set_attributes({f'request.{k}': v for k, v in controller_config.items()})
+            
+                            output_bc_span.set_inputs(controller_input)
+            
+                            output_controller_request = controller_input | controller_config
+            
+                            controller_request_ref = ray.put(output_controller_request)
+            
+                            output_controller_ref = controller_ref.generate_output.remote(
+                                request = controller_request_ref
+                            )
+            
+                            output_controller_payload = ray.get(output_controller_ref)
+                            print(f'Output controller request status: {output_controller_payload['status']}')
+                            if output_controller_payload['status'] == 'success':
+                                try:
+                                    output_controller_metrics = output_controller_payload['metrics']
+                                    output_controller_output = output_controller_payload['response']
+            
+                                    output_bc_span.set_attributes(
+                                        mlflow_token_usage(
+                                            input_tokens = output_controller_metrics['prompt-tokens'], 
+                                            output_tokens = output_controller_metrics['completion-tokens']
+                                        )
+                                    )
+                        
+                                    input_cost = trace_attributes['utilization-cost-sec'] * output_controller_metrics['prompt-processing-time-sec']
+                                    output_cost = trace_attributes['utilization-cost-sec'] * output_controller_metrics['generation-time-sec']
+                                    
+                                    model_name = f'{trace_attributes['repo-id']}-{trace_attributes['file-name']}'
+                                    model_name = model_name.replace('*','')
+                                    output_bc_span.set_attributes(
+                                        mlflow_llm_cost(
+                                            model_provider = trace_attributes['inference-framework'], 
+                                            model_name = model_name, 
+                                            input_cost = input_cost, 
+                                            output_cost = output_cost
+                                        )
+                                    )
+                        
+                                    output_bc_span.set_attributes(
+                                        mlflow_llm_effiency(
+                                            prompt_tokens = output_controller_metrics['prompt-tokens'],
+                                            completion_tokens = output_controller_metrics['completion-tokens'],
+                                            total_tokens = output_controller_metrics['total-tokens'],
+                                            prompt_processing_time = output_controller_metrics['prompt-processing-time-sec'],
+                                            generation_time = output_controller_metrics['generation-time-sec'],
+                                            input_tokens_per_sec = output_controller_metrics['input-tokens-per-sec'],
+                                            output_tokens_per_sec = output_controller_metrics['output-tokens-per-sec'],
+                                            total_latency = output_controller_metrics['total-latency-sec'],
+                                            time_to_first_token = output_controller_metrics['time-to-first-token-sec'],
+                                            tokens_per_second = output_controller_metrics['tokens-per-second'],
+                                            time_per_output_token = output_controller_metrics['time-per-output-token-sec'],
+                                            input_to_output_ratio = output_controller_metrics['input-to-output-ratio'],
+                                            context_window_utilization = output_controller_metrics['context-window-utilization-pct'],
+                                        )
+                                    )
 
-                sent_prompt = assistant_prompt['prompt']
-                assistant_config = assistant_prompt['config']
+                                    output_behavior = controller_extract_output(
+                                        output = output_controller_output
+                                    )
 
-                assistant_span_input = {
-                    'messages': sent_prompt
-                }
-
-                assistant_span.set_inputs(assistant_span_input)
-
-                assistant_span.set_attributes({f'request.{k}': v for k, v in assistant_config.items()})
-
-                coding_assistant_request = assistant_span_input | assistant_config
-
-                coding_assistant_request_ref = ray.put(coding_assistant_request)
-                
-                coding_assistant_ref = assistant_ref.generate_output.remote(
-                    request = coding_assistant_request_ref 
-                )
-
-                coding_assistant_payload = ray.get(coding_assistant_ref)
-                print(f'Request status: {coding_assistant_payload['status']}')
-                if coding_assistant_payload['status'] == 'success':
-                    coding_assistant_metrics = coding_assistant_payload['metrics']
-                    coding_assistant_output = coding_assistant_payload['response']
-
-                    assistant_span.set_attributes(
-                        mlflow_token_usage(
-                            input_tokens = coding_assistant_metrics['prompt-tokens'], 
-                            output_tokens = coding_assistant_metrics['completion-tokens']
-                        )
-                    )
-        
-                    input_cost = trace_attributes['utilization-cost-sec'] * coding_assistant_metrics['prompt-processing-time-sec']
-                    output_cost = trace_attributes['utilization-cost-sec'] * coding_assistant_metrics['generation-time-sec']
-                    
-                    model_name = f'{trace_attributes['repo-id']}-{trace_attributes['file-name']}'
-                    model_name = model_name.replace('*','')
-                    assistant_span.set_attributes(
-                        mlflow_llm_cost(
-                            model_provider = trace_attributes['inference-framework'], 
-                            model_name = model_name, 
-                            input_cost = input_cost, 
-                            output_cost = output_cost
-                        )
-                    )
-        
-                    assistant_span.set_attributes(
-                        mlflow_llm_effiency(
-                            prompt_tokens = coding_assistant_metrics['prompt-tokens'],
-                            completion_tokens = coding_assistant_metrics['completion-tokens'],
-                            total_tokens = coding_assistant_metrics['total-tokens'],
-                            prompt_processing_time = coding_assistant_metrics['prompt-processing-time-sec'],
-                            generation_time = coding_assistant_metrics['generation-time-sec'],
-                            input_tokens_per_sec = coding_assistant_metrics['input-tokens-per-sec'],
-                            output_tokens_per_sec = coding_assistant_metrics['output-tokens-per-sec'],
-                            total_latency = coding_assistant_metrics['total-latency-sec'],
-                            time_to_first_token = coding_assistant_metrics['time-to-first-token-sec'],
-                            tokens_per_second = coding_assistant_metrics['tokens-per-second'],
-                            time_per_output_token = coding_assistant_metrics['time-per-output-token-sec'],
-                            input_to_output_ratio = coding_assistant_metrics['input-to-output-ratio'],
-                            context_window_utilization = coding_assistant_metrics['context-window-utilization-pct'],
-                        )
-                    )
-
-                    assistant_span.set_outputs({
-                        'output': coding_assistant_output
-                    })
-
-                    print('Ending span')
-                    mlflow_end_span(
-                        mlflow_client = mlflow_client,
-                        child_trace_id = trace_id,
-                        child_span_id = assistant_span_id
-                    )
+                                    output_bc_span.set_outputs({
+                                        'output': output_behavior
+                                    })
+                                    print('Ending span')
+                                    mlflow_end_span(
+                                        mlflow_client = mlflow_client,
+                                        child_trace_id = trace_id,
+                                        child_span_id = output_bc_span_id
+                                    )
+                                except Exception:
+                                    output_behavior = {
+                                        'reasoning': 'Malformed JSON returned by guardrail', 
+                                        'irrelevant': 0, 
+                                        'verbose': 0, 
+                                        'out-of-scope': 0
+                                    }
+                else:
+                    reasons = []
+                    if input_behavior.get('secret-leak') == 1: reasons.append("SECRET_LEAK")
+                    if input_behavior.get('off-topic') == 1: reasons.append("OFF_TOPIC")
 
                     trace_output = {
-                        'response': coding_assistant_output
+                        'response': 'REFUSED_INPUT',
+                        'refusal-reason': " | ".join(reasons)
                     }
-
-                    if 'pe-rag-bc' in name:
-                        print('Checking output with behavior controller')
-                        print('Starting span')
-                        output_bc_span = mlflow_start_span(
-                            mlflow_client = mlflow_client, 
-                            span_name = 'behavior-controller-output-check',
-                            trace_id = trace_id,
-                            span_id = root_span_id
-                        )
-
-                        output_bc_span_id = output_bc_span.span_id
-
-                        controller_prompt = mlflow_get_prompt(
-                            mlflow_client = mlflow_client,
-                            prompt_name = controller_prompts['output']['name'],
-                            prompt_version = controller_prompts['output']['version'],
-                            prompt_replacements = {
-                                'query': query_text,
-                                'output': coding_assistant_output
-                            }
-                        )
-
-                        sent_prompt = controller_prompt['prompt']
-                        controller_config = controller_prompt['config']
-
-                        controller_input = {
-                            'messages': sent_prompt 
-                        }
-        
-                        output_bc_span.set_attributes({f'request.{k}': v for k, v in controller_config.items()})
-        
-                        output_bc_span.set_inputs(controller_input)
-        
-                        output_controller_request = controller_input | controller_config
-        
-                        controller_request_ref = ray.put(output_controller_request)
-        
-                        output_controller_ref = controller_ref.generate_output.remote(
-                            request = controller_request_ref
-                        )
-        
-                        output_controller_payload = ray.get(output_controller_ref)
-                        print(f'Request status: {output_controller_payload['status']}')
-                        if output_controller_payload['status'] == 'success':
-                            try:
-                                output_controller_metrics = output_controller_payload['metrics']
-                                output_controller_output = output_controller_payload['response']
-        
-                                output_bc_span.set_attributes(
-                                    mlflow_token_usage(
-                                        input_tokens = output_controller_metrics['prompt-tokens'], 
-                                        output_tokens = output_controller_metrics['completion-tokens']
-                                    )
-                                )
+                print(f'Output behavior: {output_behavior}')
+                if output_behavior.get('irrelevant') == 1 or output_behavior.get('verbose') == 1 or output_behavior.get('out-of-scope') == 1:
+                    reasons = []
+                    if output_behavior.get('irrelevant') == 1: reasons.append("IRRELEVANT")
+                    if output_behavior.get('verbose') == 1: reasons.append("VERBOSE")
+                    if output_behavior.get('out-of-scope') == 1: reasons.append("OUT_OF_SCOPE")
                     
-                                input_cost = trace_attributes['utilization-cost-sec'] * output_controller_metrics['prompt-processing-time-sec']
-                                output_cost = trace_attributes['utilization-cost-sec'] * output_controller_metrics['generation-time-sec']
-                                
-                                model_name = f'{trace_attributes['repo-id']}-{trace_attributes['file-name']}'
-                                model_name = model_name.replace('*','')
-                                output_bc_span.set_attributes(
-                                    mlflow_llm_cost(
-                                        model_provider = trace_attributes['inference-framework'], 
-                                        model_name = model_name, 
-                                        input_cost = input_cost, 
-                                        output_cost = output_cost
-                                    )
-                                )
-                    
-                                output_bc_span.set_attributes(
-                                    mlflow_llm_effiency(
-                                        prompt_tokens = output_controller_metrics['prompt-tokens'],
-                                        completion_tokens = output_controller_metrics['completion-tokens'],
-                                        total_tokens = output_controller_metrics['total-tokens'],
-                                        prompt_processing_time = output_controller_metrics['prompt-processing-time-sec'],
-                                        generation_time = output_controller_metrics['generation-time-sec'],
-                                        input_tokens_per_sec = output_controller_metrics['input-tokens-per-sec'],
-                                        output_tokens_per_sec = output_controller_metrics['output-tokens-per-sec'],
-                                        total_latency = output_controller_metrics['total-latency-sec'],
-                                        time_to_first_token = output_controller_metrics['time-to-first-token-sec'],
-                                        tokens_per_second = output_controller_metrics['tokens-per-second'],
-                                        time_per_output_token = output_controller_metrics['time-per-output-token-sec'],
-                                        input_to_output_ratio = output_controller_metrics['input-to-output-ratio'],
-                                        context_window_utilization = output_controller_metrics['context-window-utilization-pct'],
-                                    )
-                                )
-
-                                output_behavior = controller_extract_output(
-                                    output = output_controller_output
-                                )
-
-                                output_bc_span.set_outputs({
-                                    'output': output_behavior
-                                })
-                                print('Ending span')
-                                mlflow_end_span(
-                                    mlflow_client = mlflow_client,
-                                    child_trace_id = trace_id,
-                                    child_span_id = output_bc_span_id
-                                )
-                            except Exception:
-                                output_behavior = {
-                                    'reasoning': 'Malformed JSON returned by guardrail', 
-                                    'irrelevant': 0, 
-                                    'verbose': 0, 
-                                    'out-of-scope': 0
-                                }
-            else:
-                reasons = []
-                if input_behavior.get('secret-leak') == 1: reasons.append("SECRET_LEAK")
-                if input_behavior.get('off-topic') == 1: reasons.append("OFF_TOPIC")
-
-                trace_output = {
-                    'response': 'REFUSED_INPUT',
-                    'refusal-reason': " | ".join(reasons)
-                }
-
-            if output_behavior.get('irrelevant') == 1 or output_behavior.get('verbose') == 1 or output_behavior.get('out-of-scope') == 1:
-                reasons = []
-                if output_behavior.get('irrelevant') == 1: reasons.append("IRRELEVANT")
-                if output_behavior.get('verbose') == 1: reasons.append("VERBOSE")
-                if output_behavior.get('out-of-scope') == 1: reasons.append("OUT_OF_SCOPE")
-                
-                trace_output = {
-                    'response': 'REFUSED_OUTPUT',
-                    'refusal-reason': " | ".join(reasons)
-                }
-            print('Ending trace')
-            mlflow_end_trace(
-                mlflow_client = mlflow_client,
-                trace_id = trace_id,
-                trace_output = trace_output
-            )
+                    trace_output = {
+                        'response': 'REFUSED_OUTPUT',
+                        'refusal-reason': " | ".join(reasons)
+                    }
+            finally:
+                print('Ending trace')
+                mlflow_end_trace(
+                    mlflow_client = mlflow_client,
+                    trace_id = trace_id,
+                    trace_output = trace_output
+                )
             
     end_time = t.time()
     total_time = round(end_time-start_time,5)
