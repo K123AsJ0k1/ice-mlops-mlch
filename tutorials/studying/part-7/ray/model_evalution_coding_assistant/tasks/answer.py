@@ -314,8 +314,8 @@ def answer_dataset(
 
                 coding_assistant_payload = ray.get(coding_assistant_ref)
                 if coding_assistant_payload['status'] == 'success':
-                    coding_assistant_metrics = input_controller_payload['metrics']
-                    coding_assistant_output = input_controller_payload['response']
+                    coding_assistant_metrics = coding_assistant_payload['metrics']
+                    coding_assistant_output = coding_assistant_payload['response']
 
                     assistant_span.set_attributes(
                         mlflow_token_usage(
