@@ -8,10 +8,8 @@ import ray
 class Retrieval:
     def __init__(
         self,
-        device_mode: str,
         qdrant_parameters: dict,
-        dense_model_name: str,
-        sparse_model_name: str
+        retrieval_parameters: dict
     ): 
         from icebreaker.qdrant.setup import qdrant_setup_client
         from sentence_transformers import SentenceTransformer
@@ -20,13 +18,16 @@ class Retrieval:
         self.qdrant_client = qdrant_setup_client(
             qdrant_parameters = qdrant_parameters
         )
-
+        device_mode = retrieval_parameters['device-mode']
+        
+        dense_model_name = retrieval_parameters['dense-model-name']
         self.dense_model = SentenceTransformer(
             dense_model_name, 
             device = device_mode
         )
         self.dense_model_name = dense_model_name
-        
+
+        sparse_model_name = retrieval_parameters['sparse-model-name:']
         self.sparse_model = SparseEncoder(
             sparse_model_name,
             device = device_mode

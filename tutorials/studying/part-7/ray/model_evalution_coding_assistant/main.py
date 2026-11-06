@@ -22,11 +22,15 @@ def coding_assistant_process(
         print('Parameters')
         swift_parameters = job_parameters['swift']
         mlflow_parameters = job_parameters['mlflow']
+        qdrant_parameters = job_parameters['qdrant']
         input_storage_parameters = job_parameters['input-storage']
         output_storage_parameters = job_parameters['output-storage']
         config_parameters = job_parameters['config']
-        model_parameters = job_parameters['model']
-        prompt_parameters = config_parameters['prompts']
+        assistant_parameters = job_parameters['assistant']
+        retrieval_parameters = job_parameters['retrieval']
+        controller_parameters = job_parameters['controller']
+        assistant_prompts = config_parameters['assistant-prompts']
+        controller_prompts = config_parameters['controller-prompts']
         process_parameters = job_parameters['process']
         server_name = process_parameters['server-name']  
         # This will be always single task and actor job
@@ -62,20 +66,18 @@ def coding_assistant_process(
 
         assistant_ref = Assistant.remote(
             server_name = server_name,
-            model_parameters = model_parameters
+            model_parameters = assistant_parameters
         )
 
         retrieval_ref = Retrieval.remote(
-            server_name = server_name,
-            model_parameters = model_parameters
+            qdrant_parameters = qdrant_parameters,
+            retrieval_parameters = retrieval_parameters
         )
 
         controller_ref = Controller.remote(
             server_name = server_name,
-            model_parameters = model_parameters
+            model_parameters = controller_parameters
         )
-
-        # Going to need to run 4 tasks for baseline, PE, PE-RAG and PE-RAG-BC
 
         print('Starting baseline answer dataset task')
         task_1_refs = [] 
@@ -87,12 +89,12 @@ def coding_assistant_process(
             controller_ref = controller_ref,
             swift_parameters = swift_parameters,
             mlflow_parameters = mlflow_parameters,
-            model_parameters = model_parameters,
             experiment_id = experiment_id,
             input_storage_parameters = input_storage_parameters,
             output_storage_parameters = output_storage_parameters,
             worker_input = worker_input_ref,
-            used_prompts = prompt_parameters
+            assistant_prompts = assistant_prompts,
+            controller_prompts = controller_prompts
         ))
 
         print('Waiting answer dataset')
