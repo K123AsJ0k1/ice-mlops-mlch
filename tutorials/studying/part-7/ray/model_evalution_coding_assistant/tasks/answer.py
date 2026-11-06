@@ -8,7 +8,7 @@ from icebreaker.objects.use import objects_get_data
 from icebreaker.controller.utility import controller_extract_output
 from icebreaker.assistant.utility import assistant_format_context
 from icebreaker.mlflow.setup import mlflow_setup_client
-from icebreaker.mlflow.use import mlflow_create_trace, mlflow_end_trace, mlflow_get_prompt,mlflow_start_span
+from icebreaker.mlflow.use import mlflow_create_trace, mlflow_end_trace, mlflow_get_prompt, mlflow_start_span, mlflow_end_span
 from icebreaker.mlflow.utility import mlflow_token_usage, mlflow_llm_cost, mlflow_llm_effiency
 from icebreaker.generator.utility import generator_extract_output, generator_format_data
 from icebreaker.objects.use import objects_store_data, objects_get_prefix_list
@@ -101,7 +101,7 @@ def answer_dataset(
         for name, metadata in assistant_prompts.items():
             query_text = row['query']
             query_weights = json.loads(row['internal-material-ranks'])
-
+            print('Starting trace')
             root_span = mlflow_create_trace(
                 mlflow_client = mlflow_client,  
                 trace_name = trace_name,
@@ -130,15 +130,19 @@ def answer_dataset(
                 'verbose': 0, 
                 'out-of-scope': 0
             }
-
+            print(f'Prompt variant: {name}')
             trace_output = {}
             if 'pe-rag-bc' in name:
+                print('Checking the input with behavior controller')
+                print('Starting span')
                 input_bc_span = mlflow_start_span(
                     mlflow_client = mlflow_client, 
                     span_name = 'behavior-controller-input-check',
                     trace_id = trace_id,
                     span_id = root_span_id
                 )
+
+                input_bc_span_id = input_bc_span.span_id
 
                 controller_prompt = mlflow_get_prompt(
                     mlflow_client = mlflow_client,
@@ -169,6 +173,7 @@ def answer_dataset(
                 )
 
                 input_controller_payload = ray.get(input_controller_ref)
+                print(f'Request status: {input_controller_payload['status']}')
                 if input_controller_payload['status'] == 'success':
                     try:
                         input_controller_metrics = input_controller_payload['metrics']
@@ -219,15 +224,24 @@ def answer_dataset(
                         input_bc_span.set_outputs({
                             'output': input_behavior
                         })
+
+                        mlflow_end_span(
+                            mlflow_client = mlflow_client,
+                            child_trace_id = trace_id,
+                            child_span_id = input_bc_span_id
+                        )
+                        print('Ending span')
                     except Exception:
                         input_behavior = {
                             'reasoning': 'Malformed JSON returned by guardrail', 
                             'secret-leak': 0, 
                             'off-topic': 0
                         }
-
+            print(f'Input behavior: {input_behavior}')
             if input_behavior.get('secret-leak') == 0 or input_behavior.get('off-topic') == 0:
                 if 'rag' in name:
+                    print('Using RAG')
+                    print('Starting span')
                     retrieval_span = mlflow_start_span(
                         mlflow_client = mlflow_client, 
                         span_name = 'retrieval-augmented-generation-query',
@@ -235,14 +249,15 @@ def answer_dataset(
                         span_id = root_span_id
                     )
 
-                    retrieval_query = [query_text]
+                    retrieval_span_id = retrieval_span.span_id
 
                     retrieval_span.set_inputs({
-                        'query': retrieval_query
+                        'query': query_text
                     })
 
                     retrieval_span.set_attributes({f'request.{k}': v for k, v in retrieval_parameters.items()})
 
+                    retrieval_query = [query_text]
                     retrieval_query_ref = ray.put(retrieval_query)
                     retrieval_payload_ref = retrieval_ref.batch_generate_queries.remote(
                         key_name = dataset_name,
@@ -277,14 +292,25 @@ def answer_dataset(
                         'created-context': created_context
                     })
 
+                    print('Ending span')
+                    mlflow_end_span(
+                        mlflow_client = mlflow_client,
+                        child_trace_id = trace_id,
+                        child_span_id = retrieval_span_id
+                    )
+
                     assistant_prompt_replacements['content'] = created_context
 
+                print('Sending question to coding assistant')
+                print('Starting span')
                 assistant_span = mlflow_start_span(
                     mlflow_client = mlflow_client, 
                     span_name = 'coding-assistant-request',
                     trace_id = trace_id,
                     span_id = root_span_id
                 )
+
+                assistant_span_id = assistant_span.span_id
             
                 assistant_prompt = mlflow_get_prompt(
                     mlflow_client = mlflow_client,
@@ -313,6 +339,7 @@ def answer_dataset(
                 )
 
                 coding_assistant_payload = ray.get(coding_assistant_ref)
+                print(f'Request status: {coding_assistant_payload['status']}')
                 if coding_assistant_payload['status'] == 'success':
                     coding_assistant_metrics = coding_assistant_payload['metrics']
                     coding_assistant_output = coding_assistant_payload['response']
@@ -360,17 +387,28 @@ def answer_dataset(
                         'output': coding_assistant_output
                     })
 
+                    print('Ending span')
+                    mlflow_end_span(
+                        mlflow_client = mlflow_client,
+                        child_trace_id = trace_id,
+                        child_span_id = assistant_span_id
+                    )
+
                     trace_output = {
                         'response': coding_assistant_output
                     }
 
                     if 'pe-rag-bc' in name:
+                        print('Checking output with behavior controller')
+                        print('Starting span')
                         output_bc_span = mlflow_start_span(
                             mlflow_client = mlflow_client, 
                             span_name = 'behavior-controller-output-check',
                             trace_id = trace_id,
                             span_id = root_span_id
                         )
+
+                        output_bc_span_id = output_bc_span.span_id
 
                         controller_prompt = mlflow_get_prompt(
                             mlflow_client = mlflow_client,
@@ -382,8 +420,11 @@ def answer_dataset(
                             }
                         )
 
+                        sent_prompt = controller_prompt['prompt']
+                        controller_config = controller_prompt['config']
+
                         controller_input = {
-                            'messages': controller_prompt
+                            'messages': sent_prompt 
                         }
         
                         output_bc_span.set_attributes({f'request.{k}': v for k, v in controller_config.items()})
@@ -399,7 +440,8 @@ def answer_dataset(
                         )
         
                         output_controller_payload = ray.get(output_controller_ref)
-                        if input_controller_payload['status'] == 'success':
+                        print(f'Request status: {output_controller_payload['status']}')
+                        if output_controller_payload['status'] == 'success':
                             try:
                                 output_controller_metrics = output_controller_payload['metrics']
                                 output_controller_output = output_controller_payload['response']
@@ -450,6 +492,12 @@ def answer_dataset(
                                 output_bc_span.set_outputs({
                                     'output': output_behavior
                                 })
+                                print('Ending span')
+                                mlflow_end_span(
+                                    mlflow_client = mlflow_client,
+                                    child_trace_id = trace_id,
+                                    child_span_id = output_bc_span_id
+                                )
                             except Exception:
                                 output_behavior = {
                                     'reasoning': 'Malformed JSON returned by guardrail', 
@@ -477,7 +525,7 @@ def answer_dataset(
                     'response': 'REFUSED_OUTPUT',
                     'refusal-reason': " | ".join(reasons)
                 }
-
+            print('Ending trace')
             mlflow_end_trace(
                 mlflow_client = mlflow_client,
                 trace_id = trace_id,
