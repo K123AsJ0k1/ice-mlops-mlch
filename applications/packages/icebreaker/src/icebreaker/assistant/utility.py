@@ -80,10 +80,10 @@ def assistant_format_context(
     formatted_context = "\n".join(xml_lines)
     return formatted_context
 
-def assistant_make_requests(
+def assistant_prompt_requests(
     mlflow_client: any,
     dataset_name: str,
-    dataset_df: any,
+    dataset_row: dict,
     prompts: dict,
     query_results: list
 ):
@@ -93,78 +93,65 @@ def assistant_make_requests(
     except ImportError as e:
         raise ImportError("assistant/use failed to import", e)
     
-    request_index = 0
-    prompt_variant_index = {}
-    inference_requests = []
+    query_requests = []
+    for name, metadata in prompts.items():
+        query_text = dataset_row['query']
+        query_category = dataset_row['category']
 
-    for row in dataset_df.to_dict(orient = 'records'):
-        for name, metadata in prompts.items():
-            query_text = row['query']
-            query_category = row['category']
+        prompt_replacements = {
+            'query': query_text
+        }
 
-            prompt_replacements = {
-                'query': query_text
-            }
-
-            if 'rag' in name:
-                prompt_replacements['content'] = assistant_format_context(
-                    query_results = query_results,
-                    wrapper_tag = 'context',
-                    metadata_keys = [
-                        'part',
-                        'document',
-                        'chapter',
-                        'index',
-                        'absolute-path',
-                        'relevance'
-                    ],
-                    material_key = 'ref-material',
-                    path_key = 'ref-paths',
-                    content_key = 'content'
-                )
-
-            filled_prompt = mlflow_get_prompt(
-                mlflow_client = mlflow_client,
-                prompt_name = name,
-                prompt_version = metadata['version'],
-                prompt_replacements = prompt_replacements
+        if 'rag' in name:
+            prompt_replacements['content'] = assistant_format_context(
+                query_results = query_results,
+                wrapper_tag = 'context',
+                metadata_keys = [
+                    'part',
+                    'document',
+                    'chapter',
+                    'index',
+                    'absolute-path',
+                    'relevance'
+                ],
+                material_key = 'ref-material',
+                path_key = 'ref-paths',
+                content_key = 'content'
             )
 
-            prompt_variant = name.split('-')[1]
-            if not prompt_variant in prompt_variant_index:
-                prompt_variant_index[prompt_variant] = 1
+        filled_prompt = mlflow_get_prompt(
+            mlflow_client = mlflow_client,
+            prompt_name = name,
+            prompt_version = metadata['version'],
+            prompt_replacements = prompt_replacements
+        )
 
-            for i in range(0, metadata['amount']):
+        prompt_variant = name.split('-')[1]
+        for i in range(0, metadata['amount']):
 
-                metadata = {
-                    'dataset-name': dataset_name,
-                    'prompt-variant': prompt_variant,
-                    'request-index': request_index,
-                    'variant-index': prompt_variant_index[prompt_variant]
-                }
+            metadata = {
+                'dataset-name': dataset_name,
+                'prompt-variant': prompt_variant,
+            }
 
-                if query_category == 'synthetic' or query_category == 'validation':
-                    metadata['part'] = row['internal-material-part']
-                    metadata['chapter'] = row['internal-material-chapter']
-                    metadata['idx'] = row['internal-material-index']
-                    metadata['relevance'] = row['internal-material-grade']
-                    metadata['weights'] = row['internal-material-ranks']
+            if query_category == 'synthetic' or query_category == 'validation':
+                metadata['part'] = dataset_row['internal-material-part']
+                metadata['chapter'] = dataset_row['internal-material-chapter']
+                metadata['idx'] = dataset_row['internal-material-index']
+                metadata['relevance'] = dataset_row['internal-material-grade']
+                metadata['weights'] = dataset_row['internal-material-ranks']
 
-                filled_prompt['metadata'] = {
-                    'dataset-name': dataset_name,
-                    'prompt-variant': prompt_variant,
-                    'request-index': request_index,
-                    'variant-index': prompt_variant_index[prompt_variant]
-                }
+            filled_prompt['metadata'] = {
+                'dataset-name': dataset_name,
+                'prompt-variant': prompt_variant,
+            }
 
-                for prompt in filled_prompt['prompt']:
-                    key_name = f'{prompt['role']}-prompt-length'
-                    filled_prompt['metadata'][key_name] = len(prompt['content'])
-                
-                prompt_variant_index[prompt_variant] += 1
-                inference_requests.append(filled_prompt)
-                request_index += 1
-    return inference_requests
+            for prompt in filled_prompt['prompt']:
+                key_name = f'{prompt['role']}-prompt-length'
+                filled_prompt['metadata'][key_name] = len(prompt['content'])
+            
+            query_requests.append(filled_prompt)
+    return query_requests 
 
 def assistant_create_requests( 
     mlflow_client: any,
