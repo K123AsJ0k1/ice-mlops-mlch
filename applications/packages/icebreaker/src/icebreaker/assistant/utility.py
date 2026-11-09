@@ -581,8 +581,14 @@ def assistant_format_data(
     # pandas automatically handles missing keys across records by filling them with NaN/None
     created_dataframe = pd.DataFrame(records)   
 
+    modified_metric_columns = []
+    for column in metric_columns:
+        modified_metric_columns.append(f'assistant-{column}')
+        modified_metric_columns.append(f'input-controller-{column}')
+        modified_metric_columns.append(f'output-controller-{column}')
+
     # Filter metric_columns to only those present in the created DataFrame to avoid KeyError
-    valid_metric_cols = [c for c in metric_columns if c in created_dataframe.columns]
+    valid_metric_cols = [c for c in modified_metric_columns if c in created_dataframe.columns]
 
     metric_dict = created_dataframe[valid_metric_cols].agg([
         'sum',
