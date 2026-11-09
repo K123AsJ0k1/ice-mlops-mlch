@@ -80,7 +80,7 @@ def assistant_format_context(
     formatted_context = "\n".join(xml_lines)
     return formatted_context
 
-def assistant_prompt_requests(
+def assistant_query_requests(
     mlflow_client: any,
     dataset_name: str,
     dataset_row: dict,
@@ -464,7 +464,7 @@ def assistant_send_answers(
             "accepted-count": sum(1 for r in run_records if r["status"] == "ACCEPTED")
         }
     }
-'''
+
 def assistant_print_answers(
     run_data: dict
 ):  
@@ -521,4 +521,98 @@ def assistant_print_answers(
             print(f"  Behavior: {ctrl_out['behavior']}\n")
 
         print("=" * 40 + "\n")
-'''
+
+def assistant_format_data(
+    assistant_data: any,
+    metric_columns: list
+) -> any:
+    try:
+        import pandas as pd
+        from ..misc.dict import flatten_nested_dict
+        from ..pd_stats.utility import pandas_get_p95, pandas_get_p99
+    except ImportError as e:
+        raise ImportError("assistant/utility failed to import", e)
+    
+    records = []
+    for case in assistant_data:
+        row_dict = {
+            'status': case['status'],
+            'variant': case['assistant-variant']
+        }
+        
+        for key, value in case['assistant-data']['input'].items():
+            used_key = f'assistant-{key}'
+            row_dict[used_key] = value
+
+        for key, value in case['assistant-data']['metrics'].items():
+            used_key = f'assistant-{key}'
+            row_dict[used_key] = value
+
+        for key, value in case['assistant-data']['output'].items():
+            used_key = f'assistant-{key}'
+            row_dict[used_key] = value
+
+        for key, value in case['input-controller-data']['input'].items():
+            used_key = f'input-controller-{key}'
+            row_dict[used_key] = value
+
+        for key, value in case['input-controller-data']['metrics'].items():
+            used_key = f'input-controller-{key}'
+            row_dict[used_key] = value
+
+        for key, value in case['input-controller-data']['output'].items():
+            used_key = f'input-controller-{key}'
+            row_dict[used_key] = value
+
+        for key, value in case['output-controller-data']['input'].items():
+            used_key = f'output-controller-{key}'
+            row_dict[used_key] = value
+
+        for key, value in case['output-controller-data']['metrics'].items():
+            used_key = f'output-controller-{key}'
+            row_dict[used_key] = value
+
+        for key, value in case['output-controller-data']['output'].items():
+            used_key = f'output-controller-{key}'
+            row_dict[used_key] = value
+
+        records.append(row_dict)
+         
+    # pandas automatically handles missing keys across records by filling them with NaN/None
+    created_dataframe = pd.DataFrame(records)   
+
+    # Filter metric_columns to only those present in the created DataFrame to avoid KeyError
+    valid_metric_cols = [c for c in metric_columns if c in created_dataframe.columns]
+
+    metric_dict = created_dataframe[valid_metric_cols].agg([
+        'sum',
+        'mean', 
+        'std', 
+        'median', 
+        pandas_get_p95, 
+        pandas_get_p99, 
+        'min', 
+        'max'
+    ]).rename(
+        index = {
+            pandas_get_p95: 'p95',
+            pandas_get_p99: 'p99'
+        }
+    ).to_dict()
+    
+    formatted_metrics = flatten_nested_dict(
+        target_dict = metric_dict,
+        parent_key = '', 
+        seperator = '-'
+    )
+
+    formatted_parametes = {}
+    for key, value in assistant_data['parameters'].items():
+        fixed_name = key.split('.')[-1]
+        formatted_parametes[fixed_name] = value
+    
+    return {
+        'parameters': formatted_parametes,
+        'tables': created_dataframe,
+        'metrics': formatted_metrics
+    }
