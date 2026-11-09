@@ -539,7 +539,8 @@ def assistant_format_data(
         row_dict = {
             'status': case['status'],
             'refusal': case['refusal-reason'],
-            'variant': case['assistant-variant']
+            'variant': case['assistant-variant'],
+            'assistant-question': case['assistant-query']
         }
         
         for key, value in case['assistant-data']['input'].items():
