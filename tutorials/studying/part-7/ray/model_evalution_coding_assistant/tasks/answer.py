@@ -97,7 +97,7 @@ def answer_dataset(
             'status': 'ACCEPTED', # ACCEPTED, REFUSED_INPUT, REFUSED_OUTPUT
             'refusal-reason': '',
             'assistant-variant': '',
-            'assistant-query': query_text,
+            'assistant-query': '',
             'assistant-data': {
                 'input': {},
                 'metrics': {},
@@ -131,6 +131,8 @@ def answer_dataset(
                     'query': query_text
                 }
             )
+            
+            pipeline_record['assistant-query'] = query_text
             trace_id = root_span.trace_id
             root_span_id = root_span.span_id
 
