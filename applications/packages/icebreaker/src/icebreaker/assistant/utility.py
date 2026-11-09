@@ -524,6 +524,7 @@ def assistant_print_answers(
 
 def assistant_format_data(
     assistant_data: any,
+    assistant_parameters: dict,
     metric_columns: list
 ) -> any:
     try:
@@ -537,6 +538,7 @@ def assistant_format_data(
     for case in assistant_data:
         row_dict = {
             'status': case['status'],
+            'refusal': case['refusal-reason'],
             'variant': case['assistant-variant']
         }
         
@@ -613,12 +615,12 @@ def assistant_format_data(
     )
 
     formatted_parametes = {}
-    for key, value in assistant_data['parameters'].items():
+    for key, value in assistant_parameters.items():
         fixed_name = key.split('.')[-1]
         formatted_parametes[fixed_name] = value
     
     return {
         'parameters': formatted_parametes,
-        'tables': created_dataframe,
+        'table': created_dataframe,
         'metrics': formatted_metrics
     }
