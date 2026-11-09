@@ -18,7 +18,7 @@ def controller_input_check(
         mlflow_client = mlflow_client, 
         span_name = span_name, 
         trace_id = trace_id, 
-        root_span_id = root_span_id
+        parent_span_id = root_span_id
     ) as input_bc_span:
         print('Checking the input with behavior controller')
 
@@ -134,7 +134,7 @@ def controller_output_check(
         mlflow_client = mlflow_client, 
         span_name = span_name, 
         trace_id = trace_id, 
-        root_span_id = root_span_id
+        parent_span_id = root_span_id
     ) as output_bc_span:
         print('Checking output with behavior controller')
         controller_prompt = mlflow_get_prompt(

@@ -194,6 +194,7 @@ def answer_dataset(
                         span_name = 'behavior-controller-output-check',
                         trace_id = trace_id,
                         root_span_id = root_span_id,
+                        controller_prompts = controller_prompts,
                         query_text = query_text,
                         controller_ref = controller_ref,
                         trace_attributes = trace_attributes,
@@ -218,6 +219,8 @@ def answer_dataset(
                 trace_id = trace_id,
                 trace_output = trace_output
             )
+
+    mlflow.flush_trace_async_logging()
             
     end_time = t.time()
     total_time = round(end_time-start_time,5)

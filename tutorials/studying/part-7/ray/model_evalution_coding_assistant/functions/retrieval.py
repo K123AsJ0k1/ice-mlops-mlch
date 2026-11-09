@@ -17,7 +17,7 @@ def retrieval_send_query(
         mlflow_client = mlflow_client, 
         span_name = span_name, 
         trace_id = trace_id, 
-        root_span_id = root_span_id
+        parent_span_id = root_span_id
     ) as retrieval_span:
         collection_name = retrieval_parameters['collection-name']
         query_type = retrieval_parameters['query-type']

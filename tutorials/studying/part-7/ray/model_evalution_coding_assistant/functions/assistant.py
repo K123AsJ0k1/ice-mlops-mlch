@@ -32,7 +32,7 @@ def assistant_send_request(
         mlflow_client = mlflow_client, 
         span_name = span_name, 
         trace_id = trace_id, 
-        root_span_id = root_span_id
+        parent_span_id = root_span_id
     ) as assistant_span:
         assistant_prompt = mlflow_get_prompt(
             mlflow_client = mlflow_client,
