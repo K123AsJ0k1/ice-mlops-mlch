@@ -44,7 +44,7 @@ def coding_assistant_process(
             mlflow_client = mlflow_client,
             name = mlflow_parameters['experiment-name']
         )
-        '''
+        
         run_id = mlflow_start_run(
             mlflow_client = mlflow_client,
             experiment_id = experiment_id, 
@@ -52,8 +52,7 @@ def coding_assistant_process(
             tags = mlflow_parameters['run-tags']
         )
         print('MLflow setup') 
-        '''
-    
+        
         # input gives a index range
         input_data = config_parameters['input'][0]
         input_amount = len(input_data)
@@ -107,7 +106,6 @@ def coding_assistant_process(
             for output_ref in done_task_1_refs:
                 formatted_data.append(ray.get(output_ref))
 
-        '''
         for data in formatted_data:
             parameters = data['parameters']
             metrics = data['metrics']
@@ -132,7 +130,6 @@ def coding_assistant_process(
             status = 'FINISHED',
             end_time = None
         )
-        '''
         
         return True
     except Exception as e:

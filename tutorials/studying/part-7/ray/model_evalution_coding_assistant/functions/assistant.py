@@ -1,21 +1,7 @@
 import ray
 from functions.utility import utility_managed_span
-from icebreaker.assistant.utility import assistant_format_context
-
-import ray
-import time as t
-import mlflow
-import json
-from icebreaker.swift.setup import swift_setup_client
-from icebreaker.objects.use import objects_get_data
-from icebreaker.controller.utility import controller_extract_output
-from icebreaker.assistant.utility import assistant_format_context
-from icebreaker.mlflow.setup import mlflow_setup_client
-from icebreaker.mlflow.use import mlflow_create_trace, mlflow_end_trace, mlflow_get_prompt, mlflow_start_span, mlflow_end_span
+from icebreaker.mlflow.use import mlflow_get_prompt
 from icebreaker.mlflow.utility import mlflow_token_usage, mlflow_llm_cost, mlflow_llm_effiency
-from icebreaker.generator.utility import generator_extract_output, generator_format_data
-from icebreaker.objects.use import objects_store_data, objects_get_prefix_list
-from icebreaker.storage.management import storage_set_object_path
 
 def assistant_send_request(
     mlflow_client: any,
@@ -26,7 +12,8 @@ def assistant_send_request(
     prompt_version: str,
     prompt_replacements: dict,
     assistant_ref: any,
-    trace_attributes: dict
+    trace_attributes: dict,
+    pipeline_record: dict
 ):
     with utility_managed_span(
         mlflow_client = mlflow_client, 
@@ -48,6 +35,8 @@ def assistant_send_request(
             'messages': sent_prompt
         }
 
+        pipeline_record['assistant-data']['input'] = assistant_span_input
+
         assistant_span.set_inputs(assistant_span_input)
 
         assistant_span.set_attributes({f'request.{k}': v for k, v in assistant_config.items()})
@@ -62,10 +51,14 @@ def assistant_send_request(
 
         coding_assistant_payload = ray.get(coding_assistant_ref)
         coding_assistant_output = 'failed'
+        coding_assistant_metadata = {
+            'assistant-variant': prompt_name
+        }
         print(f'Coding assistant request status: {coding_assistant_payload['status']}')
         if coding_assistant_payload['status'] == 'success':
             coding_assistant_metrics = coding_assistant_payload['metrics']
             coding_assistant_output = coding_assistant_payload['response']
+            coding_assistant_metadata = coding_assistant_payload['metadata']
 
             assistant_span.set_attributes(
                 mlflow_token_usage(
@@ -77,6 +70,10 @@ def assistant_send_request(
             input_cost = trace_attributes['utilization-cost-sec'] * coding_assistant_metrics['prompt-processing-time-sec']
             output_cost = trace_attributes['utilization-cost-sec'] * coding_assistant_metrics['generation-time-sec']
             
+            coding_assistant_metadata['input-cost'] = input_cost
+            coding_assistant_metadata['output-cost'] = output_cost
+            coding_assistant_metadata['total-cost'] = input_cost + output_cost
+                            
             model_name = f'{trace_attributes['repo-id']}-{trace_attributes['file-name']}'
             model_name = model_name.replace('*','')
             assistant_span.set_attributes(
@@ -87,6 +84,11 @@ def assistant_send_request(
                     output_cost = output_cost
                 )
             )
+
+            coding_assistant_metrics['input-cost'] = input_cost
+            coding_assistant_metrics['output-cost'] = output_cost
+            coding_assistant_metrics['total-cost'] = input_cost + output_cost
+            pipeline_record['assistant-data']['metrics'] = coding_assistant_metrics
 
             assistant_span.set_attributes(
                 mlflow_llm_effiency(
@@ -110,4 +112,8 @@ def assistant_send_request(
             'output': coding_assistant_output
         })
 
-        return coding_assistant_output
+        span_output = {'answer': coding_assistant_output} | coding_assistant_metadata
+                                
+        pipeline_record['assistant-data']['output'] = span_output
+        
+        return coding_assistant_output 

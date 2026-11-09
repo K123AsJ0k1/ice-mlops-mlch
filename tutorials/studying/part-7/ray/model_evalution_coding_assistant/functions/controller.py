@@ -1,6 +1,6 @@
 import ray
 from icebreaker.controller.utility import controller_extract_output
-from icebreaker.mlflow.use import mlflow_get_prompt, mlflow_start_span, mlflow_end_span
+from icebreaker.mlflow.use import mlflow_get_prompt
 from icebreaker.mlflow.utility import mlflow_token_usage, mlflow_llm_cost, mlflow_llm_effiency
 from functions.utility import utility_managed_span
 
@@ -12,7 +12,8 @@ def controller_input_check(
     controller_prompts: dict,
     query_text: str,
     controller_ref: any,
-    trace_attributes: dict
+    trace_attributes: dict,
+    pipeline_record: dict
 ):
     with utility_managed_span(
         mlflow_client = mlflow_client, 
@@ -38,6 +39,8 @@ def controller_input_check(
             'messages': sent_prompt
         }
 
+        pipeline_record['input-controller-data']['input'] = controller_input
+
         input_bc_span.set_attributes({f'request.{k}': v for k, v in controller_config.items()})
 
         input_bc_span.set_inputs(controller_input)
@@ -57,11 +60,13 @@ def controller_input_check(
             'secret-leak': 0, 
             'off-topic': 0
         }
+        input_controller_metadata = {}
         print(f'Input controller request status: {input_controller_payload['status']}')
         if input_controller_payload['status'] == 'success':
             try:
                 input_controller_metrics = input_controller_payload['metrics']
                 input_controller_output = input_controller_payload['response']
+                input_controller_metadata = input_controller_payload['metadata']
 
                 input_bc_span.set_attributes(
                     mlflow_token_usage(
@@ -72,6 +77,10 @@ def controller_input_check(
 
                 input_cost = trace_attributes['utilization-cost-sec'] * input_controller_metrics['prompt-processing-time-sec']
                 output_cost = trace_attributes['utilization-cost-sec'] * input_controller_metrics['generation-time-sec']
+
+                input_controller_metadata['input-cost'] = input_cost
+                input_controller_metadata['output-cost'] = output_cost
+                input_controller_metadata['total-cost'] = input_cost + output_cost
                 
                 model_name = f'{trace_attributes['repo-id']}-{trace_attributes['file-name']}'
                 model_name = model_name.replace('*','')
@@ -83,6 +92,11 @@ def controller_input_check(
                         output_cost = output_cost
                     )
                 )
+
+                input_controller_metrics['input-cost'] = input_cost
+                input_controller_metrics['output-cost'] = output_cost
+                input_controller_metrics['total-cost'] = input_cost + output_cost
+                pipeline_record['input-controller-data']['metrics'] = input_controller_metrics
 
                 input_bc_span.set_attributes(
                     mlflow_llm_effiency(
@@ -117,6 +131,10 @@ def controller_input_check(
             'output': input_behavior
         })
 
+        span_output = input_behavior | input_controller_metadata
+                        
+        pipeline_record['input-controller-data']['output'] = span_output
+
         return input_behavior
 
 def controller_output_check(
@@ -128,14 +146,15 @@ def controller_output_check(
     query_text: str,
     controller_ref: any,
     trace_attributes: dict,
-    assistant_output: str
+    assistant_output: str,
+    pipeline_record: dict
 ):
     with utility_managed_span(
         mlflow_client = mlflow_client, 
         span_name = span_name, 
         trace_id = trace_id, 
         parent_span_id = root_span_id
-    ) as output_bc_span:
+    ) as output_bc_span: 
         print('Checking output with behavior controller')
         controller_prompt = mlflow_get_prompt(
             mlflow_client = mlflow_client,
@@ -153,6 +172,8 @@ def controller_output_check(
         controller_input = {
             'messages': sent_prompt 
         }
+
+        pipeline_record['output-controller-data']['input'] = controller_input
 
         output_bc_span.set_attributes({f'request.{k}': v for k, v in controller_config.items()})
 
@@ -173,12 +194,15 @@ def controller_output_check(
             'out-of-scope': 0
         }
 
+        output_controller_metadata = {}
+
         output_controller_payload = ray.get(output_controller_ref)
         print(f'Output controller request status: {output_controller_payload['status']}')
         if output_controller_payload['status'] == 'success':
             try:
                 output_controller_metrics = output_controller_payload['metrics']
                 output_controller_output = output_controller_payload['response']
+                output_controller_metadata = output_controller_payload['metadata']
 
                 output_bc_span.set_attributes(
                     mlflow_token_usage(
@@ -189,6 +213,10 @@ def controller_output_check(
     
                 input_cost = trace_attributes['utilization-cost-sec'] * output_controller_metrics['prompt-processing-time-sec']
                 output_cost = trace_attributes['utilization-cost-sec'] * output_controller_metrics['generation-time-sec']
+
+                output_controller_metadata['input-cost'] = input_cost
+                output_controller_metadata['output-cost'] = output_cost
+                output_controller_metadata['total-cost'] = input_cost + output_cost
                 
                 model_name = f'{trace_attributes['repo-id']}-{trace_attributes['file-name']}'
                 model_name = model_name.replace('*','')
@@ -200,6 +228,11 @@ def controller_output_check(
                         output_cost = output_cost
                     )
                 )
+
+                output_controller_metrics['input-cost'] = input_cost
+                output_controller_metrics['output-cost'] = output_cost
+                output_controller_metrics['total-cost'] = input_cost + output_cost
+                pipeline_record['output-controller-data']['metrics'] = output_controller_metrics
     
                 output_bc_span.set_attributes(
                     mlflow_llm_effiency(
@@ -234,5 +267,9 @@ def controller_output_check(
         output_bc_span.set_outputs({
             'output': output_behavior
         })
+
+        span_output = output_behavior | output_controller_metadata
+                                
+        pipeline_record['output-controller-data']['output'] = span_output
 
         return output_behavior
