@@ -537,6 +537,8 @@ def assistant_format_data(
     records = []
     for case in assistant_data:
         row_dict = {
+            'dataset-category': case['dataset-category'],
+            'dataset-index': case['dataset-index'],
             'status': case['status'],
             'refusal': case['refusal-reason'],
             'variant': case['assistant-variant'],
