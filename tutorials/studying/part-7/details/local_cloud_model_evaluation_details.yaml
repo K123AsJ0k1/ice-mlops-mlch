@@ -1,0 +1,742 @@
+storage: 
+  data-storage: 
+    bucket-target: 'experiment'
+    bucket-prefix: 'mlch'
+    bucket-user: 'user@example.com' 
+  code-storage: 
+    bucket-target: 'pipeline'
+    bucket-prefix: 'mlch'
+    bucket-user: 'user@example.com' 
+  log-storage: 
+    bucket-target: 'pipeline'
+    bucket-prefix: 'mlch'
+    bucket-user: 'user@example.com' 
+  time-storage: 
+    bucket-target: 'pipeline'
+    bucket-prefix: 'mlch'
+    bucket-user: 'user@example.com' 
+    object-name: 'local-cloud-workflow'
+    lock-parameters: 
+      central: 
+        system: 'redis'
+        redis-endpoint: 'redis-service.storage.svc.cluster.local'
+        redis-port: '6379'
+        redis-db: '0'
+        user: 'workflow'
+        place: 'pipeline'
+      local: 
+        system: 'redis'
+        redis-endpoint: 'localhost'
+        redis-port: '7002'
+        redis-db: '0'
+        user: 'workflow'
+        place: 'pipeline'
+integration:
+  cluster-yamls: {}
+  cluster-name: 'local-cloud-cluster'
+  resource-weights:
+    cpu: 0.30
+    gpu: 0.30
+    vram: 0.10 
+    ram: 0.30
+  cluster-priority:
+    cloud-vm1: 0.40
+    local-lt3: 0.60
+  hardware-influence: 0.2
+  min-initial-inputs: 1
+  min-batch-size: 1
+  workflow-steps: []
+  multi-loop-amount: 20000
+  multi-loop-wait: 10
+  job-loop-amount: 2
+  job-loop-wait: 5
+processing:
+  step-1: # qwen3.5 2B assistant baseline, PE, PE-RAG, PE-RAG-BC with later RAG models and behavior controller
+    general:
+      swift: {} 
+      input-storage: 
+        bucket-target: 'experiment'
+        bucket-prefix: 'mlch'
+        bucket-user: 'user@example.com'   
+        object-path: 'DATA/EVALUATION/unified-dataset.parquet' 
+        object-serialization: 'parquet'
+      output-storage: 
+        bucket-target: 'experiment'
+        bucket-prefix: 'mlch'
+        bucket-user: 'user@example.com'   
+        object-serialization: 'parquet'
+        name-start-prefix: 'evaluation'
+      time-storage: 
+        bucket-target: 'pipeline'
+        bucket-prefix: 'mlch'
+        bucket-user: 'user@example.com' 
+        object-name: 'local-cloud-workflow'  
+        lock-parameters: 
+          central: 
+            system: 'redis'
+            redis-endpoint: 'redis-service.storage.svc.cluster.local'
+            redis-port: '6379'
+            redis-db: '0'
+            user: 'workflow'
+            place: 'pipeline'
+          remote: 
+            system: 'redis'
+            redis-endpoint: 'chisel-client'
+            redis-port: '6379'
+            redis-db: '0'
+            user: 'workflow'
+            place: 'pipeline'   
+      config:
+        assistant-prompts:
+          assistant-base-variant-qwen-3-5:
+            version: 2
+            amount: 1
+          assistant-pe-variant-qwen-3-5:
+            version: 2
+            amount: 1
+          assistant-pe-rag-variant-qwen-3-5:
+            version: 2
+            amount: 1
+          assistant-pe-rag-bc-variant-qwen-3-5:
+            version: 2
+            amount: 1
+        controller-prompts:
+          input:
+            name: 'controller-input-variant-qwen-3-5'
+            version: 5
+          output:
+            name: 'controller-output-variant-qwen-3-5'
+            version: 5
+    cluster:
+      cloud-vm1:
+        mlflow: 
+          tracking-uri: 'http://mlflow.mlflow.svc.cluster.local:5000'
+          s3-endpoint-url: 'http://mlflow-minio-service.mlflow.svc.cluster.local:9000'
+          aws-access-key-id: 'minioadmin'
+          aws-secret-access-key: 'minioadmin'
+          experiment-name: 'mlch-code-assistant-rag-pipeline'
+          run-name: 'assistant-step-1-vm1-model-evalution' 
+          run-tags:
+            workflow-type: 'local-cloud'
+            pipeline-step: 'assistant-model-evalution'
+          trace-name: 'code-assistant-chain'
+          trace-attributes: 
+            used-enviroment: 'cloud-vm1'
+            utilization-cost-sec: 0
+            utilization-cost-currency: ''
+            gpu-hardware-name: 'NVIDIA Tesla P100-PCIE-16GB'
+            gpu-vram-mib: 16384
+            inference-framework: 'llama-cpp'
+          trace-tags:
+            workflow-type: 'local-cloud'
+            pipeline-step: 'assistant-model-evalution'
+        qdrant: 
+          address: 'qdrant-service.storage.svc.cluster.local'
+          port: '7201'
+          api-key: 'qdrant_key'
+        assistant:
+          repo-id: 'unsloth/Qwen3.5-2B-GGUF'
+          file-name: '*Q4_K_M.gguf'
+          n-gpu-layers: -1 
+          n-ctx: 32768
+          type-k: 1
+          type-v: 1
+          flash-attention: False
+        retrieval:
+          device-mode: 'cuda'
+          collection-name: 'internal_material_local_cloud_database'
+          dense-model-name: 'Alibaba-NLP/gte-modernbert-base'
+          sparse-model-name: 'opensearch-project/opensearch-neural-sparse-encoding-doc-v3-distill'
+          query-type: 'hybrid-dbsf'
+          relevance-threshold: 1.0
+          query-limit: 5
+          fusion-limit: 40
+          batch-size: 32
+        controller:
+          repo-id: 'unsloth/Qwen3.5-2B-GGUF'
+          file-name: '*Q4_K_M.gguf'
+          n-gpu-layers: -1 
+          n-ctx: 8192
+          type-k: 1
+          type-v: 1
+          flash-attention: False
+        process:
+          server-name: 'cloud-vm1'
+          lock-location: 'central'
+        job:
+          main-file: 'main.py'
+          runtime:
+            working_dir: 'model_evalution_coding_assistant'
+            pip: 'c-vm1-requirements.txt'
+            env_vars:
+              HF_TOKEN: 'fill'
+      local-lt3:
+        mlflow: 
+          tracking-uri: 'http://mlflow.mlflow.svc.cluster.local:5000'
+          s3-endpoint-url: 'http://mlflow-minio-service.mlflow.svc.cluster.local:9000'
+          aws-access-key-id: 'minioadmin'
+          aws-secret-access-key: 'minioadmin'
+          experiment-name: 'mlch-code-assistant-rag-pipeline'
+          run-name: 'assistant-step-1-lt3-model-evalution' 
+          run-tags:
+            workflow-type: 'local-cloud'
+            pipeline-step: 'assistant-model-evalution'
+          trace-name: 'code-assistant-chain'
+          trace-attributes: 
+            used-enviroment: 'local-lt3'
+            utilization-cost-sec: 0
+            utilization-cost-currency: ''
+            gpu-hardware-name: 'NVIDIA GeForce RTX 4090'
+            gpu-vram-mib: 16376
+            inference-framework: 'llama-cpp'
+          trace-tags:
+            workflow-type: 'local-cloud'
+            pipeline-step: 'assistant-model-evalution'
+        qdrant: 
+          address: 'chisel-client'
+          port: '7201'
+          api-key: 'qdrant_key'
+        assistant:
+          repo-id: 'unsloth/Qwen3.5-4B-GGUF'
+          file-name: '*Q4_K_M.gguf'
+          n-gpu-layers: -1 
+          n-ctx: 32768
+          type-k: 1
+          type-v: 1
+          flash-attention: True
+        retrieval:
+          device-mode: 'cuda'
+          collection-name: 'internal_material_local_cloud_database'
+          dense-model-name: 'Alibaba-NLP/gte-modernbert-base'
+          sparse-model-name: 'opensearch-project/opensearch-neural-sparse-encoding-doc-v3-distill'
+          query-type: 'hybrid-dbsf'
+          relevance-threshold: 1.0
+          query-limit: 5
+          fusion-limit: 40
+          batch-size: 32
+        controller:
+          repo-id: 'unsloth/Qwen3.5-2B-GGUF'
+          file-name: '*Q4_K_M.gguf'
+          n-gpu-layers: -1 
+          n-ctx: 8192
+          type-k: 1
+          type-v: 1
+          flash-attention: True
+        process:
+          server-name: 'local-lt3'
+          lock-location: 'remote'
+        job:
+          main-file: 'main.py'
+          runtime:
+            working_dir: 'model_evalution_coding_assistant'
+            pip: 'c-vm1-requirements.txt'
+            env_vars:
+              HF_TOKEN: 'fill'
+  step-2: # qwen3.5 4B assistant baseline, PE, PE-RAG, PE-RAG-BC
+    general:
+      swift: {} 
+      rag:
+        collection-name: 'internal_material_local_cloud_database'
+        dense-model-name: 'Alibaba-NLP/gte-modernbert-base'
+        sparse-model-name: 'opensearch-project/opensearch-neural-sparse-encoding-doc-v3-distill'
+      input-storage: 
+        bucket-target: 'experiment'
+        bucket-prefix: 'mlch'
+        bucket-user: 'user@example.com'   
+        object-path: 'DATA/EVALUATION/unified-dataset.parquet' 
+        object-serialization: 'parquet'
+      output-storage: 
+        bucket-target: 'experiment'
+        bucket-prefix: 'mlch'
+        bucket-user: 'user@example.com'   
+        object-serialization: 'parquet'
+        name-start-prefix: 'preprocess'
+      time-storage: 
+        bucket-target: 'pipeline'
+        bucket-prefix: 'mlch'
+        bucket-user: 'user@example.com' 
+        object-name: 'local-cloud-workflow'  
+        lock-parameters: 
+          central: 
+            system: 'redis'
+            redis-endpoint: 'redis-service.storage.svc.cluster.local'
+            redis-port: '6379'
+            redis-db: '0'
+            user: 'workflow'
+            place: 'pipeline'
+          remote: 
+            system: 'redis'
+            redis-endpoint: 'chisel-client'
+            redis-port: '6379'
+            redis-db: '0'
+            user: 'workflow'
+            place: 'pipeline'   
+      config:
+        assistant-prompts:
+          assistant-base-variant-qwen-3-5:
+            version: 2
+            amount: 1
+          assistant-pe-variant-qwen-3-5:
+            version: 2
+            amount: 1
+          assistant-pe-rag-variant-qwen-3-5:
+            version: 2
+            amount: 1
+          assistant-pe-rag-bc-variant-qwen-3-5:
+            version: 2
+            amount: 1
+        controller-prompts:
+          input:
+            name: 'controller-input-variant-qwen-3-5'
+            version: 5
+          output:
+            name: 'controller-output-variant-qwen-3-5'
+            version: 5
+    cluster:
+      cloud-vm1:
+        mlflow: 
+          tracking-uri: 'http://mlflow.mlflow.svc.cluster.local:5000'
+          s3-endpoint-url: 'http://mlflow-minio-service.mlflow.svc.cluster.local:9000'
+          aws-access-key-id: 'minioadmin'
+          aws-secret-access-key: 'minioadmin'
+          experiment-name: 'mlch-code-assistant-rag-pipeline'
+          run-name: 'assistant-step-2-vm1-model-evalution' 
+          run-tags:
+            workflow-type: 'local-cloud'
+            pipeline-step: 'assistant-model-evalution'
+          trace-name: 'code-assistant-chain'
+          trace-attributes: 
+            used-enviroment: 'cloud-vm1'
+            utilization-cost-sec: 0
+            utilization-cost-currency: ''
+            gpu-hardware-name: 'NVIDIA Tesla P100-PCIE-16GB'
+            gpu-vram-mib: 16384
+            inference-framework: 'llama-cpp'
+          trace-tags:
+            workflow-type: 'local-cloud'
+            pipeline-step: 'assistant-model-evalution'
+        qdrant: 
+          address: 'qdrant-service.storage.svc.cluster.local'
+          port: '7201'
+          api-key: 'qdrant_key'
+        assistant:
+          repo-id: 'unsloth/Qwen3.5-4B-GGUF'
+          file-name: '*Q4_K_M.gguf'
+          n-gpu-layers: -1 
+          n-ctx: 32768
+          type-k: 1
+          type-v: 1
+          flash-attention: False
+        retrieval:
+          device-mode: 'cuda'
+          collection-name: 'internal_material_local_cloud_database'
+          dense-model-name: 'Alibaba-NLP/gte-modernbert-base'
+          sparse-model-name: 'opensearch-project/opensearch-neural-sparse-encoding-doc-v3-distill'
+          query-type: 'hybrid-dbsf'
+          relevance-threshold: 1.0
+          query-limit: 5
+          fusion-limit: 40
+          batch-size: 32
+        controller:
+          repo-id: 'unsloth/Qwen3.5-2B-GGUF'
+          file-name: '*Q4_K_M.gguf'
+          n-gpu-layers: -1 
+          n-ctx: 8192
+          type-k: 1
+          type-v: 1
+          flash-attention: False
+        process:
+          server-name: 'cloud-vm1'
+          lock-location: 'central'
+        job:
+          main-file: 'main.py'
+          runtime:
+            working_dir: 'model_evalution_coding_assistant'
+            pip: 'c-vm1-requirements.txt'
+            env_vars:
+              HF_TOKEN: 'fill'
+      local-lt3:
+        mlflow: 
+          tracking-uri: 'http://mlflow.mlflow.svc.cluster.local:5000'
+          s3-endpoint-url: 'http://mlflow-minio-service.mlflow.svc.cluster.local:9000'
+          aws-access-key-id: 'minioadmin'
+          aws-secret-access-key: 'minioadmin'
+          experiment-name: 'mlch-code-assistant-rag-pipeline'
+          run-name: 'assistant-step-2-lt3-model-evalution' 
+          run-tags:
+            workflow-type: 'local-cloud'
+            pipeline-step: 'assistant-model-evalution'
+          trace-name: 'code-assistant-chain'
+          trace-attributes: 
+            used-enviroment: 'local-lt3'
+            utilization-cost-sec: 0
+            utilization-cost-currency: ''
+            gpu-hardware-name: 'NVIDIA GeForce RTX 4090'
+            gpu-vram-mib: 16376
+            inference-framework: 'llama-cpp'
+          trace-tags:
+            workflow-type: 'local-cloud'
+            pipeline-step: 'assistant-model-evalution'
+        qdrant: 
+          address: 'chisel-client'
+          port: '7201'
+          api-key: 'qdrant_key'
+        assistant:
+          repo-id: 'unsloth/Qwen3.5-4B-GGUF'
+          file-name: '*Q4_K_M.gguf'
+          n-gpu-layers: -1 
+          n-ctx: 32768
+          type-k: 1
+          type-v: 1
+          flash-attention: True
+        retrieval:
+          device-mode: 'cuda'
+          collection-name: 'internal_material_local_cloud_database'
+          dense-model-name: 'Alibaba-NLP/gte-modernbert-base'
+          sparse-model-name: 'opensearch-project/opensearch-neural-sparse-encoding-doc-v3-distill'
+          query-type: 'hybrid-dbsf'
+          relevance-threshold: 1.0
+          query-limit: 5
+          fusion-limit: 40
+          batch-size: 32
+        controller:
+          repo-id: 'unsloth/Qwen3.5-2B-GGUF'
+          file-name: '*Q4_K_M.gguf'
+          n-gpu-layers: -1 
+          n-ctx: 8192
+          type-k: 1
+          type-v: 1
+          flash-attention: True
+        process:
+          server-name: 'local-lt3'
+          lock-location: 'remote'
+        job:
+          main-file: 'main.py'
+          runtime:
+            working_dir: 'model_evalution_coding_assistant'
+            pip: 'c-vm1-requirements.txt'
+            env_vars:
+              HF_TOKEN: 'fill'
+  step-3: # qwen3.5 9B assisatnt baseline, PE, PE-RAG, PE-RAG-BC
+    general:
+      swift: {} 
+      rag:
+        collection-name: 'internal_material_local_cloud_database'
+        dense-model-name: 'Alibaba-NLP/gte-modernbert-base'
+        sparse-model-name: 'opensearch-project/opensearch-neural-sparse-encoding-doc-v3-distill'
+      input-storage: 
+        bucket-target: 'experiment'
+        bucket-prefix: 'mlch'
+        bucket-user: 'user@example.com'   
+        object-path: 'DATA/EVALUATION/unified-dataset.parquet' 
+        object-serialization: 'parquet'
+      output-storage: 
+        bucket-target: 'experiment'
+        bucket-prefix: 'mlch'
+        bucket-user: 'user@example.com'   
+        object-serialization: 'parquet'
+        name-start-prefix: 'preprocess'
+      time-storage: 
+        bucket-target: 'pipeline'
+        bucket-prefix: 'mlch'
+        bucket-user: 'user@example.com' 
+        object-name: 'local-cloud-workflow'  
+        lock-parameters: 
+          central: 
+            system: 'redis'
+            redis-endpoint: 'redis-service.storage.svc.cluster.local'
+            redis-port: '6379'
+            redis-db: '0'
+            user: 'workflow'
+            place: 'pipeline'
+          remote: 
+            system: 'redis'
+            redis-endpoint: 'chisel-client'
+            redis-port: '6379'
+            redis-db: '0'
+            user: 'workflow'
+            place: 'pipeline'   
+      config:
+        assistant-prompts:
+          assistant-base-variant-qwen-3-5:
+            version: 2
+            amount: 1
+          assistant-pe-variant-qwen-3-5:
+            version: 2
+            amount: 1
+          assistant-pe-rag-variant-qwen-3-5:
+            version: 2
+            amount: 1
+          assistant-pe-rag-bc-variant-qwen-3-5:
+            version: 2
+            amount: 1
+        controller-prompts:
+          input:
+            name: 'controller-input-variant-qwen-3-5'
+            version: 5
+          output:
+            name: 'controller-output-variant-qwen-3-5'
+            version: 5
+    cluster:
+      cloud-vm1:
+        mlflow: 
+          tracking-uri: 'http://mlflow.mlflow.svc.cluster.local:5000'
+          s3-endpoint-url: 'http://mlflow-minio-service.mlflow.svc.cluster.local:9000'
+          aws-access-key-id: 'minioadmin'
+          aws-secret-access-key: 'minioadmin'
+          experiment-name: 'mlch-code-assistant-rag-pipeline'
+          run-name: 'assistant-step-3-vm1-model-evalution' 
+          run-tags:
+            workflow-type: 'local-cloud'
+            pipeline-step: 'assistant-model-evalution'
+          trace-name: 'code-assistant-chain'
+          trace-attributes: 
+            used-enviroment: 'cloud-vm1'
+            utilization-cost-sec: 0
+            utilization-cost-currency: ''
+            gpu-hardware-name: 'NVIDIA Tesla P100-PCIE-16GB'
+            gpu-vram-mib: 16384
+            inference-framework: 'llama-cpp'
+          trace-tags:
+            workflow-type: 'local-cloud'
+            pipeline-step: 'assistant-model-evalution'
+        qdrant: 
+          address: 'qdrant-service.storage.svc.cluster.local'
+          port: '7201'
+          api-key: 'qdrant_key'
+        assistant:
+          repo-id: 'unsloth/Qwen3.5-4B-GGUF'
+          file-name: '*Q4_K_M.gguf'
+          n-gpu-layers: -1 
+          n-ctx: 32768
+          type-k: 1
+          type-v: 1
+          flash-attention: False
+        retrieval:
+          device-mode: 'cuda'
+          collection-name: 'internal_material_local_cloud_database'
+          dense-model-name: 'Alibaba-NLP/gte-modernbert-base'
+          sparse-model-name: 'opensearch-project/opensearch-neural-sparse-encoding-doc-v3-distill'
+          query-type: 'hybrid-dbsf'
+          relevance-threshold: 1.0
+          query-limit: 5
+          fusion-limit: 40
+          batch-size: 32
+        controller:
+          repo-id: 'unsloth/Qwen3.5-2B-GGUF'
+          file-name: '*Q4_K_M.gguf'
+          n-gpu-layers: -1 
+          n-ctx: 8192
+          type-k: 1
+          type-v: 1
+          flash-attention: False
+        process:
+          server-name: 'cloud-vm1'
+          lock-location: 'central'
+        job:
+          main-file: 'main.py'
+          runtime:
+            working_dir: 'model_evalution_coding_assistant'
+            pip: 'c-vm1-requirements.txt'
+            env_vars:
+              HF_TOKEN: 'fill'
+      local-lt3:
+        mlflow: 
+          tracking-uri: 'http://mlflow.mlflow.svc.cluster.local:5000'
+          s3-endpoint-url: 'http://mlflow-minio-service.mlflow.svc.cluster.local:9000'
+          aws-access-key-id: 'minioadmin'
+          aws-secret-access-key: 'minioadmin'
+          experiment-name: 'mlch-code-assistant-rag-pipeline'
+          run-name: 'assistant-step-1-lt3-model-evalution' 
+          run-tags:
+            workflow-type: 'local-cloud'
+            pipeline-step: 'assistant-model-evalution'
+          trace-name: 'code-assistant-chain'
+          trace-attributes: 
+            used-enviroment: 'local-lt3'
+            utilization-cost-sec: 0
+            utilization-cost-currency: ''
+            gpu-hardware-name: 'NVIDIA GeForce RTX 4090'
+            gpu-vram-mib: 16376
+            inference-framework: 'llama-cpp'
+          trace-tags:
+            workflow-type: 'local-cloud'
+            pipeline-step: 'assistant-model-evalution'
+        qdrant: 
+          address: 'chisel-client'
+          port: '7201'
+          api-key: 'qdrant_key'
+        assistant:
+          repo-id: 'unsloth/Qwen3.5-4B-GGUF'
+          file-name: '*Q4_K_M.gguf'
+          n-gpu-layers: -1 
+          n-ctx: 32768
+          type-k: 1
+          type-v: 1
+          flash-attention: False
+        retrieval:
+          device-mode: 'cuda'
+          collection-name: 'internal_material_local_cloud_database'
+          dense-model-name: 'Alibaba-NLP/gte-modernbert-base'
+          sparse-model-name: 'opensearch-project/opensearch-neural-sparse-encoding-doc-v3-distill'
+          query-type: 'hybrid-dbsf'
+          relevance-threshold: 1.0
+          query-limit: 5
+          fusion-limit: 40
+          batch-size: 32
+        controller:
+          repo-id: 'unsloth/Qwen3.5-2B-GGUF'
+          file-name: '*Q4_K_M.gguf'
+          n-gpu-layers: -1 
+          n-ctx: 8192
+          type-k: 1
+          type-v: 1
+          flash-attention: False
+        process:
+          server-name: 'local-lt3'
+          lock-location: 'remote'
+        job:
+          main-file: 'main.py'
+          runtime:
+            working_dir: 'model_evalution_coding_assistant'
+            pip: 'c-vm1-requirements.txt'
+            env_vars:
+              HF_TOKEN: 'fill'
+  step-4: # ministral 8B judges qwen3.5 variants
+    general:
+      swift: {}
+      data-storage: 
+        bucket-target: 'experiment'
+        bucket-prefix: 'mlch'
+        bucket-user: 'user@example.com'   
+        object-prefix: 'ICEbreaker-tutorial'
+      time-storage: 
+        bucket-target: 'pipeline'
+        bucket-prefix: 'mlch'
+        bucket-user: 'user@example.com' 
+        object-name: 'local-cloud-workflow'    
+      model:
+        generator-model-parameters: 
+          inference: 'llama'
+          repo-id: 'unsloth/Ministral-3-8B-Instruct-2512-GGUF'
+          filename: '*Q4_K_M.gguf'
+          n-gpu-layers: -1
+          n-ctx: 8192
+          type-k: 1
+          type-v: 1
+        generator-prompt-parameters: {}
+    cluster:
+      cloud-vm1:
+        process:
+          workers: 6
+          actors: 1
+        serve:
+          id: 'cloud-vm1'
+          host: '0.0.0.0'
+          port: 8000
+          shutdown: False
+          time: 240
+        job:
+          main-file: 'main.py'
+          runtime:
+            working_dir: 'model_evalution_server'
+            pip: 'model_evalution_server/c-vm1-requirements.txt'
+            env_vars:
+              HF_TOKEN: 'fill'
+      local-lt2:
+        process:
+          workers: 12
+          actors: 1
+        serve:
+          host: '0.0.0.0'
+          port: 8000
+        job:
+          main-file: 'main.py'
+          runtime:
+            working_dir: 'model_evalution'
+            pip: 'model_evalution/requirements.txt'
+            env_vars:
+              HF_TOKEN: 'fill'
+      local-lt3:
+        process:
+          workers: 28
+          actors: 1
+        serve:
+          host: '0.0.0.0'
+          port: 8000
+        job:
+          main-file: 'main.py'
+          runtime:
+            working_dir: 'model_evalution'
+            pip: 'model_evalution/requirements.txt'
+            env_vars:
+              HF_TOKEN: 'fill'
+  step-5: # gemma-4 8B judeges qwen3.5 variants
+    general:
+      swift: {}
+      data-storage: 
+        bucket-target: 'experiment'
+        bucket-prefix: 'mlch'
+        bucket-user: 'user@example.com'   
+        object-prefix: 'ICEbreaker-tutorial'
+      time-storage: 
+        bucket-target: 'pipeline'
+        bucket-prefix: 'mlch'
+        bucket-user: 'user@example.com' 
+        object-name: 'local-cloud-workflow'    
+      model:
+        generator-model-parameters: 
+          inference: 'llama'
+          repo-id: 'unsloth/gemma-4-E4B-it-GGUF'
+          filename: '*Q4_K_M.gguf'
+          n-gpu-layers: -1
+          n-ctx: 8192
+          type-k: 1
+          type-v: 1
+        generator-prompt-parameters: {}
+    cluster:
+      cloud-vm1:
+        process:
+          workers: 6
+          actors: 1
+        serve:
+          id: 'cloud-vm1'
+          host: '0.0.0.0'
+          port: 8000
+          shutdown: False
+          time: 240
+        job:
+          main-file: 'main.py'
+          runtime:
+            working_dir: 'model_evalution_server'
+            pip: 'model_evalution_server/c-vm1-requirements.txt'
+            env_vars:
+              HF_TOKEN: 'fill'
+      local-lt2:
+        process:
+          workers: 12
+          actors: 1
+        serve:
+          host: '0.0.0.0'
+          port: 8000
+        job:
+          main-file: 'main.py'
+          runtime:
+            working_dir: 'model_evalution'
+            pip: 'model_evalution/requirements.txt'
+            env_vars:
+              HF_TOKEN: 'fill'
+      local-lt3:
+        process:
+          workers: 28
+          actors: 1
+        serve:
+          host: '0.0.0.0'
+          port: 8000
+        job:
+          main-file: 'main.py'
+          runtime:
+            working_dir: 'model_evalution'
+            pip: 'model_evalution/requirements.txt'
+            env_vars:
+              HF_TOKEN: 'fill'

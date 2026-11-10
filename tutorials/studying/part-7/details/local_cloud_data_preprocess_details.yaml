@@ -383,14 +383,14 @@ processing:
             user: 'workflow'
             place: 'pipeline'
       config:
-         text-column: 'content'
-         query-column: 'topic'
-         weight-column: 'ranking-weights'
-         query-type: 'hybrid-dbsf'
-         relevance-threshold: 1.0
-         query-limit: 5
-         fusion-limit: 40
-         batch-size: 32
+        text-column: 'content'
+        query-column: 'topic'
+        weight-column: 'ranking-weights'
+        query-type: 'hybrid-dbsf'
+        relevance-threshold: 1.0
+        query-limit: 5
+        fusion-limit: 40
+        batch-size: 32
     cluster:
       cloud-vm1:
         mlflow: 
