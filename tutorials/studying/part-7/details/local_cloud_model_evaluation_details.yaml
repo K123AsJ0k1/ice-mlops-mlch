@@ -54,7 +54,13 @@ processing:
   step-1: # ministral 8B judges qwen3.5 variants
     general:
       swift: {}
-      input-storage: 
+      answer-storage: 
+        bucket-target: 'experiment'
+        bucket-prefix: 'mlch'
+        bucket-user: 'user@example.com'   
+        object-path: 'DATA/ANSWERS/unified-dataset.parquet' 
+        object-serialization: 'parquet'
+      solution-storage: 
         bucket-target: 'experiment'
         bucket-prefix: 'mlch'
         bucket-user: 'user@example.com'   
@@ -181,7 +187,13 @@ processing:
   step-2: # gemma-4 8B judeges qwen3.5 variants
     general:
       swift: {}
-      input-storage: 
+      answer-storage: 
+        bucket-target: 'experiment'
+        bucket-prefix: 'mlch'
+        bucket-user: 'user@example.com'   
+        object-path: 'DATA/ANSWERS/unified-dataset.parquet' 
+        object-serialization: 'parquet'
+      solution-storage: 
         bucket-target: 'experiment'
         bucket-prefix: 'mlch'
         bucket-user: 'user@example.com'   
