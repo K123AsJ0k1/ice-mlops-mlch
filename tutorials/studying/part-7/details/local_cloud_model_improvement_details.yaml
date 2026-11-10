@@ -235,10 +235,6 @@ processing:
   step-2: # qwen3.5 4B assistant baseline, PE, PE-RAG, PE-RAG-BC
     general:
       swift: {} 
-      rag:
-        collection-name: 'internal_material_local_cloud_database'
-        dense-model-name: 'Alibaba-NLP/gte-modernbert-base'
-        sparse-model-name: 'opensearch-project/opensearch-neural-sparse-encoding-doc-v3-distill'
       input-storage: 
         bucket-target: 'experiment'
         bucket-prefix: 'mlch'
@@ -250,7 +246,7 @@ processing:
         bucket-prefix: 'mlch'
         bucket-user: 'user@example.com'   
         object-serialization: 'parquet'
-        name-start-prefix: 'preprocess'
+        name-start-prefix: 'evaluation'
       time-storage: 
         bucket-target: 'pipeline'
         bucket-prefix: 'mlch'
@@ -420,10 +416,6 @@ processing:
   step-3: # qwen3.5 9B assisatnt baseline, PE, PE-RAG, PE-RAG-BC
     general:
       swift: {} 
-      rag:
-        collection-name: 'internal_material_local_cloud_database'
-        dense-model-name: 'Alibaba-NLP/gte-modernbert-base'
-        sparse-model-name: 'opensearch-project/opensearch-neural-sparse-encoding-doc-v3-distill'
       input-storage: 
         bucket-target: 'experiment'
         bucket-prefix: 'mlch'
@@ -435,7 +427,7 @@ processing:
         bucket-prefix: 'mlch'
         bucket-user: 'user@example.com'   
         object-serialization: 'parquet'
-        name-start-prefix: 'preprocess'
+        name-start-prefix: 'evaluation'
       time-storage: 
         bucket-target: 'pipeline'
         bucket-prefix: 'mlch'
