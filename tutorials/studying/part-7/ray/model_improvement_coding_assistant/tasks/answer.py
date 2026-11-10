@@ -83,39 +83,51 @@ def answer_dataset(
     )
 
     trace_attributes = mlflow_parameters['trace-attributes']
-    trace_attributes = trace_attributes | assistant_parameters 
-    trace_attributes = trace_attributes | retrieval_parameters
-    trace_attributes = trace_attributes | controller_parameters
+    
+    for key, value in assistant_parameters.items():
+        used_key = f'assistant-{key}'
+        trace_attributes[used_key] = value
 
+    for key, value in retrieval_parameters.items():
+        used_key = f'retrieval-{key}'
+        trace_attributes[used_key] = value
+
+    for key, value in controller_parameters.items():
+        used_key = f'controller-{key}'
+        trace_attributes[used_key] = value 
+    
     trace_name = mlflow_parameters['trace-name']
     trace_tags = mlflow_parameters['trace-tags']
     request_index = 0
 
     pipeline_data = []
+    data_index = 0
     for row in processed_subset.to_dict(orient = 'records'):
-        pipeline_record = {
-            'status': 'ACCEPTED', # ACCEPTED, REFUSED_INPUT, REFUSED_OUTPUT
-            'refusal-reason': '',
-            'assistant-variant': '',
-            'assistant-query': '',
-            'assistant-data': {
-                'input': {},
-                'metrics': {},
-                'output': {}
-            },
-            'input-controller-data': {
-                'input': {},
-                'metrics': {},
-                'output': {}
-            },
-            'output-controller-data': {
-                'input': {},
-                'metrics': {},
-                'output': {}
-            }
-        }
-
         for name, metadata in assistant_prompts.items():
+            pipeline_record = {
+                'dataset-category': row['category'],
+                'dataset-index': data_index,
+                'status': 'ACCEPTED', # ACCEPTED, REFUSED_INPUT, REFUSED_OUTPUT
+                'refusal-reason': '',
+                'assistant-variant': '',
+                'assistant-query': '',
+                'assistant-data': {
+                    'input': {},
+                    'metrics': {},
+                    'output': {}
+                },
+                'input-controller-data': {
+                    'input': {},
+                    'metrics': {},
+                    'output': {}
+                },
+                'output-controller-data': {
+                    'input': {},
+                    'metrics': {},
+                    'output': {}
+                }
+            }
+
             request_index += 1
             query_text = row['query'] 
             query_weights = json.loads(row['internal-material-ranks'])
@@ -256,6 +268,7 @@ def answer_dataset(
             )
 
             pipeline_data.append(pipeline_record)
+        data_index += 1
 
     mlflow.flush_trace_async_logging() 
 
@@ -285,7 +298,7 @@ def answer_dataset(
     )
 
     name_start_prefix = output_storage_parameters['name-start-prefix']
-    assistant_model_name = trace_attributes['repo-id'].split('/')[-1]
+    assistant_model_name = trace_attributes['assistant-repo-id'].split('/')[-1]
     artifact = {
         'parameters': formatted_data['parameters'],
         'metrics': formatted_data['metrics']

@@ -13,7 +13,7 @@ def retrieval_send_query(
     dataset_name: str,
     query_weights: dict
 ):
-    with utility_managed_span(
+    with utility_managed_span( 
         mlflow_client = mlflow_client, 
         span_name = span_name, 
         trace_id = trace_id, 

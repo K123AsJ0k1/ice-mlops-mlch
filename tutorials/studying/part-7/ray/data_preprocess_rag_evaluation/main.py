@@ -193,7 +193,7 @@ if __name__ == "__main__":
     print('Getting input')
     job_parameters = json.loads(sys.argv[1])
     
-    print('Running internal rag setup')
+    print('Running internal rag evalution')
     task_status = internal_rag_evalution(
         job_parameters = job_parameters
     )

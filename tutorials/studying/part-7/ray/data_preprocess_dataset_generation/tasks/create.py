@@ -63,9 +63,7 @@ def create_dataset(
     )  
     
     pandas_df = data_object[0]
-    #print(worker_input)
     range_split = worker_input[0].split('-')
-    #print(range_split)
     start_index = int(range_split[0])
     end_index = int(range_split[-1])
     dataset_name = input_storage_parameters['object-path'].split('/')[-1].split('.')[0]
@@ -87,7 +85,7 @@ def create_dataset(
 
     trace_name = mlflow_parameters['trace-name']
     trace_tags = mlflow_parameters['trace-tags']
-
+    
     generator_data = {
         'parameters': trace_attributes,
         'inputs': [],

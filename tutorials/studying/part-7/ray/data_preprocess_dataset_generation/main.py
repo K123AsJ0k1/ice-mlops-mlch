@@ -135,7 +135,7 @@ if __name__ == "__main__":
     print('Getting input')
     job_parameters = json.loads(sys.argv[1])
     
-    print('Running external data analysis')
+    print('Running intenral dataset creation')
     task_status = internal_dataset_creation(
         job_parameters = job_parameters
     )

@@ -55,7 +55,7 @@ def controller_input_check(
 
         input_controller_payload = ray.get(input_controller_ref)
 
-        input_behavior = {
+        input_behavior = { 
             'reasoning': '', 
             'secret-leak': 0, 
             'off-topic': 0
@@ -82,7 +82,7 @@ def controller_input_check(
                 input_controller_metadata['output-cost'] = output_cost
                 input_controller_metadata['total-cost'] = input_cost + output_cost
                 
-                model_name = f'{trace_attributes['repo-id']}-{trace_attributes['file-name']}'
+                model_name = f'{trace_attributes['controller-repo-id']}-{trace_attributes['controller-file-name']}'
                 model_name = model_name.replace('*','')
                 input_bc_span.set_attributes(
                     mlflow_llm_cost(
@@ -218,7 +218,7 @@ def controller_output_check(
                 output_controller_metadata['output-cost'] = output_cost
                 output_controller_metadata['total-cost'] = input_cost + output_cost
                 
-                model_name = f'{trace_attributes['repo-id']}-{trace_attributes['file-name']}'
+                model_name = f'{trace_attributes['controller-repo-id']}-{trace_attributes['controller-file-name']}'
                 model_name = model_name.replace('*','')
                 output_bc_span.set_attributes(
                     mlflow_llm_cost(

@@ -3,7 +3,7 @@ from functions.utility import utility_managed_span
 from icebreaker.mlflow.use import mlflow_get_prompt
 from icebreaker.mlflow.utility import mlflow_token_usage, mlflow_llm_cost, mlflow_llm_effiency
 
-def assistant_send_request(
+def judge_send_request(
     mlflow_client: any,
     span_name: str,
     trace_id: any,
@@ -11,7 +11,7 @@ def assistant_send_request(
     prompt_name: str,
     prompt_version: str,
     prompt_replacements: dict,
-    assistant_ref: any,
+    judge_ref: any,
     trace_attributes: dict,
     pipeline_record: dict
 ):
