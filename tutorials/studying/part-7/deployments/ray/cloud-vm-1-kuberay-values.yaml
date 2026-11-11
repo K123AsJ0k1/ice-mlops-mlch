@@ -1,0 +1,40 @@
+image:
+  repository: t9k4b5ndjok1/multi-local-cloud-hpc-integration
+  tag: kuberay-cu121
+  pullPolicy: IfNotPresent
+
+head:
+  resources:
+    limits:
+      cpu: "2"
+      memory: "27Gi"
+      nvshare.com/gpu: "1"
+    requests:
+      cpu: "2"
+      memory: "27Gi"
+  volumes:
+    - name: log-volume
+      emptyDir: {}
+  volumeMounts:
+    - mountPath: /tmp/ray
+      name: log-volume
+ 
+worker:
+  groupName: worker
+  replicas: 1
+  minReplicas: 1
+  maxReplicas: 2
+  resources:
+    limits:
+      cpu: "2"
+      memory: "27Gi"
+      nvshare.com/gpu: "1"
+    requests:
+      cpu: "2"
+      memory: "27Gi"
+  volumes:
+    - name: log-volume
+      emptyDir: {}
+  volumeMounts:
+    - mountPath: /tmp/ray
+      name: log-volume
