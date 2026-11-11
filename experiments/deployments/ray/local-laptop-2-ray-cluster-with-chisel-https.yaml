@@ -7,7 +7,7 @@ networks:
 
 services:
   ray-head:
-    image: rayproject/ray:2.49.2-py312-cu128
+    image: t9k4b5ndjok1/multi-local-cloud-hpc-integration:compose-cu128
     container_name: ray-head
     hostname: ray-head
     restart: no
@@ -32,7 +32,7 @@ services:
       exp_network:
         ipv4_address: 172.29.0.15
   ray-worker:
-    image: rayproject/ray:2.49.2-py312-cu128
+    image: t9k4b5ndjok1/multi-local-cloud-hpc-integration:compose-cu128
     container_name: ray-worker
     hostname: ray-worker
     depends_on:
