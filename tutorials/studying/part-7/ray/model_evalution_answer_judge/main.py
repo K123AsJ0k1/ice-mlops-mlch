@@ -13,7 +13,7 @@ from icebreaker.misc.time import time_run_update
 from icebreaker.mlflow.setup import mlflow_setup_client
 from icebreaker.mlflow.use import mlflow_get_or_create_experiment, mlflow_start_run, mlflow_add_logs, mlflow_end_run
 
-def coding_assistant_process(
+def answer_judge_process(
     job_parameters: any
 ):
     try:  
@@ -21,6 +21,7 @@ def coding_assistant_process(
         swift_parameters = job_parameters['swift']
         mlflow_parameters = job_parameters['mlflow']
         input_storage_parameters = job_parameters['input-storage']
+        solution_storage_parameters = job_parameters['solution-storage']
         output_storage_parameters = job_parameters['output-storage']
         config_parameters = job_parameters['config']
         judge_parameters = job_parameters['judge']
@@ -74,6 +75,7 @@ def coding_assistant_process(
             mlflow_parameters = mlflow_parameters,
             experiment_id = experiment_id,
             input_storage_parameters = input_storage_parameters,
+            solution_storage_parameters = solution_storage_parameters,
             output_storage_parameters = output_storage_parameters,
             worker_input = worker_input_ref,
             judge_prompts = judge_prompts
@@ -114,7 +116,7 @@ def coding_assistant_process(
         
         return True
     except Exception as e:
-        print(f'Coding assistant process: {e}')
+        print(f'Answer judge process: {e}')
         return False
 
 if __name__ == "__main__":
@@ -145,8 +147,8 @@ if __name__ == "__main__":
     print('Getting input')
     job_parameters = json.loads(sys.argv[1])
     
-    print('Running coding assistant process')
-    task_status = coding_assistant_process(
+    print('Running answer judge process')
+    task_status = answer_judge_process(
         job_parameters = job_parameters
     )
 
@@ -160,14 +162,14 @@ if __name__ == "__main__":
     work_swift_client = swift_setup_client(
         swift_parameters = swift_parameters
     )
-    '''
+    
     time_storage_parameters = job_parameters['time-storage']
     time_storage_parameters['lock-location'] = job_parameters['process']['lock-location']
     time_object_name = time_storage_parameters['object-name']
     cluster_name = job_parameters['cluster']
     step_name = job_parameters['step']
-    time_name = f'ray-internal-dataset-creation-{cluster_name}-{step_name}'
-    
+    time_name = f'ray-answer-judge-process-{cluster_name}-{step_name}'
+    '''
     time_stored_1, time_index_1, time_name_1 = time_run_update(
         storage_client = work_swift_client,
         storage_parameters = time_storage_parameters,

@@ -106,8 +106,9 @@ def answer_dataset(
     record_index = 1
     for index, row in processed_subset.iterrows():
         for name, metadata in assistant_prompts.items():
+            data_category = row['category']
             pipeline_record = {
-                'dataset-category': row['category'],
+                'dataset-category': data_category,
                 'dataset-index': index,
                 'status': 'ACCEPTED', # ACCEPTED, REFUSED_INPUT, REFUSED_OUTPUT
                 'refusal-reason': '',
@@ -130,7 +131,9 @@ def answer_dataset(
                 }
             }
 
-            print(f'Processing {record_index}/{total_records}')
+            print(f'Processing {index}/{record_index}/{total_records}')
+            print(f'Dataset category: {data_category}')
+            print(f'Prompt variant: {name}')
 
             request_index += 1
             query_text = row['query'] 
@@ -171,8 +174,6 @@ def answer_dataset(
                 'out-of-scope': 0
             }
 
-            #print(f'Request index: {request_index}')
-            print(f'Prompt variant: {name}')
             trace_output = {
                 'response': 'failed',
                 'refusal-reason': 'unknown'

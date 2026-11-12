@@ -8,7 +8,9 @@ from icebreaker.mlflow.setup import mlflow_setup_client
 from icebreaker.mlflow.use import mlflow_create_trace, mlflow_end_trace
 from icebreaker.objects.use import objects_store_data, objects_get_prefix_list
 from icebreaker.storage.management import storage_set_object_path
-from icebreaker.assistant.utility import assistant_format_data
+from icebreaker.judge.utility import judge_format_data
+
+from functions.judge import judge_send_request
 
 @ray.remote(
     num_cpus = 0.4,
@@ -23,6 +25,7 @@ def evaluate_dataset(
     mlflow_parameters: dict,
     experiment_id: str,
     input_storage_parameters: dict,
+    solution_storage_parameters: dict,
     output_storage_parameters: dict,
     worker_input: list,
     judge_prompts: dict,
@@ -41,7 +44,7 @@ def evaluate_dataset(
         mlflow_parameters = mlflow_parameters
     )
     
-    data_object = objects_get_data(
+    input_data_object = objects_get_data(
         swift_client = swift_client,
         storage_parameters = {
             'bucket-target': input_storage_parameters['bucket-target'],
@@ -61,185 +64,160 @@ def evaluate_dataset(
         dict_format = False
     )  
     
-    pandas_df = data_object[0]
+    input_pandas_df = input_data_object[0]
     range_split = worker_input[0].split('-')
     start_index = int(range_split[0])
     end_index = int(range_split[-1])
-    dataset_name = input_storage_parameters['object-path'].split('/')[-1].split('.')[0]
-    processed_subset = pandas_df.iloc[start_index:end_index]
-    print(f'Amount of rows: {len(processed_subset)}')
+    input_dataset_name = input_storage_parameters['object-path'].split('/')[-1].split('.')[0]
+    processed_input_subset = input_pandas_df.iloc[start_index:end_index]
+    print(f'Amount of rows: {len(processed_input_subset)}')
+
+    solution_data_object = objects_get_data(
+        swift_client = swift_client,
+        storage_parameters = {
+            'bucket-target': solution_storage_parameters['bucket-target'],
+            'bucket-prefix': solution_storage_parameters['bucket-prefix'],
+            'bucket-user': solution_storage_parameters['bucket-user'],
+            'object-name': 'root',
+            'object-serialization': solution_storage_parameters['object-serialization'],
+            'path-replacers': {
+                'name': solution_storage_parameters['object-path']
+            },
+            'path-names': [],
+            'debug-prints': True,
+            'lock-parameters': {},
+            'lock-location': None,
+            'overwrite': True
+        },
+        dict_format = False
+    )  
+
+    solution_pandas_df = solution_data_object[0]
 
     mlflow.set_experiment(
         experiment_id = experiment_id
     )
 
     trace_attributes = mlflow_parameters['trace-attributes']
-    trace_attributes = trace_attributes | judge_parameters
+   
+    for key, value in judge_parameters.items():
+        used_key = f'judge-{key}'
+        trace_attributes[used_key] = value
 
     trace_name = mlflow_parameters['trace-name']
     trace_tags = mlflow_parameters['trace-tags']
-    request_index = 0
-
+    
     pipeline_data = []
-    for row in processed_subset.to_dict(orient = 'records'):
-        # Needs conditional prompt swapping
+    total_records = len(processed_input_subset) * len(judge_prompts)
+    print(f'Starting processing total {total_records} QA pairs')
+    for index, row in processed_input_subset.iterrows():
+        dataset_category = row['dataset-category']
+        dataset_index = row['dataset-index']
+
         pipeline_record = {
-            'assistant-variant': '',
-            'assistant-query': '',
-            'assistant-data': {
+            'dataset-category': dataset_category,
+            'dataset-index': dataset_index,
+            'judge-variant': '',
+            'judge-data': {
                 'input': {},
                 'metrics': {},
+                'output': {}
+            },
+            'assistant-data': {
+                'input': {},
                 'output': {}
             }
         }
 
-        for name, metadata in assistant_prompts.items():
-            request_index += 1
-            query_text = row['query'] 
-            query_weights = json.loads(row['internal-material-ranks'])
-            pipeline_record['assistant-variant'] = name
-            print('Starting trace')
-            root_span = mlflow_create_trace(
-                mlflow_client = mlflow_client,  
-                trace_name = trace_name,
-                experiment_id = experiment_id,
-                trace_attributes = trace_attributes,
-                trace_tags = trace_tags,
-                trace_input = {
-                    'query': query_text
-                }
-            )
-            
-            pipeline_record['assistant-query'] = query_text
-            trace_id = root_span.trace_id
-            root_span_id = root_span.span_id
+        print(f'Processing {index}/{dataset_index}/{total_records}')
+        print(f'Dataset category: {dataset_category}')
 
-            assistant_prompt_replacements = {
-                'query': query_text
-            }
+        dataset_prompt = judge_prompts[dataset_category]
+        prompt_name = dataset_prompt['name']
+        prompt_version = dataset_prompt['version']
+        # This needs the solution dataset
 
-            input_behavior = {
-                'reasoning': '', 
-                'secret-leak': 0, 
-                'off-topic': 0
-            }
-            output_behavior = {
-                'reasoning': '', 
-                'irrelevant': 0, 
-                'verbose': 0, 
-                'out-of-scope': 0
-            }
-
-            print(f'Request index: {request_index}')
-            print(f'Prompt variant: {name}')
-            trace_output = {
-                'response': 'failed',
-                'refusal-reason': 'unknown'
-            }
-            
-            if 'pe-rag-bc' in name:
-                input_behavior = controller_input_check(
-                    mlflow_client = mlflow_client,
-                    span_name = 'behavior-controller-input-check',
-                    trace_id = trace_id,
-                    root_span_id = root_span_id,
-                    controller_prompts = controller_prompts,
-                    query_text = query_text,
-                    controller_ref = controller_ref,
-                    trace_attributes = trace_attributes,
-                    pipeline_record = pipeline_record
-                )
-                
-            print(f'Input behavior: {input_behavior}')
-            if input_behavior.get('secret-leak') == 1 or input_behavior.get('off-topic') == 1:
-                reasons = []
-                if input_behavior.get('secret-leak') == 1: reasons.append("SECRET_LEAK")
-                if input_behavior.get('off-topic') == 1: reasons.append("OFF_TOPIC")
-
-                given_response = 'REFUSED INPUT'
-                refusal_reason = " | ".join(reasons)
-                pipeline_record['status'] = given_response
-                pipeline_record['refusal-reason'] = refusal_reason
-                trace_output = {
-                    'response': given_response,
-                    'refusal-reason': refusal_reason
-                }
-
-            if input_behavior.get('secret-leak') == 0 and input_behavior.get('off-topic') == 0:
-                if 'rag' in name:
-                    assistant_prompt_replacements['content'] = retrieval_send_query(
-                        mlflow_client = mlflow_client, 
-                        span_name = 'retrieval-augmented-generation-query',
-                        trace_id = trace_id,
-                        root_span_id = root_span_id,
-                        retrieval_parameters = retrieval_parameters,
-                        query_text = query_text,
-                        retrieval_ref = retrieval_ref,
-                        dataset_name = dataset_name,
-                        query_weights = query_weights
-                    )
-
-                coding_assistant_output = assistant_send_request(
-                    mlflow_client = mlflow_client, 
-                    span_name = 'coding-assistant-request',
-                    trace_id = trace_id,
-                    root_span_id = root_span_id,
-                    prompt_name = name,
-                    prompt_version = metadata['version'],
-                    prompt_replacements = assistant_prompt_replacements,
-                    assistant_ref = assistant_ref,
-                    trace_attributes = trace_attributes,
-                    pipeline_record = pipeline_record
-                )
-
-                trace_output = {
-                    'response': coding_assistant_output,
-                    'refusal-reason': 'empty'
-                }
-                if 'pe-rag-bc' in name:
-                    output_behavior = controller_output_check(
-                        mlflow_client = mlflow_client, 
-                        span_name = 'behavior-controller-output-check',
-                        trace_id = trace_id,
-                        root_span_id = root_span_id,
-                        controller_prompts = controller_prompts,
-                        query_text = query_text,
-                        controller_ref = controller_ref,
-                        trace_attributes = trace_attributes,
-                        assistant_output = coding_assistant_output,
-                        pipeline_record = pipeline_record
-                    )
-
-            print(f'Output behavior: {output_behavior}')
-            if output_behavior.get('irrelevant') == 1 or output_behavior.get('verbose') == 1 or output_behavior.get('out-of-scope') == 1:
-                reasons = []
-                if output_behavior.get('irrelevant') == 1: reasons.append("IRRELEVANT")
-                if output_behavior.get('verbose') == 1: reasons.append("VERBOSE")
-                if output_behavior.get('out-of-scope') == 1: reasons.append("OUT_OF_SCOPE")
-
-                given_response = 'REFUSED OUTPUT'
-                refusal_reason = " | ".join(reasons)
-                pipeline_record['status'] = given_response
-                pipeline_record['refusal-reason'] = refusal_reason
-                trace_output = {
-                    'response': given_response,
-                    'refusal-reason': refusal_reason
-                }
+        assistant_query = row['assistant-question']
         
-            print('Ending trace')
-            mlflow_end_trace(
-                mlflow_client = mlflow_client,
-                trace_id = trace_id,
-                trace_output = trace_output
-            )
+        pipeline_record['judge-variant'] = prompt_name
+        print('Starting trace')
+        root_span = mlflow_create_trace(
+            mlflow_client = mlflow_client,  
+            trace_name = trace_name,
+            experiment_id = experiment_id,
+            trace_attributes = trace_attributes,
+            trace_tags = trace_tags,
+            trace_input = {
+                'query': assistant_query
+            }
+        )
 
-            pipeline_data.append(pipeline_record)
+        pipeline_record['assistant-query'] = assistant_query
+
+        judge_prompt_replacements = {
+            'truth': '',
+            'query': assistant_query,
+            'output': ''
+        }
+
+        trace_id = root_span.trace_id
+        root_span_id = root_span.span_id
+
+        trace_output = {
+            'response': 'failed',
+            'refusal-reason': 'unknown'
+        } 
+
+        judge_prompt_replacements['truth'] = solution_pandas_df.iloc[dataset_index]['solution']
+        
+        if 'synthetic ' in prompt_name:
+            material_index = solution_pandas_df.iloc[dataset_index]['internal-material-index']
+            judge_prompt_replacements['content'] = solution_pandas_df[solution_pandas_df['internal-material-index'] == int(material_index)]['solution']
+
+        judge_prompt_replacements['output'] = row['assistant-answer']
+
+        answer_judge_output = judge_send_request(
+            mlflow_client = mlflow_client,
+            span_name = 'answer-judge-request',
+            trace_id = trace_id,
+            root_span_id = root_span_id,
+            prompt_name = prompt_name,
+            prompt_version = prompt_version,
+            prompt_replacements =judge_prompt_replacements,
+            judge_ref = judge_ref,
+            trace_attributes = trace_attributes,
+            pipeline_record = pipeline_record 
+        )
+
+        print(f'Answer score: {answer_judge_output}')
+        trace_output = {
+            'response': answer_judge_output,
+            'refusal-reason': 'empty'
+        }
+
+        pipeline_record['assistant-data']['input'] = {
+            'variant': row['variant'],
+            'question': row['assistant-question']
+        }
+
+        pipeline_record['assistant-data']['output'] = {
+            'answer': row['assistant-answer']
+        }
+
+        print('Ending trace')
+        mlflow_end_trace(
+            mlflow_client = mlflow_client,
+            trace_id = trace_id,
+            trace_output = trace_output
+        )
+
+        pipeline_data.append(pipeline_record)
 
     mlflow.flush_trace_async_logging() 
-
-    formatted_data = assistant_format_data(
-        assistant_data = pipeline_data,
-        assistant_parameters = trace_attributes,
+    
+    formatted_data = judge_format_data(
+        judge_data = pipeline_data,
+        judge_parameters = trace_attributes,
         metric_columns = [
             'prompt-tokens',
             'completion-tokens',
@@ -263,7 +241,7 @@ def evaluate_dataset(
     )
 
     name_start_prefix = output_storage_parameters['name-start-prefix']
-    assistant_model_name = trace_attributes['repo-id'].split('/')[-1]
+    judge_model_name = trace_attributes['judge-repo-id'].split('/')[-1]
     artifact = {
         'parameters': formatted_data['parameters'],
         'metrics': formatted_data['metrics']
@@ -274,7 +252,7 @@ def evaluate_dataset(
         'name': 'METRICS'
     }
 
-    artifact_path_name = f'{name_start_prefix}-assistant-{assistant_model_name}-metrics-{trace_attributes['used-enviroment']}-{dataset_name}-'
+    artifact_path_name = f'{name_start_prefix}-judge-{judge_model_name}-metrics-{trace_attributes['used-enviroment']}-{input_dataset_name}-'
 
     artifact_temp_path_name = [
         artifact_path_name
@@ -317,10 +295,10 @@ def evaluate_dataset(
     
     table_object_name = 'data'
     table_path_replacers = {
-        'name': 'ANSWERS'
+        'name': 'JUDGED'
     }
 
-    table_path_name = f'{name_start_prefix}-assistant-{assistant_model_name}-data-{trace_attributes['used-enviroment']}-{dataset_name}-'
+    table_path_name = f'{name_start_prefix}-judge-{judge_model_name}-data-{trace_attributes['used-enviroment']}-{input_dataset_name}-'
 
     table_temp_path_name = [
         table_path_name
@@ -361,8 +339,8 @@ def evaluate_dataset(
         object_metadata = {}
     ) 
     
-    formatted_data['identity'] = dataset_name
-        
+    formatted_data['identity'] = input_dataset_name
+     
     end_time = t.time()
     total_time = round(end_time-start_time,5)
     print('Spent seconds', total_time)
