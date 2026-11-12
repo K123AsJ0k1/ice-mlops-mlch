@@ -298,7 +298,7 @@ def qdrant_modifiable_query(
         except Exception as e:
             print(f"Warning: Qdrant query attempt {attempt}/{max_retries} failed: {e}")
             if attempt == max_retries:
-                print(f"Error: All {max_retries} attempts failed for HSRRF/Qdrant query.")
+                print(f"Error: All {max_retries} attempts failed for Qdrant query.")
                 return []
 
             base_sleep = backoff_factor * (2 ** (attempt - 1))
