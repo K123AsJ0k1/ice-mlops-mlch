@@ -234,6 +234,7 @@ def qdrant_modifiable_query(
 ) -> list:
     try:
         import time
+        import random
         from qdrant_client.models import models
     except ImportError as e:
         raise ImportError("qdrant/use failed to import", e)
@@ -299,6 +300,10 @@ def qdrant_modifiable_query(
             if attempt == max_retries:
                 print(f"Error: All {max_retries} attempts failed for HSRRF/Qdrant query.")
                 return []
-            time.sleep(backoff_factor * (2 ** (attempt - 1)))
+
+            base_sleep = backoff_factor * (2 ** (attempt - 1))
+            sleep_jitter = random.uniform(0, 0.25)
+            sleep_time = base_sleep + sleep_jitter
+            time.sleep(sleep_time)
     return []
     

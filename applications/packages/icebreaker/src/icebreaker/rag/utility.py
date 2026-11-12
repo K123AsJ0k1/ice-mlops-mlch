@@ -122,7 +122,9 @@ def rag_batch_query(
             query_dense = q_dense,
             query_sparse = q_sparse,
             query_limit = query_limit,
-            fusion_limit = fusion_limit
+            fusion_limit = fusion_limit,
+            max_retries = 10,
+            backoff_factor = 0.5
         )
         search_latency_ms = (time.perf_counter_ns() - start_search) / 1e6
 
