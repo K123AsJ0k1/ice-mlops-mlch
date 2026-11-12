@@ -1005,11 +1005,14 @@ def workflow_create_unified_dataset(
                         type_value = format_replacers[type_value] 
                 modified_row['type'] = type_value
                 if 'internal-material-ranks' in row:
-                    modified_row['internal-material-ranks'] = json.dumps(row['internal-material-ranks'])
+                    if isinstance(row['internal-material-ranks'], dict):
+                        modified_row['internal-material-ranks'] = json.dumps(row['internal-material-ranks'])
                 if 'internal-material-references' in row:
-                    modified_row['internal-material-references'] = json.dumps(row['internal-material-references'])
+                    if isinstance(row['internal-material-references'], dict):
+                        modified_row['internal-material-references'] = json.dumps(row['internal-material-references'])
                 if 'internal-material-paths' in row:
-                    modified_row['internal-material-paths'] = json.dumps(row['internal-material-paths'])
+                    if isinstance(row['internal-material-paths'], dict):
+                        modified_row['internal-material-paths'] = json.dumps(row['internal-material-paths'])
             joined_rows.append(modified_row)
 
     unified_dataset = pd.DataFrame(joined_rows)
