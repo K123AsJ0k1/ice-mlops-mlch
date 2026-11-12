@@ -166,14 +166,14 @@ processing:
         job:
           main-file: 'main.py'
           runtime:
-            working_dir: 'model_evalution_coding_assistant'
-            pip: 'c-vm1-requirements.txt'
+            working_dir: 'model_improvement_coding_assistant'
+            pip: 'min-requirements.txt'
             env_vars:
               HF_TOKEN: 'fill'
       local-lt3:
         mlflow: 
-          tracking-uri: 'http://mlflow.mlflow.svc.cluster.local:5000'
-          s3-endpoint-url: 'http://mlflow-minio-service.mlflow.svc.cluster.local:9000'
+          tracking-uri: 'http://chisel-client:5000'
+          s3-endpoint-url: 'http://chisel-client:9000'
           aws-access-key-id: 'minioadmin'
           aws-secret-access-key: 'minioadmin'
           experiment-name: 'mlch-code-assistant-rag-pipeline'
@@ -228,8 +228,8 @@ processing:
         job:
           main-file: 'main.py'
           runtime:
-            working_dir: 'model_evalution_coding_assistant'
-            pip: 'c-vm1-requirements.txt'
+            working_dir: 'model_improvement_coding_assistant'
+            pip: 'min-requirements.txt'
             env_vars:
               HF_TOKEN: 'fill'
   step-2: # qwen3.5 4B assistant baseline, PE, PE-RAG, PE-RAG-BC
@@ -347,14 +347,14 @@ processing:
         job:
           main-file: 'main.py'
           runtime:
-            working_dir: 'model_evalution_coding_assistant'
-            pip: 'c-vm1-requirements.txt'
+            working_dir: 'model_improvement_coding_assistant'
+            pip: 'min-requirements.txt'
             env_vars:
               HF_TOKEN: 'fill'
       local-lt3:
         mlflow: 
-          tracking-uri: 'http://mlflow.mlflow.svc.cluster.local:5000'
-          s3-endpoint-url: 'http://mlflow-minio-service.mlflow.svc.cluster.local:9000'
+          tracking-uri: 'http://chisel-client:5000'
+          s3-endpoint-url: 'http://chisel-client:9000'
           aws-access-key-id: 'minioadmin'
           aws-secret-access-key: 'minioadmin'
           experiment-name: 'mlch-code-assistant-rag-pipeline'
@@ -409,8 +409,8 @@ processing:
         job:
           main-file: 'main.py'
           runtime:
-            working_dir: 'model_evalution_coding_assistant'
-            pip: 'c-vm1-requirements.txt'
+            working_dir: 'model_improvement_coding_assistant'
+            pip: 'min-requirements.txt'
             env_vars:
               HF_TOKEN: 'fill'
   step-3: # qwen3.5 9B assisatnt baseline, PE, PE-RAG, PE-RAG-BC
@@ -528,18 +528,18 @@ processing:
         job:
           main-file: 'main.py'
           runtime:
-            working_dir: 'model_evalution_coding_assistant'
-            pip: 'c-vm1-requirements.txt'
+            working_dir: 'model_improvement_coding_assistant'
+            pip: 'min-requirements.txt'
             env_vars:
               HF_TOKEN: 'fill'
       local-lt3:
         mlflow: 
-          tracking-uri: 'http://mlflow.mlflow.svc.cluster.local:5000'
-          s3-endpoint-url: 'http://mlflow-minio-service.mlflow.svc.cluster.local:9000'
+          tracking-uri: 'http://chisel-client:5000'
+          s3-endpoint-url: 'http://chisel-client:9000'
           aws-access-key-id: 'minioadmin'
           aws-secret-access-key: 'minioadmin'
           experiment-name: 'mlch-code-assistant-rag-pipeline'
-          run-name: 'assistant-step-1-lt3-model-evalution' 
+          run-name: 'assistant-step-3-lt3-model-evalution' 
           run-tags:
             workflow-type: 'local-cloud'
             pipeline-step: 'assistant-model-evalution'
@@ -565,7 +565,7 @@ processing:
           n-ctx: 32768
           type-k: 1
           type-v: 1
-          flash-attention: False
+          flash-attention: True
         retrieval:
           device-mode: 'cuda'
           collection-name: 'internal_material_local_cloud_database'
@@ -583,14 +583,14 @@ processing:
           n-ctx: 8192
           type-k: 1
           type-v: 1
-          flash-attention: False
+          flash-attention: True
         process:
           server-name: 'local-lt3'
           lock-location: 'remote'
         job:
           main-file: 'main.py'
           runtime:
-            working_dir: 'model_evalution_coding_assistant'
-            pip: 'c-vm1-requirements.txt'
+            working_dir: 'model_improvement_coding_assistant'
+            pip: 'min-requirements.txt'
             env_vars:
               HF_TOKEN: 'fill'
