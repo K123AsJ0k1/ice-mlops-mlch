@@ -125,20 +125,24 @@ def rag_batch_query(
             fusion_limit = fusion_limit
         )
         search_latency_ms = (time.perf_counter_ns() - start_search) / 1e6
-        
-        total_characters = sum(point.payload.get('characters', 0) for point in query_result)
-        retrieved_idx = [point.payload['idx'] for point in query_result]
 
-        resulted_metadata = {}
-        resulted_metadata['retrieved-idx'] = retrieved_idx
-        resulted_metadata['query-score'] = [point.score for point in query_result]
-        resulted_metadata['query-topic'] = [point.payload['topic'] for point in query_result]
-        resulted_metadata['query-relevance'] = [int(point.payload['relevance']) for point in query_result]
-        resulted_metadata['query-ranking'] = [point.payload['ranking-weights'] for point in query_result]
-        resulted_metadata['query-part'] = [int(point.payload['part']) for point in query_result]
-        resulted_metadata['query-document'] = [int(point.payload['document']) for point in query_result]
-        resulted_metadata['query-chapter'] = [int(point.payload['chapter']) for point in query_result]
-        resulted_metadata['query-index'] = [int(point.payload['index']) for point in query_result] 
+        if query_result is None:
+            query_result = []
+        
+        total_characters = sum(point.payload.get('characters', 0) for point in query_result if point.payload)
+        retrieved_idx = [point.payload['idx'] for point in query_result if point.payload and 'idx' in point.payload]
+
+        resulted_metadata = {
+            'retrieved-idx': retrieved_idx,
+            'query-score': [point.score for point in query_result],
+            'query-topic': [point.payload.get('topic') for point in query_result if point.payload],
+            'query-relevance': [int(point.payload['relevance']) for point in query_result if point.payload and 'relevance' in point.payload],
+            'query-ranking': [point.payload.get('ranking-weights') for point in query_result if point.payload],
+            'query-part': [int(point.payload['part']) for point in query_result if point.payload and 'part' in point.payload],
+            'query-document': [int(point.payload['document']) for point in query_result if point.payload and 'document' in point.payload],
+            'query-chapter': [int(point.payload['chapter']) for point in query_result if point.payload and 'chapter' in point.payload],
+            'query-index': [int(point.payload['index']) for point in query_result if point.payload and 'index' in point.payload]
+        }
 
         resulted_metrics = {} 
         if 0 < len(q_relevant_weights):
@@ -154,7 +158,7 @@ def rag_batch_query(
         resulted_metrics['total-characters'] = total_characters
 
         query_results.append(query_result)
-        query_metadata.append(query_metadata)
+        query_metadata.append(resulted_metadata)
         query_metrics.append(resulted_metrics)
         
     return {

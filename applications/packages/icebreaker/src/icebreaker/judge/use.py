@@ -117,7 +117,7 @@ def judge_generate_answers(
     print(f'Request token limit {token_limit}\n')
     print('')
     
-    run_records = []
+    run_records = [] 
     for inference_request in dataset_inference_requests:
         execution_time_start = t.time()
 

@@ -228,69 +228,77 @@ def qdrant_modifiable_query(
     query_dense: any,
     query_sparse: any,
     query_limit: int,
-    fusion_limit: int
+    fusion_limit: int,
+    max_retries: int = 3,
+    backoff_factor: float = 1.0
 ) -> list:
     try:
+        import time
         from qdrant_client.models import models
     except ImportError as e:
         raise ImportError("qdrant/use failed to import", e)
 
-    try:
-        if query_type == 'dense':
-            query_result = qdrant_client.query_points(
-                collection_name = collection_name,
-                query = query_dense,
-                using = "dense",
-                limit = query_limit
-            )
+    for attempt in range(1, max_retries + 1):
+        try:
+            if query_type == 'dense':
+                query_result = qdrant_client.query_points(
+                    collection_name = collection_name,
+                    query = query_dense,
+                    using = "dense",
+                    limit = query_limit
+                )
 
-        if query_type == 'sparse':
-            query_result = qdrant_client.query_points(
-                collection_name = collection_name,
-                query = query_sparse,
-                using = "sparse",
-                limit = query_limit
-            )
-        
-        if query_type == 'hybrid-rrf':
-            query_result = qdrant_client.query_points(
-                collection_name = collection_name,
-                prefetch = [
-                    models.Prefetch(
-                        query = query_dense,
-                        using = "dense",
-                        limit = fusion_limit
-                    ),
-                    models.Prefetch(
-                        query = query_sparse,
-                        using = "sparse",
-                        limit = fusion_limit
-                    )
-                ],
-                query = models.FusionQuery(fusion=models.Fusion.RRF),
-                limit = query_limit
-            )
-        if query_type == 'hybrid-dbsf': 
-            query_result = qdrant_client.query_points(
-                collection_name = collection_name,
-                prefetch = [
-                    models.Prefetch(
-                        query = query_dense,
-                        using = "dense",
-                        limit = fusion_limit
-                    ),
-                    models.Prefetch(
-                        query = query_sparse,
-                        using = "sparse",
-                        limit = fusion_limit
-                    )
-                ],
-                query = models.FusionQuery(fusion=models.Fusion.DBSF),
-                limit = query_limit
-            )
+            if query_type == 'sparse':
+                query_result = qdrant_client.query_points(
+                    collection_name = collection_name,
+                    query = query_sparse,
+                    using = "sparse",
+                    limit = query_limit
+                )
+            
+            if query_type == 'hybrid-rrf':
+                query_result = qdrant_client.query_points(
+                    collection_name = collection_name,
+                    prefetch = [
+                        models.Prefetch(
+                            query = query_dense,
+                            using = "dense",
+                            limit = fusion_limit
+                        ),
+                        models.Prefetch(
+                            query = query_sparse,
+                            using = "sparse",
+                            limit = fusion_limit
+                        )
+                    ],
+                    query = models.FusionQuery(fusion=models.Fusion.RRF),
+                    limit = query_limit
+                )
+            if query_type == 'hybrid-dbsf': 
+                query_result = qdrant_client.query_points(
+                    collection_name = collection_name,
+                    prefetch = [
+                        models.Prefetch(
+                            query = query_dense,
+                            using = "dense",
+                            limit = fusion_limit
+                        ),
+                        models.Prefetch(
+                            query = query_sparse,
+                            using = "sparse",
+                            limit = fusion_limit
+                        )
+                    ],
+                    query = models.FusionQuery(fusion=models.Fusion.DBSF),
+                    limit = query_limit
+                )
 
-        return query_result.points
-    except Exception as e:
-        print(f"Error HSRRF query: {e}")
-        return None
+            return query_result.points if query_result and hasattr(query_result, 'points') else []
+        except Exception as e:
+            print(f"Warning: Qdrant query attempt {attempt}/{max_retries} failed: {e}")
+            if attempt == max_retries:
+                print(f"Error: All {max_retries} attempts failed for HSRRF/Qdrant query.")
+                return []
+            time.sleep(backoff_factor * (2 ** (attempt - 1)))
+    return []
     

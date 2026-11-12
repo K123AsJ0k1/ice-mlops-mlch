@@ -20,7 +20,7 @@ def judge_extract_output(
 
     try:
         data = json.loads(json_str)
-        return data
+        return data 
     except Exception as e:
         return {
             'reasoning': 'Malformed JSON returned by guardrail', 
@@ -333,4 +333,91 @@ def judge_evalute_models(
     return {
         'data': collected_df,
         'stats': data_summaries
+    }
+
+def judge_format_data( 
+    judge_data: any,
+    judge_parameters: dict,
+    metric_columns: list
+) -> any:
+    try:
+        import pandas as pd
+        from ..misc.dict import flatten_nested_dict
+        from ..pd_stats.utility import pandas_get_p95, pandas_get_p99
+    except ImportError as e:
+        raise ImportError("assistant/utility failed to import", e)
+    
+    records = []
+    for case in judge_data:
+        row_dict = {
+            'dataset-category': case['dataset-category'],
+            'dataset-index': case['dataset-index'],
+            'variant': case['judge-variant']
+        }
+
+        for key, value in case['judge-data']['input'].items():
+            used_key = f'judge-{key}'
+            row_dict[used_key] = value
+
+        for key, value in case['judge-data']['metrics'].items():
+            used_key = f'judge-{key}'
+            row_dict[used_key] = value
+
+        for key, value in case['judge-data']['output'].items():
+            used_key = f'judge-{key}'
+            row_dict[used_key] = value
+        
+        for key, value in case['assistant-data']['input'].items():
+            used_key = f'assistant-{key}'
+            row_dict[used_key] = value
+
+        for key, value in case['assistant-data']['output'].items():
+            used_key = f'assistant-{key}'
+            row_dict[used_key] = value
+
+        records.append(row_dict)
+         
+    # pandas automatically handles missing keys across records by filling them with NaN/None
+    created_dataframe = pd.DataFrame(records)   
+
+    modified_metric_columns = []
+    for column in metric_columns:
+        modified_metric_columns.append(f'assistant-{column}')
+        modified_metric_columns.append(f'input-controller-{column}')
+        modified_metric_columns.append(f'output-controller-{column}')
+
+    # Filter metric_columns to only those present in the created DataFrame to avoid KeyError
+    valid_metric_cols = [c for c in modified_metric_columns if c in created_dataframe.columns]
+
+    metric_dict = created_dataframe[valid_metric_cols].agg([
+        'sum',
+        'mean', 
+        'std', 
+        'median', 
+        pandas_get_p95, 
+        pandas_get_p99, 
+        'min', 
+        'max'
+    ]).rename(
+        index = {
+            pandas_get_p95: 'p95',
+            pandas_get_p99: 'p99'
+        }
+    ).to_dict()
+    
+    formatted_metrics = flatten_nested_dict(
+        target_dict = metric_dict,
+        parent_key = '', 
+        seperator = '-'
+    )
+
+    formatted_parametes = {}
+    for key, value in judge_parameters.items():
+        fixed_name = key.split('.')[-1]
+        formatted_parametes[fixed_name] = value
+    
+    return {
+        'parameters': formatted_parametes,
+        'table': created_dataframe,
+        'metrics': formatted_metrics
     }

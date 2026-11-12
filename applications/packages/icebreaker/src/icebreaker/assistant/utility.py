@@ -522,7 +522,7 @@ def assistant_print_answers(
 
         print("=" * 40 + "\n")
 
-def assistant_format_data(
+def assistant_format_data( 
     assistant_data: any,
     assistant_parameters: dict,
     metric_columns: list
