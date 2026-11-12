@@ -101,12 +101,14 @@ def answer_dataset(
     request_index = 0
 
     pipeline_data = []
-    data_index = 0
-    for row in processed_subset.to_dict(orient = 'records'):
+    total_records = len(processed_subset) * len(assistant_prompts)
+    print(f'Starting processing total {total_records} records')
+    record_index = 1
+    for index, row in processed_subset.iterrows():
         for name, metadata in assistant_prompts.items():
             pipeline_record = {
                 'dataset-category': row['category'],
-                'dataset-index': data_index,
+                'dataset-index': index,
                 'status': 'ACCEPTED', # ACCEPTED, REFUSED_INPUT, REFUSED_OUTPUT
                 'refusal-reason': '',
                 'assistant-variant': '',
@@ -128,9 +130,14 @@ def answer_dataset(
                 }
             }
 
+            print(f'Processing {record_index}/{total_records}')
+
             request_index += 1
             query_text = row['query'] 
             query_weights = json.loads(row['internal-material-ranks'])
+            if not isinstance(query_weights, dict):
+                query_weights = {}
+
             pipeline_record['assistant-variant'] = name
             print('Starting trace')
             root_span = mlflow_create_trace(
@@ -164,7 +171,7 @@ def answer_dataset(
                 'out-of-scope': 0
             }
 
-            print(f'Request index: {request_index}')
+            #print(f'Request index: {request_index}')
             print(f'Prompt variant: {name}')
             trace_output = {
                 'response': 'failed',
@@ -268,7 +275,7 @@ def answer_dataset(
             )
 
             pipeline_data.append(pipeline_record)
-        data_index += 1
+            record_index += 1
 
     mlflow.flush_trace_async_logging() 
 
