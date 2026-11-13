@@ -1090,7 +1090,6 @@ def workflow_create_unified_answer_dataset(
     dataset_user: str
 ):
     try: 
-        import json
         import pandas as pd
         from ..objects.use import objects_get_data, objects_store_data
         from ..mlflow.use import mlflow_create_dataset, mlflow_get_or_create_experiment
@@ -1120,8 +1119,73 @@ def workflow_create_unified_answer_dataset(
         ) 
 
         object_df = data_object[0]
-        print(object_df.columns)
-
+        
         wanted_columns = dataset_details['wanted-columns']
         filtered_df = object_df[wanted_columns].copy()
+        for index, row in filtered_df.iterrows():
+            joined_rows.append(row)
+
+    unified_dataset = pd.DataFrame(joined_rows)
+    unified_dataset = unified_dataset.reset_index(drop = True)
+
+    dataset_name = 'unified-dataset'
+    path_name = f'{dataset_name}.parquet'
+    storage_parameters['object-name'] = 'data'
+    storage_parameters['object-serialization'] = 'parquet'
+    storage_parameters['path-replacers'] = {
+        'name': 'ANSWERS'
+    }
+    storage_parameters['path-names'] = [
+        path_name
+    ]
+    storage_parameters['debug-prints'] = True
+    storage_parameters['lock-parameters'] = {}
+    storage_parameters['lock-location'] = None
+    storage_parameters['overwrite'] = True
+    
+    dataset_stored = objects_store_data(
+        swift_client = swift_client,
+        storage_parameters = storage_parameters,
+        object_data = unified_dataset,
+        object_metadata = {}
+    )
+
+    experiment_id = mlflow_get_or_create_experiment(
+        mlflow_client = mlflow_client,
+        name = experiment_name
+    ) 
+
+    formatted_records = []
+    for _, row in unified_dataset.iterrows():
+        formatted_records.append({
+            'inputs': {
+                'assistant-question': row['assistant-question']
+            },
+            'expectations': {
+                'assistant-answer': row['assistant-answer'],
+                'dataset-category': row['dataset-category'],
+                'dataset-index': row['dataset-category'],
+                'assistant-variant': row['variant']
+            },
+            'source': {
+                'source_type': 'UNSPECIFIED'
+            },
+            'tags': {
+                'mlflow.user': dataset_user
+            }
+        })
+    
+    dataset_tags['mlflow.user'] = dataset_user
+    dataset_id = mlflow_create_dataset(
+        mlflow_client = mlflow_client,
+        dataset_name = dataset_name,
+        experiment_id = experiment_id,
+        dataset_tags = dataset_tags,
+        dataset_records = formatted_records
+    )
+
+    return {
+        'dataset': unified_dataset,
+        'id': dataset_id
+    }
         

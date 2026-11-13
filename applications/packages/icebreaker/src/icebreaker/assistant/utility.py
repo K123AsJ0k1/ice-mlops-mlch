@@ -541,7 +541,7 @@ def assistant_format_data(
             'dataset-index': case['dataset-index'],
             'status': case['status'],
             'refusal': case['refusal-reason'],
-            'variant': case['assistant-variant'],
+            'assistant-variant': case['assistant-variant'],
             'assistant-question': case['assistant-query']
         }
         
