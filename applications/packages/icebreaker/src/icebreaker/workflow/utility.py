@@ -930,7 +930,7 @@ def workflow_create_synthetic_dataset(
         'id': dataset_id
     }
 
-def workflow_create_unified_dataset(
+def workflow_create_unified_evalution_dataset(
     swift_client: any,
     mlflow_client: any,
     storage_parameters: dict,
@@ -1078,3 +1078,47 @@ def workflow_create_unified_dataset(
         'dataset': unified_dataset,
         'id': dataset_id
     }
+
+def workflow_create_unified_answer_dataset(
+    swift_client: any,
+    mlflow_client: any,
+    storage_parameters: dict,
+    dataset_paths: list,
+    dataset_details: dict,
+    experiment_name: str,
+    dataset_tags: dict,
+    dataset_user: str
+):
+    try: 
+        import json
+        import pandas as pd
+        from ..objects.use import objects_get_data, objects_store_data
+        from ..mlflow.use import mlflow_create_dataset, mlflow_get_or_create_experiment
+    except ImportError as e:
+        raise ImportError("workflow/utility failed to import", e)
+
+    joined_rows = []
+    for dataset_path in dataset_paths:
+        data_object = objects_get_data(
+            swift_client = swift_client,
+            storage_parameters = {
+                'bucket-target': storage_parameters['bucket-target'],
+                'bucket-prefix': storage_parameters['bucket-prefix'],
+                'bucket-user': storage_parameters['bucket-user'],
+                'object-name': 'root',
+                'object-serialization': storage_parameters['object-serialization'],
+                'path-replacers': {
+                    'name': dataset_path
+                },
+                'path-names': [],
+                'debug-prints': True,
+                'lock-parameters': {},
+                'lock-location': None,
+                'overwrite': True
+            },
+            dict_format = False
+        ) 
+
+        object_df = data_object[0]
+        print(object_df.columns)
+        
