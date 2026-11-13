@@ -1121,4 +1121,7 @@ def workflow_create_unified_answer_dataset(
 
         object_df = data_object[0]
         print(object_df.columns)
+
+        wanted_columns = dataset_details['wanted-columns']
+        filtered_df = object_df[wanted_columns].copy()
         

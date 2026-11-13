@@ -146,13 +146,24 @@ def rag_batch_query(
             'query-index': [int(point.payload['index']) for point in query_result if point.payload and 'index' in point.payload]
         }
 
-        resulted_metrics = {} 
+        resulted_metrics = {
+            'p@1': 0,
+            'r@3': 0,
+            'rr': 0,
+            'ap': 0,
+            'ndcg@3': 0,
+            'ndcg@5': 0,
+            'embedding-latency-ms': 0,
+            'search-latency-ms': 0,
+            'total-latency-ms': 0,
+            'total-characters': 0
+        }
         if 0 < len(q_relevant_weights):
             resulted_metrics = evalution_ranking_metrics( 
                 retrieved_ids = retrieved_idx,
                 true_relevant_weights = q_relevant_weights,
                 relevance_threshold = relevance_threshold
-            ) 
+            )   
             
         resulted_metrics['embedding-latency-ms'] = total_embed_total_ms
         resulted_metrics['search-latency-ms'] = search_latency_ms

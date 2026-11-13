@@ -211,7 +211,7 @@ def evalution_ranking_metrics(
     ndcg_3 = float(dcg_3 / idcg_3) if idcg_3 > 0 else 0.0
     ndcg_5 = float(dcg_5 / idcg_5) if idcg_5 > 0 else 0.0
     
-    return {
+    return { 
         'p@1': p_at_1,
         'r@3': r_at_3,
         'rr': rr,
