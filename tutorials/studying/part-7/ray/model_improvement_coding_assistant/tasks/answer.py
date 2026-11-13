@@ -119,6 +119,10 @@ def answer_dataset(
                     'metrics': {},
                     'output': {}
                 },
+                'retrieval-data': {
+                    'metrics': {},
+                    'output': {}
+                },
                 'input-controller-data': {
                     'input': {},
                     'metrics': {},
@@ -209,7 +213,7 @@ def answer_dataset(
 
             if input_behavior.get('secret-leak') == 0 and input_behavior.get('off-topic') == 0:
                 if 'rag' in name:
-                    assistant_prompt_replacements['content'] = retrieval_send_query(
+                    assistant_prompt_replacements['content'] = retrieval_send_query( 
                         mlflow_client = mlflow_client, 
                         span_name = 'retrieval-augmented-generation-query',
                         trace_id = trace_id,
@@ -218,7 +222,8 @@ def answer_dataset(
                         query_text = query_text,
                         retrieval_ref = retrieval_ref,
                         dataset_name = dataset_name,
-                        query_weights = query_weights
+                        query_weights = query_weights,
+                        pipeline_record = pipeline_record
                     )
 
                 coding_assistant_output = assistant_send_request(

@@ -126,7 +126,9 @@ def evaluate_dataset(
             'assistant-data': {
                 'input': {},
                 'output': {}
-            }
+            },
+            'question-truth': '',
+            'question-content': ''
         }
 
         print(f'Processing {index}/{dataset_index}/{total_records}')
@@ -137,7 +139,7 @@ def evaluate_dataset(
         prompt_version = dataset_prompt['version']
         # This needs the solution dataset
 
-        assistant_query = row['assistant-question']
+        assistant_question = row['assistant-question']
         
         pipeline_record['judge-variant'] = prompt_name
         print('Starting trace')
@@ -148,15 +150,15 @@ def evaluate_dataset(
             trace_attributes = trace_attributes,
             trace_tags = trace_tags,
             trace_input = {
-                'query': assistant_query
+                'query': assistant_question
             }
         )
 
-        pipeline_record['assistant-query'] = assistant_query
+        pipeline_record['assistant-question'] = assistant_question
 
         judge_prompt_replacements = {
             'truth': '',
-            'query': assistant_query,
+            'query': assistant_question,
             'output': ''
         }
 
@@ -168,11 +170,15 @@ def evaluate_dataset(
             'refusal-reason': 'unknown'
         } 
 
-        judge_prompt_replacements['truth'] = solution_pandas_df.iloc[dataset_index]['solution']
+        ground_truth = solution_pandas_df.iloc[dataset_index]['solution']
+        judge_prompt_replacements['truth'] = ground_truth
+        pipeline_record['question-truth'] = ground_truth
         
         if 'synthetic ' in prompt_name:
             material_index = solution_pandas_df.iloc[dataset_index]['internal-material-index']
-            judge_prompt_replacements['content'] = solution_pandas_df[solution_pandas_df['internal-material-index'] == int(material_index)]['solution']
+            question_content = solution_pandas_df[solution_pandas_df['internal-material-index'] == int(material_index)]['solution']
+            judge_prompt_replacements['content'] = question_content
+            pipeline_record['question-content'] = question_content
 
         judge_prompt_replacements['output'] = row['assistant-answer']
 
@@ -183,7 +189,7 @@ def evaluate_dataset(
             root_span_id = root_span_id,
             prompt_name = prompt_name,
             prompt_version = prompt_version,
-            prompt_replacements =judge_prompt_replacements,
+            prompt_replacements = judge_prompt_replacements,
             judge_ref = judge_ref,
             trace_attributes = trace_attributes,
             pipeline_record = pipeline_record 

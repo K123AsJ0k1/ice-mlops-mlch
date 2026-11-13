@@ -51,9 +51,7 @@ def assistant_send_request(
 
         coding_assistant_payload = ray.get(coding_assistant_ref)
         coding_assistant_output = 'failed'
-        coding_assistant_metadata = {
-            'assistant-variant': prompt_name
-        }
+        coding_assistant_metadata = {}
         print(f'Coding assistant request status: {coding_assistant_payload['status']}')
         if coding_assistant_payload['status'] == 'success':
             coding_assistant_metrics = coding_assistant_payload['metrics']

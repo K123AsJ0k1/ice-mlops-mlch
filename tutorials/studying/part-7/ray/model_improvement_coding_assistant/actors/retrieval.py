@@ -53,7 +53,7 @@ class Retrieval:
         from icebreaker.rag.utility import rag_batch_query
 
         result = { 
-            'key_name': key_name
+            'key_name': key_name 
         }
         
         batch_outputs = rag_batch_query(

@@ -11,7 +11,8 @@ def retrieval_send_query(
     query_text: str,
     retrieval_ref: any,
     dataset_name: str,
-    query_weights: dict
+    query_weights: dict,
+    pipeline_record: dict
 ):
     with utility_managed_span( 
         mlflow_client = mlflow_client, 
@@ -43,26 +44,32 @@ def retrieval_send_query(
             relevance_threshold = relevance_threshold,
             query_limit = query_limit,
             fusion_limit = fusion_limit,
-            batch_size = batch_size
+            batch_size = batch_size 
         )
         retrieval_payload = ray.get(retrieval_payload_ref)
-        
-        created_context = assistant_format_context(
-            query_results = retrieval_payload['results'],
-            wrapper_tag = 'context',
-            metadata_keys = [
-                'part',
-                'document',
-                'chapter',
-                'index',
-                'absolute-path',
-                'relevance'
-            ],
-            material_key = 'ref-material',
-            path_key = 'ref-paths',
-            content_key = 'content'
-        )
 
+        created_context = ''
+        if 0 < len(retrieval_payload['results']):
+            pipeline_record['retrieval-data']['metrics'] = retrieval_payload['metrics']
+            
+            created_context = assistant_format_context(
+                query_results = retrieval_payload['results'],
+                wrapper_tag = 'context',
+                metadata_keys = [
+                    'part',
+                    'document',
+                    'chapter',
+                    'index',
+                    'absolute-path',
+                    'relevance'
+                ],
+                material_key = 'ref-material',
+                path_key = 'ref-paths',
+                content_key = 'content'
+            )
+
+            pipeline_record['retrieval-data']['output'] = created_context
+            
         retrieval_span.set_outputs({
             'created-context': created_context
         })

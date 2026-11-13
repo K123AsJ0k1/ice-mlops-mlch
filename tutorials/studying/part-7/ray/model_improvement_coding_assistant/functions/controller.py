@@ -60,6 +60,11 @@ def controller_input_check(
             'secret-leak': 0, 
             'off-topic': 0
         }
+        error_default = {
+            'reasoning': 'Malformed JSON returned by guardrail', 
+            'secret-leak': 0, 
+            'off-topic': 0
+        }
         input_controller_metadata = {}
         print(f'Input controller request status: {input_controller_payload['status']}')
         if input_controller_payload['status'] == 'success':
@@ -117,15 +122,12 @@ def controller_input_check(
                 )
 
                 input_behavior = controller_extract_output(
-                    output = input_controller_output
+                    output = input_controller_output,
+                    error_default = error_default
                 )
 
             except Exception:
-                input_behavior = {
-                    'reasoning': 'Malformed JSON returned by guardrail', 
-                    'secret-leak': 0, 
-                    'off-topic': 0
-                }
+                input_behavior = error_default
 
         input_bc_span.set_outputs({
             'output': input_behavior
@@ -193,6 +195,12 @@ def controller_output_check(
             'verbose': 0, 
             'out-of-scope': 0
         }
+        error_default = {
+            'reasoning': 'Malformed JSON returned by guardrail', 
+            'irrelevant': 0, 
+            'verbose': 0, 
+            'out-of-scope': 0
+        }
 
         output_controller_metadata = {}
 
@@ -253,16 +261,12 @@ def controller_output_check(
                 )
 
                 output_behavior = controller_extract_output(
-                    output = output_controller_output
+                    output = output_controller_output,
+                    error_default = error_default
                 )
 
             except Exception:
-                output_behavior = {
-                    'reasoning': 'Malformed JSON returned by guardrail', 
-                    'irrelevant': 0, 
-                    'verbose': 0, 
-                    'out-of-scope': 0
-                }
+                output_behavior = error_default
 
         output_bc_span.set_outputs({
             'output': output_behavior
