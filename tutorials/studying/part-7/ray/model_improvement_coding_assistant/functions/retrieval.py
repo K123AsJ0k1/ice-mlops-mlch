@@ -48,9 +48,21 @@ def retrieval_send_query(
         )
         retrieval_payload = ray.get(retrieval_payload_ref)
 
+        pipeline_metrics = {
+            'p@1': 0,
+            'r@3': 0,
+            'rr': 0,
+            'ap': 0,
+            'ndcg@3': 0,
+            'ndcg@5': 0,
+            'embedding-latency-ms': 0,
+            'search-latency-ms': 0,
+            'total-latency-ms': 0,
+           'total-characters': 0
+        }
         created_context = ''
         if 0 < len(retrieval_payload['results']):
-            pipeline_record['retrieval-data']['metrics'] = retrieval_payload['metrics']
+            pipeline_metrics = retrieval_payload['metrics'][0]
             
             created_context = assistant_format_context(
                 query_results = retrieval_payload['results'],
@@ -68,10 +80,12 @@ def retrieval_send_query(
                 content_key = 'content'
             )
 
-            pipeline_record['retrieval-data']['output'] = created_context
-            
-        retrieval_span.set_outputs({
+        pipeline_record['retrieval-data']['metrics'] = pipeline_metrics
+
+        pipeline_output = {
             'created-context': created_context
-        })
+        }
+        pipeline_record['retrieval-data']['output'] = pipeline_output
+        retrieval_span.set_outputs(pipeline_output)
 
         return created_context

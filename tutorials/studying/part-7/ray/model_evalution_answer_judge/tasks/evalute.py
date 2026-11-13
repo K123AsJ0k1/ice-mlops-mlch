@@ -246,6 +246,8 @@ def evaluate_dataset(
         ]
     )
 
+    # There needs to be synthetic and validation tables
+
     name_start_prefix = output_storage_parameters['name-start-prefix']
     judge_model_name = trace_attributes['judge-repo-id'].split('/')[-1]
     artifact = {
