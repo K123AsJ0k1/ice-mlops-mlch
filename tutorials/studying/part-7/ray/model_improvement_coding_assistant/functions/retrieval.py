@@ -1,4 +1,5 @@
 import ray
+import json
 from functions.utility import utility_managed_span
 from icebreaker.assistant.utility import assistant_format_context
 
@@ -58,10 +59,12 @@ def retrieval_send_query(
             'embedding-latency-ms': 0,
             'search-latency-ms': 0,
             'total-latency-ms': 0,
-           'total-characters': 0
+            'total-characters': 0
         }
         created_context = ''
+        query_index_list = []
         if 0 < len(retrieval_payload['results']):
+            query_index_list = retrieval_payload['metadata'][0]['retrieved-idx']
             pipeline_metrics = retrieval_payload['metrics'][0]
             
             created_context = assistant_format_context(
@@ -83,8 +86,11 @@ def retrieval_send_query(
         pipeline_record['retrieval-data']['metrics'] = pipeline_metrics
 
         pipeline_output = {
+            'query-identities': json.dumps(query_index_list),
+            'query-ranks': json.dumps(query_weights), 
             'created-context': created_context
         }
+        pipeline_output = pipeline_output | pipeline_metrics
         pipeline_record['retrieval-data']['output'] = pipeline_output
         retrieval_span.set_outputs(pipeline_output)
 
