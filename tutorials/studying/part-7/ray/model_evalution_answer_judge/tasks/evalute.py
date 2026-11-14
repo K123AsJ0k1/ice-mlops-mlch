@@ -8,7 +8,7 @@ from icebreaker.mlflow.setup import mlflow_setup_client
 from icebreaker.mlflow.use import mlflow_create_trace, mlflow_end_trace
 from icebreaker.objects.use import objects_store_data, objects_get_prefix_list
 from icebreaker.storage.management import storage_set_object_path
-from icebreaker.judge.utility import judge_format_data
+from icebreaker.judge.utility import judge_format_data, judge_rag_metrics
 
 from functions.judge import judge_send_request
 
@@ -72,6 +72,28 @@ def evaluate_dataset(
     processed_input_subset = input_pandas_df.iloc[start_index:end_index]
     print(f'Amount of rows: {len(processed_input_subset)}')
 
+    formatted_metrics = judge_rag_metrics(
+        answer_data = input_pandas_df,
+        category_column = 'dataset-category',
+        used_categories = [
+            'general',
+            'synthetic',
+            'validation'
+        ],
+        metric_columns = [
+            'retrieval-p@1',
+            'retrieval-r@3',
+            'retrieval-rr',
+            'retrieval-ap',
+            'retrieval-ndcg@3',
+            'retrieval-ndcg@5',
+            'retrieval-embedding-latency-ms',
+            'retrieval-search-latency-ms',
+            'retrieval-total-latency-ms',
+            'retrieval-total-characters'
+        ]
+    )
+
     solution_data_object = objects_get_data(
         swift_client = swift_client,
         storage_parameters = {
@@ -107,7 +129,7 @@ def evaluate_dataset(
     trace_name = mlflow_parameters['trace-name']
     trace_tags = mlflow_parameters['trace-tags']
     
-    pipeline_data = []
+    pipeline_data = [] 
     total_records = len(processed_input_subset) * len(judge_prompts)
     print(f'Starting processing total {total_records} QA pairs')
     for index, row in processed_input_subset.iterrows():
@@ -245,14 +267,12 @@ def evaluate_dataset(
             'total-cost'
         ]
     )
-
-    # There needs to be synthetic and validation tables
-
+    '''
     name_start_prefix = output_storage_parameters['name-start-prefix']
     judge_model_name = trace_attributes['judge-repo-id'].split('/')[-1]
     artifact = {
         'parameters': formatted_data['parameters'],
-        'metrics': formatted_data['metrics']
+        'metrics': formatted_data['metrics'] | formatted_rag_metrics
     }
 
     artifact_object_name = 'arti'
@@ -348,8 +368,13 @@ def evaluate_dataset(
     ) 
     
     formatted_data['identity'] = input_dataset_name
+    '''
+
+    formatted_metrics['judge'] = formatted_data['metrics']
+
+    # you need to separate general, synthetic and validation
      
     end_time = t.time()
     total_time = round(end_time-start_time,5)
     print('Spent seconds', total_time)
-    return formatted_data
+    return formatted_metrics

@@ -335,6 +335,46 @@ def judge_evalute_models(
         'stats': data_summaries
     }
 
+def judge_rag_metrics(
+    answer_data: any,
+    category_column: str,
+    used_categories: list,
+    metric_columns: list
+) -> dict:
+    try:
+        import pandas as pd
+        from ..misc.dict import flatten_nested_dict
+        from ..pd_stats.utility import pandas_get_p95, pandas_get_p99
+    except ImportError as e:
+        raise ImportError("assistant/utility failed to import", e)
+
+    collective_metrics = {}
+    for category in used_categories:
+        category_dataset = answer_data[answer_data[category_column] == category]
+
+        category_metric_dict = category_dataset[metric_columns].agg([
+            'sum',
+            'mean', 
+            'std', 
+            'median', 
+            pandas_get_p95, 
+            pandas_get_p99, 
+            'min', 
+            'max'
+        ]).rename(
+            index = {
+                pandas_get_p95: 'p95',
+                pandas_get_p99: 'p99'
+            }
+        ).to_dict()
+        
+        collective_metrics[category] = flatten_nested_dict(
+            target_dict = category_metric_dict,
+            parent_key = '', 
+            seperator = '-'
+        )
+    return collective_metrics
+
 def judge_format_data( 
     judge_data: any,
     judge_parameters: dict,
@@ -416,7 +456,7 @@ def judge_format_data(
         fixed_name = key.split('.')[-1]
         formatted_parametes[fixed_name] = value
     
-    return {
+    return { 
         'parameters': formatted_parametes,
         'table': created_dataframe,
         'metrics': formatted_metrics

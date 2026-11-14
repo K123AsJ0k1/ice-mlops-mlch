@@ -27,6 +27,9 @@ def kubeflow_wait_run(
         if run_status == 'ERROR':
             run_status = True
             break
+        if run_status == 'CANCELING' or run_status == 'CANCELLED' or run_status == 'CANCELED':
+            run_status = True
+            break
         t.sleep(loop_wait)
     return run_status
 

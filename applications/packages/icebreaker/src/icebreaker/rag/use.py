@@ -172,7 +172,7 @@ def rag_evalute_retrieval(
         ) 
         retrieval_outputs['tables'][dataset_name] = dataset_output
 
-    formatted_rag_data = rag_format_data(
+    formatted_rag_data = rag_format_data( 
         retrieval_outputs = retrieval_outputs,
         metric_columns = [
             'p@1',

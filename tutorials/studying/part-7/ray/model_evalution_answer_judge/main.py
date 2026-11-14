@@ -39,7 +39,7 @@ def answer_judge_process(
             mlflow_client = mlflow_client,
             name = mlflow_parameters['experiment-name']
         )
-        '''
+        ''' 
         run_id = mlflow_start_run(
             mlflow_client = mlflow_client,
             experiment_id = experiment_id, 
@@ -87,6 +87,12 @@ def answer_judge_process(
             done_task_1_refs, task_1_refs = ray.wait(task_1_refs)
             for output_ref in done_task_1_refs:
                 formatted_data.append(ray.get(output_ref))
+
+        for data in formatted_data:
+            for identity, values in data.items():
+                print(identity)
+                print(values)
+        
         '''
         for data in formatted_data:
             parameters = data['parameters']

@@ -603,7 +603,7 @@ def assistant_format_data(
     # Filter metric_columns to only those present in the created DataFrame to avoid KeyError
     valid_metric_cols = [c for c in modified_metric_columns if c in created_dataframe.columns]
 
-    metric_dict = created_dataframe[valid_metric_cols].agg([
+    metric_dict = created_dataframe[valid_metric_cols].agg([ 
         'sum',
         'mean', 
         'std', 

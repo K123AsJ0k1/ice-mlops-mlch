@@ -258,7 +258,7 @@ def rag_format_data(
     retrieval_outputs: any,
     metric_columns: list
 ) -> any:
-    try:
+    try: 
         import numpy as np
         import pandas as pd
         from ..misc.dict import flatten_nested_dict
@@ -338,7 +338,7 @@ def rag_format_data(
                     parent_key = '',
                     seperator = '-'
                 )
-                formatted_metrics[dataset_name] = dataset_metrics | metric_dict
+                formatted_metrics[dataset_name] = dataset_metrics | metric_dict 
                 
     return {
         'parameters': retrieval_outputs['parameters'],

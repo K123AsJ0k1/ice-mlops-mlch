@@ -1164,8 +1164,8 @@ def workflow_create_unified_answer_dataset(
             'expectations': {
                 'assistant-answer': row['assistant-answer'],
                 'dataset-category': row['dataset-category'],
-                'dataset-index': row['dataset-category'],
-                'assistant-variant': row['variant']
+                'dataset-index': row['dataset-index'],
+                'assistant-variant': row['assistant-variant']
             },
             'source': {
                 'source_type': 'UNSPECIFIED'

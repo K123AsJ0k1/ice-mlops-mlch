@@ -114,11 +114,14 @@ def judge_send_request(
                     input_to_output_ratio = answer_judge_metrics['input-to-output-ratio'],
                     context_window_utilization = answer_judge_metrics['context-window-utilization-pct'],
                 )
-            )
+            ) 
 
-            answer_score = judge_extract_output(
+            model_score = judge_extract_output(
                 output = answer_judge_output
             )
+
+            for key, value in model_score.items():
+                answer_score[key] = value
 
         judge_span.set_outputs({
             'output': answer_score
