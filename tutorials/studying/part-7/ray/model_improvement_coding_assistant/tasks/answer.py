@@ -107,9 +107,11 @@ def answer_dataset(
     for index, row in processed_subset.iterrows():
         for name, metadata in assistant_prompts.items():
             data_category = row['category']
+            data_type = row['type']
             pipeline_record = {
                 'dataset-category': data_category,
                 'dataset-index': index,
+                'dataset-type': data_type,
                 'status': 'ACCEPTED', # ACCEPTED, REFUSED_INPUT, REFUSED_OUTPUT
                 'refusal-reason': '',
                 'assistant-variant': '',
@@ -307,6 +309,15 @@ def answer_dataset(
             'input-cost',
             'output-cost',
             'total-cost'
+        ],
+        wanted_keys = [
+            'dataset-category',
+            'dataset-index',
+            'dataset-type',
+            'status',
+            'refusal-reason',
+            'assistant-variant',
+            'assistant-query'
         ]
     )
 

@@ -72,7 +72,7 @@ def evaluate_dataset(
     processed_input_subset = input_pandas_df.iloc[start_index:end_index]
     print(f'Amount of rows: {len(processed_input_subset)}')
 
-    formatted_metrics = judge_rag_metrics(
+    collected_metrics = judge_rag_metrics(
         answer_data = input_pandas_df,
         category_column = 'dataset-category',
         used_categories = [
@@ -130,15 +130,19 @@ def evaluate_dataset(
     trace_tags = mlflow_parameters['trace-tags']
     
     pipeline_data = [] 
-    total_records = len(processed_input_subset) * len(judge_prompts)
+    total_records = len(processed_input_subset)
     print(f'Starting processing total {total_records} QA pairs')
     for index, row in processed_input_subset.iterrows():
         dataset_category = row['dataset-category']
         dataset_index = row['dataset-index']
+        dataset_type = row['dataset-type']
+        assistant_variant = row['assistant-variant']
+        assistant_model_name = row['assistant-used-model']
 
         pipeline_record = {
             'dataset-category': dataset_category,
             'dataset-index': dataset_index,
+            'dataset-type': dataset_type,
             'judge-variant': '',
             'judge-data': {
                 'input': {},
@@ -149,11 +153,11 @@ def evaluate_dataset(
                 'input': {},
                 'output': {}
             },
-            'question-truth': '',
-            'question-content': ''
+            'case-truth': '',
+            'case-content': ''
         }
 
-        print(f'Processing {index}/{dataset_index}/{total_records}')
+        print(f'Processing {dataset_index}/{index}/{total_records}')
         print(f'Dataset category: {dataset_category}')
 
         dataset_prompt = judge_prompts[dataset_category]
@@ -161,7 +165,7 @@ def evaluate_dataset(
         prompt_version = dataset_prompt['version']
         # This needs the solution dataset
 
-        assistant_question = row['assistant-question']
+        assistant_query = row['assistant-query']
         
         pipeline_record['judge-variant'] = prompt_name
         print('Starting trace')
@@ -172,15 +176,19 @@ def evaluate_dataset(
             trace_attributes = trace_attributes,
             trace_tags = trace_tags,
             trace_input = {
-                'query': assistant_question
+                'category': dataset_category,
+                'type': dataset_type,
+                'variant': assistant_variant,
+                'model': assistant_model_name,
+                'query': assistant_query
             }
         )
 
-        pipeline_record['assistant-question'] = assistant_question
+        pipeline_record['case-query'] = assistant_query
 
         judge_prompt_replacements = {
             'truth': '',
-            'query': assistant_question,
+            'query': assistant_query,
             'output': ''
         }
 
@@ -194,13 +202,15 @@ def evaluate_dataset(
 
         ground_truth = solution_pandas_df.iloc[dataset_index]['solution']
         judge_prompt_replacements['truth'] = ground_truth
-        pipeline_record['question-truth'] = ground_truth
-        
-        if 'synthetic ' in prompt_name:
+        pipeline_record['case-truth'] = ground_truth
+        # We need the dataset type also
+        # Plus the guard rail action and refusal from solutions
+        # to double check it agains answers
+        if 'synthetic' in prompt_name:
             material_index = solution_pandas_df.iloc[dataset_index]['internal-material-index']
-            question_content = solution_pandas_df[solution_pandas_df['internal-material-index'] == int(material_index)]['solution']
+            question_content = solution_pandas_df[(solution_pandas_df['internal-material-index'] == int(material_index)) & (solution_pandas_df['category'] == 'validation')]['solution'].iloc[0]
             judge_prompt_replacements['content'] = question_content
-            pipeline_record['question-content'] = question_content
+            pipeline_record['case-content'] = question_content
 
         judge_prompt_replacements['output'] = row['assistant-answer']
 
@@ -217,15 +227,14 @@ def evaluate_dataset(
             pipeline_record = pipeline_record 
         )
 
-        print(f'Answer score: {answer_judge_output}')
         trace_output = {
-            'response': answer_judge_output,
-            'refusal-reason': 'empty'
+            'response': answer_judge_output
         }
 
         pipeline_record['assistant-data']['input'] = {
-            'variant': row['variant'],
-            'question': row['assistant-question']
+            'variant': assistant_variant,
+            'query': assistant_query,
+            'model': assistant_model_name
         }
 
         pipeline_record['assistant-data']['output'] = {
@@ -265,14 +274,20 @@ def evaluate_dataset(
             'input-cost',
             'output-cost',
             'total-cost'
+        ],
+        wanted_keys = [
+            'dataset-category',
+            'dataset-index',
+            'dataset-type',
+            'judge-variant'
         ]
     )
-    '''
+    
     name_start_prefix = output_storage_parameters['name-start-prefix']
     judge_model_name = trace_attributes['judge-repo-id'].split('/')[-1]
     artifact = {
         'parameters': formatted_data['parameters'],
-        'metrics': formatted_data['metrics'] | formatted_rag_metrics
+        'metrics': formatted_data['metrics'] | collected_metrics
     }
 
     artifact_object_name = 'arti'
@@ -365,16 +380,16 @@ def evaluate_dataset(
         storage_parameters = output_storage_parameters,
         object_data = formatted_data['table'],
         object_metadata = {}
-    ) 
-    
-    formatted_data['identity'] = input_dataset_name
-    '''
+    )
 
-    formatted_metrics['judge'] = formatted_data['metrics']
+    collected_metrics['judge'] = formatted_data['metrics']
 
-    # you need to separate general, synthetic and validation
+    formatted_output = {
+        'parameters': formatted_data['parameters'],
+        'metrics': collected_metrics
+    }
      
     end_time = t.time()
     total_time = round(end_time-start_time,5)
     print('Spent seconds', total_time)
-    return formatted_metrics
+    return formatted_output

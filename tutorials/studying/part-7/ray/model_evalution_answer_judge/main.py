@@ -39,7 +39,7 @@ def answer_judge_process(
             mlflow_client = mlflow_client,
             name = mlflow_parameters['experiment-name']
         )
-        ''' 
+        
         run_id = mlflow_start_run(
             mlflow_client = mlflow_client,
             experiment_id = experiment_id, 
@@ -47,7 +47,6 @@ def answer_judge_process(
             tags = mlflow_parameters['run-tags']
         )
         print('MLflow setup') 
-        '''
         
         # input gives a index range
         input_data = config_parameters['input'][0]
@@ -89,28 +88,20 @@ def answer_judge_process(
                 formatted_data.append(ray.get(output_ref))
 
         for data in formatted_data:
-            for identity, values in data.items():
-                print(identity)
-                print(values)
-        
-        '''
-        for data in formatted_data:
             parameters = data['parameters']
-            metrics = data['metrics']
-            used_identity = data['identity']
-
-            mlflow_add_logs(
-                mlflow_client = mlflow_client,
-                run_id = run_id, 
-                parameters = parameters,
-                metrics = metrics,
-                metrics_prefix = used_identity,
-                metrics_step = 1,
-                table = {},
-                table_folder = '',
-                table_name = ''
-            ) 
-
+            for identity, values in data['metrics'].items():
+                mlflow_add_logs(
+                    mlflow_client = mlflow_client,
+                    run_id = run_id, 
+                    parameters = parameters,
+                    metrics = values,
+                    metrics_prefix = identity,
+                    metrics_step = 1,
+                    table = {},
+                    table_folder = '',
+                    table_name = ''
+                ) 
+        
         print('Completing MLflow run')
         mlflow_end_run(
             mlflow_client = mlflow_client, 
@@ -118,7 +109,6 @@ def answer_judge_process(
             status = 'FINISHED',
             end_time = None
         )
-        '''
         
         return True
     except Exception as e:
