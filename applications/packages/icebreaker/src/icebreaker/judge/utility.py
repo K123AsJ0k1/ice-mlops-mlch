@@ -378,7 +378,8 @@ def judge_rag_metrics(
 def judge_format_data( 
     judge_data: any,
     judge_parameters: dict,
-    metric_columns: list
+    metric_columns: list,
+    wanted_keys: list
 ) -> any:
     try:
         import pandas as pd
@@ -389,11 +390,9 @@ def judge_format_data(
     
     records = []
     for case in judge_data:
-        row_dict = {
-            'dataset-category': case['dataset-category'],
-            'dataset-index': case['dataset-index'],
-            'variant': case['judge-variant']
-        }
+        row_dict = {}
+        for column in wanted_keys:
+            row_dict[column] = case[column]
 
         for key, value in case['judge-data']['input'].items():
             used_key = f'judge-{key}'
