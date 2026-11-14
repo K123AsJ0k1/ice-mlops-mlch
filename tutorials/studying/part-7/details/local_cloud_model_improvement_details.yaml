@@ -40,8 +40,8 @@ integration:
     vram: 0.10 
     ram: 0.30
   cluster-priority:
-    cloud-vm1: 0.40
-    local-lt3: 0.60
+    cloud-vm1: 0.05
+    local-lt3: 0.95
   hardware-influence: 0.2
   min-initial-inputs: 1
   min-batch-size: 1
@@ -114,7 +114,7 @@ processing:
           s3-endpoint-url: 'http://mlflow-minio-service.mlflow.svc.cluster.local:9000'
           aws-access-key-id: 'minioadmin'
           aws-secret-access-key: 'minioadmin'
-          experiment-name: 'mlch-code-assistant-rag-pipeline'
+          experiment-name: ''
           run-name: 'assistant-step-1-vm1-model-evalution' 
           run-tags:
             workflow-type: 'local-cloud'
@@ -176,7 +176,7 @@ processing:
           s3-endpoint-url: 'http://chisel-client:9000'
           aws-access-key-id: 'minioadmin'
           aws-secret-access-key: 'minioadmin'
-          experiment-name: 'mlch-code-assistant-rag-pipeline'
+          experiment-name: ''
           run-name: 'assistant-step-1-lt3-model-evalution' 
           run-tags:
             workflow-type: 'local-cloud'
@@ -270,24 +270,24 @@ processing:
       config:
         assistant-prompts:
           assistant-base-variant-qwen-3-5:
-            version: 2
+            version: 5
             amount: 1
           assistant-pe-variant-qwen-3-5:
-            version: 2
+            version: 5
             amount: 1
           assistant-pe-rag-variant-qwen-3-5:
-            version: 2
+            version: 5
             amount: 1
           assistant-pe-rag-bc-variant-qwen-3-5:
-            version: 2
+            version: 5
             amount: 1
         controller-prompts:
           input:
             name: 'controller-input-variant-qwen-3-5'
-            version: 5
+            version: 8
           output:
             name: 'controller-output-variant-qwen-3-5'
-            version: 5
+            version: 8
     cluster:
       cloud-vm1:
         mlflow: 
@@ -295,7 +295,7 @@ processing:
           s3-endpoint-url: 'http://mlflow-minio-service.mlflow.svc.cluster.local:9000'
           aws-access-key-id: 'minioadmin'
           aws-secret-access-key: 'minioadmin'
-          experiment-name: 'mlch-code-assistant-rag-pipeline'
+          experiment-name: ''
           run-name: 'assistant-step-2-vm1-model-evalution' 
           run-tags:
             workflow-type: 'local-cloud'
@@ -357,7 +357,7 @@ processing:
           s3-endpoint-url: 'http://chisel-client:9000'
           aws-access-key-id: 'minioadmin'
           aws-secret-access-key: 'minioadmin'
-          experiment-name: 'mlch-code-assistant-rag-pipeline'
+          experiment-name: ''
           run-name: 'assistant-step-2-lt3-model-evalution' 
           run-tags:
             workflow-type: 'local-cloud'
@@ -476,7 +476,7 @@ processing:
           s3-endpoint-url: 'http://mlflow-minio-service.mlflow.svc.cluster.local:9000'
           aws-access-key-id: 'minioadmin'
           aws-secret-access-key: 'minioadmin'
-          experiment-name: 'mlch-code-assistant-rag-pipeline'
+          experiment-name: ''
           run-name: 'assistant-step-3-vm1-model-evalution' 
           run-tags:
             workflow-type: 'local-cloud'
@@ -538,7 +538,7 @@ processing:
           s3-endpoint-url: 'http://chisel-client:9000'
           aws-access-key-id: 'minioadmin'
           aws-secret-access-key: 'minioadmin'
-          experiment-name: 'mlch-code-assistant-rag-pipeline'
+          experiment-name: ''
           run-name: 'assistant-step-3-lt3-model-evalution' 
           run-tags:
             workflow-type: 'local-cloud'

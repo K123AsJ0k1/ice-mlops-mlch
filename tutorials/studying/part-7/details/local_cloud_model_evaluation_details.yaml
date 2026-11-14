@@ -40,8 +40,8 @@ integration:
     vram: 0.10 
     ram: 0.30
   cluster-priority:
-    cloud-vm1: 0.40
-    local-lt3: 0.60
+    cloud-vm1: 0.20
+    local-lt3: 0.80
   hardware-influence: 0.2
   min-initial-inputs: 1
   min-batch-size: 1
@@ -54,7 +54,7 @@ processing:
   step-1: # ministral 8B judges qwen3.5 variants
     general:
       swift: {}
-      answer-storage: 
+      input-storage: 
         bucket-target: 'experiment'
         bucket-prefix: 'mlch'
         bucket-user: 'user@example.com'   
@@ -96,13 +96,13 @@ processing:
         judge-prompts:
           general:
             name: 'judge-general-variant-ministral-3'
-            version: 3
+            version: 5
           synthetic:
             name: 'judge-synthetic-variant-ministral-3'
-            version: 3
+            version: 5
           validation:
             name: 'judge-validation-variant-ministral-3'
-            version: 1
+            version: 3
     cluster:
       cloud-vm1:
         mlflow: 
@@ -110,8 +110,8 @@ processing:
           s3-endpoint-url: 'http://mlflow-minio-service.mlflow.svc.cluster.local:9000'
           aws-access-key-id: 'minioadmin'
           aws-secret-access-key: 'minioadmin'
-          experiment-name: 'mlch-code-assistant-rag-pipeline'
-          run-name: 'judge-step-4-vm1-model-evalution' 
+          experiment-name: ''
+          run-name: 'judge-step-1-vm1-model-evalution' 
           run-tags:
             workflow-type: 'local-cloud'
             pipeline-step: 'judge-model-evalution'
@@ -130,7 +130,7 @@ processing:
           repo-id: 'unsloth/Ministral-3-8B-Instruct-2512-GGUF'
           file-name: '*Q4_K_M.gguf'
           n-gpu-layers: -1 
-          n-ctx: 32768
+          n-ctx: 16384
           type-k: 1
           type-v: 1
           flash-attention: False
@@ -141,7 +141,7 @@ processing:
           main-file: 'main.py'
           runtime:
             working_dir: 'model_evalution_answer_judge'
-            pip: 'c-vm1-requirements.txt'
+            pip: 'min-requirements.txt'
             env_vars:
               HF_TOKEN: 'fill'
       local-lt3:
@@ -150,8 +150,8 @@ processing:
           s3-endpoint-url: 'http://mlflow-minio-service.mlflow.svc.cluster.local:9000'
           aws-access-key-id: 'minioadmin'
           aws-secret-access-key: 'minioadmin'
-          experiment-name: 'mlch-code-assistant-rag-pipeline'
-          run-name: 'judge-step-4-vm1-model-evalution' 
+          experiment-name: ''
+          run-name: 'judge-step-1-lt3-model-evalution' 
           run-tags:
             workflow-type: 'local-cloud'
             pipeline-step: 'judge-model-evalution'
@@ -170,7 +170,7 @@ processing:
           repo-id: 'unsloth/Ministral-3-8B-Instruct-2512-GGUF'
           file-name: '*Q4_K_M.gguf'
           n-gpu-layers: -1 
-          n-ctx: 32768
+          n-ctx: 16384
           type-k: 1
           type-v: 1
           flash-attention: True
@@ -180,14 +180,14 @@ processing:
         job:
           main-file: 'main.py'
           runtime:
-            working_dir: 'model_evalution_coding_assistant'
-            pip: 'c-vm1-requirements.txt'
+            working_dir: 'model_evalution_answer_judge'
+            pip: 'min-requirements.txt'
             env_vars:
               HF_TOKEN: 'fill'
   step-2: # gemma-4 8B judeges qwen3.5 variants
     general:
       swift: {}
-      answer-storage: 
+      input-storage: 
         bucket-target: 'experiment'
         bucket-prefix: 'mlch'
         bucket-user: 'user@example.com'   
@@ -243,8 +243,8 @@ processing:
           s3-endpoint-url: 'http://mlflow-minio-service.mlflow.svc.cluster.local:9000'
           aws-access-key-id: 'minioadmin'
           aws-secret-access-key: 'minioadmin'
-          experiment-name: 'mlch-code-assistant-rag-pipeline'
-          run-name: 'judge-step-5-vm1-model-evalution' 
+          experiment-name: ''
+          run-name: 'judge-step-2-vm1-model-evalution' 
           run-tags:
             workflow-type: 'local-cloud'
             pipeline-step: 'judge-model-evalution'
@@ -260,10 +260,10 @@ processing:
             workflow-type: 'local-cloud'
             pipeline-step: 'judge-model-evalution'
         judge:
-          repo-id: 'unsloth/Ministral-3-8B-Instruct-2512-GGUF'
+          repo-id: 'unsloth/gemma-4-E4B-it-GGUF'
           file-name: '*Q4_K_M.gguf'
           n-gpu-layers: -1 
-          n-ctx: 32768
+          n-ctx: 16384
           type-k: 1
           type-v: 1
           flash-attention: False
@@ -274,7 +274,7 @@ processing:
           main-file: 'main.py'
           runtime:
             working_dir: 'model_evalution_answer_judge'
-            pip: 'c-vm1-requirements.txt'
+            pip: 'min-requirements.txt'
             env_vars:
               HF_TOKEN: 'fill'
       local-lt3:
@@ -283,8 +283,8 @@ processing:
           s3-endpoint-url: 'http://mlflow-minio-service.mlflow.svc.cluster.local:9000'
           aws-access-key-id: 'minioadmin'
           aws-secret-access-key: 'minioadmin'
-          experiment-name: 'mlch-code-assistant-rag-pipeline'
-          run-name: 'judge-step-5-lt3-model-evalution' 
+          experiment-name: ''
+          run-name: 'judge-step-2-lt3-model-evalution' 
           run-tags:
             workflow-type: 'local-cloud'
             pipeline-step: 'judge-model-evalution'
@@ -300,10 +300,10 @@ processing:
             workflow-type: 'local-cloud'
             pipeline-step: 'judge-model-evalution'
         judge:
-          repo-id: 'unsloth/Ministral-3-8B-Instruct-2512-GGUF'
+          repo-id: 'unsloth/gemma-4-E4B-it-GGUF'
           file-name: '*Q4_K_M.gguf'
           n-gpu-layers: -1 
-          n-ctx: 32768
+          n-ctx: 16384
           type-k: 1
           type-v: 1
           flash-attention: True
@@ -313,7 +313,7 @@ processing:
         job:
           main-file: 'main.py'
           runtime:
-            working_dir: 'model_evalution_coding_assistant'
-            pip: 'c-vm1-requirements.txt'
+            working_dir: 'model_evalution_answer_judge'
+            pip: 'min-requirements.txt'
             env_vars:
               HF_TOKEN: 'fill'
