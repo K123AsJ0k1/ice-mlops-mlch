@@ -1127,6 +1127,7 @@ def workflow_create_unified_answer_dataset(
 
     unified_dataset = pd.DataFrame(joined_rows)
     unified_dataset = unified_dataset.reset_index(drop = True)
+    unified_dataset.columns = unified_dataset.columns.str.replace('_','-')
 
     dataset_name = 'unified-dataset'
     path_name = f'{dataset_name}.parquet'
@@ -1159,7 +1160,7 @@ def workflow_create_unified_answer_dataset(
     for _, row in unified_dataset.iterrows():
         formatted_records.append({
             'inputs': {
-                'assistant-question': row['assistant-question']
+                'assistant-query': row['assistant-query']
             },
             'expectations': {
                 'assistant-answer': row['assistant-answer'],
@@ -1172,7 +1173,7 @@ def workflow_create_unified_answer_dataset(
             },
             'tags': {
                 'mlflow.user': dataset_user
-            }
+            } 
         })
     
     dataset_tags['mlflow.user'] = dataset_user
@@ -1187,5 +1188,87 @@ def workflow_create_unified_answer_dataset(
     return {
         'dataset': unified_dataset,
         'id': dataset_id
+    }
+
+def workflow_create_unified_judged_dataset(
+    swift_client: any,
+    mlflow_client: any,
+    storage_parameters: dict,
+    dataset_paths: list,
+    dataset_details: dict,
+    experiment_name: str,
+    dataset_tags: dict,
+    dataset_user: str
+):
+    try: 
+        import pandas as pd
+        from ..objects.use import objects_get_data, objects_store_data
+        from ..mlflow.use import mlflow_create_dataset, mlflow_get_or_create_experiment
+    except ImportError as e:
+        raise ImportError("workflow/utility failed to import", e)
+
+    model_dfs = {}
+    for dataset_path in dataset_paths:
+        data_object = objects_get_data(
+            swift_client = swift_client,
+            storage_parameters = {
+                'bucket-target': storage_parameters['bucket-target'],
+                'bucket-prefix': storage_parameters['bucket-prefix'],
+                'bucket-user': storage_parameters['bucket-user'],
+                'object-name': 'root',
+                'object-serialization': storage_parameters['object-serialization'],
+                'path-replacers': {
+                    'name': dataset_path
+                },
+                'path-names': [],
+                'debug-prints': True,
+                'lock-parameters': {},
+                'lock-location': None,
+                'overwrite': True
+            },
+            dict_format = False
+        ) 
+
+        object_df = data_object[0]
+
+        model_name_column = dataset_details['model-column']
+        assistant_model = object_df[model_name_column].iloc[0]
+
+        same_columns = dataset_details['same-columns']
+        if not assistant_model in model_dfs:
+            model_dfs[assistant_model] = {
+                'data': object_df[same_columns]
+            }
+            
+        judge_name_column = dataset_details['judge-column']
+        judge_model = object_df[judge_name_column].iloc[0]
+
+        different_columns = dataset_details['different-columns']
+        used_key = f'judge-{judge_model}'
+        model_dfs[assistant_model][used_key] = object_df[different_columns]
+        
+    #unified_dataset = pd.DataFrame(joined_rows)
+    #unified_dataset = unified_dataset.reset_index(drop = True)
+    #unified_dataset.columns = unified_dataset.columns.str.replace('_','-')
+
+    df_list = []
+    for judged_model, sub_dict in model_dfs.items():
+        base_df = sub_dict['data'].copy()
+        for key, judge_df in sub_dict.items():
+            if 'data' in key:
+                continue
+            prefix_name = key.split('/')[-1].split('-')[0].lower()
+            suffixed_judge_df = judge_df.add_suffix(f'-{prefix_name}')
+            base_df = base_df.join(suffixed_judge_df)
+            
+            #base_df = base_df.join(df, rsuffix = f'-{prefix_name}')
+        df_list.append(base_df)
+
+    unified_dataset = pd.concat(df_list, ignore_index = True)
+    unified_dataset.columns = unified_dataset.columns.str.replace('_','-')
+
+    return {
+        'dataset': unified_dataset,
+        'id': None
     }
         

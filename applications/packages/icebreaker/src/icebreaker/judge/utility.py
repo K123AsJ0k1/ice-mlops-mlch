@@ -458,3 +458,4 @@ def judge_format_data(
         'table': created_dataframe,
         'metrics': formatted_metrics
     }
+
