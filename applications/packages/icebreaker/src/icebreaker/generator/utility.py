@@ -505,6 +505,7 @@ def generator_format_data(
          
     # pandas automatically handles missing keys across records by filling them with NaN/None
     created_dataframe = pd.DataFrame(records)   
+    created_dataframe.columns = created_dataframe.columns.str.replace('_','-') 
 
     # Filter metric_columns to only those present in the created DataFrame to avoid KeyError
     valid_metric_cols = [c for c in metric_columns if c in created_dataframe.columns]

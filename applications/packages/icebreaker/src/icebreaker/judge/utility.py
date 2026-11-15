@@ -418,6 +418,7 @@ def judge_format_data(
          
     # pandas automatically handles missing keys across records by filling them with NaN/None
     created_dataframe = pd.DataFrame(records)   
+    created_dataframe.columns = created_dataframe.columns.str.replace('_','-') 
 
     modified_metric_columns = []
     for column in metric_columns:
