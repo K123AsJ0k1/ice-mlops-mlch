@@ -99,7 +99,7 @@ def assistant_send_request(
                     output_tokens_per_sec = coding_assistant_metrics['output-tokens-per-sec'],
                     total_latency = coding_assistant_metrics['total-latency-sec'],
                     time_to_first_token = coding_assistant_metrics['time-to-first-token-sec'],
-                    tokens_per_second = coding_assistant_metrics['tokens-per-second'],
+                    tokens_per_sec = coding_assistant_metrics['tokens-per-sec'],
                     time_per_output_token = coding_assistant_metrics['time-per-output-token-sec'],
                     input_to_output_ratio = coding_assistant_metrics['input-to-output-ratio'],
                     context_window_utilization = coding_assistant_metrics['context-window-utilization-pct'],

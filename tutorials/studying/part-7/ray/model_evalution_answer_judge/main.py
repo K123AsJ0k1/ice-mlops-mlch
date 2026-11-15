@@ -64,7 +64,7 @@ def answer_judge_process(
             model_parameters = judge_parameters
         )
         judge_status = ray.get(judge_ref.initilize_actor.remote())
-        print(f'Judge status {judge_status}')
+        print(f'Judge status {judge_status}') 
 
         print('Starting evaluate dataset task')
         task_1_refs = [] 

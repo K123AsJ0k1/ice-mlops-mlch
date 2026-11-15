@@ -235,7 +235,7 @@ def evaluate_dataset(
             'variant': assistant_variant,
             'query': assistant_query,
             'model': assistant_model_name
-        }
+        } 
 
         pipeline_record['assistant-data']['output'] = {
             'answer': row['assistant-answer']
@@ -265,7 +265,7 @@ def evaluate_dataset(
             'input-tokens-per-sec',
             'output-tokens-per-sec',
             'time-to-first-token-sec',
-            'tokens-per-second',
+            'tokens-per-sec',
             'time-per-output-token-sec',
             'input-to-output-ratio',
             'context-window-utilization-pct',

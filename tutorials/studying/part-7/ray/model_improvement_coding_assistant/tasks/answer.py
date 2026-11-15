@@ -306,7 +306,7 @@ def answer_dataset(
             'input-tokens-per-sec',
             'output-tokens-per-sec',
             'time-to-first-token-sec',
-            'tokens-per-second',
+            'tokens-per-sec',
             'time-per-output-token-sec',
             'input-to-output-ratio',
             'context-window-utilization-pct',

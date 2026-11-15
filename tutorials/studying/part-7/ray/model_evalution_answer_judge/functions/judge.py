@@ -109,7 +109,7 @@ def judge_send_request(
                     output_tokens_per_sec = answer_judge_metrics['output-tokens-per-sec'],
                     total_latency = answer_judge_metrics['total-latency-sec'],
                     time_to_first_token = answer_judge_metrics['time-to-first-token-sec'],
-                    tokens_per_second = answer_judge_metrics['tokens-per-second'],
+                    tokens_per_sec = answer_judge_metrics['tokens-per-sec'],
                     time_per_output_token = answer_judge_metrics['time-per-output-token-sec'],
                     input_to_output_ratio = answer_judge_metrics['input-to-output-ratio'],
                     context_window_utilization = answer_judge_metrics['context-window-utilization-pct'],
