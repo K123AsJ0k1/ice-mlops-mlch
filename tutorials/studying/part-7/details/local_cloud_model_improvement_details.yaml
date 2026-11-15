@@ -115,10 +115,10 @@ processing:
           aws-access-key-id: 'minioadmin'
           aws-secret-access-key: 'minioadmin'
           experiment-name: ''
-          run-name: 'assistant-step-1-vm1-model-evalution' 
+          run-name: 'assistant-step-1-vm1-model-improvement' 
           run-tags:
             workflow-type: 'local-cloud'
-            pipeline-step: 'assistant-model-evalution'
+            pipeline-step: 'assistant-model-improvement'
           trace-name: 'code-assistant-chain'
           trace-attributes: 
             used-enviroment: 'cloud-vm1'
@@ -177,10 +177,10 @@ processing:
           aws-access-key-id: 'minioadmin'
           aws-secret-access-key: 'minioadmin'
           experiment-name: ''
-          run-name: 'assistant-step-1-lt3-model-evalution' 
+          run-name: 'assistant-step-1-lt3-model-improvement' 
           run-tags:
             workflow-type: 'local-cloud'
-            pipeline-step: 'assistant-model-evalution'
+            pipeline-step: 'assistant-model-improvement'
           trace-name: 'code-assistant-chain'
           trace-attributes: 
             used-enviroment: 'local-lt3'
@@ -296,10 +296,10 @@ processing:
           aws-access-key-id: 'minioadmin'
           aws-secret-access-key: 'minioadmin'
           experiment-name: ''
-          run-name: 'assistant-step-2-vm1-model-evalution' 
+          run-name: 'assistant-step-2-vm1-model-improvement' 
           run-tags:
             workflow-type: 'local-cloud'
-            pipeline-step: 'assistant-model-evalution'
+            pipeline-step: 'assistant-model-improvement'
           trace-name: 'code-assistant-chain'
           trace-attributes: 
             used-enviroment: 'cloud-vm1'
@@ -358,10 +358,10 @@ processing:
           aws-access-key-id: 'minioadmin'
           aws-secret-access-key: 'minioadmin'
           experiment-name: ''
-          run-name: 'assistant-step-2-lt3-model-evalution' 
+          run-name: 'assistant-step-2-lt3-model-improvement' 
           run-tags:
             workflow-type: 'local-cloud'
-            pipeline-step: 'assistant-model-evalution'
+            pipeline-step: 'assistant-model-improvement'
           trace-name: 'code-assistant-chain'
           trace-attributes: 
             used-enviroment: 'local-lt3'
@@ -477,10 +477,10 @@ processing:
           aws-access-key-id: 'minioadmin'
           aws-secret-access-key: 'minioadmin'
           experiment-name: ''
-          run-name: 'assistant-step-3-vm1-model-evalution' 
+          run-name: 'assistant-step-3-vm1-model-improvement' 
           run-tags:
             workflow-type: 'local-cloud'
-            pipeline-step: 'assistant-model-evalution'
+            pipeline-step: 'assistant-model-improvement'
           trace-name: 'code-assistant-chain'
           trace-attributes: 
             used-enviroment: 'cloud-vm1'
@@ -539,10 +539,10 @@ processing:
           aws-access-key-id: 'minioadmin'
           aws-secret-access-key: 'minioadmin'
           experiment-name: ''
-          run-name: 'assistant-step-3-lt3-model-evalution' 
+          run-name: 'assistant-step-3-lt3-model-improvement' 
           run-tags:
             workflow-type: 'local-cloud'
-            pipeline-step: 'assistant-model-evalution'
+            pipeline-step: 'assistant-model-improvement'
           trace-name: 'code-assistant-chain'
           trace-attributes: 
             used-enviroment: 'local-lt3'
