@@ -61,6 +61,8 @@ def internal_dataset_creation(
             model_parameters = model_parameters
         )
 
+        # add initilization
+
         print('Starting create dataset task')
         task_1_refs = [] 
         task_1_refs.append(create_dataset.remote( 

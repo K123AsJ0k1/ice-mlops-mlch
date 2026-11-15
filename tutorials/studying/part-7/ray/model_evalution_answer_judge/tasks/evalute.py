@@ -382,7 +382,7 @@ def evaluate_dataset(
         object_metadata = {}
     )
 
-    collected_metrics['judge'] = formatted_data['metrics']
+    collected_metrics['model'] = formatted_data['metrics']
 
     formatted_output = {
         'parameters': formatted_data['parameters'],

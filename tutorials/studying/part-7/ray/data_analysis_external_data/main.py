@@ -73,6 +73,7 @@ def external_data_analysis(
         print(f'Selected amount of actors {suitable_actor_number}')
         actor_refs = []
         for i in range(0, suitable_actor_number):
+            # Add initilization
             actor_refs.append(Detector.remote(
                 swift_parameters = swift_parameters,
                 model_parameters = model_parameters

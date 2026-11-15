@@ -122,7 +122,7 @@ def judge_send_request(
 
             for key, value in model_score.items():
                 answer_score[key] = value
-
+        
         judge_span.set_outputs({
             'output': answer_score
         })
@@ -131,4 +131,4 @@ def judge_send_request(
                                 
         pipeline_record['judge-data']['output'] = span_output
         
-        return answer_judge_output 
+        return answer_score

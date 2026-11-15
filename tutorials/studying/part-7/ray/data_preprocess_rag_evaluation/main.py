@@ -88,6 +88,7 @@ def internal_rag_evalution(
         print(f'Using sparse model: {sparse_model_name}')
         actor_refs = []
         for i in range(0, suitable_actor_number):
+            # Add initilization
             actor_refs.append(Generator.remote(
                 device_mode = device_mode,
                 qdrant_parameters = qdrant_parameters,

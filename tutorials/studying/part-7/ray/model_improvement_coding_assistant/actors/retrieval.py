@@ -38,6 +38,11 @@ class Retrieval:
         )
         self.sparse_model_name = sparse_model_name
 
+    def initilize_actor(
+        self
+    ):
+        return 'READY'
+
     def batch_generate_queries(
         self,
         key_name: str,

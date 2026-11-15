@@ -102,20 +102,23 @@ def answer_dataset(
 
     pipeline_data = []
     total_records = len(processed_subset) * len(assistant_prompts)
-    print(f'Starting processing total {total_records} records')
+    print(f'Starting processing {total_records} total records')
     record_index = 1
+    assistant_model_name = trace_attributes['assistant-repo-id'].split('/')[-1]
     for index, row in processed_subset.iterrows():
-        for name, metadata in assistant_prompts.items():
-            data_category = row['category']
-            data_type = row['type']
+        for assistant_variant, metadata in assistant_prompts.items():
+            execution_time_start = t.time()
+            dataset_category = row['category']
+            dataset_type = row['type']
+            assistant_query = row['query']
             pipeline_record = {
-                'dataset-category': data_category,
+                'dataset-category': dataset_category,
                 'dataset-index': index,
-                'dataset-type': data_type,
+                'dataset-type': dataset_type,
                 'status': 'ACCEPTED', # ACCEPTED, REFUSED_INPUT, REFUSED_OUTPUT
                 'refusal-reason': '',
-                'assistant-variant': '',
-                'assistant-query': '',
+                'assistant-variant': assistant_variant,
+                'assistant-query': assistant_query,
                 'assistant-data': {
                     'input': {},
                     'metrics': {},
@@ -136,18 +139,17 @@ def answer_dataset(
                     'output': {}
                 }
             }
-
+            # Needs pipeline time
             print(f'Processing {index}/{record_index}/{total_records}')
-            print(f'Dataset category: {data_category}')
-            print(f'Prompt variant: {name}')
+            print(f'Dataset category: {dataset_category}')
+            print(f'Dataset type: {dataset_type}')
+            print(f'Assistant variant: {assistant_variant}')
 
-            request_index += 1
-            query_text = row['query'] 
+            request_index += 1 
             query_weights = json.loads(row['internal-material-ranks'])
             if not isinstance(query_weights, dict):
                 query_weights = {}
 
-            pipeline_record['assistant-variant'] = name
             print('Starting trace')
             root_span = mlflow_create_trace(
                 mlflow_client = mlflow_client,  
@@ -156,16 +158,19 @@ def answer_dataset(
                 trace_attributes = trace_attributes,
                 trace_tags = trace_tags,
                 trace_input = {
-                    'query': query_text
+                    'category': dataset_category,
+                    'type': dataset_type,
+                    'variant': assistant_variant,
+                    'model': assistant_model_name,
+                    'query': assistant_query
                 }
             )
             
-            pipeline_record['assistant-query'] = query_text
             trace_id = root_span.trace_id
             root_span_id = root_span.span_id
 
             assistant_prompt_replacements = {
-                'query': query_text
+                'query': assistant_query
             }
 
             input_behavior = {
@@ -185,14 +190,14 @@ def answer_dataset(
                 'refusal-reason': 'unknown'
             }
             
-            if 'pe-rag-bc' in name:
+            if 'pe-rag-bc' in assistant_variant:
                 input_behavior = controller_input_check(
                     mlflow_client = mlflow_client,
                     span_name = 'behavior-controller-input-check',
                     trace_id = trace_id,
                     root_span_id = root_span_id,
                     controller_prompts = controller_prompts,
-                    query_text = query_text,
+                    query_text = assistant_query,
                     controller_ref = controller_ref,
                     trace_attributes = trace_attributes,
                     pipeline_record = pipeline_record
@@ -214,14 +219,14 @@ def answer_dataset(
                 }
 
             if input_behavior.get('secret-leak') == 0 and input_behavior.get('off-topic') == 0:
-                if 'rag' in name:
+                if 'rag' in assistant_variant:
                     assistant_prompt_replacements['content'] = retrieval_send_query( 
                         mlflow_client = mlflow_client, 
                         span_name = 'retrieval-augmented-generation-query',
                         trace_id = trace_id,
                         root_span_id = root_span_id,
                         retrieval_parameters = retrieval_parameters,
-                        query_text = query_text,
+                        query_text = assistant_query,
                         retrieval_ref = retrieval_ref,
                         dataset_name = dataset_name,
                         query_weights = query_weights,
@@ -233,7 +238,7 @@ def answer_dataset(
                     span_name = 'coding-assistant-request',
                     trace_id = trace_id,
                     root_span_id = root_span_id,
-                    prompt_name = name,
+                    prompt_name = assistant_variant,
                     prompt_version = metadata['version'],
                     prompt_replacements = assistant_prompt_replacements,
                     assistant_ref = assistant_ref,
@@ -245,14 +250,14 @@ def answer_dataset(
                     'response': coding_assistant_output,
                     'refusal-reason': 'empty'
                 }
-                if 'pe-rag-bc' in name:
+                if 'pe-rag-bc' in assistant_variant:
                     output_behavior = controller_output_check(
                         mlflow_client = mlflow_client, 
                         span_name = 'behavior-controller-output-check',
                         trace_id = trace_id,
                         root_span_id = root_span_id,
                         controller_prompts = controller_prompts,
-                        query_text = query_text,
+                        query_text = assistant_query,
                         controller_ref = controller_ref,
                         trace_attributes = trace_attributes,
                         assistant_output = coding_assistant_output,
@@ -281,7 +286,8 @@ def answer_dataset(
                 trace_id = trace_id,
                 trace_output = trace_output
             )
-
+            pipeline_record['assistant-data']['metrics']['execution-time-sec'] = round(t.time() - execution_time_start, 5)
+              
             pipeline_data.append(pipeline_record)
             record_index += 1
 
@@ -308,7 +314,8 @@ def answer_dataset(
             'user-prompt-length',
             'input-cost',
             'output-cost',
-            'total-cost'
+            'total-cost',
+            'execution-time-sec'
         ],
         wanted_keys = [
             'dataset-category',
@@ -321,8 +328,10 @@ def answer_dataset(
         ]
     )
 
+    formatted_data['parameters']['total-amount'] = total_records
+
     name_start_prefix = output_storage_parameters['name-start-prefix']
-    assistant_model_name = trace_attributes['assistant-repo-id'].split('/')[-1]
+    
     artifact = {
         'parameters': formatted_data['parameters'],
         'metrics': formatted_data['metrics']
@@ -425,4 +434,4 @@ def answer_dataset(
     end_time = t.time()
     total_time = round(end_time-start_time,5)
     print('Spent seconds', total_time)
-    return formatted_data
+    return formatted_data 

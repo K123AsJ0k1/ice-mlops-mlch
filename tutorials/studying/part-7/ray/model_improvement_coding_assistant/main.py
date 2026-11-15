@@ -63,22 +63,31 @@ def coding_assistant_process(
 
         worker_input_ref = ray.put(input_data)
 
+        print('Initilizing actors')
         assistant_ref = Assistant.remote(
             server_name = server_name,
             model_parameters = assistant_parameters
         )
+        assistant_status = ray.get(assistant_ref.initilize_actor.remote())
+        print(f'Assistant status {assistant_status}')
 
         retrieval_ref = Retrieval.remote(
             qdrant_parameters = qdrant_parameters,
             retrieval_parameters = retrieval_parameters
         )
+        retrieval_status = ray.get(retrieval_ref.initilize_actor.remote())
+        print(f'Retrieval status {retrieval_status}')
 
         controller_ref = Controller.remote(
             server_name = server_name,
             model_parameters = controller_parameters
         )
+        controller_status = ray.get(controller_ref.initilize_actor.remote())
+        print(f'Controller status {controller_status}')
 
-        print('Starting baseline answer dataset task')
+        print('Actors initilized')
+
+        print('Starting answer dataset task')
         task_1_refs = [] 
         task_1_refs.append(answer_dataset.remote( 
             worker_index = 1,

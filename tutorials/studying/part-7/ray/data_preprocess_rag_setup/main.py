@@ -81,6 +81,7 @@ def internal_rag_setup(
         print(f'Using sparse model: {sparse_model_name}')
         actor_refs = []
         for i in range(0, suitable_actor_number):
+            # add initilization
             actor_refs.append(Generator.remote(
                 device_mode = device_mode,
                 dense_model_name = dense_model_name,

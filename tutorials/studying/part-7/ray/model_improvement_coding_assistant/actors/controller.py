@@ -27,6 +27,11 @@ class Controller:
             model_parameters = model_parameters
         )
 
+    def initilize_actor(
+        self
+    ):
+        return 'READY'
+
     def generate_output(
         self,
         request: dict
