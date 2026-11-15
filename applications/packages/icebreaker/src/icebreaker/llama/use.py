@@ -87,7 +87,7 @@ def llama_generate_output(
                 'input-tokens-per-sec': input_tokens_per_sec,
                 'output-tokens-per-sec': output_tokens_per_sec,
                 'time-to-first-token-sec': ttft,
-                'tokens-per-second': tokens_per_sec,
+                'tokens-per-sec': tokens_per_sec,
                 'time-per-output-token-sec': time_per_output_token,
                 'input-to-output-ratio': input_to_output_ratio,
                 'context-window-utilization-pct': context_utilization * 100

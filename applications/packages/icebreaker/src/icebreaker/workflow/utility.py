@@ -1097,6 +1097,7 @@ def workflow_create_unified_answer_dataset(
         raise ImportError("workflow/utility failed to import", e)
 
     joined_rows = []
+    record_index = 0
     for dataset_path in dataset_paths:
         data_object = objects_get_data(
             swift_client = swift_client,
@@ -1123,7 +1124,10 @@ def workflow_create_unified_answer_dataset(
         wanted_columns = dataset_details['wanted-columns']
         filtered_df = object_df[wanted_columns].copy()
         for index, row in filtered_df.iterrows():
-            joined_rows.append(row)
+            modified_row = row.copy()
+            modified_row['record-index'] = record_index
+            joined_rows.append(modified_row)
+            record_index += 1
 
     unified_dataset = pd.DataFrame(joined_rows)
     unified_dataset = unified_dataset.reset_index(drop = True)
@@ -1166,7 +1170,8 @@ def workflow_create_unified_answer_dataset(
                 'assistant-answer': row['assistant-answer'],
                 'dataset-category': row['dataset-category'],
                 'dataset-index': row['dataset-index'],
-                'assistant-variant': row['assistant-variant']
+                'assistant-variant': row['assistant-variant'],
+                'record-index': row['record-index']
             },
             'source': {
                 'source_type': 'UNSPECIFIED'
@@ -1246,7 +1251,7 @@ def workflow_create_unified_judged_dataset(
         different_columns = dataset_details['different-columns']
         used_key = f'judge-{judge_model}'
         model_dfs[assistant_model][used_key] = object_df[different_columns]
-        
+         
     #unified_dataset = pd.DataFrame(joined_rows)
     #unified_dataset = unified_dataset.reset_index(drop = True)
     #unified_dataset.columns = unified_dataset.columns.str.replace('_','-')
