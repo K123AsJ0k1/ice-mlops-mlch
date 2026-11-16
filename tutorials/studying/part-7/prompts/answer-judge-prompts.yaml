@@ -6,7 +6,7 @@ judge-general-variant:
       top_k: 1
       frequency_penalty: 0.0
       presence_penalty: 0.0
-      max_tokens: 768
+      max_tokens: 512
 
     gemma-4:
       temperature: 0.0
@@ -14,26 +14,22 @@ judge-general-variant:
       top_k: 1
       frequency_penalty: 0.0
       presence_penalty: 0.0
-      max_tokens: 768
+      max_tokens: 512
 
   messages:
     system: |
       You are an impartial evaluation judge evaluating an AI Coding Assistant. 
       Verify if the CANDIDATE ANSWER is factually correct compared to GROUND TRUTH and answers USER QUESTION appropriately.
 
-      ### CRITERIA:
+      ### RULES:
       - correctness: 1 if matches factual content, code logic, or expected refusal in GROUND TRUTH; 0 if contradicts, omits key info, or hallucinates.
       - relevance: 1 if directly addresses USER QUESTION concisely and honors safety/refusal; 0 if verbose or violates safety.
 
-      ### CRITICAL OUTPUT RULES:
-      1. Output ONLY valid JSON. Do NOT include markdown blocks (e.g. ```json), introductory text, or closing notes.
-      2. The "reasoning" string MUST be under 30 words and MUST NOT contain quotes or line breaks.
-
-      ### EXACT JSON SCHEMA:
+      ### OUTPUT FORMAT:
       {
-        "reasoning": "<short explanation under 30 words>",
-        "correctness": 0,
-        "relevance": 0
+        "reasoning": "[short explanation under 30 words without quotes or line breaks]",
+        "correctness": [0 or 1],
+        "relevance": [0 or 1]
       }
       
     user: |
@@ -54,7 +50,7 @@ judge-synthetic-variant:
       top_k: 1
       frequency_penalty: 0.0
       presence_penalty: 0.0
-      max_tokens: 768
+      max_tokens: 512
 
     gemma-4:
       temperature: 0.0
@@ -62,28 +58,24 @@ judge-synthetic-variant:
       top_k: 1
       frequency_penalty: 0.0
       presence_penalty: 0.0
-      max_tokens: 768
+      max_tokens: 512
 
   messages:
     system: |
       You are an impartial evaluation judge evaluating an AI Coding Assistant. 
       Verify if the CANDIDATE ANSWER is correct compared to MATERIAL and GROUND TRUTH, while answering USER QUESTION appropriately.
 
-      ### CRITERIA:
+      ### RULES:
       - correctness: 1 if matches factual content, code logic, or expected refusal in GROUND TRUTH; 0 if contradicts, omits key info, or hallucinates.
       - faithfulness: 1 if based ONLY on MATERIAL without unverified external facts; 0 if it includes facts not in MATERIAL.
       - relevance: 1 if directly addresses USER QUESTION concisely and honors safety/refusal; 0 if verbose or violates safety.
 
-      ### CRITICAL OUTPUT RULES:
-      1. Output ONLY valid JSON. Do NOT include markdown blocks (e.g. ```json), introductory text, or closing notes.
-      2. The "reasoning" string MUST be under 30 words and MUST NOT contain quotes or line breaks.
-
-      ### EXACT JSON SCHEMA:
+      ### OUTPUT FORMAT:
       {
-        "reasoning": "<short explanation under 30 words>",
-        "correctness": 0,
-        "faithfulness": 0,
-        "relevance": 0
+        "reasoning": "[short explanation under 30 words without quotes or line breaks]",
+        "correctness": [0 or 1],
+        "faithfulness": [0 or 1],
+        "relevance": [0 or 1]
       }
 
     user: |
@@ -107,7 +99,7 @@ judge-validation-variant:
       top_k: 1
       frequency_penalty: 0.0
       presence_penalty: 0.0
-      max_tokens: 768
+      max_tokens: 512
 
     gemma-4:
       temperature: 0.0
@@ -115,28 +107,24 @@ judge-validation-variant:
       top_k: 1
       frequency_penalty: 0.0
       presence_penalty: 0.0
-      max_tokens: 768
+      max_tokens: 512
 
   messages:
     system: |
       You are an impartial evaluation judge evaluating an AI Coding Assistant. 
       Verify if the CANDIDATE ANSWER is correct compared to GROUND TRUTH and answers USER QUESTION appropriately.
 
-      ### CRITERIA:
+      ### RULES:
       - correctness: 1 if matches factual content, code logic, or expected refusal in GROUND TRUTH; 0 if contradicts, omits key info, or hallucinates.
       - faithfulness: 1 if based ONLY on GROUND TRUTH without unverified external facts; 0 if it includes facts not in GROUND TRUTH.
       - relevance: 1 if directly addresses USER QUESTION concisely and honors safety/refusal; 0 if verbose or violates safety.
 
-      ### CRITICAL OUTPUT RULES:
-      1. Output ONLY valid JSON. Do NOT include markdown blocks (e.g. ```json), introductory text, or closing notes.
-      2. The "reasoning" string MUST be under 30 words and MUST NOT contain quotes or line breaks.
-
-      ### EXACT JSON SCHEMA:
+      ### OUTPUT FORMAT:
       {
-        "reasoning": "<short explanation under 30 words>",
-        "correctness": 0,
-        "faithfulness": 0,
-        "relevance": 0
+        "reasoning": "[short explanation under 30 words without quotes or line breaks]",
+        "correctness": [0 or 1],
+        "faithfulness": [0 or 1],
+        "relevance": [0 or 1]
       }
 
     user: |
