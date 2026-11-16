@@ -99,12 +99,14 @@ controller-output-variant:
 
       ## Example 1 (Truncation detected)
       <user_request>Write a quick Python script to calculate fibonacci numbers.</user_request>
-      <assistant_output>```python
+      <assistant_output>Here is the Python function:
+      ```python
       def fib(n):
           if n <= 1:
               return n
           return fib(n-1) + fib(
-      ```</assistant_output>
+      ```
+      Would you like to know anything else?</assistant_output>
       Expected Output:
       {
         "reasoning": "The output contains a python function cut off mid-expression.",
@@ -116,7 +118,8 @@ controller-output-variant:
 
       ## Example 2 (Token loop detected)
       <user_request>Write a Python function to check if a number is even.</user_request>
-      <assistant_output>```python
+      <assistant_output>Here is the python function:
+      ```python
       def is_even(n):
           return n % 2 == 0
 
@@ -127,7 +130,8 @@ controller-output-variant:
       # Another way:
       def is_even(n):
           return n % 2 == 0
-      ```</assistant_output>
+      ```
+      Would you like to know anything else?</assistant_output>
       Expected Output:
       {
         "reasoning": "The output contains a Python function repeated three times.",
@@ -175,7 +179,8 @@ controller-output-variant:
 
       ## Example 6 (Valid output)
       <user_request>How to create a Python function that checks a key path in a nested dictionary using a specific separator?</user_request>
-      <assistant_output>Here is the example Python function:```python
+      <assistant_output>Here is the example Python function:
+      ```python
       def check_dict_path(
           target_dict: any,
           key_path: any,
