@@ -138,6 +138,7 @@ def evaluate_dataset(
         dataset_type = row['dataset-type']
         assistant_variant = row['assistant-variant']
         assistant_model_name = row['assistant-used-model']
+        assistant_query = row['assistant-query']
 
         pipeline_record = {
             'dataset-category': dataset_category,
@@ -165,8 +166,6 @@ def evaluate_dataset(
         prompt_version = dataset_prompt['version']
         # This needs the solution dataset
 
-        assistant_query = row['assistant-query']
-        
         pipeline_record['judge-variant'] = prompt_name
         print('Starting trace')
         root_span = mlflow_create_trace(
@@ -183,8 +182,6 @@ def evaluate_dataset(
                 'query': assistant_query
             }
         )
-
-        pipeline_record['case-query'] = assistant_query
 
         judge_prompt_replacements = {
             'truth': '',
@@ -206,6 +203,9 @@ def evaluate_dataset(
         # We need the dataset type also
         # Plus the guard rail action and refusal from solutions
         # to double check it agains answers
+        # We want all general and validation cases to pass
+        # We want all negative synthetic cases to not pass
+        # Question is that should we specify this in the judge prompts
         if 'synthetic' in prompt_name:
             material_index = solution_pandas_df.iloc[dataset_index]['internal-material-index']
             question_content = solution_pandas_df[(solution_pandas_df['internal-material-index'] == int(material_index)) & (solution_pandas_df['category'] == 'validation')]['solution'].iloc[0]

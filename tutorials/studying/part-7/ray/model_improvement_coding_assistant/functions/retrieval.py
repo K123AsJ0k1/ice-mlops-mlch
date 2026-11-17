@@ -66,10 +66,10 @@ def retrieval_send_query(
         if 0 < len(retrieval_payload['results']):
             query_index_list = retrieval_payload['metadata'][0]['retrieved-idx']
             pipeline_metrics = retrieval_payload['metrics'][0]
-            
+            # Prompt tag change place
             created_context = assistant_format_context(
                 query_results = retrieval_payload['results'],
-                wrapper_tag = 'context',
+                wrapper_tag = 'provided_context',
                 metadata_keys = [
                     'part',
                     'document',

@@ -50,7 +50,7 @@ def assistant_send_request(
         )
 
         coding_assistant_payload = ray.get(coding_assistant_ref)
-        coding_assistant_output = 'failed'
+        coding_assistant_output = 'REQUEST_FAILED'
         coding_assistant_metadata = {}
         print(f'Coding assistant request status: {coding_assistant_payload['status']}')
         if coding_assistant_payload['status'] == 'success':
@@ -102,8 +102,8 @@ def assistant_send_request(
                     tokens_per_sec = coding_assistant_metrics['tokens-per-sec'],
                     time_per_output_token = coding_assistant_metrics['time-per-output-token-sec'],
                     input_to_output_ratio = coding_assistant_metrics['input-to-output-ratio'],
-                    context_window_utilization = coding_assistant_metrics['context-window-utilization-pct'],
-                )
+                    context_window_utilization = coding_assistant_metrics['context-window-utilization-pct']
+                )  
             )
 
         assistant_span.set_outputs({
@@ -114,4 +114,4 @@ def assistant_send_request(
                                 
         pipeline_record['assistant-data']['output'] = span_output
         
-        return coding_assistant_output 
+        return coding_assistant_output  

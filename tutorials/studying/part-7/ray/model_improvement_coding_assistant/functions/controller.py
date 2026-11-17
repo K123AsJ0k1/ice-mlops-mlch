@@ -22,13 +22,14 @@ def controller_input_check(
         parent_span_id = root_span_id
     ) as input_bc_span:
         print('Checking the input with behavior controller')
-
+        # Prompt tag change place
+    
         controller_prompt = mlflow_get_prompt(
             mlflow_client = mlflow_client,
             prompt_name = controller_prompts['input']['name'],
             prompt_version = controller_prompts['input']['version'],
             prompt_replacements = {
-                'query': query_text
+                'request': query_text
             }
         )
 
@@ -158,13 +159,14 @@ def controller_output_check(
         parent_span_id = root_span_id
     ) as output_bc_span: 
         print('Checking output with behavior controller')
+        # Prompt tag change place
         controller_prompt = mlflow_get_prompt(
             mlflow_client = mlflow_client,
             prompt_name = controller_prompts['output']['name'],
             prompt_version = controller_prompts['output']['version'],
             prompt_replacements = {
-                'query': query_text,
-                'output': assistant_output
+                'request': query_text,
+                'answer': assistant_output
             }
         )
 
@@ -191,15 +193,17 @@ def controller_output_check(
 
         output_behavior = {
             'reasoning': '', 
-            'irrelevant': 0, 
-            'verbose': 0, 
-            'out-of-scope': 0
+            'truncated': 0, 
+            'token-loop': 0, 
+            'verbose': 0,
+            'dangerous-code': 0
         }
         error_default = {
             'reasoning': 'Malformed JSON returned by guardrail', 
-            'irrelevant': 0, 
-            'verbose': 0, 
-            'out-of-scope': 0
+            'truncated': 0, 
+            'token-loop': 0, 
+            'verbose': 0,
+            'dangerous-code': 0
         }
 
         output_controller_metadata = {}

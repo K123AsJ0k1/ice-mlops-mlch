@@ -2,6 +2,7 @@ import ray
 import time as t
 import mlflow
 import json
+import re
 from icebreaker.swift.setup import swift_setup_client
 from icebreaker.objects.use import objects_get_data
 from icebreaker.mlflow.setup import mlflow_setup_client
@@ -105,6 +106,10 @@ def answer_dataset(
     print(f'Starting processing {total_records} total records')
     record_index = 1
     assistant_model_name = trace_attributes['assistant-repo-id'].split('/')[-1]
+    assistant_prompt_replacement_keys = [
+        'request',
+        'context'
+    ]
     for index, row in processed_subset.iterrows():
         for assistant_variant, metadata in assistant_prompts.items():
             execution_time_start = t.time()
@@ -115,7 +120,7 @@ def answer_dataset(
                 'dataset-category': dataset_category,
                 'dataset-index': index,
                 'dataset-type': dataset_type,
-                'status': 'ACCEPTED', # ACCEPTED, REFUSED_INPUT, REFUSED_OUTPUT
+                'status': 'ACCEPTED', # ACCEPTED, REFUSED_INPUT, REFUSED_REQUEST, REFUSED_OUTPUT
                 'refusal-reason': '',
                 'assistant-variant': assistant_variant,
                 'assistant-query': assistant_query,
@@ -170,7 +175,7 @@ def answer_dataset(
             root_span_id = root_span.span_id
 
             assistant_prompt_replacements = {
-                'query': assistant_query
+                assistant_prompt_replacement_keys[0]: assistant_query
             }
 
             input_behavior = {
@@ -180,14 +185,15 @@ def answer_dataset(
             }
             output_behavior = {
                 'reasoning': '', 
-                'irrelevant': 0, 
-                'verbose': 0, 
-                'out-of-scope': 0
+                'truncated': 0, 
+                'token-loop': 0, 
+                'verbose': 0,
+                'dangerous-code': 0
             }
 
             trace_output = {
                 'response': 'failed',
-                'refusal-reason': 'unknown'
+                'refusal-reason': 'UNKNOWN'
             }
             
             if 'pe-rag-bc' in assistant_variant:
@@ -209,7 +215,7 @@ def answer_dataset(
                 if input_behavior.get('secret-leak') == 1: reasons.append("SECRET_LEAK")
                 if input_behavior.get('off-topic') == 1: reasons.append("OFF_TOPIC")
 
-                given_response = 'REFUSED INPUT'
+                given_response = 'REFUSED_INPUT'
                 refusal_reason = " | ".join(reasons)
                 pipeline_record['status'] = given_response
                 pipeline_record['refusal-reason'] = refusal_reason
@@ -217,14 +223,14 @@ def answer_dataset(
                     'response': given_response,
                     'refusal-reason': refusal_reason
                 }
-
+               
             if input_behavior.get('secret-leak') == 0 and input_behavior.get('off-topic') == 0:
                 if 'rag' in assistant_variant:
-                    assistant_prompt_replacements['content'] = retrieval_send_query( 
+                    assistant_prompt_replacements[assistant_prompt_replacement_keys[1]] = retrieval_send_query( 
                         mlflow_client = mlflow_client, 
                         span_name = 'retrieval-augmented-generation-query',
                         trace_id = trace_id,
-                        root_span_id = root_span_id,
+                        root_span_id = root_span_id, 
                         retrieval_parameters = retrieval_parameters,
                         query_text = assistant_query,
                         retrieval_ref = retrieval_ref,
@@ -246,32 +252,62 @@ def answer_dataset(
                     pipeline_record = pipeline_record
                 )
 
-                trace_output = {
-                    'response': coding_assistant_output,
-                    'refusal-reason': 'empty'
-                }
+                if coding_assistant_output == 'REQUEST_FAILED':
+                    given_response = 'REFUSED_REQUEST'
+                    refusal_reason = 'REQUEST_ERROR'
+                    pipeline_record['status'] = given_response
+                    pipeline_record['refusal-reason'] = refusal_reason
+                    trace_output = {
+                        'response': given_response,
+                        'refusal-reason': refusal_reason
+                    }
+                else:
+                    trace_output = {
+                        'response': coding_assistant_output,
+                        'refusal-reason': 'NONE'
+                    }
+
                 if 'pe-rag-bc' in assistant_variant:
-                    output_behavior = controller_output_check(
-                        mlflow_client = mlflow_client, 
-                        span_name = 'behavior-controller-output-check',
-                        trace_id = trace_id,
-                        root_span_id = root_span_id,
-                        controller_prompts = controller_prompts,
-                        query_text = assistant_query,
-                        controller_ref = controller_ref,
-                        trace_attributes = trace_attributes,
-                        assistant_output = coding_assistant_output,
-                        pipeline_record = pipeline_record
+                    REFUSAL_PATTERN = re.compile(
+                        r"\[?\s*REFUSAL\s*[-–—]\s*OUT[_\s]OF[_\s]SCOPE\s*\]?",
+                        re.IGNORECASE
                     )
+                    cleaned = coding_assistant_output.strip()
+                    assistant_refusal = bool(REFUSAL_PATTERN.fullmatch(cleaned))
+                    
+                    if assistant_refusal:
+                        given_response = 'REFUSED_REQUEST'
+                        refusal_reason = 'OUT_OF_SCOPE'
+                        pipeline_record['status'] = given_response
+                        pipeline_record['refusal-reason'] = refusal_reason
+                        trace_output = {
+                            'response': given_response,
+                            'refusal-reason': refusal_reason
+                        }
+                    
+                    if not coding_assistant_output == 'REQUEST_FAILED' or not assistant_refusal:
+                        output_behavior = controller_output_check(
+                            mlflow_client = mlflow_client, 
+                            span_name = 'behavior-controller-output-check',
+                            trace_id = trace_id,
+                            root_span_id = root_span_id,
+                            controller_prompts = controller_prompts,
+                            query_text = assistant_query,
+                            controller_ref = controller_ref,
+                            trace_attributes = trace_attributes,
+                            assistant_output = coding_assistant_output,
+                            pipeline_record = pipeline_record
+                        )
 
             print(f'Output behavior: {output_behavior}')
-            if output_behavior.get('irrelevant') == 1 or output_behavior.get('verbose') == 1 or output_behavior.get('out-of-scope') == 1:
+            if output_behavior.get('truncated') == 1 or output_behavior.get('token-loop') == 1 or output_behavior.get('verbose') == 1 or output_behavior.get('dangerous-code') == 1:
                 reasons = []
-                if output_behavior.get('irrelevant') == 1: reasons.append("IRRELEVANT")
+                if output_behavior.get('truncated') == 1: reasons.append("TRUNCATED")
+                if output_behavior.get('token-loop') == 1: reasons.append("TOKEN_LOOP")
                 if output_behavior.get('verbose') == 1: reasons.append("VERBOSE")
-                if output_behavior.get('out-of-scope') == 1: reasons.append("OUT_OF_SCOPE")
+                if output_behavior.get('dangerous-code') == 1: reasons.append("DANGEROUS_CODE")
 
-                given_response = 'REFUSED OUTPUT'
+                given_response = 'REFUSED_OUTPUT'
                 refusal_reason = " | ".join(reasons)
                 pipeline_record['status'] = given_response
                 pipeline_record['refusal-reason'] = refusal_reason
