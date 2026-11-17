@@ -23,11 +23,15 @@ def controller_input_check(
     ) as input_bc_span:
         print('Checking the input with behavior controller')
         # Prompt tag change place
-    
+
+        controller_prompt_name = controller_prompts['input']['name']
+        controller_prompt_version = controller_prompts['input']['version']
+        controller_variant = f'v{controller_prompt_version}-{controller_prompt_name}'
+        print(f'Input controller variant: {controller_variant}')
         controller_prompt = mlflow_get_prompt(
             mlflow_client = mlflow_client,
-            prompt_name = controller_prompts['input']['name'],
-            prompt_version = controller_prompts['input']['version'],
+            prompt_name = controller_prompt_name,
+            prompt_version = controller_prompt_version,
             prompt_replacements = {
                 'request': query_text
             }
@@ -37,6 +41,7 @@ def controller_input_check(
         controller_config = controller_prompt['config']
 
         controller_input = {
+            'variant': controller_variant,
             'messages': sent_prompt
         }
 
@@ -160,10 +165,14 @@ def controller_output_check(
     ) as output_bc_span: 
         print('Checking output with behavior controller')
         # Prompt tag change place
+        controller_prompt_name = controller_prompts['output']['name']
+        controller_prompt_version = controller_prompts['output']['version']
+        controller_variant = f'v{controller_prompt_version}-{controller_prompt_name}'
+        print(f'Output controller variant: {controller_variant}')
         controller_prompt = mlflow_get_prompt(
             mlflow_client = mlflow_client,
-            prompt_name = controller_prompts['output']['name'],
-            prompt_version = controller_prompts['output']['version'],
+            prompt_name = controller_prompt_name,
+            prompt_version = controller_prompt_version,
             prompt_replacements = {
                 'request': query_text,
                 'answer': assistant_output
@@ -174,6 +183,7 @@ def controller_output_check(
         controller_config = controller_prompt['config']
 
         controller_input = {
+            'variant': controller_variant,
             'messages': sent_prompt 
         }
 

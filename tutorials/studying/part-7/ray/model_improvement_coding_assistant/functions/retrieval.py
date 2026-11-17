@@ -28,11 +28,14 @@ def retrieval_send_query(
         fusion_limit = retrieval_parameters['fusion-limit']
         batch_size = retrieval_parameters['batch-size']
         
-        retrieval_span.set_inputs({
-            'query': query_text
-        })
-
+        retrieval_input = retrieval_parameters.copy()
+        retrieval_input['query'] = query_text
+       
+        pipeline_record['retrieval-data']['input'] = retrieval_input
+        
         retrieval_span.set_attributes({f'request.{k}': v for k, v in retrieval_parameters.items()})
+
+        retrieval_span.set_inputs(retrieval_input)
 
         retrieval_query = [query_text]
         retrieval_query_ref = ray.put(retrieval_query)

@@ -21,6 +21,7 @@ def assistant_send_request(
         trace_id = trace_id, 
         parent_span_id = root_span_id
     ) as assistant_span:
+        assistant_variant = f'v{prompt_version}-{prompt_name}'
         assistant_prompt = mlflow_get_prompt(
             mlflow_client = mlflow_client,
             prompt_name = prompt_name,
@@ -32,6 +33,7 @@ def assistant_send_request(
         assistant_config = assistant_prompt['config']
 
         assistant_span_input = {
+            'variant': assistant_variant,
             'messages': sent_prompt
         }
 
