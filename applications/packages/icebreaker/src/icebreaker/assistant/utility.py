@@ -554,6 +554,10 @@ def assistant_format_data(
             used_key = f'assistant-{key}'
             row_dict[used_key] = value
 
+        for key, value in case['retrieval-data']['input'].items():
+            used_key = f'retrieval-{key}'
+            row_dict[used_key] = value
+        
         for key, value in case['retrieval-data']['metrics'].items():
             used_key = f'retrieval-{key}'
             row_dict[used_key] = value
