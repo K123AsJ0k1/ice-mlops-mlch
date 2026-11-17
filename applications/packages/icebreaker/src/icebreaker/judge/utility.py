@@ -406,14 +406,6 @@ def judge_format_data(
             used_key = f'judge-{key}'
             row_dict[used_key] = value
         
-        for key, value in case['assistant-data']['input'].items():
-            used_key = f'assistant-{key}'
-            row_dict[used_key] = value
-
-        for key, value in case['assistant-data']['output'].items():
-            used_key = f'assistant-{key}'
-            row_dict[used_key] = value
-
         records.append(row_dict)
          
     # pandas automatically handles missing keys across records by filling them with NaN/None
