@@ -1,0 +1,19 @@
+details:
+  model-column: assistant-model
+  judge-column: judge-used_model
+  same-columns:
+    - dataset-category
+    - dataset-index
+    - dataset-type
+    - assistant-variant
+    - assistant-model
+    - assistant-query
+    - assistant-answer
+    - 
+  different-columns:
+    - judge-variant
+    - judge-used_model
+    - judge-reasoning
+    - judge-correctness
+    - judge-faithfulness
+    - judge-relevance

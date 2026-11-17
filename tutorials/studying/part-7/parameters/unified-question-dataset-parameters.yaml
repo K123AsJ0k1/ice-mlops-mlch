@@ -1,0 +1,63 @@
+details:
+  external-general-dataset:
+    wanted-columns:
+      - question
+      - answer
+      - dataset-path
+    renamed-columns:
+      question: 'query'
+      answer: 'solution'
+      dataset-path: 'source-path'
+    type-column: 'format'
+  internal-synthetic-dataset:
+    wanted-columns:
+      - question
+      - ground-truth-answer
+      - relevant-used-references
+      - relevant-used-paths
+      - part
+      - chapter
+      - idx
+      - relevance
+      - weights
+      - prompt-variant
+      - action
+      - category
+      - source-path
+    renamed-columns:
+      question: 'query'
+      ground-truth-answer: 'solution'
+      relevant-used-references: 'internal-material-references'
+      relevant-used-paths: 'internal-material-paths'
+      part: 'internal-material-part'
+      chapter: 'internal-material-chapter'
+      idx: 'internal-material-index'
+      relevance: 'internal-material-grade'
+      weights: 'internal-material-ranks'
+      prompt-variant: 'type'
+      action: 'guardrail-action'
+      category: 'guardrail-category'
+  internal-validation-dataset: 
+    wanted-columns:
+      - topic
+      - content
+      - ref-material
+      - ref-paths
+      - part
+      - chapter
+      - idx
+      - relevance
+      - ranking-weights
+      - dataset-object
+    renamed-columns:
+      topic: 'query'
+      content: 'solution'
+      ref-material: 'internal-material-references'
+      ref-paths: 'internal-material-paths'
+      part: 'internal-material-part'
+      chapter: 'internal-material-chapter'
+      idx: 'internal-material-index'
+      relevance: 'internal-material-grade'
+      ranking-weights: 'internal-material-ranks'
+      dataset-object: 'source-path'
+    type-column: 'absolute-path'

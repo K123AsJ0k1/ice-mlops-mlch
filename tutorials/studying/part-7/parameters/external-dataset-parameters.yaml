@@ -1,0 +1,49 @@
+details:
+  - processing-type: 'full'
+    dataset-repository: 'openai/openai_humaneval'
+    dataset-name: 'openai_humaneval'
+    file-name: 'openai-humaneval'
+  - processing-type: 'full'
+    dataset-repository: 'google-research-datasets/mbpp'
+    dataset-name: 'sanitized'  
+    file-name: 'mbpp'
+  - processing-type: 'full' 
+    dataset-repository: 'emirkaanozdemr/bash_command_data_6K'
+    dataset-name: 'default'
+    file-name: 'bash-command-data'
+  - processing-type: 'divided'
+    dataset-repository: 'OpenCoder-LLM/opc-sft-stage2'
+    dataset-name: 'mceval_instruct' 
+    table-size: 40000 
+    size-limit: 36000
+  - processing-type: 'divided'
+    dataset-repository: 'OpenCoder-LLM/opc-sft-stage2'
+    dataset-name: 'evol_instruct' 
+    table-size: 40000 
+    size-limit: 112000
+  - processing-type: 'divided'
+    dataset-repository: 'OpenCoder-LLM/opc-sft-stage2'
+    dataset-name: 'educational_instruct'
+    table-size: 120000
+    size-limit: 119000
+  - processing-type: 'divided'
+    dataset-repository: 'OpenCoder-LLM/opc-sft-stage2' 
+    dataset-name: 'package_instruct' 
+    table-size: 30000
+    size-limit: 172000
+  - processing-type: 'divided'
+    dataset-repository: 'OpenCoder-LLM/opc-sft-stage1'
+    dataset-name: 'realuser_instruct'
+    table-size: 30000 
+    size-limit: 677000
+  - processing-type: 'divided'
+    dataset-repository: 'OpenCoder-LLM/opc-sft-stage1'
+    dataset-name: 'filtered_infinity_instruct'
+    table-size: 50000
+    size-limit: 1040000
+  - processing-type: 'divided'
+    dataset-repository: 'OpenCoder-LLM/opc-sft-stage1' 
+    dataset-name: 'largescale_diverse_instruct' 
+    table-size: 40000
+    size-limit: 2520000
+
