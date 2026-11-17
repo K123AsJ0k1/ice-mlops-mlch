@@ -47,7 +47,7 @@ judge-general-variant:
 
       ## Candidate Answer
       <candidate_answer>
-      {{ output }}
+      {{ answer }}
       </candidate_answer>
 
 judge-synthetic-variant:
@@ -147,7 +147,7 @@ judge-validation-variant:
         "faithfulness": [0 or 1]
       }
 
-    user: |
+    user: | 
       ## User Request
       <user_request>
       {{ request }} 
@@ -160,5 +160,5 @@ judge-validation-variant:
 
       ## Candidate Answer
       <candidate_answer>
-      {{ output }}
+      {{ answer }}
       </candidate_answer>

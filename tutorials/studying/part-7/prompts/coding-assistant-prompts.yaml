@@ -16,7 +16,7 @@ assistant-base-variant:
     user: |
       {{ request }}
 
-assistant-pe-variant:
+assistant-pe-variant: 
   models:
     qwen-3-5:
       temperature: 0.6
