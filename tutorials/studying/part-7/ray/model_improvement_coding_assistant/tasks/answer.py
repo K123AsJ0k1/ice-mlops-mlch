@@ -123,9 +123,10 @@ def answer_dataset(
                 'dataset-index': index,
                 'dataset-type': dataset_type,
                 'assistant-status': 'ACCEPTED', # ACCEPTED, REFUSED_INPUT, REFUSED_REQUEST, REFUSED_OUTPUT
-                'assistant-status-reason': '',
+                'assistant-status-reason': 'NONE',
                 'assistant-variant': assistant_variant,
                 'assistant-query': assistant_query,
+                'assistant-record-index': record_index,
                 'assistant-data': {
                     'input': {},
                     'metrics': {},
@@ -147,6 +148,7 @@ def answer_dataset(
                     'output': {}
                 }
             }
+            # Maybe add assistant record index here for easier search
             # Needs pipeline time
             print(f'Processing {index}/{record_index}/{total_records}')
             print(f'Dataset category: {dataset_category}')
@@ -194,8 +196,13 @@ def answer_dataset(
                 'dangerous-code': 0
             }
 
+            #default_response = 'FAILED'
+            #default_reason = 'UNKNOWN'
+            #pipeline_record['assistant-status'] = default_response
+            #pipeline_record['assistant-status-reason'] = default_reason
+            # Update judge extract to have fialure dict
             trace_output = {
-                'response': 'failed',
+                'response': 'PIPELINE_FAILED',
                 'assistant-status-reason': 'UNKNOWN'
             }
             
@@ -265,6 +272,11 @@ def answer_dataset(
                         'assistant-status-reason': refusal_reason
                     }
                 else:
+                    #wanted_status = 'ACCEPTED'
+                    #wanted_reason = 'NONE'
+                    #pipeline_record['assistant-status'] = wanted_status
+                    #pipeline_record['assistant-status-reason'] = wanted_reason
+
                     trace_output = {
                         'response': coding_assistant_output,
                         'assistant-status-reason': 'NONE'

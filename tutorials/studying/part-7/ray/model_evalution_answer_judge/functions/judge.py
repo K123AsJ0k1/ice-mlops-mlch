@@ -22,6 +22,7 @@ def judge_send_request(
         trace_id = trace_id, 
         parent_span_id = root_span_id
     ) as judge_span:
+        judge_variant = f'v{prompt_version}-{prompt_name}'
         judge_prompt = mlflow_get_prompt(
             mlflow_client = mlflow_client,
             prompt_name = prompt_name,
@@ -33,6 +34,7 @@ def judge_send_request(
         judge_config = judge_prompt['config']
 
         judge_span_input = {
+            'variant': judge_variant,
             'messages': sent_prompt
         }
 
@@ -52,7 +54,7 @@ def judge_send_request(
 
         answer_judge_payload = ray.get(answer_judge_ref)
         
-        answer_score = {
+        evaluation_score = {
             'reasoning': '', 
             'correctness': 0,
             'faithfulness': 0,
@@ -116,19 +118,19 @@ def judge_send_request(
                 )
             ) 
 
-            model_score = judge_extract_output(
+            judge_score = judge_extract_output(
                 output = answer_judge_output
             )
 
-            for key, value in model_score.items():
-                answer_score[key] = value
+            for key, value in judge_score.items():
+                evaluation_score[key] = value
         
         judge_span.set_outputs({
-            'output': answer_score
+            'output': evaluation_score
         })
 
-        span_output = answer_score | answer_judge_metadata
+        span_output = evaluation_score | answer_judge_metadata
                                 
         pipeline_record['judge-data']['output'] = span_output
         
-        return answer_score
+        return evaluation_score
