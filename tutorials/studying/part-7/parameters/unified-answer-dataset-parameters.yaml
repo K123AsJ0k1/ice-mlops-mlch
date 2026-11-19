@@ -1,5 +1,5 @@
 details:
-  wanted-columns:
+  wanted-columns: 
     - dataset-category
     - dataset-index
     - dataset-type
@@ -33,6 +33,8 @@ details:
     - assistant-execution-time-sec
     - retrieval-device-mode
     - retrieval-collection-name
+    - retrieval-dense-model-name
+    - retrieval-sparse-model-name
     - retrieval-query-type
     - retrieval-relevance-threshold
     - retrieval-query-limit

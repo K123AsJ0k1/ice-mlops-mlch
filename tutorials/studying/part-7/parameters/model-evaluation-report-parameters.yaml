@@ -1,0 +1,561 @@
+parameters:
+  wanted-columns: 
+    answers:
+      - assistant-record-index
+      - dataset-category
+      - dataset-index
+      - dataset-type
+      - assistant-variant
+      - assistant-used-model
+      - assistant-inference-server
+      - assistant-prompt-tokens
+      - assistant-completion-tokens
+      - assistant-total-tokens
+      - assistant-total-latency-sec
+      - assistant-prompt-processing-time-sec
+      - assistant-generation-time-sec
+      - assistant-input-tokens-per-sec
+      - assistant-output-tokens-per-sec
+      - assistant-time-to-first-token-sec
+      - assistant-tokens-per-sec
+      - assistant-time-per-output-token-sec
+      - assistant-input-to-output-ratio
+      - assistant-context-window-utilization-pct
+      - assistant-input-cost
+      - assistant-output-cost
+      - assistant-total-cost
+      - assistant-execution-time-sec
+      - retrieval-collection-name
+      - retrieval-dense-model-name
+      - retrieval-sparse-model-name
+      - retrieval-p@1
+      - retrieval-r@3
+      - retrieval-rr
+      - retrieval-ap
+      - retrieval-ndcg@3
+      - retrieval-ndcg@5
+      - retrieval-embedding-latency-ms
+      - retrieval-search-latency-ms
+      - retrieval-total-latency-ms
+      - retrieval-total-characters
+      - input-controller-variant
+      - input-controller-used-model
+      - input-controller-inference-server
+      - input-controller-prompt-tokens
+      - input-controller-completion-tokens
+      - input-controller-total-tokens
+      - input-controller-total-latency-sec
+      - input-controller-prompt-processing-time-sec
+      - input-controller-generation-time-sec
+      - input-controller-input-tokens-per-sec
+      - input-controller-output-tokens-per-sec
+      - input-controller-time-to-first-token-sec
+      - input-controller-tokens-per-sec
+      - input-controller-time-per-output-token-sec
+      - input-controller-input-to-output-ratio
+      - input-controller-context-window-utilization-pct
+      - input-controller-input-cost
+      - input-controller-output-cost
+      - input-controller-total-cost
+      - input-controller-reasoning
+      - input-controller-secret-leak
+      - input-controller-off-topic
+      - output-controller-variant
+      - output-controller-inference-server
+      - output-controller-used-model
+      - output-controller-prompt-tokens
+      - output-controller-completion-tokens
+      - output-controller-total-tokens
+      - output-controller-total-latency-sec
+      - output-controller-prompt-processing-time-sec
+      - output-controller-generation-time-sec
+      - output-controller-input-tokens-per-sec
+      - output-controller-output-tokens-per-sec
+      - output-controller-time-to-first-token-sec
+      - output-controller-tokens-per-sec
+      - output-controller-time-per-output-token-sec
+      - output-controller-input-to-output-ratio
+      - output-controller-context-window-utilization-pct
+      - output-controller-input-cost
+      - output-controller-output-cost
+      - output-controller-total-cost
+      - output-controller-reasoning
+      - output-controller-truncated
+      - output-controller-token-loop
+      - output-controller-verbose
+      - output-controller-dangerous-code
+    judged:
+      - assistant-record-index
+      - dataset-category
+      - dataset-index
+      - dataset-type
+      - assistant-model
+      - judge-status
+      - judge-status-reason
+      - judge-inference-server
+      - judge-prompt-tokens
+      - judge-completion-tokens
+      - judge-total-tokens
+      - judge-total-latency-sec
+      - judge-prompt-processing-time-sec
+      - judge-generation-time-sec
+      - judge-input-tokens-per-sec
+      - judge-output-tokens-per-sec
+      - judge-time-to-first-token-sec
+      - judge-tokens-per-sec
+      - judge-time-per-output-token-sec
+      - judge-input-to-output-ratio
+      - judge-context-window-utilization-pct
+      - judge-input-cost
+      - judge-output-cost
+      - judge-total-cost
+      - judge-variant
+      - judge-used-model
+      - judge-reasoning
+      - judge-correctness
+      - judge-faithfulness
+      - judge-relevance
+  reports:
+    answer-columns:
+      - assistant-record-index
+      - assistant-variant
+      - assistant-prompt-tokens
+      - assistant-completion-tokens
+      - assistant-total-tokens
+      - assistant-total-latency-sec
+      - assistant-prompt-processing-time-sec
+      - assistant-generation-time-sec
+      - assistant-input-tokens-per-sec
+      - assistant-output-tokens-per-sec
+      - assistant-time-to-first-token-sec
+      - assistant-tokens-per-sec
+      - assistant-time-per-output-token-sec
+      - assistant-input-to-output-ratio
+      - assistant-context-window-utilization-pct
+      - assistant-input-cost
+      - assistant-output-cost
+      - assistant-total-cost
+      - assistant-execution-time-sec
+      - retrieval-collection-name
+      - retrieval-dense-model-name
+      - retrieval-sparse-model-name
+      - retrieval-p@1
+      - retrieval-r@3
+      - retrieval-rr
+      - retrieval-ap
+      - retrieval-ndcg@3
+      - retrieval-ndcg@5
+      - retrieval-embedding-latency-ms
+      - retrieval-search-latency-ms
+      - retrieval-total-latency-ms
+      - retrieval-total-characters
+      - input-controller-variant
+      - input-controller-used-model
+      - input-controller-inference-server
+      - input-controller-prompt-tokens
+      - input-controller-completion-tokens
+      - input-controller-total-tokens
+      - input-controller-total-latency-sec
+      - input-controller-prompt-processing-time-sec
+      - input-controller-generation-time-sec
+      - input-controller-input-tokens-per-sec
+      - input-controller-output-tokens-per-sec
+      - input-controller-time-to-first-token-sec
+      - input-controller-tokens-per-sec
+      - input-controller-time-per-output-token-sec
+      - input-controller-input-to-output-ratio
+      - input-controller-context-window-utilization-pct
+      - input-controller-input-cost
+      - input-controller-output-cost
+      - input-controller-total-cost
+      - input-controller-reasoning
+      - input-controller-secret-leak
+      - input-controller-off-topic
+      - output-controller-variant
+      - output-controller-inference-server
+      - output-controller-used-model
+      - output-controller-prompt-tokens
+      - output-controller-completion-tokens
+      - output-controller-total-tokens
+      - output-controller-total-latency-sec
+      - output-controller-prompt-processing-time-sec
+      - output-controller-generation-time-sec
+      - output-controller-input-tokens-per-sec
+      - output-controller-output-tokens-per-sec
+      - output-controller-time-to-first-token-sec
+      - output-controller-tokens-per-sec
+      - output-controller-time-per-output-token-sec
+      - output-controller-input-to-output-ratio
+      - output-controller-context-window-utilization-pct
+      - output-controller-input-cost
+      - output-controller-output-cost
+      - output-controller-total-cost
+      - output-controller-reasoning
+      - output-controller-truncated
+      - output-controller-token-loop
+      - output-controller-verbose
+      - output-controller-dangerous-code
+    merge-column: assistant-record-index
+    types:
+      Assistant-score-reports-(Mean):
+        value-columns:
+          - judge-correctness
+          - judge-faithfulness
+          - judge-relevance
+        group-variants:
+          Comparison-table-1:
+            - assistant-model
+            - assistant-variant
+            - dataset-category
+            - dataset-type
+            - judge-used-model
+          Comparison-table-2:
+            - assistant-model
+            - assistant-variant
+            - dataset-category
+            - dataset-type
+          Comparison-table-3:
+            - assistant-model
+            - assistant-variant
+            - dataset-category
+          Comparison-table-4:
+            - assistant-model
+            - assistant-variant
+          Comparison-table-5:
+            - assistant-model
+          Bias-table-1:
+            - assistant-model
+            - judge-used-model
+          Bias-table-2:
+            - assistant-variant
+            - judge-used-model
+          Bias-table-3:
+            - dataset-category
+            - judge-used-model
+          Bias-table-4:
+            - dataset-type
+            - judge-used-model
+        column-sorting:
+          dataset-category:
+            - general
+            - synthetic
+            - validation
+          assistant-variant:
+            - v10-assistant-base-variant-qwen-3-5
+            - v10-assistant-pe-variant-qwen-3-5
+            - v10-assistant-pe-rag-variant-qwen-3-5
+            - v10-assistant-pe-rag-bc-variant-qwen-3-5
+      Assistant-effiency-reports-(Mean):
+        value-columns:
+          - assistant-execution-time-sec
+          - assistant-total-latency-sec
+          - assistant-tokens-per-sec
+          - assistant-time-per-output-token-sec
+          - assistant-time-to-first-token-sec
+          - assistant-prompt-processing-time-sec
+          - assistant-generation-time-sec
+          - assistant-input-tokens-per-sec
+          - assistant-output-tokens-per-sec
+          - assistant-input-to-output-ratio
+          - assistant-context-window-utilization-pct
+        group-variants:
+          Comparison-table-1:
+            - assistant-model
+            - assistant-variant
+            - dataset-category
+            - dataset-type
+          Comparison-table-2:
+            - assistant-model
+            - assistant-variant
+            - dataset-category
+          Comparison-table-3:
+            - assistant-model
+            - assistant-variant
+          Comparison-table-4:
+            - assistant-model
+          Comparison-table-5:
+            - assistant-variant
+          Comparison-table-6:
+            - dataset-category
+          Comparison-table-7:
+            - dataset-type
+        column-sorting:
+          dataset-category:
+            - general
+            - synthetic
+            - validation
+          assistant-variant:
+            - v10-assistant-base-variant-qwen-3-5
+            - v10-assistant-pe-variant-qwen-3-5
+            - v10-assistant-pe-rag-variant-qwen-3-5
+            - v10-assistant-pe-rag-bc-variant-qwen-3-5
+      Assistant-cost-reports-(Mean):
+        value-columns:
+          - assistant-input-cost
+          - assistant-output-cost
+          - assistant-total-cost
+          - assistant-prompt-tokens
+          - assistant-completion-tokens
+          - assistant-total-tokens
+        group-variants:
+          Comparison-table-1:
+            - assistant-model
+            - assistant-variant
+            - dataset-category
+            - dataset-type
+          Comparison-table-2:
+            - assistant-model
+            - assistant-variant
+            - dataset-category
+          Comparison-table-3:
+            - assistant-model
+            - assistant-variant
+          Comparison-table-4:
+            - assistant-model
+          Comparison-table-5:
+            - assistant-variant
+          Comparison-table-6:
+            - dataset-category
+          Comparison-table-7:
+            - dataset-type
+        column-sorting:
+          dataset-category:
+            - general
+            - synthetic
+            - validation
+          assistant-variant:
+            - v10-assistant-base-variant-qwen-3-5
+            - v10-assistant-pe-variant-qwen-3-5
+            - v10-assistant-pe-rag-variant-qwen-3-5
+            - v10-assistant-pe-rag-bc-variant-qwen-3-5
+      Assistant-retrieval-reports-(Mean):
+        value-columns:
+          - retrieval-p@1
+          - retrieval-r@3
+          - retrieval-rr
+          - retrieval-ap
+          - retrieval-ndcg@3
+          - retrieval-ndcg@5
+          - retrieval-embedding-latency-ms
+          - retrieval-search-latency-ms
+          - retrieval-total-latency-ms
+          - retrieval-total-characters
+        group-variants:
+          Comparison-table-1:
+            - retrieval-collection-name
+            - retrieval-dense-model-name
+            - retrieval-sparse-model-name
+            - dataset-category
+            - dataset-type
+          Comparison-table-2:
+            - retrieval-collection-name
+            - retrieval-dense-model-name
+            - retrieval-sparse-model-name
+            - dataset-category
+          Comparison-table-3:
+            - retrieval-collection-name
+            - retrieval-dense-model-name
+            - retrieval-sparse-model-name
+          Comparison-table-4:
+            - dataset-category
+          Comparison-table-5:
+            - dataset-type
+        column-sorting:
+          dataset-category:
+            - general
+            - synthetic
+            - validation
+      Input-controller-action-reports-(Mean):
+        value-columns:
+          - input-controller-secret-leak
+          - input-controller-off-topic
+        group-variants:
+          Comparison-table-1:
+            - input-controller-used-model
+          Comparison-table-2:
+            - dataset-type
+          Comparison-table-3:
+            - dataset-category
+        column-sorting:
+          dataset-category:
+            - general
+            - synthetic
+            - validation
+      Input-controller-effiency-reports-(Mean):
+        value-columns:
+          - input-controller-total-latency-sec
+          - input-controller-tokens-per-sec
+          - input-controller-time-per-output-token-sec
+          - input-controller-time-to-first-token-sec
+          - input-controller-prompt-processing-time-sec
+          - input-controller-generation-time-sec
+          - input-controller-input-tokens-per-sec
+          - input-controller-output-tokens-per-sec
+          - input-controller-input-to-output-ratio
+          - input-controller-context-window-utilization-pct
+        group-variants:
+          Comparison-table-1:
+            - input-controller-used-model
+          Comparison-table-2:
+            - dataset-type
+          Comparison-table-3:
+            - dataset-category
+        column-sorting:
+          dataset-category:
+            - general
+            - synthetic
+            - validation
+      Input-controller-cost-reports-(Mean):
+        value-columns:
+          - input-controller-input-cost
+          - input-controller-output-cost
+          - input-controller-total-cost
+          - input-controller-prompt-tokens
+          - input-controller-completion-tokens
+          - input-controller-total-tokens
+        group-variants:
+          Comparison-table-1:
+            - input-controller-used-model
+          Comparison-table-2:
+            - dataset-type
+          Comparison-table-3:
+            - dataset-category
+        column-sorting:
+          dataset-category:
+            - general
+            - synthetic
+            - validation
+      Output-controller-action-reports-(Mean):
+        value-columns:
+          - output-controller-truncated
+          - output-controller-token-loop
+          - output-controller-verbose
+          - output-controller-dangerous-code
+        group-variants:
+          Comparison-table-1:
+            - output-controller-used-model
+          Comparison-table-2:
+            - dataset-type
+          Comparison-table-3:
+            - dataset-category
+        column-sorting:
+          dataset-category:
+            - general
+            - synthetic
+            - validation
+      Output-controller-effiency-reports-(Mean):
+        value-columns:
+          - output-controller-total-latency-sec
+          - output-controller-tokens-per-sec
+          - output-controller-time-per-output-token-sec
+          - output-controller-time-to-first-token-sec
+          - output-controller-prompt-processing-time-sec
+          - output-controller-generation-time-sec
+          - output-controller-input-tokens-per-sec
+          - output-controller-output-tokens-per-sec
+          - output-controller-input-to-output-ratio
+          - output-controller-context-window-utilization-pct
+        group-variants:
+          Comparison-table-1:
+            - output-controller-used-model
+          Comparison-table-2:
+            - dataset-type
+          Comparison-table-3:
+            - dataset-category
+        column-sorting:
+          dataset-category:
+            - general
+            - synthetic
+            - validation
+      Output-controller-cost-reports-(Mean):
+        value-columns:
+          - output-controller-input-cost
+          - output-controller-output-cost
+          - output-controller-total-cost
+          - output-controller-prompt-tokens
+          - output-controller-completion-tokens
+          - output-controller-total-tokens
+        group-variants:
+          Comparison-table-1:
+            - output-controller-used-model
+          Comparison-table-2:
+            - dataset-type
+          Comparison-table-3:
+            - dataset-category
+        column-sorting:
+          dataset-category:
+            - general
+            - synthetic
+            - validation
+      Judge-effiency-reports-(Mean):
+        value-columns:
+          - judge-total-latency-sec
+          - judge-tokens-per-sec
+          - judge-time-per-output-token-sec
+          - judge-time-to-first-token-sec
+          - judge-prompt-processing-time-sec
+          - judge-generation-time-sec
+          - judge-input-tokens-per-sec
+          - judge-output-tokens-per-sec
+          - judge-input-to-output-ratio
+          - judge-context-window-utilization-pct
+        group-variants:
+          Comparison-table-1:
+            - judge-used-model
+            - judge-variant
+            - dataset-category
+            - dataset-type
+          Comparison-table-2:
+            - judge-used-model
+            - judge-variant
+            - dataset-category
+          Comparison-table-3:
+            - judge-used-model
+            - judge-variant
+          Comparison-table-4:
+            - judge-used-model
+          Comparison-table-5:
+            - judge-variant
+          Comparison-table-6:
+            - dataset-category
+          Comparison-table-7:
+            - dataset-type
+        column-sorting:
+          dataset-category:
+            - general
+            - synthetic
+            - validation
+      Judge-cost-reports-(Mean):
+        value-columns:
+          - judge-input-cost
+          - judge-output-cost
+          - judge-total-cost
+          - judge-prompt-tokens
+          - judge-completion-tokens
+          - judge-total-tokens
+        group-variants:
+          Comparison-table-1:
+            - judge-used-model
+            - judge-variant
+            - dataset-category
+            - dataset-type
+          Comparison-table-2:
+            - judge-used-model
+            - judge-variant
+            - dataset-category
+          Comparison-table-3:
+            - judge-used-model
+            - judge-variant
+          Comparison-table-4:
+            - judge-used-model
+          Comparison-table-5:
+            - judge-variant
+          Comparison-table-6:
+            - dataset-category
+          Comparison-table-7:
+            - dataset-type
+        column-sorting:
+          dataset-category:
+            - general
+            - synthetic
+            - validation

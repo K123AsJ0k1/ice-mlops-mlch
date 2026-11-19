@@ -1,18 +1,35 @@
 details:
-  model-column: assistant-model
-  judge-column: judge-used_model
-  same-columns:
+  wanted-columns:
     - dataset-category
     - dataset-index
     - dataset-type
-    - assistant-variant
+    - assistant-record-index
     - assistant-model
-    - assistant-query
-    - assistant-answer
-    - 
-  different-columns:
+    - case-request
+    - case-material
+    - case-truth
+    - case-answer
+    - judge-status
+    - judge-status-reason
+    - judge-inference-server
+    - judge-prompt-tokens
+    - judge-completion-tokens
+    - judge-total-tokens
+    - judge-total-latency-sec
+    - judge-prompt-processing-time-sec
+    - judge-generation-time-sec
+    - judge-input-tokens-per-sec
+    - judge-output-tokens-per-sec
+    - judge-time-to-first-token-sec
+    - judge-tokens-per-sec
+    - judge-time-per-output-token-sec
+    - judge-input-to-output-ratio
+    - judge-context-window-utilization-pct
+    - judge-input-cost
+    - judge-output-cost
+    - judge-total-cost
     - judge-variant
-    - judge-used_model
+    - judge-used-model
     - judge-reasoning
     - judge-correctness
     - judge-faithfulness
