@@ -6,7 +6,7 @@ def judge_extract_output(
         import json
     except ImportError as e:
         raise ImportError("judge/utility failed to import", e)
-    
+    # Update this
     json_match = re.search(r"\{.*\}", output, re.DOTALL)
     if not json_match:
         return {
@@ -53,6 +53,8 @@ def judge_model_report(
         index = [melted[col] for col in index_cols],
         columns = melted['score']
     )
+
+    #print(grouped_counts)
 
     grouped_counts['pass_pct'] = (grouped_counts[1] / (grouped_counts[0] + grouped_counts[1]) * 100).round(2)
     

@@ -1120,12 +1120,12 @@ def workflow_create_unified_answer_dataset(
         ) 
 
         object_df = data_object[0]
-        
+        # consider removing record
         wanted_columns = dataset_details['wanted-columns']
         filtered_df = object_df[wanted_columns].copy()
         for index, row in filtered_df.iterrows():
             modified_row = row.copy()
-            modified_row['record-index'] = record_index
+            modified_row['assistant-record-index'] = record_index
             joined_rows.append(modified_row)
             record_index += 1
 
@@ -1171,7 +1171,7 @@ def workflow_create_unified_answer_dataset(
                 'dataset-category': row['dataset-category'],
                 'dataset-index': row['dataset-index'],
                 'assistant-variant': row['assistant-variant'],
-                'record-index': row['record-index']
+                'record-index': row['assistant-record-index']
             },
             'source': {
                 'source_type': 'UNSPECIFIED'
@@ -1212,7 +1212,31 @@ def workflow_create_unified_judged_dataset(
     except ImportError as e:
         raise ImportError("workflow/utility failed to import", e)
 
-    model_dfs = {}
+    '''
+    model-column: assistant-model
+    judge-column: judge-used-model
+    same-columns:
+        - dataset-category
+        - dataset-index
+        - dataset-type
+        - assistant-model
+        - case-request
+        - case-material
+        - case-truth
+        - case-answer
+    different-columns:
+        - judge-status
+        - judge-status-reason
+        - judge-variant
+        - judge-used-model
+        - judge-reasoning
+        - judge-correctness
+        - judge-faithfulness
+        - judge-relevance
+    '''
+
+    joined_rows = []
+    record_index = 0
     for dataset_path in dataset_paths:
         data_object = objects_get_data(
             swift_client = swift_client,
@@ -1235,7 +1259,18 @@ def workflow_create_unified_judged_dataset(
         ) 
 
         object_df = data_object[0]
+        wanted_columns = dataset_details['wanted-columns']
+        # consider removing record
+        filtered_df = object_df[wanted_columns].copy()
+        for index, row in filtered_df.iterrows():
+            modified_row = row.copy()
+            modified_row['judge-record-index'] = record_index
+            joined_rows.append(modified_row)
+            record_index += 1
 
+        #df_list.append(object_df[wanted_columns])
+
+        '''
         model_name_column = dataset_details['model-column']
         assistant_model = object_df[model_name_column].iloc[0]
 
@@ -1251,11 +1286,12 @@ def workflow_create_unified_judged_dataset(
         different_columns = dataset_details['different-columns']
         used_key = f'judge-{judge_model}'
         model_dfs[assistant_model][used_key] = object_df[different_columns]
+        '''
          
     #unified_dataset = pd.DataFrame(joined_rows)
     #unified_dataset = unified_dataset.reset_index(drop = True)
     #unified_dataset.columns = unified_dataset.columns.str.replace('_','-')
-
+    '''
     df_list = []
     for judged_model, sub_dict in model_dfs.items():
         base_df = sub_dict['data'].copy()
@@ -1268,12 +1304,313 @@ def workflow_create_unified_judged_dataset(
             
             #base_df = base_df.join(df, rsuffix = f'-{prefix_name}')
         df_list.append(base_df)
+    '''
+    #unified_dataset = pd.concat(df_list, ignore_index = True)
+    #unified_dataset = pd.concat(df_list, ignore_index = True)
 
-    unified_dataset = pd.concat(df_list, ignore_index = True)
-    unified_dataset.columns = unified_dataset.columns.str.replace('_','-')
+    unified_dataset = pd.DataFrame(joined_rows)
+    unified_dataset = unified_dataset.reset_index(drop = True)
 
+    #unified_dataset.columns = unified_dataset.columns.str.replace('_','-')
+    
+    dataset_name = 'unified-dataset'
+    path_name = f'{dataset_name}.parquet'
+    storage_parameters['object-name'] = 'data'
+    storage_parameters['object-serialization'] = 'parquet'
+    storage_parameters['path-replacers'] = {
+        'name': 'JUDGED'
+    }
+    storage_parameters['path-names'] = [
+        path_name
+    ]
+    storage_parameters['debug-prints'] = True
+    storage_parameters['lock-parameters'] = {}
+    storage_parameters['lock-location'] = None
+    storage_parameters['overwrite'] = True
+    
+    dataset_stored = objects_store_data(
+        swift_client = swift_client,
+        storage_parameters = storage_parameters,
+        object_data = unified_dataset,
+        object_metadata = {}
+    )
+    
+    '''
+    formatted_records = []
+    for _, row in unified_dataset.iterrows():
+        formatted_records.append({
+            'inputs': {
+                'assistant-query': row['assistant-query']
+            },
+            'expectations': {
+                'assistant-answer': row['assistant-answer'],
+                'dataset-category': row['dataset-category'],
+                'dataset-index': row['dataset-index'],
+                'assistant-variant': row['assistant-variant'],
+                'record-index': row['record-index']
+            },
+            'source': {
+                'source_type': 'UNSPECIFIED'
+            },
+            'tags': {
+                'mlflow.user': dataset_user
+            } 
+        })
+    
+    dataset_tags['mlflow.user'] = dataset_user
+    dataset_id = mlflow_create_dataset(
+        mlflow_client = mlflow_client,
+        dataset_name = dataset_name,
+        experiment_id = experiment_id,
+        dataset_tags = dataset_tags,
+        dataset_records = formatted_records
+    )
+    '''
     return {
         'dataset': unified_dataset,
         'id': None
     }
+
+def workflow_create_dataframe_reports(
+    target_df: any,
+    parameters: dict
+):
+    try: 
+        import pandas as pd
+    except ImportError as e:
+        raise ImportError("workflow/utility failed to import", e)
+
+    value_columns = parameters['value-columns']
+    group_variants = parameters['group-variants']
+    df_reports = {}
+    for report_name, group_columns in group_variants.items():
+        #print(report_name)
+        #print(group_columns)
+        column_sorting = parameters['column-sorting']
         
+        value_agg_dict = {col: 'mean' for col in value_columns}
+        collapsed_value_df = target_df.groupby(group_columns, as_index=False).agg(value_agg_dict)
+
+        sorting_list = []
+        for column, categories in column_sorting.items():
+            if column in collapsed_value_df.columns:
+                collapsed_value_df[column] = pd.Categorical(
+                    collapsed_value_df[column], 
+                    categories = categories, 
+                    ordered = True
+                )
+                sorting_list.append(column)
+
+        df_report = collapsed_value_df.sort_values(
+            by = sorting_list
+        )
+
+        if 'value-filter' in parameters:
+            for column, included in parameters['value-filter'].items():
+                df_report = df_report[df_report[column].isin(included)]
+
+        df_reports[report_name] = df_report
+
+    return df_reports
+
+def workflow_model_evaluation_report(
+    swift_client: any,
+    mlflow_client: any,
+    storage_parameters: dict,
+    dataset_paths: list,
+    report_parameters: dict,
+    experiment_name: str,
+    dataset_tags: dict,
+    dataset_user: str
+): 
+    try: 
+        import pandas as pd
+        from ..objects.use import objects_get_data, objects_store_data
+        from ..mlflow.use import mlflow_create_dataset, mlflow_get_or_create_experiment
+        from ..judge.utility import judge_model_report
+        from ..evaluation.use import evalution_model_report
+    except ImportError as e:
+        raise ImportError("workflow/utility failed to import", e)
+
+    model_dfs = {}
+    for dataset_path in dataset_paths:
+        data_object = objects_get_data(
+            swift_client = swift_client,
+            storage_parameters = {
+                'bucket-target': storage_parameters['bucket-target'],
+                'bucket-prefix': storage_parameters['bucket-prefix'],
+                'bucket-user': storage_parameters['bucket-user'],
+                'object-name': 'root',
+                'object-serialization': storage_parameters['object-serialization'],
+                'path-replacers': {
+                    'name': dataset_path
+                },
+                'path-names': [],
+                'debug-prints': True,
+                'lock-parameters': {},
+                'lock-location': None,
+                'overwrite': True
+            },
+            dict_format = False
+        ) 
+
+        object_df = data_object[0]    
+        category_name = dataset_path.split('/')[1].lower()
+        wanted_columns = report_parameters['wanted-columns'][category_name]
+        model_dfs[category_name] = object_df[wanted_columns]
+
+    answer_report_columns = report_parameters['reports']['answer-columns']
+    answer_subset = model_dfs['answers'][answer_report_columns]
+    merge_column = report_parameters['reports']['merge-column']
+    enriched_judge_df = pd.merge(
+        model_dfs['judged'], 
+        answer_subset, 
+        on = merge_column, 
+        how = 'left'  
+    )
+
+    stat_reports = {}  
+    report_types = report_parameters['reports']['types']
+    for name, parameters in report_types.items():
+        #print(name)
+        stat_reports[name] = workflow_create_dataframe_reports(
+            target_df = enriched_judge_df,
+            parameters = parameters
+        )
+
+
+    # What we want is the following
+        # Model effiency plus behavior controller checks
+        # RAG metrics would also be nice
+        # behavior controller
+        # checks also for the report
+
+    return {
+        'dataset': enriched_judge_df,
+        'reports': stat_reports
+    }
+
+def workflow_model_evalution_html_report(
+    report_title: str,
+    df_reports: dict
+):
+    try: 
+        import html
+        import pandas as pd
+    except ImportError as e:
+        raise ImportError("workflow/utility failed to import", e)
+    
+    safe_title = html.escape(report_title)
+
+    parts = [
+        "<!DOCTYPE html>",
+        '<html lang="en">',
+        "<head>",
+        '<meta charset="utf-8">',
+        f"<title>{safe_title}</title>",
+        """
+        <style>
+            body {
+                font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+                line-height: 1.5;
+                color: #1f2328;
+                max-width: 1400px;
+                margin: 24px auto;
+                padding: 0 20px;
+            }
+            h1 {
+                border-bottom: 2px solid #d0d7de;
+                padding-bottom: 10px;
+            }
+            h2 {
+                margin-top: 32px;
+                border-bottom: 1px solid #e5e7eb;
+                padding-bottom: 6px;
+            }
+            h3 {
+                margin-top: 20px;
+                margin-bottom: 8px;
+                color: #374151;
+            }
+            .table-wrap {
+                overflow-x: auto;
+                margin-bottom: 16px;
+            }
+            table.eval-table {
+                border-collapse: collapse;
+                width: 100%;
+                font-size: 13px;
+            }
+            table.eval-table th,
+            table.eval-table td {
+                border: 1px solid #d0d7de;
+                padding: 8px 10px;
+                text-align: left;
+                white-space: nowrap;
+            }
+            table.eval-table thead th {
+                background-color: #f6f8fa;
+                font-weight: 600;
+            }
+            table.eval-table tbody tr:nth-child(even) {
+                background-color: #f9fafb;
+            }
+            .empty-msg {
+                color: #656d76;
+                font-style: italic;
+                margin: 6px 0 16px;
+            }
+        </style>
+        """,
+        "</head>",
+        "<body>",
+        f"<h1>{safe_title}</h1>",
+    ]
+
+    for category, variants_dict in df_reports.items():
+        parts.append(f"<h2>{html.escape(str(category))}</h2>")
+
+        for variant in variants_dict.keys():
+            df = variants_dict[variant]
+            parts.append(f"<h3>{html.escape(str(variant))}</h3>")
+
+            if df is None or df.empty:
+                parts.append('<p class="empty-msg">No data available for this variant.</p>')
+            else:
+                table_html = df.to_html(
+                    index=False,
+                    classes="eval-table",
+                    border=0,
+                    na_rep="-",
+                )
+                parts.append(f'<div class="table-wrap">\n{table_html}\n</div>')
+
+    parts.extend(["</body>", "</html>"])
+
+    html_report = "\n".join(parts)
+
+    with open("model_evaluation_report.html", "w", encoding="utf-8") as f:
+        f.write(html_report)
+    
+def workflow_model_evalution_markdown_report(
+    report_title: str,
+    df_reports: dict
+):  
+    sections = [f"# {report_title}"]
+    for category, variants_dict in df_reports.items():
+        sections.append(f"## {category}")
+
+        for variant in variants_dict.keys():
+            df = variants_dict[variant]
+            sections.append(f"### {variant}")
+
+            if df is None or df.empty:
+                sections.append("_No data available for this variant._")
+            else:
+                sections.append(df.to_markdown(index=False))
+
+    markdown_report = "\n\n".join(sections)
+
+    with open("model_evaluation_report.md", "w", encoding="utf-8") as f:
+        f.write(markdown_report)
+    

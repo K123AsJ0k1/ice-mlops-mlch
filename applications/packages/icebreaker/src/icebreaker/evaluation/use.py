@@ -414,5 +414,63 @@ def evalute_add_datasets(
         dataset_ids.append(dataset_id)
     return dataset_ids
 
-def evalute_summarize_judges(): 
-    pass
+def evalution_model_report(
+    metrics_df: any,
+    group_columns: list,
+    score_columns: list,
+    efficiency_columns: list,
+    pivot_column: str = None  # e.g., 'variant' or 'dataset' to make a wide comparison table
+):
+    try:
+        import pandas as pd
+    except ImportError as e:
+        raise ImportError("evaluation/use failed to import", e)
+    
+    # 1. Melt score columns to calculate pass rates cleanly
+    melted = metrics_df.melt(
+        id_vars=group_columns,
+        value_vars=score_columns,
+        var_name='metric',
+        value_name='score'
+    )
+
+    index_cols = group_columns + ['metric']
+
+    # 2. Compute pass percentages using groupby instead of crosstab
+    agg_df = melted.groupby(index_cols)['score'].agg(
+        total_count='count',
+        pass_count=lambda x: (x == 1).sum()
+    ).reset_index()
+
+    agg_df['pass_pct'] = (agg_df['pass_count'] / agg_df['total_count'] * 100).round(2)
+    
+    # Drop raw counts to keep the report clean
+    agg_df = agg_df.drop(columns=['total_count', 'pass_count'])
+
+    # 3. Compute efficiency means
+    efficiency_means = metrics_df.groupby(group_columns)[efficiency_columns].mean().round(2).reset_index()
+
+    # 4. Merge pass percentages with efficiency metrics
+    full_report = agg_df.merge(efficiency_means, on=group_columns, how='left')
+
+    # 5. Optional: Pivot for side-by-side comparison
+    if pivot_column:
+        if pivot_column not in group_columns:
+            raise ValueError(f"pivot_column '{pivot_column}' must be one of the group_columns.")
+        
+        remaining_groups = [col for col in group_columns if col != pivot_column]
+        pivot_index = remaining_groups + ['metric']
+        value_cols = ['pass_pct'] + efficiency_columns
+        
+        # Pivot so the variants (or datasets) become columns side-by-side
+        pivoted_report = full_report.pivot_table(
+            index = pivot_index,
+            columns = pivot_column,
+            values = value_cols
+        )
+        
+        # Flatten MultiIndex columns for cleaner printing (e.g., 'pass_pct_variantA')
+        pivoted_report.columns = [f"{col[0]}_{col[1]}" for col in pivoted_report.columns]
+        return pivoted_report.reset_index()
+
+    return full_report.set_index(index_cols)
