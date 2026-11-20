@@ -842,6 +842,9 @@ def workflow_create_synthetic_dataset(
         ) 
 
         object_df = data_object[0]
+        # Change this so that all infrastructures get a part
+        # otherwise it is a waste
+        # there needs to be infrastructure pick using infernece server
         for index, row in object_df.iterrows():
             if sampled < sample_amount:
                 modified_row = row.copy()
@@ -1124,9 +1127,9 @@ def workflow_create_unified_answer_dataset(
         wanted_columns = dataset_details['wanted-columns']
         filtered_df = object_df[wanted_columns].copy()
         for index, row in filtered_df.iterrows():
-            modified_row = row.copy()
-            modified_row['assistant-record-index'] = record_index
-            joined_rows.append(modified_row)
+            #modified_row = row.copy()
+            #modified_row['assistant-record-index'] = record_index
+            joined_rows.append(row)
             record_index += 1
 
     unified_dataset = pd.DataFrame(joined_rows)
@@ -1384,27 +1387,26 @@ def workflow_create_dataframe_reports(
     group_variants = parameters['group-variants']
     df_reports = {}
     for report_name, group_columns in group_variants.items():
-        #print(report_name)
-        #print(group_columns)
-        column_sorting = parameters['column-sorting']
-        
         value_agg_dict = {col: 'mean' for col in value_columns}
-        collapsed_value_df = target_df.groupby(group_columns, as_index=False).agg(value_agg_dict)
-
+        
+        df_report = target_df.groupby(group_columns, as_index=False).agg(value_agg_dict)
+        
         sorting_list = []
-        for column, categories in column_sorting.items():
-            if column in collapsed_value_df.columns:
-                collapsed_value_df[column] = pd.Categorical(
-                    collapsed_value_df[column], 
-                    categories = categories, 
-                    ordered = True
-                )
-                sorting_list.append(column)
+        if 'column-sorting' in parameters:
+            column_sorting = parameters['column-sorting']
+            for column, categories in column_sorting.items():
+                if column in df_report.columns:
+                    df_report[column] = pd.Categorical(
+                        df_report[column], 
+                        categories = categories, 
+                        ordered = True
+                    )
+                    sorting_list.append(column)
 
-        df_report = collapsed_value_df.sort_values(
-            by = sorting_list
-        )
-
+            df_report = df_report.sort_values(
+                by = sorting_list
+            )
+    
         if 'value-filter' in parameters:
             for column, included in parameters['value-filter'].items():
                 df_report = df_report[df_report[column].isin(included)]
@@ -1432,6 +1434,7 @@ def workflow_model_evaluation_report(
     except ImportError as e:
         raise ImportError("workflow/utility failed to import", e)
 
+    gen_dfs = {}
     model_dfs = {}
     for dataset_path in dataset_paths:
         data_object = objects_get_data(
@@ -1457,11 +1460,24 @@ def workflow_model_evaluation_report(
         object_df = data_object[0]    
         category_name = dataset_path.split('/')[1].lower()
         wanted_columns = report_parameters['wanted-columns'][category_name]
-        model_dfs[category_name] = object_df[wanted_columns]
+        if category_name == 'generated':
+            object_df.columns = object_df.columns.str.replace('_','-') 
+            object_df = object_df.rename(columns = {
+                'tokens-per-second': 'tokens-per-sec'
+            })
+            object_df = object_df.add_prefix('generator-')
+            #print(object_df.columns)
+            gen_dfs[dataset_path] = object_df[wanted_columns]
+            #model_dfs[category_name] = pd.concat[object_df[wanted_columns]
+        else:
+            model_dfs[category_name] = object_df[wanted_columns]
 
     answer_report_columns = report_parameters['reports']['answer-columns']
     answer_subset = model_dfs['answers'][answer_report_columns]
     merge_column = report_parameters['reports']['merge-column']
+    
+    joined_generator_df = pd.concat(gen_dfs.values(), axis = 0, ignore_index = True)
+
     enriched_judge_df = pd.merge(
         model_dfs['judged'], 
         answer_subset, 
@@ -1472,11 +1488,16 @@ def workflow_model_evaluation_report(
     stat_reports = {}  
     report_types = report_parameters['reports']['types']
     for name, parameters in report_types.items():
-        #print(name)
-        stat_reports[name] = workflow_create_dataframe_reports(
-            target_df = enriched_judge_df,
-            parameters = parameters
-        )
+        if 'Generator' in name:
+            stat_reports[name] = workflow_create_dataframe_reports(
+                target_df = joined_generator_df,
+                parameters = parameters
+            )
+        else:
+            stat_reports[name] = workflow_create_dataframe_reports(
+                target_df = enriched_judge_df,
+                parameters = parameters
+            )
 
 
     # What we want is the following

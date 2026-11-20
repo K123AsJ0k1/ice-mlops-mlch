@@ -1,4 +1,5 @@
 import ray
+import time as t
 from functions.utility import utility_managed_span
 from icebreaker.judge.utility import judge_extract_output
 from icebreaker.mlflow.use import mlflow_get_prompt
@@ -16,12 +17,13 @@ def judge_send_request(
     trace_attributes: dict,
     pipeline_record: dict
 ):
-    with utility_managed_span(
+    with utility_managed_span( 
         mlflow_client = mlflow_client, 
         span_name = span_name, 
         trace_id = trace_id, 
         parent_span_id = root_span_id
     ) as judge_span:
+        execution_time_start = t.time()
         judge_variant = f'v{prompt_version}-{prompt_name}'
         judge_prompt = mlflow_get_prompt(
             mlflow_client = mlflow_client,
@@ -123,7 +125,10 @@ def judge_send_request(
             )
 
             for key, value in judge_score.items():
-                evaluation_score[key] = value
+                if key == 'reasoning':
+                    evaluation_score[key] = value
+                else:
+                    evaluation_score[key] = int(value)
         
         judge_span.set_outputs({
             'output': evaluation_score
@@ -132,5 +137,7 @@ def judge_send_request(
         span_output = evaluation_score | answer_judge_metadata
                                 
         pipeline_record['judge-data']['output'] = span_output
+
+        pipeline_record['judge-data']['metrics']['execution-time-sec'] = round(t.time() - execution_time_start, 5)
         
         return evaluation_score

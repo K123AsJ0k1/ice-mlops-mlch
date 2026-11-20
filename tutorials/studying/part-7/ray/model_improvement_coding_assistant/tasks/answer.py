@@ -95,15 +95,15 @@ def answer_dataset(
 
     for key, value in controller_parameters.items():
         used_key = f'controller-{key}'
-        trace_attributes[used_key] = value 
+        trace_attributes[used_key] = value  
     
     trace_name = mlflow_parameters['trace-name']
     trace_tags = mlflow_parameters['trace-tags']
-    request_index = 0
-
+    
     pipeline_data = []
     total_records = len(processed_subset) * len(assistant_prompts)
     print(f'Starting processing {total_records} total records')
+    # this isn't unique
     record_index = 1
     assistant_model_name = trace_attributes['assistant-repo-id'].split('/')[-1]
     assistant_prompt_replacement_keys = [
@@ -118,15 +118,22 @@ def answer_dataset(
             assistant_query = row['query']
             assistant_prompt_version = assistant_prompt_metadata['version']
             assistant_variant = f'v{assistant_prompt_version}-{assistant_prompt_name}'
+            default_status_reason = 'NONE'
+            # 'assistant-record-index': record_index,
             pipeline_record = {
                 'dataset-category': dataset_category,
                 'dataset-index': index,
                 'dataset-type': dataset_type,
-                'assistant-status': 'ACCEPTED', # ACCEPTED, REFUSED_INPUT, REFUSED_REQUEST, REFUSED_OUTPUT
-                'assistant-status-reason': 'NONE',
+                'assistant-status': 'ACCEPTED', # ACCEPTED, PIPELINE_FAILED, REFUSED_INPUT, REFUSED_REQUEST, REFUSED_OUTPUT
+                'assistant-status-reason': default_status_reason,
                 'assistant-variant': assistant_variant,
                 'assistant-query': assistant_query,
-                'assistant-record-index': record_index,
+                'assistant-pipeline-time-sec': 0,
+                'assistant-pipeline-utilization-cost-sec': trace_attributes['utilization-cost-sec'],
+                'assistant-pipeline-utilization-cost-currency': trace_attributes['utilization-cost-currency'],
+                'assistant-pipeline-gpu-hardware-name': trace_attributes['gpu-hardware-name'],
+                'assistant-pipeline-gpu-vram-mib': trace_attributes['gpu-vram-mib'],
+                'assistant-pipeline-inference-framework': trace_attributes['inference-framework'],
                 'assistant-data': {
                     'input': {},
                     'metrics': {},
@@ -148,14 +155,12 @@ def answer_dataset(
                     'output': {}
                 }
             }
-            # Maybe add assistant record index here for easier search
-            # Needs pipeline time
-            print(f'Processing {index}/{record_index}/{total_records}')
+            
+            print(f'Processing index {index} with record {record_index} from {total_records}')
             print(f'Dataset category: {dataset_category}')
             print(f'Dataset type: {dataset_type}')
             print(f'Assistant variant: {assistant_variant}')
 
-            request_index += 1 
             query_weights = json.loads(row['internal-material-ranks'])
             if not isinstance(query_weights, dict):
                 query_weights = {}
@@ -196,149 +201,138 @@ def answer_dataset(
                 'dangerous-code': 0
             }
 
-            #default_response = 'FAILED'
-            #default_reason = 'UNKNOWN'
-            #pipeline_record['assistant-status'] = default_response
-            #pipeline_record['assistant-status-reason'] = default_reason
-            # Update judge extract to have fialure dict
             trace_output = {
-                'response': 'PIPELINE_FAILED',
+                'response': 'EMPTY',
                 'assistant-status-reason': 'UNKNOWN'
             }
-            
-            if 'pe-rag-bc' in assistant_prompt_name:
-                input_behavior = controller_input_check(
-                    mlflow_client = mlflow_client,
-                    span_name = 'behavior-controller-input-check',
-                    trace_id = trace_id,
-                    root_span_id = root_span_id,
-                    controller_prompts = controller_prompts,
-                    query_text = assistant_query,
-                    controller_ref = controller_ref,
-                    trace_attributes = trace_attributes,
-                    pipeline_record = pipeline_record
-                )
-                
-            print(f'Input behavior: {input_behavior}')
-            if input_behavior.get('secret-leak') == 1 or input_behavior.get('off-topic') == 1:
-                reasons = []
-                if input_behavior.get('secret-leak') == 1: reasons.append("SECRET_LEAK")
-                if input_behavior.get('off-topic') == 1: reasons.append("OFF_TOPIC")
 
-                given_response = 'REFUSED_INPUT'
-                refusal_reason = " | ".join(reasons)
-                pipeline_record['assistant-status'] = given_response
-                pipeline_record['assistant-status-reason'] = refusal_reason
-                trace_output = {
-                    'response': given_response,
-                    'assistant-status-reason': refusal_reason
-                }
-               
-            if input_behavior.get('secret-leak') == 0 and input_behavior.get('off-topic') == 0:
-                if 'rag' in assistant_prompt_name:
-                    assistant_prompt_replacements[assistant_prompt_replacement_keys[1]] = retrieval_send_query( 
-                        mlflow_client = mlflow_client, 
-                        span_name = 'retrieval-augmented-generation-query',
+            try:
+                if 'pe-rag-bc' in assistant_prompt_name:
+                    input_behavior = controller_input_check(
+                        mlflow_client = mlflow_client,
+                        span_name = 'behavior-controller-input-check',
                         trace_id = trace_id,
-                        root_span_id = root_span_id, 
-                        retrieval_parameters = retrieval_parameters,
+                        root_span_id = root_span_id,
+                        controller_prompts = controller_prompts,
                         query_text = assistant_query,
-                        retrieval_ref = retrieval_ref,
-                        dataset_name = dataset_name,
-                        query_weights = query_weights,
+                        controller_ref = controller_ref,
+                        trace_attributes = trace_attributes,
+                        pipeline_record = pipeline_record
+                    )
+                    
+                print(f'Input behavior: {input_behavior}')
+                if input_behavior.get('secret-leak') == 1 or input_behavior.get('off-topic') == 1:
+                    reasons = []
+                    if input_behavior.get('secret-leak') == 1: reasons.append("SECRET_LEAK")
+                    if input_behavior.get('off-topic') == 1: reasons.append("OFF_TOPIC")
+
+                    given_response = 'REFUSED_INPUT'
+                    refusal_reason = " | ".join(reasons)
+                    pipeline_record['assistant-status'] = given_response
+                    pipeline_record['assistant-status-reason'] = refusal_reason
+                    trace_output['response'] = given_response
+                    trace_output['assistant-status-reason'] = refusal_reason
+                            
+                if input_behavior.get('secret-leak') == 0 and input_behavior.get('off-topic') == 0:
+                    if 'rag' in assistant_prompt_name:
+                        assistant_prompt_replacements[assistant_prompt_replacement_keys[1]] = retrieval_send_query( 
+                            mlflow_client = mlflow_client, 
+                            span_name = 'retrieval-augmented-generation-query',
+                            trace_id = trace_id,
+                            root_span_id = root_span_id, 
+                            retrieval_parameters = retrieval_parameters,
+                            query_text = assistant_query,
+                            retrieval_ref = retrieval_ref,
+                            dataset_name = dataset_name,
+                            query_weights = query_weights,
+                            pipeline_record = pipeline_record
+                        )
+
+                    coding_assistant_output = assistant_send_request(
+                        mlflow_client = mlflow_client, 
+                        span_name = 'coding-assistant-request',
+                        trace_id = trace_id,
+                        root_span_id = root_span_id,
+                        prompt_name = assistant_prompt_name,
+                        prompt_version = assistant_prompt_version,
+                        prompt_replacements = assistant_prompt_replacements,
+                        assistant_ref = assistant_ref,
+                        trace_attributes = trace_attributes,
                         pipeline_record = pipeline_record
                     )
 
-                coding_assistant_output = assistant_send_request(
-                    mlflow_client = mlflow_client, 
-                    span_name = 'coding-assistant-request',
-                    trace_id = trace_id,
-                    root_span_id = root_span_id,
-                    prompt_name = assistant_prompt_name,
-                    prompt_version = assistant_prompt_version,
-                    prompt_replacements = assistant_prompt_replacements,
-                    assistant_ref = assistant_ref,
-                    trace_attributes = trace_attributes,
-                    pipeline_record = pipeline_record
-                )
+                    if coding_assistant_output == 'REQUEST_FAILED':
+                        given_response = 'REFUSED_REQUEST'
+                        refusal_reason = 'REQUEST_ERROR'
+                        pipeline_record['assistant-status'] = given_response
+                        pipeline_record['assistant-status-reason'] = refusal_reason
+                        trace_output['response'] = given_response
+                        trace_output['assistant-status-reason'] = refusal_reason
+                    else:
+                        trace_output['response'] = coding_assistant_output
+                        trace_output['assistant-status-reason'] = default_status_reason
 
-                if coding_assistant_output == 'REQUEST_FAILED':
-                    given_response = 'REFUSED_REQUEST'
-                    refusal_reason = 'REQUEST_ERROR'
-                    pipeline_record['assistant-status'] = given_response
-                    pipeline_record['assistant-status-reason'] = refusal_reason
-                    trace_output = {
-                        'response': given_response,
-                        'assistant-status-reason': refusal_reason
-                    }
-                else:
-                    #wanted_status = 'ACCEPTED'
-                    #wanted_reason = 'NONE'
-                    #pipeline_record['assistant-status'] = wanted_status
-                    #pipeline_record['assistant-status-reason'] = wanted_reason
-
-                    trace_output = {
-                        'response': coding_assistant_output,
-                        'assistant-status-reason': 'NONE'
-                    }
-
-                    if 'pe-rag-bc' in assistant_prompt_name:
-                        REFUSAL_PATTERN = re.compile(
-                            r"\[?\s*REFUSAL\s*[-–—]\s*OUT[_\s]OF[_\s]SCOPE\s*\]?(?:\s*:\s*(.*))?",
-                            re.IGNORECASE
-                        )
-
-                        assistant_refusal = REFUSAL_PATTERN.search(coding_assistant_output)
-                        if assistant_refusal:
-                            given_response = 'REFUSED_REQUEST'
-                            refusal_reason = 'OUT_OF_SCOPE'
-                            pipeline_record['assistant-status'] = given_response
-                            pipeline_record['assistant-status-reason'] = refusal_reason
-                            trace_output = {
-                                'response': given_response,
-                                'assistant-status-reason': refusal_reason
-                            }
-                        else:
-                            output_behavior = controller_output_check(
-                                mlflow_client = mlflow_client, 
-                                span_name = 'behavior-controller-output-check',
-                                trace_id = trace_id,
-                                root_span_id = root_span_id,
-                                controller_prompts = controller_prompts,
-                                query_text = assistant_query,
-                                controller_ref = controller_ref,
-                                trace_attributes = trace_attributes,
-                                assistant_output = coding_assistant_output,
-                                pipeline_record = pipeline_record
+                        if 'pe-rag-bc' in assistant_prompt_name:
+                            REFUSAL_PATTERN = re.compile(
+                                r"\[?\s*REFUSAL\s*[-–—]\s*OUT[_\s]OF[_\s]SCOPE\s*\]?(?:\s*:\s*(.*))?",
+                                re.IGNORECASE
                             )
 
-            print(f'Output behavior: {output_behavior}')
-            if output_behavior.get('truncated') == 1 or output_behavior.get('token-loop') == 1 or output_behavior.get('verbose') == 1 or output_behavior.get('dangerous-code') == 1:
-                reasons = []
-                if output_behavior.get('truncated') == 1: reasons.append("TRUNCATED")
-                if output_behavior.get('token-loop') == 1: reasons.append("TOKEN_LOOP")
-                if output_behavior.get('verbose') == 1: reasons.append("VERBOSE")
-                if output_behavior.get('dangerous-code') == 1: reasons.append("DANGEROUS_CODE")
+                            assistant_refusal = REFUSAL_PATTERN.search(coding_assistant_output)
+                            if assistant_refusal:
+                                given_response = 'REFUSED_REQUEST'
+                                refusal_reason = 'OUT_OF_SCOPE'
+                                pipeline_record['assistant-status'] = given_response
+                                pipeline_record['assistant-status-reason'] = refusal_reason
+                                trace_output['response'] = given_response
+                                trace_output['assistant-status-reason'] = refusal_reason
+                            else:
+                                output_behavior = controller_output_check(
+                                    mlflow_client = mlflow_client, 
+                                    span_name = 'behavior-controller-output-check',
+                                    trace_id = trace_id,
+                                    root_span_id = root_span_id,
+                                    controller_prompts = controller_prompts,
+                                    query_text = assistant_query,
+                                    controller_ref = controller_ref,
+                                    trace_attributes = trace_attributes,
+                                    assistant_output = coding_assistant_output,
+                                    pipeline_record = pipeline_record
+                                ) 
 
-                given_response = 'REFUSED_OUTPUT'
-                refusal_reason = " | ".join(reasons)
+                print(f'Output behavior: {output_behavior}')
+                if output_behavior.get('truncated') == 1 or output_behavior.get('token-loop') == 1 or output_behavior.get('verbose') == 1 or output_behavior.get('dangerous-code') == 1:
+                    reasons = []
+                    if output_behavior.get('truncated') == 1: reasons.append("TRUNCATED")
+                    if output_behavior.get('token-loop') == 1: reasons.append("TOKEN_LOOP")
+                    if output_behavior.get('verbose') == 1: reasons.append("VERBOSE")
+                    if output_behavior.get('dangerous-code') == 1: reasons.append("DANGEROUS_CODE")
+
+                    given_response = 'REFUSED_OUTPUT'
+                    refusal_reason = " | ".join(reasons)
+                    pipeline_record['assistant-status'] = given_response
+                    pipeline_record['assistant-status-reason'] = refusal_reason  
+                    trace_output['response'] = given_response
+                    trace_output['assistant-status-reason'] = refusal_reason
+
+            except Exception as e:
+                given_response = 'PIPELINE_FAILED'
+                refusal_reason = e
                 pipeline_record['assistant-status'] = given_response
                 pipeline_record['assistant-status-reason'] = refusal_reason  
-                trace_output = {
-                    'response': given_response,
-                    'assistant-status-reason': refusal_reason
-                }
+                trace_output['response'] = given_response
+                trace_output['assistant-status-reason'] = refusal_reason
+                print(f'Pipeline failed with error: {e}')
         
             print('Ending trace')
             mlflow_end_trace(
                 mlflow_client = mlflow_client,
                 trace_id = trace_id,
                 trace_output = trace_output
-            )
-            pipeline_record['assistant-data']['metrics']['execution-time-sec'] = round(t.time() - execution_time_start, 5)
-              
+            )              
             pipeline_data.append(pipeline_record)
             record_index += 1
+            pipeline_record['assistant-pipeline-time-sec'] = round(t.time() - execution_time_start, 5)
 
     mlflow.flush_trace_async_logging() 
 
@@ -373,7 +367,14 @@ def answer_dataset(
             'assistant-status',
             'assistant-status-reason',
             'assistant-variant',
-            'assistant-query'
+            'assistant-query',
+            'assistant-record-index',
+            'assistant-pipeline-time-sec',
+            'assistant-pipeline-utilization-cost-sec',
+            'assistant-pipeline-utilization-cost-currency',
+            'assistant-pipeline-gpu-hardware-name',
+            'assistant-pipeline-gpu-vram-mib',
+            'assistant-pipeline-inference-framework'
         ]
     )
 

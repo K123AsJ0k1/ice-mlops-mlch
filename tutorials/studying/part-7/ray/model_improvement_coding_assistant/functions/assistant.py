@@ -1,4 +1,5 @@
 import ray
+import time as t
 from functions.utility import utility_managed_span
 from icebreaker.mlflow.use import mlflow_get_prompt
 from icebreaker.mlflow.utility import mlflow_token_usage, mlflow_llm_cost, mlflow_llm_effiency
@@ -21,6 +22,7 @@ def assistant_send_request(
         trace_id = trace_id, 
         parent_span_id = root_span_id
     ) as assistant_span:
+        execution_time_start = t.time()
         assistant_variant = f'v{prompt_version}-{prompt_name}'
         assistant_prompt = mlflow_get_prompt(
             mlflow_client = mlflow_client,
@@ -35,7 +37,7 @@ def assistant_send_request(
         assistant_span_input = {
             'variant': assistant_variant,
             'messages': sent_prompt
-        }
+        } 
 
         pipeline_record['assistant-data']['input'] = assistant_span_input
 
@@ -115,5 +117,7 @@ def assistant_send_request(
         span_output = {'answer': coding_assistant_output} | coding_assistant_metadata
                                 
         pipeline_record['assistant-data']['output'] = span_output
+
+        pipeline_record['assistant-data']['metrics']['execution-time-sec'] = round(t.time() - execution_time_start, 5)
         
         return coding_assistant_output  

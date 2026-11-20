@@ -85,7 +85,8 @@ def create_dataset(
 
     trace_name = mlflow_parameters['trace-name']
     trace_tags = mlflow_parameters['trace-tags']
-    
+
+    # This needs improvement
     generator_data = {
         'parameters': trace_attributes,
         'inputs': [],

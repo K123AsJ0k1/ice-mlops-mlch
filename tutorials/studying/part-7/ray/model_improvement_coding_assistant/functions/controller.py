@@ -1,4 +1,5 @@
 import ray
+import time as t
 from icebreaker.controller.utility import controller_extract_output
 from icebreaker.mlflow.use import mlflow_get_prompt
 from icebreaker.mlflow.utility import mlflow_token_usage, mlflow_llm_cost, mlflow_llm_effiency
@@ -21,6 +22,7 @@ def controller_input_check(
         trace_id = trace_id, 
         parent_span_id = root_span_id
     ) as input_bc_span:
+        execution_time_start = t.time()
         print('Checking the input with behavior controller')
         # Prompt tag change place
 
@@ -143,6 +145,8 @@ def controller_input_check(
                         
         pipeline_record['input-controller-data']['output'] = span_output
 
+        pipeline_record['input-controller-data']['metrics']['execution-time-sec'] = round(t.time() - execution_time_start, 5)
+
         return input_behavior
 
 def controller_output_check(
@@ -163,6 +167,7 @@ def controller_output_check(
         trace_id = trace_id, 
         parent_span_id = root_span_id
     ) as output_bc_span: 
+        execution_time_start = t.time()
         print('Checking output with behavior controller')
         # Prompt tag change place
         controller_prompt_name = controller_prompts['output']['name']
@@ -289,5 +294,7 @@ def controller_output_check(
         span_output = output_behavior | output_controller_metadata
                                 
         pipeline_record['output-controller-data']['output'] = span_output
+
+        pipeline_record['output-controller-data']['metrics']['execution-time-sec'] = round(t.time() - execution_time_start, 5)
 
         return output_behavior

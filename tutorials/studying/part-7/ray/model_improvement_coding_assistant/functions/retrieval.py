@@ -1,4 +1,5 @@
 import ray
+import time as t
 import json
 from functions.utility import utility_managed_span
 from icebreaker.assistant.utility import assistant_format_context
@@ -21,6 +22,8 @@ def retrieval_send_query(
         trace_id = trace_id, 
         parent_span_id = root_span_id 
     ) as retrieval_span:
+        # Add time
+        execution_time_start = t.time()
         collection_name = retrieval_parameters['collection-name']
         query_type = retrieval_parameters['query-type']
         relevance_threshold = retrieval_parameters['relevance-threshold']
@@ -96,5 +99,7 @@ def retrieval_send_query(
         pipeline_output = pipeline_output | pipeline_metrics
         pipeline_record['retrieval-data']['output'] = pipeline_output
         retrieval_span.set_outputs(pipeline_output)
+
+        pipeline_record['retrieval-data']['metrics']['execution-time-sec'] = round(t.time() - execution_time_start, 5)
 
         return created_context

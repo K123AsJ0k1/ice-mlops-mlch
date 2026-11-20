@@ -90,7 +90,8 @@ def evaluate_dataset(
             'retrieval-embedding-latency-ms',
             'retrieval-search-latency-ms',
             'retrieval-total-latency-ms',
-            'retrieval-total-characters'
+            'retrieval-total-characters',
+            'retrieval-execution-time-sec'
         ]
     )
 
@@ -118,7 +119,7 @@ def evaluate_dataset(
 
     mlflow.set_experiment(
         experiment_id = experiment_id
-    )
+    ) 
 
     trace_attributes = mlflow_parameters['trace-attributes']
    
@@ -128,6 +129,7 @@ def evaluate_dataset(
 
     trace_name = mlflow_parameters['trace-name']
     trace_tags = mlflow_parameters['trace-tags']
+    # This isn't unique
     record_index = 1
     pipeline_data = []  
     total_records = len(processed_input_subset)
@@ -139,6 +141,7 @@ def evaluate_dataset(
         'reference'
     ]
     for index, row in processed_input_subset.iterrows():
+        execution_time_start = t.time()
         assistant_status = row['assistant-status']
         assistant_status_reason = row['assistant-status-reason']
         assistant_record_index = row['assistant-record-index']
@@ -148,21 +151,28 @@ def evaluate_dataset(
         assistant_variant = row['assistant-variant']
         assistant_model_name = row['assistant-used-model']
         assistant_query = row['assistant-query']
-        assistant_answer = row['assistant-answer']
+        
         ground_truth = solution_pandas_df.iloc[dataset_index]['solution']
 
         dataset_prompt = judge_prompts[dataset_category]
         judge_prompt_name = dataset_prompt['name']
         judge_prompt_version = dataset_prompt['version']
         judge_variant = f'v{judge_prompt_version}-{judge_prompt_name}'
+        default_status_reason = 'NONE'
+        #'judge-record-index': record_index,
         pipeline_record = {
             'dataset-category': dataset_category,
             'dataset-index': dataset_index,
             'dataset-type': dataset_type,
-            'judge-status': 'ACCEPTED', # ACCEPTED, REFUSED_REQUEST, SKIPPED
-            'judge-status-reason': 'NONE',
+            'judge-status': 'ACCEPTED', # ACCEPTED, PIPELINE_FAILED, REFUSED_REQUEST, SKIPPED
+            'judge-status-reason': default_status_reason,
             'judge-variant': judge_variant, 
-            'judge-record-index': record_index,
+            'judge-pipeline-time-sec': 0,
+            'judge-pipeline-utilization-cost-sec': trace_attributes['utilization-cost-sec'],
+            'judge-pipeline-utilization-cost-currency': trace_attributes['utilization-cost-currency'],
+            'judge-pipeline-gpu-hardware-name': trace_attributes['gpu-hardware-name'],
+            'judge-pipeline-gpu-vram-mib': trace_attributes['gpu-vram-mib'],
+            'judge-pipeline-inference-framework': trace_attributes['inference-framework'],
             'judge-data': {
                 'input': {},
                 'metrics': {},
@@ -172,11 +182,11 @@ def evaluate_dataset(
             'assistant-model': assistant_model_name,
             'assistant-record-index': assistant_record_index,
             'case-request': assistant_query,
-            'case-material': '',
+            'case-reference': '',
             'case-truth': ground_truth,
             'case-answer': ''
         }
-        # add record index here for easier search
+        
         print(f'Processing {dataset_index}/{record_index}/{total_records}')
         print(f'Dataset category: {dataset_category}')
         print(f'Dataset type: {dataset_type}')
@@ -203,7 +213,7 @@ def evaluate_dataset(
 
         trace_id = root_span.trace_id
         root_span_id = root_span.span_id
-
+        
         evaluation_score = {
             'reasoning': '', 
             'correctness': 0,
@@ -220,53 +230,59 @@ def evaluate_dataset(
             'answer': ''
         }
 
-        if assistant_status == 'ACCEPTED':
-            judge_prompt_replacements = {
-                judge_prompt_replacement_keys[0]: assistant_query,
-                judge_prompt_replacement_keys[1]: ground_truth,
-                judge_prompt_replacement_keys[2]: assistant_answer
-            } 
-            #pipeline_record['case-request'] = assistant_query
-            #pipeline_record['case-truth'] = ground_truth
-            trace_output['truth'] = ground_truth
-            pipeline_record['case-answer'] = assistant_answer
-            trace_output['answer'] = assistant_answer
+        try:
+            if assistant_status == 'ACCEPTED':
+                assistant_answer = row['assistant-answer']
+                judge_prompt_replacements = {
+                    judge_prompt_replacement_keys[0]: assistant_query,
+                    judge_prompt_replacement_keys[1]: ground_truth,
+                    judge_prompt_replacement_keys[2]: assistant_answer
+                } 
+                pipeline_record['case-answer'] = assistant_answer
+                trace_output['answer'] = assistant_answer
 
-            if dataset_category == 'synthetic':
-                material_index = solution_pandas_df.iloc[dataset_index]['internal-material-index']
-                question_content = solution_pandas_df[(solution_pandas_df['internal-material-index'] == int(material_index)) & (solution_pandas_df['category'] == 'validation')]['solution'].iloc[0]
-                judge_prompt_replacements[judge_prompt_replacement_keys[3]] = question_content
-                pipeline_record['case-material'] = question_content
-                trace_output['reference'] = question_content
+                if dataset_category == 'synthetic':
+                    material_index = solution_pandas_df.iloc[dataset_index]['internal-material-index']
+                    question_content = solution_pandas_df[(solution_pandas_df['internal-material-index'] == int(material_index)) & (solution_pandas_df['category'] == 'validation')]['solution'].iloc[0]
+                    judge_prompt_replacements[judge_prompt_replacement_keys[3]] = question_content
+                    pipeline_record['case-reference'] = question_content
+                    trace_output['reference'] = question_content
 
-            evaluation_score = judge_send_request(
-                mlflow_client = mlflow_client,
-                span_name = 'answer-judge-request',
-                trace_id = trace_id,
-                root_span_id = root_span_id,
-                prompt_name = judge_prompt_name,
-                prompt_version = judge_prompt_version,
-                prompt_replacements = judge_prompt_replacements,
-                judge_ref = judge_ref,
-                trace_attributes = trace_attributes,
-                pipeline_record = pipeline_record 
-            )
+                evaluation_score = judge_send_request(
+                    mlflow_client = mlflow_client,
+                    span_name = 'answer-judge-request',
+                    trace_id = trace_id,
+                    root_span_id = root_span_id,
+                    prompt_name = judge_prompt_name,
+                    prompt_version = judge_prompt_version,
+                    prompt_replacements = judge_prompt_replacements,
+                    judge_ref = judge_ref,
+                    trace_attributes = trace_attributes,
+                    pipeline_record = pipeline_record 
+                )
 
-            if evaluation_score['reasoning'] == '':
-                given_response = 'REFUSED_REQUEST'
-                refusal_reason = 'REQUEST_ERROR'
-                pipeline_record['judge-status'] = given_response
+                if evaluation_score['reasoning'] == '':
+                    given_status = 'REFUSED_REQUEST'
+                    refusal_reason = 'REQUEST_ERROR'
+                    pipeline_record['judge-status'] = given_status
+                    pipeline_record['judge-status-reason'] = refusal_reason
+                    trace_output['judge-status-reason'] = refusal_reason
+                else:
+                    trace_output['response'] = evaluation_score
+                    trace_output['judge-status-reason'] = default_status_reason
+            else:
+                given_status = 'SKIPPED'
+                refusal_reason = 'ASSISTANT_REFUSAL'
+                pipeline_record['judge-status'] = given_status
                 pipeline_record['judge-status-reason'] = refusal_reason
                 trace_output['judge-status-reason'] = refusal_reason
-            else:
-                trace_output['response'] = evaluation_score
-                trace_output['judge-status-reason'] = 'NONE'
-        else:
-            given_response = 'SKIPPED'
-            refusal_reason = 'ASSISTANT_REFUSAL'
-            pipeline_record['judge-status'] = given_response
-            pipeline_record['judge-status-reason'] = refusal_reason
+
+        except Exception as e:
+            refusal_reason = e
+            pipeline_record['judge-status'] = 'PIPELINE_FAILED'
+            pipeline_record['judge-status-reason'] = refusal_reason  
             trace_output['judge-status-reason'] = refusal_reason
+            print(f'Pipeline failed with error: {e}')
 
         print('Ending trace')
         mlflow_end_trace(
@@ -274,9 +290,9 @@ def evaluate_dataset(
             trace_id = trace_id,
             trace_output = trace_output
         )
-
         pipeline_data.append(pipeline_record)
         record_index += 1
+        pipeline_record['judge-pipeline-time-sec'] = round(t.time() - execution_time_start, 5)
 
     mlflow.flush_trace_async_logging() 
     
@@ -301,7 +317,8 @@ def evaluate_dataset(
             'user-prompt-length',
             'input-cost',
             'output-cost',
-            'total-cost'
+            'total-cost',
+            'execution-time-sec'
         ],
         wanted_keys = [
             'dataset-category',
@@ -310,11 +327,17 @@ def evaluate_dataset(
             'judge-status',
             'judge-status-reason',
             'judge-variant',
+            'judge-pipeline-time-sec',
+            'judge-pipeline-utilization-cost-sec',
+            'judge-pipeline-utilization-cost-currency',
+            'judge-pipeline-gpu-hardware-name',
+            'judge-pipeline-gpu-vram-mib',
+            'judge-pipeline-inference-framework',
             'assistant-variant',
             'assistant-model',
             'assistant-record-index',
             'case-request',
-            'case-material',
+            'case-reference',
             'case-truth',
             'case-answer'
         ]
